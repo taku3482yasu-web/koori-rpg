@@ -7,7 +7,7 @@
 import { ART } from '../art/index.js';
 import { backArt } from '../art/back.js';
 import { BACK_ART } from '../art/back-art.js';
-import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMMAND_NAMES } from './special-fx.js';
+import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMMANDS, COMMAND_NAMES } from './special-fx.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect } from '../core/draw.js';
@@ -182,7 +182,8 @@ export function createBattleView(app, battle, place) {
         if (!canSpecial(battle, pos)) { sfx('cancel'); return; }
         const unit = startSpecial(battle, pos);
         const sp = specialOf(unit.id);
-        mg = { unit, pos, sp, phase: 'cmd', t: 0, cmd: createCommand(sp.command, app.rng), mult: 1, resolved: false };
+        const command = app.rng.pick(COMMANDS);   // コマンドは 毎回 ランダム
+        mg = { unit, pos, sp, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1, resolved: false };
         sfx('ok');
     }
     function updateMinigame(dt, input) {
@@ -457,7 +458,7 @@ export function createBattleView(app, battle, place) {
         ctx.stroke();
         drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
         text(ctx, `必殺技「${u.special.name}」`, 200, 30, { size: 18, align: 'center', bold: true, color: COLORS.accent });
-        text(ctx, COMMAND_NAMES[mg.sp.command], 200, 52, { size: 13, align: 'center', bold: true });
+        text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: 'center', bold: true });
         if (mg.phase === 'result') text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
     }
 

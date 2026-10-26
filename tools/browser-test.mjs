@@ -182,10 +182,10 @@ try {
     await key('KeyQ');
     await evaluate('(() => { const b = window.__app.scene.battle; b.front()[0].gauge = 100; return true; })()');
     await key('Digit1');
-    check(await evaluate('window.__app.scene.battle.paused && window.__app.scene.debug.mg().sp.command === "spin"'), '必殺技で キャラごとの コマンド (ダイチョウエンキンは ぐるぐる)');
+    check(await evaluate('window.__app.scene.battle.paused && ["mash", "reel", "trace", "spin"].includes(window.__app.scene.debug.mg().command)'), '必殺技で コマンド (4 種類から ランダム)');
     await shot('command');
-    // ぐるぐる: 上→右→下→左 を 5 回
-    for (let i = 0; i < 5; i++) for (const k of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft']) await key(k, 20);
+    // どの コマンドでも 決まるまで A を 押す (れんだ・目押し)。なぞる・ぐるぐるは 時間切れまで 待つ
+    for (let i = 0; i < 12; i++) await key('Enter', 20);
     // コマンド → 結果 → カットイン → 動き を 見とどける (動きの 中で 敵が 食らう モーション)
     const flow = await evaluate('new Promise(r => { const seen = new Set(); let hurt = false, n = 0; const tick = () => { const s = window.__app.scene, m = s.debug && s.debug.mg(); if (m) seen.add(m.phase); if (s.debug && Object.values(s.debug.motions).some(x => x.kind === "hurt" || x.kind === "ko")) hurt = true; if ((!m && seen.size) || ++n > 900) r({ phases: [...seen], hurt, mult: null }); else requestAnimationFrame(tick); }; tick(); })');
     check(['result', 'cutin', 'act'].every(p => flow.phases.includes(p)), `必殺技: コマンドの あと 結果 → カットイン → キャラの 動き (${flow.phases.join(' → ')})`);

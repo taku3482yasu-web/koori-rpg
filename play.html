@@ -3806,28 +3806,29 @@ body.nopad #pad { display: none; }
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
-    haribaby: { command: "mash", motion: "dash", color: "#e0b070" },
-    mumenbachi: { command: "spin", motion: "spin", color: "#ffd040" },
-    donguriko: { command: "reel", motion: "aura", color: "#c88a40", glyph: "◆" },
-    nemuridake: { command: "trace", motion: "cloud", color: "#ff9ad8", glyph: "Zz" },
-    pekorisu: { command: "mash", motion: "dash", color: "#f0c890", drain: true },
-    tsutankobu: { command: "trace", motion: "beam", color: "#5ad06a" },
-    yofukashi: { command: "trace", motion: "cloud", color: "#d8a8ff", glyph: "♪" },
-    kogame: { command: "reel", motion: "aura", color: "#9ad07a", glyph: "◆" },
-    tsuribariuo: { command: "reel", motion: "line", color: "#dddddd" },
-    mokugyoro: { command: "mash", motion: "multi", color: "#d0a060", glyph: "ポク", hits: 5 },
-    rousokubi: { command: "spin", motion: "rain", color: "#ff8a3a", glyph: "▲" },
-    daichouenkin: { command: "spin", motion: "cloud", color: "#a8d060", glyph: "@" },
-    kunaisuzume: { command: "mash", motion: "rain", color: "#d0d0d0", glyph: "↓" },
-    kawarimidanuki: { command: "trace", motion: "dash", color: "#e0e0e0", puff: true },
-    shinobigaeru: { command: "trace", motion: "rain", color: "#6ab0f0", glyph: "●" },
-    ishikoron: { command: "mash", motion: "roll", color: "#b4b4bc" },
-    mizukirin: { command: "reel", motion: "skip", color: "#bff0ff", hits: 8 },
-    soumennagare: { command: "spin", motion: "aura", color: "#f8f4e8", glyph: "〜" },
-    kozarappa: { command: "reel", motion: "aura", color: "#4aa8e0", glyph: "●" },
-    hashishita: { command: "trace", motion: "cloud", color: "#ffe040", glyph: "1 2 3" }
+    haribaby: { motion: "dash", color: "#e0b070" },
+    mumenbachi: { motion: "spin", color: "#ffd040" },
+    donguriko: { motion: "aura", color: "#c88a40", glyph: "◆" },
+    nemuridake: { motion: "cloud", color: "#ff9ad8", glyph: "Zz" },
+    pekorisu: { motion: "dash", color: "#f0c890", drain: true },
+    tsutankobu: { motion: "beam", color: "#5ad06a" },
+    yofukashi: { motion: "cloud", color: "#d8a8ff", glyph: "♪" },
+    kogame: { motion: "aura", color: "#9ad07a", glyph: "◆" },
+    tsuribariuo: { motion: "line", color: "#dddddd" },
+    mokugyoro: { motion: "multi", color: "#d0a060", glyph: "ポク", hits: 5 },
+    rousokubi: { motion: "rain", color: "#ff8a3a", glyph: "▲" },
+    daichouenkin: { motion: "cloud", color: "#a8d060", glyph: "@" },
+    kunaisuzume: { motion: "rain", color: "#d0d0d0", glyph: "↓" },
+    kawarimidanuki: { motion: "dash", color: "#e0e0e0", puff: true },
+    shinobigaeru: { motion: "rain", color: "#6ab0f0", glyph: "●" },
+    ishikoron: { motion: "roll", color: "#b4b4bc" },
+    mizukirin: { motion: "skip", color: "#bff0ff", hits: 8 },
+    soumennagare: { motion: "aura", color: "#f8f4e8", glyph: "〜" },
+    kozarappa: { motion: "aura", color: "#4aa8e0", glyph: "●" },
+    hashishita: { motion: "cloud", color: "#ffe040", glyph: "1 2 3" }
   };
-  const specialOf = (id) => SPECIALS[id] || { command: "mash", motion: "dash", color: "#ffffff" };
+  const specialOf = (id) => SPECIALS[id] || { motion: "dash", color: "#ffffff" };
+  const COMMANDS = ["mash", "reel", "trace", "spin"];
   const COMMAND_NAMES = { mash: "れんだ！", reel: "目押しで こおりを そろえろ！", trace: "なぞれ！", spin: "ぐるぐる まわせ！" };
   function createCommand(type, rng) {
     if (type === "reel") return reelCommand(rng);
@@ -4393,7 +4394,8 @@ body.nopad #pad { display: none; }
       }
       const unit = startSpecial(battle, pos);
       const sp2 = specialOf(unit.id);
-      mg = { unit, pos, sp: sp2, phase: "cmd", t: 0, cmd: createCommand(sp2.command, app2.rng), mult: 1, resolved: false };
+      const command = app2.rng.pick(COMMANDS);
+      mg = { unit, pos, sp: sp2, command, phase: "cmd", t: 0, cmd: createCommand(command, app2.rng), mult: 1, resolved: false };
       sfx("ok");
     }
     function updateMinigame(dt, input2) {
@@ -4715,7 +4717,7 @@ body.nopad #pad { display: none; }
       ctx.stroke();
       drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
       text(ctx, `必殺技「${u.special.name}」`, 200, 30, { size: 18, align: "center", bold: true, color: COLORS.accent });
-      text(ctx, COMMAND_NAMES[mg.sp.command], 200, 52, { size: 13, align: "center", bold: true });
+      text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: "center", bold: true });
       if (mg.phase === "result") text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: "center", bold: true, color: mg.mult > 1 ? COLORS.accent : "#ffffff" });
     }
     function drawAct(ctx) {

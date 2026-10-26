@@ -1,7 +1,7 @@
 // =====================================================================
 // 必殺技の コマンド (ミニゲーム) と、キャラごとの 必殺技の 動き (2026-10-27 ユーザー指定)
 // ---------------------------------------------------------------------
-// コマンドは 4 種類。結果で 威力が かわる (大成功 1.5 倍・成功 1 倍・しっぱい 0.5 倍)
+// コマンドは 4 種類。必殺技を 打つ たびに ランダムで 1 つ (2026-10-27 ユーザー指定)。結果で 威力が かわる (大成功 1.5 倍・成功 1 倍・しっぱい 0.5 倍)
 //   mash   れんだ  : 3 秒で A か 画面を たくさん 押す (15 回で 大成功・8 回で 成功)
 //   reel   目押し  : まわる リール 3 つを 止めて「こおり」を そろえる (前後 1 コマは すべって 止まる)
 //   trace  なぞる  : 点を 順に なぞる。ボタンなら 矢印の 向きを 順に 押す
@@ -16,30 +16,31 @@ import { btn } from '../core/keys.js';
 
 const result = (score, great, ok) => (score >= great ? { mult: 1.5, label: '大成功！' } : score >= ok ? { mult: 1, label: '成功！' } : { mult: 0.5, label: 'しっぱい…' });
 
-// なかまごとの コマンドと 動き (glyph: 飛ばす もの、color: その 色)
+// なかまごとの 必殺技の 動き (glyph: 飛ばす もの、color: その 色)
 export const SPECIALS = {
-    haribaby: { command: 'mash', motion: 'dash', color: '#e0b070' },
-    mumenbachi: { command: 'spin', motion: 'spin', color: '#ffd040' },
-    donguriko: { command: 'reel', motion: 'aura', color: '#c88a40', glyph: '◆' },
-    nemuridake: { command: 'trace', motion: 'cloud', color: '#ff9ad8', glyph: 'Zz' },
-    pekorisu: { command: 'mash', motion: 'dash', color: '#f0c890', drain: true },
-    tsutankobu: { command: 'trace', motion: 'beam', color: '#5ad06a' },
-    yofukashi: { command: 'trace', motion: 'cloud', color: '#d8a8ff', glyph: '♪' },
-    kogame: { command: 'reel', motion: 'aura', color: '#9ad07a', glyph: '◆' },
-    tsuribariuo: { command: 'reel', motion: 'line', color: '#dddddd' },
-    mokugyoro: { command: 'mash', motion: 'multi', color: '#d0a060', glyph: 'ポク', hits: 5 },
-    rousokubi: { command: 'spin', motion: 'rain', color: '#ff8a3a', glyph: '▲' },
-    daichouenkin: { command: 'spin', motion: 'cloud', color: '#a8d060', glyph: '@' },
-    kunaisuzume: { command: 'mash', motion: 'rain', color: '#d0d0d0', glyph: '↓' },
-    kawarimidanuki: { command: 'trace', motion: 'dash', color: '#e0e0e0', puff: true },
-    shinobigaeru: { command: 'trace', motion: 'rain', color: '#6ab0f0', glyph: '●' },
-    ishikoron: { command: 'mash', motion: 'roll', color: '#b4b4bc' },
-    mizukirin: { command: 'reel', motion: 'skip', color: '#bff0ff', hits: 8 },
-    soumennagare: { command: 'spin', motion: 'aura', color: '#f8f4e8', glyph: '〜' },
-    kozarappa: { command: 'reel', motion: 'aura', color: '#4aa8e0', glyph: '●' },
-    hashishita: { command: 'trace', motion: 'cloud', color: '#ffe040', glyph: '1 2 3' }
+    haribaby: { motion: 'dash', color: '#e0b070' },
+    mumenbachi: { motion: 'spin', color: '#ffd040' },
+    donguriko: { motion: 'aura', color: '#c88a40', glyph: '◆' },
+    nemuridake: { motion: 'cloud', color: '#ff9ad8', glyph: 'Zz' },
+    pekorisu: { motion: 'dash', color: '#f0c890', drain: true },
+    tsutankobu: { motion: 'beam', color: '#5ad06a' },
+    yofukashi: { motion: 'cloud', color: '#d8a8ff', glyph: '♪' },
+    kogame: { motion: 'aura', color: '#9ad07a', glyph: '◆' },
+    tsuribariuo: { motion: 'line', color: '#dddddd' },
+    mokugyoro: { motion: 'multi', color: '#d0a060', glyph: 'ポク', hits: 5 },
+    rousokubi: { motion: 'rain', color: '#ff8a3a', glyph: '▲' },
+    daichouenkin: { motion: 'cloud', color: '#a8d060', glyph: '@' },
+    kunaisuzume: { motion: 'rain', color: '#d0d0d0', glyph: '↓' },
+    kawarimidanuki: { motion: 'dash', color: '#e0e0e0', puff: true },
+    shinobigaeru: { motion: 'rain', color: '#6ab0f0', glyph: '●' },
+    ishikoron: { motion: 'roll', color: '#b4b4bc' },
+    mizukirin: { motion: 'skip', color: '#bff0ff', hits: 8 },
+    soumennagare: { motion: 'aura', color: '#f8f4e8', glyph: '〜' },
+    kozarappa: { motion: 'aura', color: '#4aa8e0', glyph: '●' },
+    hashishita: { motion: 'cloud', color: '#ffe040', glyph: '1 2 3' }
 };
-export const specialOf = id => SPECIALS[id] || { command: 'mash', motion: 'dash', color: '#ffffff' };
+export const specialOf = id => SPECIALS[id] || { motion: 'dash', color: '#ffffff' };
+export const COMMANDS = ['mash', 'reel', 'trace', 'spin'];
 export const COMMAND_NAMES = { mash: 'れんだ！', reel: '目押しで こおりを そろえろ！', trace: 'なぞれ！', spin: 'ぐるぐる まわせ！' };
 
 // ===================== コマンド =====================

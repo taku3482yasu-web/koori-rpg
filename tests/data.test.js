@@ -84,17 +84,14 @@ test('20 体 全員に うしろ姿の 絵が あり、前向きと 同じ 大�
     }
 });
 
-test('20 体 全員に 必殺技の コマンドと 動きが あり、コマンドは 4 種類 全部 使う', async () => {
-    const { SPECIALS, MOTION_TIME, COMMAND_NAMES } = await import('../src/view/special-fx.js');
-    const commands = new Set();
+test('20 体 全員に 必殺技の 動きが あり、コマンドは 4 種類 (毎回 ランダム)', async () => {
+    const { SPECIALS, MOTION_TIME, COMMANDS, COMMAND_NAMES } = await import('../src/view/special-fx.js');
     for (const id of NAKAMA_IDS) {
-        const sp = SPECIALS[id];
-        assert.ok(sp, `${id} の 必殺技`);
-        assert.ok(COMMAND_NAMES[sp.command], `${id} の コマンド ${sp.command}`);
-        assert.ok(MOTION_TIME[sp.motion], `${id} の 動き ${sp.motion}`);
-        commands.add(sp.command);
+        assert.ok(SPECIALS[id], `${id} の 必殺技`);
+        assert.ok(MOTION_TIME[SPECIALS[id].motion], `${id} の 動き`);
     }
-    assert.deepEqual([...commands].sort(), ['mash', 'reel', 'spin', 'trace']);
+    assert.deepEqual([...COMMANDS].sort(), ['mash', 'reel', 'spin', 'trace']);
+    for (const c of COMMANDS) assert.ok(COMMAND_NAMES[c]);
 });
 
 test('必殺技の コマンド: 目押しは こおりが そろうと 大成功・れんだは 押した 数で 決まる', async () => {
