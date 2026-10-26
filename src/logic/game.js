@@ -85,21 +85,20 @@ export function spotKinds(g, spot) {
         (!k.after || g.story === k.after));
 }
 
-// その場所に 今 だれかが いるか (レンズに 反応するか)
+// かくれている 場所に 今 だれかが いるか (違和感が 見えて、レンズに 反応するか)
 export function spotActive(g, spot, now) {
     return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
 }
 
-export function encounter(g, spot, rng) {
-    const kinds = spotKinds(g, spot);
-    const pick = rng.weighted(kinds);
+// 話しかけた キャラ (first: { id, lv }) と 戦う。ときどき 同じ 場所の キャラが もう 1 体 出る
+export function encounter(g, source, rng, first = null) {
+    const kinds = spotKinds(g, source);
     const [lo, hi] = g.story === 'clear' ? [4, 9] : [2, 5];
-    const lv = lo + rng.int(hi - lo + 1);
-    const enemies = [{ id: pick.id, lv }];
-    // ときどき 2 体 出る
-    if (rng.chance(0.2)) {
+    const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
+    const enemies = [{ id: lead.id, lv: lead.lv }];
+    if (kinds.length && rng.chance(0.2)) {
         const other = rng.weighted(kinds);
-        enemies.push({ id: other.id, lv: Math.max(1, lv - 1) });
+        enemies.push({ id: other.id, lv: Math.max(1, lead.lv - 1) });
     }
     enemies.forEach(e => { g.zukan.seen[e.id] = true; });
     return enemies;

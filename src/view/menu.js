@@ -7,7 +7,7 @@
 import { ART } from '../art/index.js';
 import { NAKAMA, NAKAMA_IDS, ROLES } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
-import { SPOTS } from '../data/map.js';
+import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit, bar, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { medalByUid, friendCount } from '../logic/game.js';
@@ -125,7 +125,7 @@ export function createMenu(app) {
             const need = expFor(medal.lv + 1) - expFor(medal.lv);
             bar(ctx, 170, 218, 210, 4, (medal.exp - expFor(medal.lv)) / need, COLORS.ice);
         } else {
-            const where = SPOTS.filter(s => s.kinds.some(k => k.id === id)).map(s => s.label);
+            const where = [...SPOTS, ...ROAMS].filter(s => s.kinds.some(k => k.id === id)).map(s => s.label);
             text(ctx, `いる場所: ${g.zukan.friends[id] || g.zukan.seen[id] ? where.join('・') : '？？？'}`, 170, 200, { size: 11, maxWidth: 220 });
         }
     }

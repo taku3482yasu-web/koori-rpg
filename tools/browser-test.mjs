@@ -53,7 +53,8 @@ async function key(code, hold = 80) {
 }
 // 会話を 最後まで 進める
 async function skipTalk(max = 20) {
-    for (let i = 0; i < max && await evaluate('window.__app.talk.isActive()'); i++) { await key('Enter'); await key('Enter'); }
+    // 会話が 終わったあとに よけいに 押すと、町で 話しかけて しまうので 1 回ずつ
+    for (let i = 0; i < max * 2 && await evaluate('window.__app.talk.isActive()'); i++) await key('Enter');
 }
 // 下画面の ドット座標 (x, y) を マウスで 押す
 async function clickBottom(x, y) {
@@ -130,6 +131,17 @@ try {
     const far = Math.max(...samples.map(v => Math.hypot(v[0] - v[2], v[1] - v[3])));
     check(Math.max(...steps) < 4 && far < 40, `ふるカワが なめらかに ついてくる (1 コマ 最大 ${Math.max(...steps).toFixed(2)} ドット・離れて 最大 ${far.toFixed(1)})`);
 
+    // ----- かくれている 場所の 違和感 (画面だけ 保存) -----
+    for (const [name, x, y] of [['cue-parking', 7, 29], ['cue-jizo', 23, 5]]) {
+        await evaluate(`(() => { const g = window.__app.g; g.pos.x = ${x} * 16 + 8; g.pos.y = ${y} * 16 + 12; return true; })()`);
+        await sleep(400);
+        await shot(name);
+    }
+
+    // ----- 見えている キャラが 町を 歩いている -----
+    await sleep(1500);
+    check(await evaluate('window.__app.field.debug.wild.list.length >= 3'), '見えている キャラが 町に いる');
+
     // ----- レンズで さがす (川原の石ころの 上に こおりくんを 立たせて、レンズを まんなかの まま 待つ) -----
     await evaluate('(() => { const g = window.__app.g; g.pos.x = 28 * 16 + 8; g.pos.y = 11 * 16 + 14; return true; })()');
     await key('KeyU');
@@ -142,7 +154,18 @@ try {
     await sleep(100);
     check(await evaluate(`(() => { const l = window.__app.field.debug.lens(); return l && Math.abs(l.x - ${target.sx}) < 2 && Math.abs(l.y - ${target.sy}) < 2; })()`), 'マウスで レンズが 動く');
     await sleep(1600);
-    check(await sceneIs('battle'), 'レンズを 合わせて 待つと バトルが 始まる');
+    check(await evaluate('window.__app.talk.isActive() && window.__app.field.debug.wild.list.some(c => c.revealed && c.id === "ishikoron")'), 'レンズで 見つけると「見つけた！」と 出て、キャラが その場に 出てくる');
+    await shot('found');
+    await skipTalk();
+    check(await sceneIs('field'), '見つけても すぐには バトルに ならない');
+    // 出てきた キャラの 下に 立って 上を 向き、J で 話しかける
+    await evaluate('(() => { const g = window.__app.g, c = window.__app.field.debug.wild.list.find(x => x.revealed); g.pos.x = c.x; g.pos.y = c.y + 16; g.pos.dir = "up"; return true; })()');
+    await shot('revealed');
+    await key('KeyJ');
+    check(await evaluate('window.__app.talk.isActive()'), '話しかけると キャラが しゃべる');
+    await skipTalk();
+    await sleep(200);
+    check(await sceneIs('battle'), '話しかけると バトルが 始まる');
     await sleep(1500);
     await shot('battle');
 

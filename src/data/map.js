@@ -63,25 +63,32 @@ export const PROPS = [
     { id: 'torii-r', kind: 'torii', x: 8, y: 9 }
 ];
 
-// レンズで さがす 場所。x, y はマス。after: 'clear' は 1 章クリアのあとだけ
+// かくれている キャラ (レンズで さがす。2026-10-26 ユーザー指定: ふだんの 画面でも「なにか へん」と わかるように 化けている)
+//   x, y はマス。cue: ふだんの 画面に 出す 違和感の 絵 (view/field.js の drawCue)
+//   レンズで 見つけると「○○を 見つけた！」→ その場に 出てくる → 話しかけると バトル
+//   time: 出る 時間帯 / weather: 'rain' は 雨の日だけ / after: 'clear' は 1 章クリアのあとだけ
 export const SPOTS = [
-    { id: 'kawara', label: '川原の石ころ', x: 28, y: 11, kinds: [{ id: 'ishikoron', w: 3 }, { id: 'mizukirin', w: 2 }] },
-    { id: 'riverTree', label: '川原の木の下', x: 25, y: 12, kinds: [{ id: 'donguriko', w: 1 }] },
-    { id: 'park', label: '公園のしげみ', x: 17, y: 27, kinds: [{ id: 'nemuridake', w: 1 }, { id: 'nemuridake', w: 3, time: ['night'] }] },
-    { id: 'dagashiBack', label: '駄菓子屋の裏', x: 21, y: 21, kinds: [{ id: 'pekorisu', w: 1 }] },
-    { id: 'ishigaki', label: '石垣のツタ', x: 11, y: 3, kinds: [{ id: 'tsutankobu', w: 1 }] },
-    { id: 'shrineTree', label: '神社の大きな木', x: 2, y: 3, kinds: [{ id: 'yofukashi', w: 1, time: ['night'] }] },
-    { id: 'densen', label: '商店の電線', x: 14, y: 19, kinds: [{ id: 'kunaisuzume', w: 1 }] },
-    { id: 'asase', label: '川の浅いところ', x: 29, y: 26, kinds: [{ id: 'kogame', w: 3 }, { id: 'shinobigaeru', w: 3, weather: 'rain' }] },
-    { id: 'hashiue', label: '橋から見る川', x: 29, y: 16, kinds: [{ id: 'tsuribariuo', w: 1 }] },
-    { id: 'toiletSide', label: '公園のトイレ', x: 26, y: 28, kinds: [{ id: 'daichouenkin', w: 1 }] },
-    { id: 'uraYama', label: '小学校の裏山', x: 25, y: 3, kinds: [{ id: 'kawarimidanuki', w: 1 }] },
-    { id: 'kadan', label: '花だん', x: 5, y: 26, kinds: [{ id: 'mumenbachi', w: 1 }] },
-    { id: 'parking', label: '駐車場の車の下', x: 4, y: 31, kinds: [{ id: 'haribaby', w: 1 }] },
-    { id: 'kawakami', label: '夏の川上', x: 29, y: 2, kinds: [{ id: 'soumennagare', w: 1 }] },
-    { id: 'hashishita', label: '橋の下の水たまり', x: 28, y: 20, kinds: [{ id: 'kozarappa', w: 2 }, { id: 'hashishita', w: 2, after: 'clear' }] },
-    { id: 'hondou', label: 'お寺の本堂', x: 43, y: 8, kinds: [{ id: 'mokugyoro', w: 1 }] },
-    { id: 'teraUra', label: 'お寺の裏', x: 37, y: 3, kinds: [{ id: 'rousokubi', w: 1, time: ['night'] }] }
+    { id: 'kawara', label: '川原の石ころ', x: 28, y: 11, cue: 'eyeStone', kinds: [{ id: 'ishikoron', w: 1 }] },
+    { id: 'uraYama', label: '小学校の裏山のお地蔵さん', x: 25, y: 3, cue: 'jizoTail', kinds: [{ id: 'kawarimidanuki', w: 1 }] },
+    { id: 'parking', label: '駐車場の車の下', x: 4, y: 31, cue: 'carNeedles', kinds: [{ id: 'haribaby', w: 1 }] },
+    { id: 'hashiue', label: '橋のそばの川', x: 29, y: 15, cue: 'fishLine', kinds: [{ id: 'tsuribariuo', w: 1 }] },
+    { id: 'shrineTree', label: '神社のくらがり', x: 2, y: 3, cue: 'nightEyes', kinds: [{ id: 'yofukashi', w: 1, time: ['night'] }] },
+    { id: 'teraUra', label: 'お寺の裏', x: 37, y: 3, cue: 'candle', kinds: [{ id: 'rousokubi', w: 1, time: ['night'] }] },
+    { id: 'hashishita', label: '橋の下', x: 28, y: 20, cue: 'glowEyes', kinds: [{ id: 'hashishita', w: 1, after: 'clear' }] }
+];
+
+// 見えている キャラが 歩きまわる 場所 (なかまの 大多数はこちら)。x0..x1, y0..y1 はマス。max: 同時に 出る 数
+export const ROAMS = [
+    { id: 'kawakami', label: '夏の川上', x0: 25, y0: 1, x1: 29, y1: 5, max: 1, kinds: [{ id: 'soumennagare', w: 1 }] },
+    { id: 'kawaraN', label: '川原 (北)', x0: 28, y0: 6, x1: 29, y1: 15, max: 1, kinds: [{ id: 'mizukirin', w: 1 }] },
+    { id: 'kawaraS', label: '川原 (南)', x0: 28, y0: 19, x1: 29, y1: 33, max: 2, kinds: [{ id: 'kogame', w: 2 }, { id: 'kozarappa', w: 2 }, { id: 'shinobigaeru', w: 3, weather: 'rain' }] },
+    { id: 'riverTree', label: '川原の木のあたり', x0: 21, y0: 10, x1: 27, y1: 15, max: 1, kinds: [{ id: 'donguriko', w: 1 }] },
+    { id: 'ishigaki', label: '神社の石垣', x0: 9, y0: 2, x1: 11, y1: 8, max: 1, kinds: [{ id: 'tsutankobu', w: 1 }] },
+    { id: 'shoutengai', label: '商店のあたり', x0: 14, y0: 16, x1: 23, y1: 19, max: 2, kinds: [{ id: 'kunaisuzume', w: 1 }, { id: 'pekorisu', w: 1 }] },
+    { id: 'kadan', label: '花だん', x0: 2, y0: 25, x1: 10, y1: 27, max: 1, kinds: [{ id: 'mumenbachi', w: 1 }] },
+    { id: 'park', label: '公園', x0: 17, y0: 27, x1: 23, y1: 32, max: 2, kinds: [{ id: 'nemuridake', w: 1 }, { id: 'nemuridake', w: 2, time: ['night'] }, { id: 'daichouenkin', w: 1 }] },
+    { id: 'temple', label: 'お寺', x0: 36, y0: 7, x1: 46, y1: 10, max: 1, kinds: [{ id: 'mokugyoro', w: 1 }] },
+    { id: 'eastField', label: '東の原っぱ', x0: 36, y0: 20, x1: 46, y1: 30, max: 1, kinds: [{ id: 'mumenbachi', w: 1 }, { id: 'donguriko', w: 1 }] }
 ];
 
 // 人 (通れない)。art は 絵の 名前。only: そのときだけ いる

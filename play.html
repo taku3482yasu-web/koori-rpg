@@ -242,9 +242,9 @@ body.nopad #pad { display: none; }
     if (topCanvas2) {
       topCanvas2.addEventListener("pointermove", (e) => {
         if (e.pointerType !== "mouse") return;
-        const r = topCanvas2.getBoundingClientRect();
-        mouse.x = (e.clientX - r.left) / r.width * 400;
-        mouse.y = (e.clientY - r.top) / r.height * 240;
+        const r2 = topCanvas2.getBoundingClientRect();
+        mouse.x = (e.clientX - r2.left) / r2.width * 400;
+        mouse.y = (e.clientY - r2.top) / r2.height * 240;
         mouse.inside = true;
         mouseMoved = true;
       });
@@ -317,8 +317,8 @@ body.nopad #pad { display: none; }
     }
     if (bottomCanvas2) {
       const pos = (e) => {
-        const r = bottomCanvas2.getBoundingClientRect();
-        return { x: (e.clientX - r.left) / r.width * 320, y: (e.clientY - r.top) / r.height * 240 };
+        const r2 = bottomCanvas2.getBoundingClientRect();
+        return { x: (e.clientX - r2.left) / r2.width * 320, y: (e.clientY - r2.top) / r2.height * 240 };
       };
       bottomCanvas2.addEventListener("pointerdown", (e) => {
         var _a;
@@ -416,10 +416,10 @@ body.nopad #pad { display: none; }
       // [{ ..., w: 重み }] から 1 つ
       weighted: (list) => {
         const total = list.reduce((s, x) => s + (x.w ?? 1), 0);
-        let r = next() * total;
+        let r2 = next() * total;
         for (const x of list) {
-          r -= x.w ?? 1;
-          if (r < 0) return x;
+          r2 -= x.w ?? 1;
+          if (r2 < 0) return x;
         }
         return list[list.length - 1];
       }
@@ -902,23 +902,25 @@ body.nopad #pad { display: none; }
     { id: "torii-r", kind: "torii", x: 8, y: 9 }
   ];
   const SPOTS = [
-    { id: "kawara", label: "川原の石ころ", x: 28, y: 11, kinds: [{ id: "ishikoron", w: 3 }, { id: "mizukirin", w: 2 }] },
-    { id: "riverTree", label: "川原の木の下", x: 25, y: 12, kinds: [{ id: "donguriko", w: 1 }] },
-    { id: "park", label: "公園のしげみ", x: 17, y: 27, kinds: [{ id: "nemuridake", w: 1 }, { id: "nemuridake", w: 3, time: ["night"] }] },
-    { id: "dagashiBack", label: "駄菓子屋の裏", x: 21, y: 21, kinds: [{ id: "pekorisu", w: 1 }] },
-    { id: "ishigaki", label: "石垣のツタ", x: 11, y: 3, kinds: [{ id: "tsutankobu", w: 1 }] },
-    { id: "shrineTree", label: "神社の大きな木", x: 2, y: 3, kinds: [{ id: "yofukashi", w: 1, time: ["night"] }] },
-    { id: "densen", label: "商店の電線", x: 14, y: 19, kinds: [{ id: "kunaisuzume", w: 1 }] },
-    { id: "asase", label: "川の浅いところ", x: 29, y: 26, kinds: [{ id: "kogame", w: 3 }, { id: "shinobigaeru", w: 3, weather: "rain" }] },
-    { id: "hashiue", label: "橋から見る川", x: 29, y: 16, kinds: [{ id: "tsuribariuo", w: 1 }] },
-    { id: "toiletSide", label: "公園のトイレ", x: 26, y: 28, kinds: [{ id: "daichouenkin", w: 1 }] },
-    { id: "uraYama", label: "小学校の裏山", x: 25, y: 3, kinds: [{ id: "kawarimidanuki", w: 1 }] },
-    { id: "kadan", label: "花だん", x: 5, y: 26, kinds: [{ id: "mumenbachi", w: 1 }] },
-    { id: "parking", label: "駐車場の車の下", x: 4, y: 31, kinds: [{ id: "haribaby", w: 1 }] },
-    { id: "kawakami", label: "夏の川上", x: 29, y: 2, kinds: [{ id: "soumennagare", w: 1 }] },
-    { id: "hashishita", label: "橋の下の水たまり", x: 28, y: 20, kinds: [{ id: "kozarappa", w: 2 }, { id: "hashishita", w: 2, after: "clear" }] },
-    { id: "hondou", label: "お寺の本堂", x: 43, y: 8, kinds: [{ id: "mokugyoro", w: 1 }] },
-    { id: "teraUra", label: "お寺の裏", x: 37, y: 3, kinds: [{ id: "rousokubi", w: 1, time: ["night"] }] }
+    { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
+    { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
+    { id: "parking", label: "駐車場の車の下", x: 4, y: 31, cue: "carNeedles", kinds: [{ id: "haribaby", w: 1 }] },
+    { id: "hashiue", label: "橋のそばの川", x: 29, y: 15, cue: "fishLine", kinds: [{ id: "tsuribariuo", w: 1 }] },
+    { id: "shrineTree", label: "神社のくらがり", x: 2, y: 3, cue: "nightEyes", kinds: [{ id: "yofukashi", w: 1, time: ["night"] }] },
+    { id: "teraUra", label: "お寺の裏", x: 37, y: 3, cue: "candle", kinds: [{ id: "rousokubi", w: 1, time: ["night"] }] },
+    { id: "hashishita", label: "橋の下", x: 28, y: 20, cue: "glowEyes", kinds: [{ id: "hashishita", w: 1, after: "clear" }] }
+  ];
+  const ROAMS = [
+    { id: "kawakami", label: "夏の川上", x0: 25, y0: 1, x1: 29, y1: 5, max: 1, kinds: [{ id: "soumennagare", w: 1 }] },
+    { id: "kawaraN", label: "川原 (北)", x0: 28, y0: 6, x1: 29, y1: 15, max: 1, kinds: [{ id: "mizukirin", w: 1 }] },
+    { id: "kawaraS", label: "川原 (南)", x0: 28, y0: 19, x1: 29, y1: 33, max: 2, kinds: [{ id: "kogame", w: 2 }, { id: "kozarappa", w: 2 }, { id: "shinobigaeru", w: 3, weather: "rain" }] },
+    { id: "riverTree", label: "川原の木のあたり", x0: 21, y0: 10, x1: 27, y1: 15, max: 1, kinds: [{ id: "donguriko", w: 1 }] },
+    { id: "ishigaki", label: "神社の石垣", x0: 9, y0: 2, x1: 11, y1: 8, max: 1, kinds: [{ id: "tsutankobu", w: 1 }] },
+    { id: "shoutengai", label: "商店のあたり", x0: 14, y0: 16, x1: 23, y1: 19, max: 2, kinds: [{ id: "kunaisuzume", w: 1 }, { id: "pekorisu", w: 1 }] },
+    { id: "kadan", label: "花だん", x0: 2, y0: 25, x1: 10, y1: 27, max: 1, kinds: [{ id: "mumenbachi", w: 1 }] },
+    { id: "park", label: "公園", x0: 17, y0: 27, x1: 23, y1: 32, max: 2, kinds: [{ id: "nemuridake", w: 1 }, { id: "nemuridake", w: 2, time: ["night"] }, { id: "daichouenkin", w: 1 }] },
+    { id: "temple", label: "お寺", x0: 36, y0: 7, x1: 46, y1: 10, max: 1, kinds: [{ id: "mokugyoro", w: 1 }] },
+    { id: "eastField", label: "東の原っぱ", x0: 36, y0: 20, x1: 46, y1: 30, max: 1, kinds: [{ id: "mumenbachi", w: 1 }, { id: "donguriko", w: 1 }] }
   ];
   const PEOPLE = [
     { id: "mama", name: "ともいし", art: "tomoishi", x: 8, y: 24 },
@@ -1007,15 +1009,14 @@ body.nopad #pad { display: none; }
   function spotActive(g, spot, now) {
     return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
   }
-  function encounter(g, spot, rng) {
-    const kinds = spotKinds(g, spot);
-    const pick = rng.weighted(kinds);
+  function encounter(g, source, rng, first = null) {
+    const kinds = spotKinds(g, source);
     const [lo, hi] = g.story === "clear" ? [4, 9] : [2, 5];
-    const lv = lo + rng.int(hi - lo + 1);
-    const enemies = [{ id: pick.id, lv }];
-    if (rng.chance(0.2)) {
+    const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
+    const enemies = [{ id: lead.id, lv: lead.lv }];
+    if (kinds.length && rng.chance(0.2)) {
       const other = rng.weighted(kinds);
-      enemies.push({ id: other.id, lv: Math.max(1, lv - 1) });
+      enemies.push({ id: other.id, lv: Math.max(1, lead.lv - 1) });
     }
     enemies.forEach((e) => {
       g.zukan.seen[e.id] = true;
@@ -2216,7 +2217,7 @@ body.nopad #pad { display: none; }
     }
   };
   const bob = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
-  const blink = (rows, from, to) => [rows, rows.map((r) => r.split(from).join(to))];
+  const blink$1 = (rows, from, to) => [rows, rows.map((r2) => r2.split(from).join(to))];
   const NEW_ART = {
     // イシコロン: 川原の丸い石。おこった まゆ
     ishikoron: {
@@ -2319,7 +2320,7 @@ body.nopad #pad { display: none; }
       w: 16,
       h: 16,
       palette: { N: "#b07a48", n: "#8a5a2a", o: "#1a1424", P: "#6a5a9a", p: "#4a3a6a", s: "#2a2238", k: "#ffe040", w: "#ffffff", b: "#3a5a8a" },
-      frames: blink([
+      frames: blink$1([
         "NNNNNNNNNNNNNNNN",
         "nnnnnnnnnnnnnnnn",
         ".n............n.",
@@ -2382,17 +2383,17 @@ body.nopad #pad { display: none; }
     }
     return lines;
   }
-  function roundRect(ctx, x, y, w, h, r = 6) {
+  function roundRect(ctx, x, y, w, h, r2 = 6) {
     ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
+    ctx.moveTo(x + r2, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r2);
+    ctx.arcTo(x + w, y + h, x, y + h, r2);
+    ctx.arcTo(x, y + h, x, y, r2);
+    ctx.arcTo(x, y, x + w, y, r2);
     ctx.closePath();
   }
-  function panel(ctx, x, y, w, h, { fill = COLORS.panel, edge = COLORS.panelEdge, r = 6, lineWidth = 1.5 } = {}) {
-    roundRect(ctx, x, y, w, h, r);
+  function panel(ctx, x, y, w, h, { fill = COLORS.panel, edge = COLORS.panelEdge, r: r2 = 6, lineWidth = 1.5 } = {}) {
+    roundRect(ctx, x, y, w, h, r2);
     ctx.fillStyle = fill;
     ctx.fill();
     if (edge) {
@@ -2512,7 +2513,7 @@ body.nopad #pad { display: none; }
         text(ctx, line.who, 64, 168, { size: 12, align: "center", bold: true });
       }
       const rows = wrap(ctx, line.text.slice(0, Math.floor(shown)), 360, 13);
-      rows.slice(0, 3).forEach((r, i) => text(ctx, r, 20, 190 + i * 18, { size: 13 }));
+      rows.slice(0, 3).forEach((r2, i) => text(ctx, r2, 20, 190 + i * 18, { size: 13 }));
       if (full() && !(atLast() && opts.choices) && Math.floor(t * 3) % 2) text(ctx, "▼", 380, 228, { size: 10, align: "right", color: COLORS.accent });
     }
     function drawBottom(ctx) {
@@ -2522,6 +2523,8 @@ body.nopad #pad { display: none; }
         ctx.fillRect(0, 0, 320, 240);
         choiceButtons().forEach((b, i) => button(ctx, b, { active: i === cursor }));
       } else {
+        ctx.fillStyle = "#16203a";
+        ctx.fillRect(0, 206, 320, 34);
         text(ctx, "A か タップで つぎへ", 160, 228, { size: 11, align: "center", color: COLORS.sub });
       }
     }
@@ -2672,6 +2675,189 @@ body.nopad #pad { display: none; }
     const t = heroTile(g);
     return t.x >= 2 && t.x <= 10 && t.y >= 2 && t.y <= 9;
   };
+  const RESPAWN = 20;
+  const WALK$1 = 22;
+  const REVEALED_LIFE = 90;
+  function createWild(g, rng) {
+    const list = [];
+    const wait = {};
+    let seq = 0;
+    const lvRange = () => g.story === "clear" ? [4, 9] : [2, 5];
+    const rollLv = () => {
+      const [lo, hi] = lvRange();
+      return lo + rng.int(hi - lo + 1);
+    };
+    function freeTileIn(r2, hero) {
+      for (let n = 0; n < 30; n++) {
+        const tx = r2.x0 + rng.int(r2.x1 - r2.x0 + 1), ty = r2.y0 + rng.int(r2.y1 - r2.y0 + 1);
+        if (blockedTile(g, tx, ty)) continue;
+        const x = tx * TILE + 8, y = ty * TILE + 14;
+        if (hero && Math.hypot(x - hero.x, y - hero.y) < 48) continue;
+        return { x, y };
+      }
+      return null;
+    }
+    function spawnRoamers(hero) {
+      if (!hasWatch(g)) return;
+      for (const r2 of ROAMS) {
+        const kinds = spotKinds(g, r2);
+        const here = list.filter((c) => c.roam === r2.id);
+        for (const c of here) if (!kinds.some((k) => k.id === c.id)) remove(c);
+        if (!kinds.length || list.filter((c) => c.roam === r2.id).length >= r2.max || (wait[r2.id] || 0) > g.playTime) continue;
+        const p = freeTileIn(r2, hero);
+        if (!p) continue;
+        const kind = rng.weighted(kinds);
+        list.push({ key: `w${++seq}`, id: kind.id, lv: rollLv(), x: p.x, y: p.y, roam: r2.id, flip: rng.chance(0.5), target: null, pause: rng.next() * 2, walkT: 0 });
+        wait[r2.id] = g.playTime + 3;
+      }
+    }
+    function reveal(spot, id) {
+      const c = { key: `w${++seq}`, id, lv: rollLv(), x: spot.x * TILE + 8, y: spot.y * TILE + 14, spot: spot.id, flip: false, target: null, pause: 999, walkT: 0, born: g.playTime, revealed: true };
+      list.push(c);
+      return c;
+    }
+    function remove(c) {
+      const i = list.indexOf(c);
+      if (i >= 0) list.splice(i, 1);
+      if (c.roam) wait[c.roam] = g.playTime + RESPAWN;
+    }
+    function update(dt, hero) {
+      spawnRoamers(hero);
+      for (const c of [...list]) {
+        if (c.revealed) {
+          if (g.playTime - c.born > REVEALED_LIFE) remove(c);
+          continue;
+        }
+        const r2 = ROAMS.find((z) => z.id === c.roam);
+        if (c.pause > 0) {
+          c.pause -= dt;
+          if (c.pause <= 0) c.target = freeTileIn(r2, null);
+          continue;
+        }
+        if (!c.target) {
+          c.pause = 1;
+          continue;
+        }
+        const dx = c.target.x - c.x, dy = c.target.y - c.y, d = Math.hypot(dx, dy);
+        if (d < 1) {
+          c.target = null;
+          c.pause = 1 + rng.next() * 3;
+          continue;
+        }
+        const step2 = Math.min(d, WALK$1 * dt);
+        const nx = c.x + dx / d * step2, ny = c.y + dy / d * step2;
+        if (blockedTile(g, Math.floor(nx / TILE), Math.floor((ny - 3) / TILE))) {
+          c.target = null;
+          c.pause = 0.5;
+          continue;
+        }
+        c.x = nx;
+        c.y = ny;
+        c.walkT += dt;
+        if (Math.abs(dx) > 0.3) c.flip = dx < 0;
+      }
+    }
+    function facing(pos) {
+      const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[pos.dir];
+      const fx = pos.x + d[0] * 14, fy = pos.y + d[1] * 14;
+      let best = null, bestD = 16;
+      for (const c of list) {
+        const dist = Math.hypot(c.x - fx, c.y - fy);
+        if (dist < bestD) {
+          best = c;
+          bestD = dist;
+        }
+      }
+      return best;
+    }
+    const sourceOf = (c) => c.roam ? ROAMS.find((r2) => r2.id === c.roam) : SPOTS.find((s) => s.id === c.spot);
+    return { list, update, reveal, remove, facing, sourceOf };
+  }
+  const r = (ctx, x, y, w, h, color) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x), Math.round(y), w, h);
+  };
+  const blink = (t) => t % 3.2 < 0.15;
+  const CUES = {
+    // 川原の 石ころの 中に、目の ある 石が まじっていて、ときどき ゆれる
+    eyeStone(ctx, x, y, t) {
+      const wob = t % 4 < 0.5 ? Math.sin(t * 40) * 1 : 0;
+      r(ctx, x - 6 + wob, y - 2, 12, 7, "#9a9aa4");
+      r(ctx, x - 5 + wob, y - 3, 10, 1, "#b4b4bc");
+      r(ctx, x - 5 + wob, y + 5, 10, 1, "#6a6a74");
+      if (!blink(t)) {
+        r(ctx, x - 3 + wob, y, 2, 2, "#10162a");
+        r(ctx, x + 2 + wob, y, 2, 2, "#10162a");
+      }
+    },
+    // お地蔵さんの うしろから しましまの しっぽが 出ていて、ふりふり している
+    jizoTail(ctx, x, y, t) {
+      const sw = Math.sin(t * 5) * 3;
+      r(ctx, x + 4, y + 2 + sw * 0.2, 5, 5, "#b07a3a");
+      r(ctx, x + 8, y + sw * 0.5, 4, 5, "#4a2a10");
+      r(ctx, x + 11, y - 2 + sw * 0.8, 4, 5, "#b07a3a");
+      r(ctx, x + 14, y - 4 + sw, 3, 4, "#4a2a10");
+    },
+    // 車の 下から トゲが のぞいて、ぴくぴく している
+    carNeedles(ctx, x, y, t) {
+      const up = Math.floor(t * 4) % 2;
+      for (let i = 0; i < 5; i++) r(ctx, x - 8 + i * 4, y + 3 - up - i % 2, 1, 4, "#c8a070");
+      r(ctx, x - 9, y + 6, 20, 1, "rgba(0,0,0,0.3)");
+    },
+    // 川に 糸が たれていて、うきが 川の 流れと 反対に 動く
+    fishLine(ctx, x, y, t) {
+      const bx = x + 18 + Math.sin(t * 1.3) * 5, by = y + 4 + Math.sin(t * 3) * 1.5;
+      ctx.strokeStyle = "rgba(240,240,240,0.8)";
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(x + 2, y - 10);
+      ctx.quadraticCurveTo(x + 10, y - 8, bx, by);
+      ctx.stroke();
+      r(ctx, bx - 1.5, by - 2, 3, 2, "#ff4a4a");
+      r(ctx, bx - 1.5, by, 3, 1, "#ffffff");
+      const ring = t * 12 % 10;
+      ctx.strokeStyle = `rgba(255,255,255,${0.6 - ring / 18})`;
+      ctx.beginPath();
+      ctx.ellipse(bx, by + 2, ring, ring / 3, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    },
+    // くらがりに 光る 目が 2 つ
+    nightEyes(ctx, x, y, t) {
+      if (blink(t)) return;
+      const dx = Math.sin(t * 0.7) * 2;
+      r(ctx, x - 4 + dx, y - 2, 3, 3, "#ffe040");
+      r(ctx, x + 2 + dx, y - 2, 3, 3, "#ffe040");
+      r(ctx, x - 3 + dx, y - 1, 1, 1, "#10162a");
+      r(ctx, x + 3 + dx, y - 1, 1, 1, "#10162a");
+    },
+    // だれも いないのに ろうそくの 火が ゆらゆら 浮いている
+    candle(ctx, x, y, t) {
+      const fy = y - 6 + Math.sin(t * 2) * 2;
+      r(ctx, x - 1, fy + 3, 3, 6, "#f0f0e0");
+      const h = 3 + Math.floor(t * 8) % 2;
+      r(ctx, x, fy + 3 - h, 1, h, "#ffb030");
+      r(ctx, x - 1, fy + 1 - h / 2, 3, 2, "#ff7a20");
+      ctx.fillStyle = "rgba(255, 180, 60, 0.18)";
+      ctx.beginPath();
+      ctx.arc(x, fy, 9, 0, Math.PI * 2);
+      ctx.fill();
+    },
+    // 橋の 下の かげから 目が のぞく
+    glowEyes(ctx, x, y, t) {
+      r(ctx, x - 8, y - 4, 16, 8, "rgba(20, 16, 40, 0.55)");
+      if (!blink(t)) {
+        r(ctx, x - 4, y - 1, 2, 2, "#ffe040");
+        r(ctx, x + 2, y - 1, 2, 2, "#ffe040");
+      }
+    }
+  };
+  function drawCue(ctx, spot, x, y, t) {
+    var _a;
+    if (x < -40 || x > 440 || y < -40 || y > 280) return;
+    (_a = CUES[spot.cue]) == null ? void 0 : _a.call(CUES, ctx, x, y, t);
+    const k = (t + spot.x * 0.37) % 4;
+    if (k < 1) text(ctx, "？", x, y - 14 - k * 6, { size: 10, align: "center", bold: true, color: `rgba(255, 240, 160, ${1 - k})`, shadow: false });
+  }
   const hash = (x, y, k = 0) => {
     let h = x * 374761393 + y * 668265263 + k * 2147483647 >>> 0;
     h = Math.imul(h ^ h >>> 13, 1274126177) >>> 0;
@@ -2680,13 +2866,13 @@ body.nopad #pad { display: none; }
   const MINI_COLORS = { G: "#6cc04a", F: "#8ad070", T: "#2e6e2e", R: "#b8b0a0", W: "#3a8ad0", B: "#b07a48", P: "#c8c0b0", S: "#e8d8a0", K: "#c8c8c0", A: "#6a6a72" };
   function drawTile(c, ch, x, y) {
     const px = x * TILE, py = y * TILE;
-    const r = (dx, dy, w, h, color) => {
+    const r2 = (dx, dy, w, h, color) => {
       c.fillStyle = color;
       c.fillRect(px + dx, py + dy, w, h);
     };
     const grass = () => {
-      r(0, 0, 16, 16, "#6cc04a");
-      for (let i = 0; i < 5; i++) r(Math.floor(hash(x, y, i) * 15), Math.floor(hash(x, y, i + 9) * 14), 1, 2, "#58a83a");
+      r2(0, 0, 16, 16, "#6cc04a");
+      for (let i = 0; i < 5; i++) r2(Math.floor(hash(x, y, i) * 15), Math.floor(hash(x, y, i + 9) * 14), 1, 2, "#58a83a");
     };
     switch (ch) {
       case "G":
@@ -2697,58 +2883,58 @@ body.nopad #pad { display: none; }
         const colors = ["#ff6a8a", "#ffd84a", "#ffffff", "#c88aff"];
         for (let i = 0; i < 4; i++) {
           const fx = 1 + Math.floor(hash(x, y, i + 20) * 13), fy = 1 + Math.floor(hash(x, y, i + 30) * 13);
-          r(fx, fy, 2, 2, colors[i % 4]);
-          r(fx, fy + 2, 1, 1, "#3a8a3a");
+          r2(fx, fy, 2, 2, colors[i % 4]);
+          r2(fx, fy + 2, 1, 1, "#3a8a3a");
         }
         break;
       }
       case "T":
         grass();
-        r(6, 10, 4, 6, "#7a4a2a");
-        r(1, 2, 14, 9, "#2e7d32");
-        r(3, 0, 10, 2, "#2e7d32");
-        r(3, 3, 5, 3, "#4aa04a");
-        r(9, 6, 3, 2, "#256a28");
+        r2(6, 10, 4, 6, "#7a4a2a");
+        r2(1, 2, 14, 9, "#2e7d32");
+        r2(3, 0, 10, 2, "#2e7d32");
+        r2(3, 3, 5, 3, "#4aa04a");
+        r2(9, 6, 3, 2, "#256a28");
         break;
       case "R":
-        r(0, 0, 16, 16, "#b8b0a0");
-        if (hash(x, y) < 0.3) r(Math.floor(hash(x, y, 2) * 13), Math.floor(hash(x, y, 3) * 13), 2, 1, "#a09888");
+        r2(0, 0, 16, 16, "#b8b0a0");
+        if (hash(x, y) < 0.3) r2(Math.floor(hash(x, y, 2) * 13), Math.floor(hash(x, y, 3) * 13), 2, 1, "#a09888");
         break;
       case "W":
-        r(0, 0, 16, 16, "#3a8ad0");
-        r(Math.floor(hash(x, y, 4) * 10), 4 + Math.floor(hash(x, y, 5) * 8), 5, 1, "#6ab0e8");
+        r2(0, 0, 16, 16, "#3a8ad0");
+        r2(Math.floor(hash(x, y, 4) * 10), 4 + Math.floor(hash(x, y, 5) * 8), 5, 1, "#6ab0e8");
         break;
       case "B": {
-        r(0, 0, 16, 16, "#b07a48");
-        for (let i = 0; i < 16; i += 4) r(i, 0, 1, 16, "#8a5a2a");
-        if (tileAt(x, y - 1) !== "B") r(0, 0, 16, 3, "#6a4020");
-        if (tileAt(x, y + 1) !== "B") r(0, 13, 16, 3, "#6a4020");
+        r2(0, 0, 16, 16, "#b07a48");
+        for (let i = 0; i < 16; i += 4) r2(i, 0, 1, 16, "#8a5a2a");
+        if (tileAt(x, y - 1) !== "B") r2(0, 0, 16, 3, "#6a4020");
+        if (tileAt(x, y + 1) !== "B") r2(0, 13, 16, 3, "#6a4020");
         break;
       }
       case "P":
-        r(0, 0, 16, 16, "#c8c0b0");
+        r2(0, 0, 16, 16, "#c8c0b0");
         for (let i = 0; i < 4; i++) {
           const sx = Math.floor(hash(x, y, i + 40) * 12), sy = Math.floor(hash(x, y, i + 50) * 12);
-          r(sx, sy, 4, 3, "#9a948a");
-          r(sx + 1, sy, 2, 1, "#e0dad0");
+          r2(sx, sy, 4, 3, "#9a948a");
+          r2(sx + 1, sy, 2, 1, "#e0dad0");
         }
         break;
       case "S":
-        r(0, 0, 16, 16, "#e8d8a0");
-        if (hash(x, y, 7) < 0.5) r(Math.floor(hash(x, y, 8) * 14), Math.floor(hash(x, y, 9) * 14), 1, 1, "#d0bc80");
+        r2(0, 0, 16, 16, "#e8d8a0");
+        if (hash(x, y, 7) < 0.5) r2(Math.floor(hash(x, y, 8) * 14), Math.floor(hash(x, y, 9) * 14), 1, 1, "#d0bc80");
         break;
       case "K":
-        r(0, 0, 16, 16, "#c8c8c0");
-        r(0, 7, 16, 1, "#b0b0a8");
-        r(y % 2 * 8, 0, 1, 7, "#b0b0a8");
-        r((y + 1) % 2 * 8, 8, 1, 8, "#b0b0a8");
+        r2(0, 0, 16, 16, "#c8c8c0");
+        r2(0, 7, 16, 1, "#b0b0a8");
+        r2(y % 2 * 8, 0, 1, 7, "#b0b0a8");
+        r2((y + 1) % 2 * 8, 8, 1, 8, "#b0b0a8");
         break;
       case "A":
-        r(0, 0, 16, 16, "#6a6a72");
-        if (x % 2 === 0) r(0, 2, 1, 12, "#f0f0f0");
+        r2(0, 0, 16, 16, "#6a6a72");
+        if (x % 2 === 0) r2(0, 2, 1, 12, "#f0f0f0");
         break;
       default:
-        r(0, 0, 16, 16, "#ff00ff");
+        r2(0, 0, 16, 16, "#ff00ff");
     }
   }
   function drawBuilding(c, b) {
@@ -2799,7 +2985,35 @@ body.nopad #pad { display: none; }
       c.fillStyle = "#2a2a2a";
       c.fillRect(l.x * TILE, l.y * TILE - 11, (rr.x - l.x) * TILE + 16, 3);
     }
+    drawLandmarks(c);
     return cv;
+  }
+  function drawLandmarks(c) {
+    const jx = 25 * TILE + 8, jy = 3 * TILE + 8;
+    c.fillStyle = "#9a9aa0";
+    c.fillRect(jx - 5, jy - 8, 10, 14);
+    c.fillStyle = "#b4b4ba";
+    c.fillRect(jx - 4, jy - 11, 8, 4);
+    c.fillStyle = "#d03a3a";
+    c.fillRect(jx - 5, jy - 3, 10, 4);
+    c.fillStyle = "#5a5a60";
+    c.fillRect(jx - 2, jy - 9, 1, 1);
+    c.fillRect(jx + 1, jy - 9, 1, 1);
+    c.fillStyle = "#707078";
+    c.fillRect(jx - 6, jy + 6, 12, 2);
+    const cx = 4 * TILE + 8, cy = 31 * TILE + 8;
+    c.fillStyle = "#3a6ac8";
+    c.fillRect(cx - 16, cy - 14, 32, 12);
+    c.fillStyle = "#5a8ae8";
+    c.fillRect(cx - 10, cy - 20, 20, 7);
+    c.fillStyle = "#bfe0ff";
+    c.fillRect(cx - 8, cy - 19, 7, 5);
+    c.fillRect(cx + 1, cy - 19, 7, 5);
+    c.fillStyle = "#202028";
+    c.fillRect(cx - 13, cy - 3, 6, 5);
+    c.fillRect(cx + 7, cy - 3, 6, 5);
+    c.fillStyle = "#ffe08a";
+    c.fillRect(cx + 14, cy - 11, 2, 3);
   }
   function buildMiniMap(scale = 3) {
     const cv = document.createElement("canvas");
@@ -2836,6 +3050,9 @@ body.nopad #pad { display: none; }
     const trail = [];
     const buddy = { x: g.pos.x - 14, y: g.pos.y, flip: false, walkT: 0, moving: false };
     const cam = { x: 0, y: 0 };
+    const wild = createWild(g, app2.rng);
+    let fighting = null;
+    const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
     function camera() {
       cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
       cam.y = Math.max(0, Math.min(MAP_H * TILE - 240, Math.round(g.pos.y - 128)));
@@ -2933,6 +3150,11 @@ body.nopad #pad { display: none; }
     }
     function afterBattle(result) {
       camera();
+      if (fighting) {
+        if (fighting.spot) g.spotCooldown[fighting.spot] = g.playTime + SPOT_COOLDOWN;
+        wild.remove(fighting);
+        fighting = null;
+      }
       if (result.boss && result.outcome === "win") {
         say([
           { who: "ハシシタボウズ", art: "hashishita", text: "数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。" },
@@ -2972,7 +3194,7 @@ body.nopad #pad { display: none; }
       let found = null;
       for (const s of SPOTS) {
         const sx = s.x * TILE + 8 - cam.x, sy = s.y * TILE + 8 - cam.y;
-        if (Math.hypot(sx - lens.x, sy - lens.y) < LENS_FIND && spotActive(g, s, g.playTime)) found = s;
+        if (Math.hypot(sx - lens.x, sy - lens.y) < LENS_FIND && hiding(s)) found = s;
       }
       if (found) {
         if (lens.spot !== found) {
@@ -2983,10 +3205,12 @@ body.nopad #pad { display: none; }
         if (Math.floor(lens.charge * 10) !== Math.floor((lens.charge - dt) * 10)) sfx("lens");
         if (lens.charge >= LENS_TIME) {
           sfx("found");
-          g.spotCooldown[found.id] = g.playTime + SPOT_COOLDOWN;
-          const enemies = encounter(g, found, app2.rng);
+          const id = app2.rng.weighted(spotKinds(g, found)).id;
+          const c = wild.reveal(found, id);
+          c.pop = t;
+          g.zukan.seen[id] = true;
           lens = null;
-          app2.startBattle({ enemies, kind: "wild", place: found.id });
+          say([{ who: "", text: `${NAKAMA[id].name}を 見つけた！` }, furu("出てきたよ！ 話しかけてみよう！")]);
         }
       } else {
         lens.spot = null;
@@ -2997,6 +3221,7 @@ body.nopad #pad { display: none; }
       t += dt;
       g.playTime += dt;
       camera();
+      wild.update(dt, g.pos);
       if (app2.talk.isActive()) return;
       if (lens) {
         updateLens(dt, input2);
@@ -3046,6 +3271,12 @@ body.nopad #pad { display: none; }
         return;
       }
       if (input2.pressed.a) {
+        const c = wild.facing(g.pos);
+        if (c) {
+          sfx("ok");
+          talkToWild(c);
+          return;
+        }
         const target = lookAt(g);
         if ((target == null ? void 0 : target.type) === "person") {
           sfx("ok");
@@ -3086,6 +3317,21 @@ body.nopad #pad { display: none; }
       if (Math.abs(dx) > 0.05) buddy.flip = dx < 0;
       if (buddy.moving) buddy.walkT += dt;
     }
+    function talkToWild(c) {
+      const n = NAKAMA[c.id];
+      c.flip = c.x > g.pos.x;
+      if (c.target) {
+        c.target = null;
+        c.pause = 3;
+      }
+      say([{ who: n.name, art: n.art, text: `「${n.line}」` }, { who: "", text: `${n.name}が おそいかかってきた！` }], {
+        done: () => {
+          fighting = c;
+          const source = wild.sourceOf(c);
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: source.id });
+        }
+      });
+    }
     function startLens() {
       sfx("lens");
       lens = { x: 200, y: 120, charge: 0, spot: null, drag: null };
@@ -3098,6 +3344,20 @@ body.nopad #pad { display: none; }
       const list = [];
       for (const p of peopleHere(g)) {
         list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
+      }
+      for (const c of wild.list) {
+        const n = NAKAMA[c.id];
+        const born = c.pop ? Math.min(1, (t - c.pop) / 0.4) : 1;
+        list.push({ y: c.y, draw: () => {
+          const x = c.x - cam.x, y = c.y - cam.y;
+          ctx.fillStyle = "rgba(0,0,0,0.22)";
+          ctx.beginPath();
+          ctx.ellipse(x, y + 1, 6, 2.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
+          drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
+          if (c.revealed) text(ctx, "!", x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: "center", bold: true, color: COLORS.accent });
+        } });
       }
       if (hasWatch(g)) {
         const bf = buddy.moving ? Math.floor(buddy.walkT * 6) : Math.floor(t * 1.5);
@@ -3121,6 +3381,7 @@ body.nopad #pad { display: none; }
           text(ctx, b.label, sx, sy + 1, { size: 9.5, align: "center", color: "#3a2410", shadow: false, bold: true });
         }
       }
+      for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
       drawPeople(ctx);
       if (TINT[g.time]) {
         ctx.fillStyle = TINT[g.time];
@@ -3153,7 +3414,7 @@ body.nopad #pad { display: none; }
       ctx.fill("evenodd");
       ctx.restore();
       for (const s of SPOTS) {
-        if (!spotActive(g, s, g.playTime)) continue;
+        if (!hiding(s)) continue;
         const sx = s.x * TILE + 8 - cam.x, sy = s.y * TILE + 8 - cam.y;
         const d = Math.hypot(sx - lx, sy - ly);
         if (d < LENS_R + 4) {
@@ -3188,7 +3449,7 @@ body.nopad #pad { display: none; }
         panel(ctx, 20, 44, 280, 130, { fill: "rgba(255,255,255,0.05)" });
         text(ctx, "ここを なぞって レンズを 動かす", 160, 104, { size: 13, align: "center", color: COLORS.sub });
         text(ctx, "(十字キー・上画面の マウスでも 動く)", 160, 124, { size: 11, align: "center", color: COLORS.dim });
-        text(ctx, lens.spot ? "……なにか いる！ そのまま！" : "あやしい ところに レンズを 合わせよう", 160, 196, { size: 13, align: "center", bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
+        text(ctx, lens.spot ? "……なにか いる！ そのまま！" : "へんな ところに レンズを 合わせよう", 160, 196, { size: 13, align: "center", bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
         text(ctx, "B で やめる", 160, 226, { size: 11, align: "center", color: COLORS.dim });
         return;
       }
@@ -3207,12 +3468,12 @@ body.nopad #pad { display: none; }
       text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : "ウォッチを まだ もっていない", 238, 132, { size: 11, align: "center", color: COLORS.sub });
       panel(ctx, 6, 146, 308, 52);
       text(ctx, "もくてき", 14, 162, { size: 10, color: COLORS.accent, bold: true });
-      wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * 15, { size: 12 }));
+      wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r2, i) => text(ctx, r2, 14, 178 + i * 15, { size: 12 }));
       text(ctx, "A: しらべる・はなす   B (おしたまま): はしる", 160, 220, { size: 10.5, align: "center", color: COLORS.dim });
       text(ctx, "PC: WASD で 歩く / J=A K=B I=X U=Y", 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
       app2.talk.drawBottom(ctx);
     }
-    return { name: "field", update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy } };
+    return { name: "field", update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy, wild } };
   }
   const WHEEL = { x: 100, y: 126, r: 70 };
   const SP_BTN = [0, 1, 2].map((i) => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -3220,7 +3481,7 @@ body.nopad #pad { display: none; }
   const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: "おやつ" };
   const ALLY_POS = [{ x: 92, y: 104 }, { x: 54, y: 154 }, { x: 92, y: 204 }];
   const MASH_TIME = 3;
-  const RIVER = ["kawara", "asase", "hashiue", "hashishita", "kawakami", "bridge", "riverTree"];
+  const RIVER = ["kawara", "kawaraN", "kawaraS", "hashiue", "hashishita", "kawakami", "bridge"];
   function createBattleView(app2, battle, place) {
     const g = app2.g;
     let t = 0, endT = 0;
@@ -3423,7 +3684,7 @@ body.nopad #pad { display: none; }
       grad.addColorStop(1, sky[1]);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 400, 120);
-      ctx.fillStyle = river ? "#3a8ad0" : place === "park" || place === "toiletSide" ? "#e8d8a0" : "#6cc04a";
+      ctx.fillStyle = river ? "#3a8ad0" : place === "park" ? "#e8d8a0" : "#6cc04a";
       ctx.fillRect(0, 96, 400, 144);
       ctx.fillStyle = river ? "#c8c0b0" : "rgba(0,0,0,0.08)";
       ctx.fillRect(0, 96, 400, 10);
@@ -3561,14 +3822,14 @@ body.nopad #pad { display: none; }
       const list = owned();
       if (!list.length) text(ctx, "なにも もっていない", 160, 110, { size: 13, align: "center", color: COLORS.sub });
       list.forEach((id, k) => {
-        const r = menuRow(k);
+        const r2 = menuRow(k);
         if (k === menu.index) {
-          roundRect(ctx, r.x, r.y, r.w, r.h, 4);
+          roundRect(ctx, r2.x, r2.y, r2.w, r2.h, 4);
           ctx.fillStyle = "#2d5aa8";
           ctx.fill();
         }
-        text(ctx, `${ITEMS[id].name}`, r.x + 10, r.y + 17, { size: 13 });
-        text(ctx, `×${g.items[id]}`, r.x + r.w - 10, r.y + 17, { size: 13, align: "right" });
+        text(ctx, `${ITEMS[id].name}`, r2.x + 10, r2.y + 17, { size: 13 });
+        text(ctx, `×${g.items[id]}`, r2.x + r2.w - 10, r2.y + 17, { size: 13, align: "right" });
       });
       text(ctx, "B で とじる", 160, 220, { size: 10, align: "center", color: COLORS.dim });
     }
@@ -3640,7 +3901,7 @@ body.nopad #pad { display: none; }
         if (kind === "look") {
           drawArt(ctx, ART[friend.art], Math.floor(t * 4), 200, 170 + Math.abs(Math.sin(t * 5)) * -8, { scale: 5 });
           panel(ctx, 20, 186, 360, 46);
-          wrap(ctx, `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, 340, 13).slice(0, 2).forEach((r, i) => text(ctx, r, 30, 204 + i * 18, { size: 13 }));
+          wrap(ctx, `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, 340, 13).slice(0, 2).forEach((r2, i) => text(ctx, r2, 30, 204 + i * 18, { size: 13 }));
         } else {
           ctx.beginPath();
           ctx.arc(200, 110, 58, 0, Math.PI * 2);
@@ -3668,7 +3929,7 @@ body.nopad #pad { display: none; }
         panel(ctx, 10, 10, 300, 180);
         text(ctx, `No.${String(friend.no).padStart(3, "0")} ${friend.name}`, 20, 32, { size: 14, bold: true });
         text(ctx, `${friend.rank}ランク　${friend.element}　${friend.title}`, 20, 52, { size: 11, color: COLORS.sub });
-        wrap(ctx, friend.desc, 280, 12).slice(0, 6).forEach((r, i) => text(ctx, r, 20, 76 + i * 17, { size: 12 }));
+        wrap(ctx, friend.desc, 280, 12).slice(0, 6).forEach((r2, i) => text(ctx, r2, 20, 76 + i * 17, { size: 12 }));
       }
       if (Math.floor(t * 2) % 2 || t < 0.4) text(ctx, "A か タップで つぎへ", 160, 222, { size: 12, align: "center", color: COLORS.sub });
     }
@@ -3842,7 +4103,7 @@ body.nopad #pad { display: none; }
       }
       text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
       text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
-      wrap(ctx, n.desc, 215, 11.5).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * 15, { size: 11.5 }));
+      wrap(ctx, n.desc, 215, 11.5).slice(0, 4).forEach((r2, i) => text(ctx, r2, 170, 90 + i * 15, { size: 11.5 }));
       text(ctx, `必殺技: ${n.special.name}`, 170, 160, { size: 11.5 });
       text(ctx, `好物: ${ITEMS[n.favorite].name}`, 170, 176, { size: 11.5 });
       if (medal) {
@@ -3852,7 +4113,7 @@ body.nopad #pad { display: none; }
         const need = expFor(medal.lv + 1) - expFor(medal.lv);
         bar(ctx, 170, 218, 210, 4, (medal.exp - expFor(medal.lv)) / need, COLORS.ice);
       } else {
-        const where = SPOTS.filter((s) => s.kinds.some((k) => k.id === id)).map((s) => s.label);
+        const where = [...SPOTS, ...ROAMS].filter((s) => s.kinds.some((k) => k.id === id)).map((s) => s.label);
         text(ctx, `いる場所: ${g.zukan.friends[id] || g.zukan.seen[id] ? where.join("・") : "？？？"}`, 170, 200, { size: 11, maxWidth: 220 });
       }
     }
@@ -3871,7 +4132,7 @@ body.nopad #pad { display: none; }
       } else if (tab === 2) {
         const id = Object.keys(ITEMS)[iIndex];
         text(ctx, ITEMS[id].name, 200, 80, { size: 20, align: "center", bold: true });
-        wrap(ctx, ITEMS[id].desc, 340, 13).forEach((r, i) => text(ctx, r, 30, 120 + i * 20, { size: 13 }));
+        wrap(ctx, ITEMS[id].desc, 340, 13).forEach((r2, i) => text(ctx, r2, 30, 120 + i * 20, { size: 13 }));
         text(ctx, `もっている数: ${g.items[id] || 0}`, 200, 200, { size: 13, align: "center", color: COLORS.accent });
       } else {
         drawArt(ctx, ART.koori, Math.floor(t * 2), 200, 120, { scale: 5 });

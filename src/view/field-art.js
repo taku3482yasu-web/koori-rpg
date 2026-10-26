@@ -132,7 +132,26 @@ export function buildFieldCanvas() {
         c.fillStyle = '#2a2a2a';
         c.fillRect(l.x * TILE, l.y * TILE - 11, (rr.x - l.x) * TILE + 16, 3);
     }
+    drawLandmarks(c);
     return cv;
+}
+
+// かくれ場所の 目じるし (いつも ある 物。キャラが いるときだけ cues.js が 違和感を 足す)
+function drawLandmarks(c) {
+    // 小学校の 裏山の お地蔵さん (25, 3)
+    const jx = 25 * TILE + 8, jy = 3 * TILE + 8;
+    c.fillStyle = '#9a9aa0'; c.fillRect(jx - 5, jy - 8, 10, 14);
+    c.fillStyle = '#b4b4ba'; c.fillRect(jx - 4, jy - 11, 8, 4);
+    c.fillStyle = '#d03a3a'; c.fillRect(jx - 5, jy - 3, 10, 4);
+    c.fillStyle = '#5a5a60'; c.fillRect(jx - 2, jy - 9, 1, 1); c.fillRect(jx + 1, jy - 9, 1, 1);
+    c.fillStyle = '#707078'; c.fillRect(jx - 6, jy + 6, 12, 2);
+    // 駐車場の 車 (4, 31 の 上)
+    const cx = 4 * TILE + 8, cy = 31 * TILE + 8;
+    c.fillStyle = '#3a6ac8'; c.fillRect(cx - 16, cy - 14, 32, 12);
+    c.fillStyle = '#5a8ae8'; c.fillRect(cx - 10, cy - 20, 20, 7);
+    c.fillStyle = '#bfe0ff'; c.fillRect(cx - 8, cy - 19, 7, 5); c.fillRect(cx + 1, cy - 19, 7, 5);
+    c.fillStyle = '#202028'; c.fillRect(cx - 13, cy - 3, 6, 5); c.fillRect(cx + 7, cy - 3, 6, 5);
+    c.fillStyle = '#ffe08a'; c.fillRect(cx + 14, cy - 11, 2, 3);
 }
 
 export function buildMiniMap(scale = 3) {

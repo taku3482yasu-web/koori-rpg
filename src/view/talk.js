@@ -75,6 +75,8 @@ export function createTalk() {
             ctx.fillRect(0, 0, 320, 240);
             choiceButtons().forEach((b, i) => button(ctx, b, { active: i === cursor }));
         } else {
+            ctx.fillStyle = '#16203a';
+            ctx.fillRect(0, 206, 320, 34);
             text(ctx, 'A か タップで つぎへ', 160, 228, { size: 11, align: 'center', color: COLORS.sub });
         }
     }

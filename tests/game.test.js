@@ -4,10 +4,10 @@ import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
 import { newGame, receiveWatch, encounter, applyBattleResult, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals } from '../src/logic/game.js';
 import { createBattle } from '../src/logic/battle.js';
-import { SPOTS, BUILDINGS, TILE, START } from '../src/data/map.js';
+import { SPOTS, ROAMS, BUILDINGS, TILE, START } from '../src/data/map.js';
 import { blockedTile, moveHero, lookAt } from '../src/logic/world.js';
 
-const spot = id => SPOTS.find(s => s.id === id);
+const spot = id => SPOTS.find(s => s.id === id) || ROAMS.find(s => s.id === id);
 const winBattle = (g, enemies, kind = 'wild') => {
     const b = createBattle({ allies: watchMedals(g), enemies, rng: createRng(1), kind });
     b.outcome = 'win';
@@ -58,12 +58,12 @@ test('夜だけ・雨の日だけ・クリア後だけの キャラ', () => {
     assert.equal(spotKinds(g, spot('shrineTree')).length, 0);
     g.time = 3;
     assert.equal(spotKinds(g, spot('shrineTree'))[0].id, 'yofukashi');
-    assert.deepEqual(spotKinds(g, spot('asase')).map(k => k.id), ['kogame']);
+    assert.deepEqual(spotKinds(g, spot('kawaraS')).map(k => k.id), ['kogame', 'kozarappa']);
     g.weather = 'rain';
-    assert.deepEqual(spotKinds(g, spot('asase')).map(k => k.id), ['kogame', 'shinobigaeru']);
-    assert.deepEqual(spotKinds(g, spot('hashishita')).map(k => k.id), ['kozarappa']);
+    assert.deepEqual(spotKinds(g, spot('kawaraS')).map(k => k.id), ['kogame', 'kozarappa', 'shinobigaeru']);
+    assert.deepEqual(spotKinds(g, spot('hashishita')).map(k => k.id), []);
     g.story = 'clear';
-    assert.deepEqual(spotKinds(g, spot('hashishita')).map(k => k.id), ['kozarappa', 'hashishita']);
+    assert.deepEqual(spotKinds(g, spot('hashishita')).map(k => k.id), ['hashishita']);
 });
 
 test('ねると 時間が 進み、夜の 次は 次の日の 朝', () => {
@@ -74,15 +74,16 @@ test('ねると 時間が 進み、夜の 次は 次の日の 朝', () => {
     assert.equal(g.time, 0);
 });
 
-test('出会い: 1 章の 野生は Lv2〜5・図鑑に 「見た」が つく', () => {
+test('出会い: 話しかけた キャラが 先頭・1 章の 野生は Lv5 まで・図鑑に 「見た」が つく', () => {
     const g = newGame('naitei');
     receiveWatch(g);
     const rng = createRng(2);
     for (let i = 0; i < 50; i++) {
-        const enemies = encounter(g, spot('kawara'), rng);
+        const enemies = encounter(g, spot('park'), rng, { id: 'nemuridake', lv: 4 });
+        assert.deepEqual(enemies[0], { id: 'nemuridake', lv: 4 });
         for (const e of enemies) assert.ok(e.lv >= 1 && e.lv <= 5);
     }
-    assert.ok(g.zukan.seen.ishikoron);
+    assert.ok(g.zukan.seen.nemuridake);
 });
 
 test('町を 歩く: 川と 建物には 入れない。橋は ヌシが いる あいだ 渡れない', () => {
@@ -107,7 +108,7 @@ test('西側 (橋の 手前) から、1 章クリア前に 行ける 場所 だ�
     // 西側の 場所 (橋より 西) で 昼に 会える キャラ
     const g = newGame('naitei');
     receiveWatch(g);
-    const west = SPOTS.filter(s => s.x < 30);
+    const west = [...SPOTS.filter(s => s.x < 30), ...ROAMS.filter(r => r.x1 < 30)];
     const kinds = new Set(west.flatMap(s => spotKinds(g, s).map(k => k.id)));
     assert.ok(kinds.size >= 10, `${kinds.size} 種類`);
 });

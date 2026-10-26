@@ -17,7 +17,7 @@ const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: 'どうぐ' };
 const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: 'おやつ' };
 const ALLY_POS = [{ x: 92, y: 104 }, { x: 54, y: 154 }, { x: 92, y: 204 }];
 const MASH_TIME = 3;
-const RIVER = ['kawara', 'asase', 'hashiue', 'hashishita', 'kawakami', 'bridge', 'riverTree'];
+const RIVER = ['kawara', 'kawaraN', 'kawaraS', 'hashiue', 'hashishita', 'kawakami', 'bridge'];
 
 export function createBattleView(app, battle, place) {
     const g = app.g;
@@ -182,7 +182,7 @@ export function createBattleView(app, battle, place) {
         grad.addColorStop(1, sky[1]);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 400, 120);
-        ctx.fillStyle = river ? '#3a8ad0' : place === 'park' || place === 'toiletSide' ? '#e8d8a0' : '#6cc04a';
+        ctx.fillStyle = river ? '#3a8ad0' : place === 'park' ? '#e8d8a0' : '#6cc04a';
         ctx.fillRect(0, 96, 400, 144);
         ctx.fillStyle = river ? '#c8c0b0' : 'rgba(0,0,0,0.08)';
         ctx.fillRect(0, 96, 400, 10);

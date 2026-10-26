@@ -5,7 +5,7 @@ import { NAKAMA, NAKAMA_IDS, BOSSES, ROLES, ELEMENTS } from '../src/data/nakama.
 import { ITEMS } from '../src/data/items.js';
 import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
-import { TILES, MAP_W, MAP_H, SPOTS, BUILDINGS } from '../src/data/map.js';
+import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
 
@@ -49,7 +49,19 @@ test('地図: 大きさ・レンズの 場所は 通れる マス・建物の �
     for (const b of BUILDINGS) assert.equal(b.door.y, b.y + b.h - 1, `${b.id} の 入り口`);
 });
 
-test('20 体 全員が どこかの 場所に 出る', () => {
-    const found = new Set(SPOTS.flatMap(s => s.kinds.map(k => k.id)));
-    for (const id of NAKAMA_IDS) assert.ok(found.has(id), `${id} の 出る場所`);
+test('20 体 全員が どこかに 出る。見えている キャラが 大多数・かくれている キャラは 少し', () => {
+    const hidden = new Set(SPOTS.flatMap(s => s.kinds.map(k => k.id)));
+    const roam = new Set(ROAMS.flatMap(s => s.kinds.map(k => k.id)));
+    for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id), `${id} の 出る場所`);
+    assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
+    for (const s of SPOTS) assert.ok(s.cue, `${s.id} の 違和感`);
+});
+
+test('歩きまわる 場所には 通れる マスが ある', () => {
+    for (const r of ROAMS) {
+        let free = 0;
+        for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (!['T', 'W'].includes(TILES[y][x])) free++;
+        assert.ok(free >= 4, `${r.id}: ${free} マス`);
+        for (const k of r.kinds) assert.ok(NAKAMA[k.id], `${r.id} の ${k.id}`);
+    }
 });

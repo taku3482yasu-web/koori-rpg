@@ -8,12 +8,14 @@ import { NAKAMA } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { moveHero, lookAt, peopleHere, inShrine } from '../logic/world.js';
-import { TIMES, objective, hasWatch, spotActive, encounter, receiveWatch, advanceTime, bossEnemies, friendCount } from '../logic/game.js';
+import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount } from '../logic/game.js';
+import { createWild } from '../logic/wild.js';
+import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
 
 const WALK = 72, RUN = 124;
 const LENS_R = 26, LENS_FIND = 14, LENS_TIME = 1.2;
-const SPOT_COOLDOWN = 25;   // 1 回 戦った 場所は 25 秒 休む
+const SPOT_COOLDOWN = 25;   // かくれている キャラと 戦った 場所は 25 秒 休む
 const TINT = ['rgba(255, 220, 160, 0.10)', null, 'rgba(255, 120, 40, 0.20)', 'rgba(20, 30, 90, 0.48)'];
 
 const BTN = {
@@ -31,6 +33,10 @@ export function createField(app) {
     const trail = [];    // こおりくんの 歩いた 道すじ (ふるカワが なぞって ついてくる)
     const buddy = { x: g.pos.x - 14, y: g.pos.y, flip: false, walkT: 0, moving: false };
     const cam = { x: 0, y: 0 };
+    const wild = createWild(g, app.rng);   // 町に いる キャラ (見えている キャラ・見つけた キャラ)
+    let fighting = null;                    // いま 戦っている キャラ
+    // かくれている 場所に いて、まだ 見つけていない (違和感を 出す・レンズに 反応する)
+    const hiding = s => spotActive(g, s, g.playTime) && !wild.list.some(c => c.spot === s.id);
 
     function camera() {
         cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
@@ -135,6 +141,11 @@ export function createField(app) {
     // 戦いから 帰ってきたとき (main.js が 呼ぶ)
     function afterBattle(result) {
         camera();
+        if (fighting) {
+            if (fighting.spot) g.spotCooldown[fighting.spot] = g.playTime + SPOT_COOLDOWN;
+            wild.remove(fighting);
+            fighting = null;
+        }
         if (result.boss && result.outcome === 'win') {
             say([
                 { who: 'ハシシタボウズ', art: 'hashishita', text: '数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。' },
@@ -169,7 +180,7 @@ export function createField(app) {
         let found = null;
         for (const s of SPOTS) {
             const sx = s.x * TILE + 8 - cam.x, sy = s.y * TILE + 8 - cam.y;
-            if (Math.hypot(sx - lens.x, sy - lens.y) < LENS_FIND && spotActive(g, s, g.playTime)) found = s;
+            if (Math.hypot(sx - lens.x, sy - lens.y) < LENS_FIND && hiding(s)) found = s;
         }
         if (found) {
             if (lens.spot !== found) { lens.spot = found; lens.charge = 0; }
@@ -177,10 +188,12 @@ export function createField(app) {
             if (Math.floor(lens.charge * 10) !== Math.floor((lens.charge - dt) * 10)) sfx('lens');
             if (lens.charge >= LENS_TIME) {
                 sfx('found');
-                g.spotCooldown[found.id] = g.playTime + SPOT_COOLDOWN;
-                const enemies = encounter(g, found, app.rng);
+                const id = app.rng.weighted(spotKinds(g, found)).id;
+                const c = wild.reveal(found, id);
+                c.pop = t;
+                g.zukan.seen[id] = true;
                 lens = null;
-                app.startBattle({ enemies, kind: 'wild', place: found.id });
+                say([{ who: '', text: `${NAKAMA[id].name}を 見つけた！` }, furu('出てきたよ！ 話しかけてみよう！')]);
             }
         } else {
             lens.spot = null;
@@ -192,6 +205,7 @@ export function createField(app) {
         t += dt;
         g.playTime += dt;
         camera();
+        wild.update(dt, g.pos);
         if (app.talk.isActive()) return;
         if (lens) { updateLens(dt, input); return; }
 
@@ -224,6 +238,8 @@ export function createField(app) {
         followBuddy(dt);
         if (g.story === 'intro' && inShrine(g)) { meetFurukawa(); return; }
         if (input.pressed.a) {
+            const c = wild.facing(g.pos);
+            if (c) { sfx('ok'); talkToWild(c); return; }
             const target = lookAt(g);
             if (target?.type === 'person') { sfx('ok'); talkToPerson(target.person); } else if (target?.type === 'door') { sfx('ok'); openDoor(target.building); }
         }
@@ -258,6 +274,20 @@ export function createField(app) {
         if (buddy.moving) buddy.walkT += dt;
     }
 
+    // 町の キャラに 話しかけると バトル
+    function talkToWild(c) {
+        const n = NAKAMA[c.id];
+        c.flip = c.x > g.pos.x;
+        if (c.target) { c.target = null; c.pause = 3; }
+        say([{ who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `${n.name}が おそいかかってきた！` }], {
+            done: () => {
+                fighting = c;
+                const source = wild.sourceOf(c);
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: source.id });
+            }
+        });
+    }
+
     function startLens() {
         sfx('lens');
         lens = { x: 200, y: 120, charge: 0, spot: null, drag: null };
@@ -269,6 +299,20 @@ export function createField(app) {
         const list = [];
         for (const p of peopleHere(g)) {
             list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
+        }
+        for (const c of wild.list) {
+            const n = NAKAMA[c.id];
+            const born = c.pop ? Math.min(1, (t - c.pop) / 0.4) : 1;
+            list.push({ y: c.y, draw: () => {
+                const x = c.x - cam.x, y = c.y - cam.y;
+                ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                ctx.beginPath();
+                ctx.ellipse(x, y + 1, 6, 2.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
+                drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
+                if (c.revealed) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: COLORS.accent });
+            } });
         }
         // ふるカワ (ウォッチを もらったあとは ついてくる)
         if (hasWatch(g)) {
@@ -296,6 +340,7 @@ export function createField(app) {
                 text(ctx, b.label, sx, sy + 1, { size: 9.5, align: 'center', color: '#3a2410', shadow: false, bold: true });
             }
         }
+        for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
@@ -329,7 +374,7 @@ export function createField(app) {
         ctx.restore();
         // 近くに いると きらきら
         for (const s of SPOTS) {
-            if (!spotActive(g, s, g.playTime)) continue;
+            if (!hiding(s)) continue;
             const sx = s.x * TILE + 8 - cam.x, sy = s.y * TILE + 8 - cam.y;
             const d = Math.hypot(sx - lx, sy - ly);
             if (d < LENS_R + 4) {
@@ -365,7 +410,7 @@ export function createField(app) {
             panel(ctx, 20, 44, 280, 130, { fill: 'rgba(255,255,255,0.05)' });
             text(ctx, 'ここを なぞって レンズを 動かす', 160, 104, { size: 13, align: 'center', color: COLORS.sub });
             text(ctx, '(十字キー・上画面の マウスでも 動く)', 160, 124, { size: 11, align: 'center', color: COLORS.dim });
-            text(ctx, lens.spot ? '……なにか いる！ そのまま！' : 'あやしい ところに レンズを 合わせよう', 160, 196, { size: 13, align: 'center', bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
+            text(ctx, lens.spot ? '……なにか いる！ そのまま！' : 'へんな ところに レンズを 合わせよう', 160, 196, { size: 13, align: 'center', bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
             text(ctx, 'B で やめる', 160, 226, { size: 11, align: 'center', color: COLORS.dim });
             return;
         }
@@ -392,7 +437,7 @@ export function createField(app) {
         app.talk.drawBottom(ctx);
     }
 
-    return { name: 'field', update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy } };
+    return { name: 'field', update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy, wild } };
 }
 
 export const nakamaName = id => NAKAMA[id]?.name || id;
