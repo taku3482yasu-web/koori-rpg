@@ -6,15 +6,30 @@
 // 下画面のタッチは input.touch (x, y は下画面のドット。down / justDown / justUp)
 // =====================================================================
 const BUTTONS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'l', 'r', 'start', 'sp1', 'sp2', 'sp3'];
+// PC: 左手の WASD (か 矢印) で 動き、右手で ボタン。J=A (決定)・K=B (戻る)・I=X・U=Y・Q=L・E=R (2026-10-26 ユーザー指定)
 const KEYS = {
     ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
-    KeyZ: 'a', Enter: 'a', Space: 'a', KeyX: 'b', Escape: 'b', Backspace: 'b', Tab: 'x', KeyC: 'y', KeyQ: 'l', KeyE: 'r',
-    ShiftLeft: 'start', ShiftRight: 'start', Digit1: 'sp1', Digit2: 'sp2', Digit3: 'sp3'
+    KeyJ: 'a', Enter: 'a', Space: 'a', KeyK: 'b', Escape: 'b', Backspace: 'b', KeyI: 'x', Tab: 'x', KeyU: 'y',
+    KeyQ: 'l', KeyE: 'r', ShiftLeft: 'start', ShiftRight: 'start', KeyP: 'start', Digit1: 'sp1', Digit2: 'sp2', Digit3: 'sp3'
 };
 // 標準のゲームパッド (下 0・右 1・左 2・上 3)。携帯機と同じく 右が A・下が B・左が Y・上が X
 const PAD = { 1: 'a', 0: 'b', 2: 'y', 3: 'x', 4: 'l', 5: 'r', 6: 'l', 7: 'r', 9: 'start', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
 
-export function createInput({ bottomCanvas = null, padRoot = null, onPadChange = () => {} } = {}) {
+export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = null, onPadChange = () => {} } = {}) {
+    // 上画面の マウス (PC でレンズを動かす)。x, y は上画面の ドット。moved はそのコマで動いたとき
+    const mouse = { x: 200, y: 120, moved: false, inside: false };
+    let mouseMoved = false;
+    if (topCanvas) {
+        topCanvas.addEventListener('pointermove', e => {
+            if (e.pointerType !== 'mouse') return;
+            const r = topCanvas.getBoundingClientRect();
+            mouse.x = (e.clientX - r.left) / r.width * 400;
+            mouse.y = (e.clientY - r.top) / r.height * 240;
+            mouse.inside = true;
+            mouseMoved = true;
+        });
+        topCanvas.addEventListener('pointerleave', () => { mouse.inside = false; });
+    }
     const sources = { key: {}, pad: {}, touchBtn: {}, fake: {} };
     const held = {}, pressed = {}, prev = {};
     const touch = { down: false, justDown: false, justUp: false, x: 0, y: 0, startX: 0, startY: 0 };
@@ -133,6 +148,8 @@ export function createInput({ bottomCanvas = null, padRoot = null, onPadChange =
         touch.down = touchDown || touchDownQueued;
         touchDownQueued = false;
         touchUpQueued = false;
+        mouse.moved = mouseMoved;
+        mouseMoved = false;
     }
 
     // 自動テスト用: ボタンを押す・はなす、下画面をさわる
@@ -144,5 +161,5 @@ export function createInput({ bottomCanvas = null, padRoot = null, onPadChange =
         if (phase === 'up') { touchDown = false; touchUpQueued = true; }
     };
 
-    return { held, pressed, touch, update, press, fakeTouch, usesTouch: () => lastKind === 'touch' };
+    return { held, pressed, touch, mouse, update, press, fakeTouch, usesTouch: () => lastKind === 'touch' };
 }

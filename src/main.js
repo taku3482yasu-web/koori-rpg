@@ -23,12 +23,13 @@ const bottomCanvas = document.getElementById('bottom');
 const screens = setupScreens(topCanvas, bottomCanvas);
 if (!matchMedia('(pointer: coarse)').matches) document.body.classList.add('nopad');
 screens.layout();
-const input = createInput({ bottomCanvas, padRoot: document.getElementById('pad'), onPadChange: () => screens.layout() });
+const input = createInput({ bottomCanvas, topCanvas, padRoot: document.getElementById('pad'), onPadChange: () => screens.layout() });
 
 const params = new URLSearchParams(location.search);
 const app = {
     version: params.get('v') === 'menkyo' ? 'menkyo' : 'naitei',
     g: null,
+    input,
     rng: createRng(Date.now() & 0xffffffff),
     talk: createTalk(),
     scene: null,

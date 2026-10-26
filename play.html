@@ -216,25 +216,42 @@ body.nopad #pad { display: none; }
     KeyA: "left",
     ArrowRight: "right",
     KeyD: "right",
-    KeyZ: "a",
+    KeyJ: "a",
     Enter: "a",
     Space: "a",
-    KeyX: "b",
+    KeyK: "b",
     Escape: "b",
     Backspace: "b",
+    KeyI: "x",
     Tab: "x",
-    KeyC: "y",
+    KeyU: "y",
     KeyQ: "l",
     KeyE: "r",
     ShiftLeft: "start",
     ShiftRight: "start",
+    KeyP: "start",
     Digit1: "sp1",
     Digit2: "sp2",
     Digit3: "sp3"
   };
   const PAD = { 1: "a", 0: "b", 2: "y", 3: "x", 4: "l", 5: "r", 6: "l", 7: "r", 9: "start", 12: "up", 13: "down", 14: "left", 15: "right" };
-  function createInput({ bottomCanvas: bottomCanvas2 = null, padRoot = null, onPadChange = () => {
+  function createInput({ bottomCanvas: bottomCanvas2 = null, topCanvas: topCanvas2 = null, padRoot = null, onPadChange = () => {
   } } = {}) {
+    const mouse = { x: 200, y: 120, moved: false, inside: false };
+    let mouseMoved = false;
+    if (topCanvas2) {
+      topCanvas2.addEventListener("pointermove", (e) => {
+        if (e.pointerType !== "mouse") return;
+        const r = topCanvas2.getBoundingClientRect();
+        mouse.x = (e.clientX - r.left) / r.width * 400;
+        mouse.y = (e.clientY - r.top) / r.height * 240;
+        mouse.inside = true;
+        mouseMoved = true;
+      });
+      topCanvas2.addEventListener("pointerleave", () => {
+        mouse.inside = false;
+      });
+    }
     const sources = { key: {}, pad: {}, touchBtn: {}, fake: {} };
     const held = {}, pressed = {}, prev = {};
     const touch = { down: false, justDown: false, justUp: false, x: 0, y: 0, startX: 0, startY: 0 };
@@ -360,6 +377,8 @@ body.nopad #pad { display: none; }
       touch.down = touchDown || touchDownQueued;
       touchDownQueued = false;
       touchUpQueued = false;
+      mouse.moved = mouseMoved;
+      mouseMoved = false;
     }
     const press = (b, v = true) => {
       sources.fake[b] = v;
@@ -378,7 +397,7 @@ body.nopad #pad { display: none; }
         touchUpQueued = true;
       }
     };
-    return { held, pressed, touch, update, press, fakeTouch, usesTouch: () => lastKind === "touch" };
+    return { held, pressed, touch, mouse, update, press, fakeTouch, usesTouch: () => lastKind === "touch" };
   }
   function createRng(seed = Date.now()) {
     let a = seed >>> 0;
@@ -2600,7 +2619,7 @@ body.nopad #pad { display: none; }
       text(ctx, "バージョンを えらぶ", 160, 20, { size: 11, align: "center", color: COLORS.sub });
       VBTN.forEach((b, i) => button(ctx, b, { active: i === v }));
       ACT.forEach((b, i) => button(ctx, b, { active: (canContinue() ? row : 1) === i, disabled: b.act === "continue" && !canContinue() }));
-      text(ctx, "十字キー・タップで えらぶ / A で 決定", 160, 222, { size: 10.5, align: "center", color: COLORS.dim });
+      text(ctx, "十字キー・タップで えらぶ / A (PC は J か Enter) で 決定", 160, 222, { size: 10.5, align: "center", color: COLORS.dim });
       if (confirm) {
         ctx.fillStyle = "rgba(0,0,0,0.75)";
         ctx.fillRect(0, 0, 320, 240);
@@ -2815,6 +2834,7 @@ body.nopad #pad { display: none; }
     let t = 0, walkT = 0, moving = false;
     let lens = null;
     const trail = [];
+    const buddy = { x: g.pos.x - 14, y: g.pos.y, flip: false, walkT: 0, moving: false };
     const cam = { x: 0, y: 0 };
     function camera() {
       cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
@@ -2836,6 +2856,8 @@ body.nopad #pad { display: none; }
       receiveWatch(g);
       sfx("watch");
       trail.length = 0;
+      buddy.x = 7 * TILE + 8;
+      buddy.y = 6 * TILE + 16;
     }
     function talkToPerson(p) {
       if (p.id === "mama") {
@@ -2941,6 +2963,10 @@ body.nopad #pad { display: none; }
         lens.drag = { x: input2.touch.x, y: input2.touch.y };
       }
       if (!input2.touch.down) lens.drag = null;
+      if (input2.mouse && input2.mouse.moved) {
+        lens.x = input2.mouse.x;
+        lens.y = input2.mouse.y;
+      }
       lens.x = Math.max(10, Math.min(390, lens.x));
       lens.y = Math.max(10, Math.min(230, lens.y));
       let found = null;
@@ -3008,11 +3034,13 @@ body.nopad #pad { display: none; }
         moveHero(g, dx * speed, dy * speed);
         walkT += dt;
         if (before.x !== g.pos.x || before.y !== g.pos.y) {
-          trail.push({ x: g.pos.x, y: g.pos.y, dir: g.pos.dir });
-          if (trail.length > 40) trail.shift();
+          const lastP = trail[trail.length - 1];
+          if (!lastP || Math.hypot(lastP.x - g.pos.x, lastP.y - g.pos.y) >= 1) trail.push({ x: g.pos.x, y: g.pos.y });
+          if (trail.length > 120) trail.shift();
         }
       }
       camera();
+      followBuddy(dt);
       if (g.story === "intro" && inShrine(g)) {
         meetFurukawa();
         return;
@@ -3028,9 +3056,43 @@ body.nopad #pad { display: none; }
         }
       }
     }
+    const FOLLOW = 18;
+    function followBuddy(dt) {
+      let tx = g.pos.x - 14, ty = g.pos.y, left = FOLLOW;
+      let prev = { x: g.pos.x, y: g.pos.y };
+      for (let i = trail.length - 1; i >= 0; i--) {
+        const d = Math.hypot(trail[i].x - prev.x, trail[i].y - prev.y);
+        if (d >= left) {
+          const k = left / d;
+          tx = prev.x + (trail[i].x - prev.x) * k;
+          ty = prev.y + (trail[i].y - prev.y) * k;
+          left = 0;
+          break;
+        }
+        left -= d;
+        prev = trail[i];
+        tx = prev.x;
+        ty = prev.y;
+      }
+      if (Math.hypot(tx - buddy.x, ty - buddy.y) > 64) {
+        buddy.x = tx;
+        buddy.y = ty;
+        trail.length = 0;
+      }
+      const dx = (tx - buddy.x) * Math.min(1, dt * 10), dy = (ty - buddy.y) * Math.min(1, dt * 10);
+      buddy.x += dx;
+      buddy.y += dy;
+      buddy.moving = Math.hypot(dx, dy) > 0.05;
+      if (Math.abs(dx) > 0.05) buddy.flip = dx < 0;
+      if (buddy.moving) buddy.walkT += dt;
+    }
     function startLens() {
       sfx("lens");
       lens = { x: 200, y: 120, charge: 0, spot: null, drag: null };
+      if (app2.input && app2.input.mouse.inside) {
+        lens.x = app2.input.mouse.x;
+        lens.y = app2.input.mouse.y;
+      }
     }
     function drawPeople(ctx) {
       const list = [];
@@ -3038,8 +3100,8 @@ body.nopad #pad { display: none; }
         list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
       }
       if (hasWatch(g)) {
-        const f = trail.length > 14 ? trail[trail.length - 15] : { x: g.pos.x - 14, y: g.pos.y - 2 };
-        list.push({ y: f.y, draw: () => drawArt(ctx, ART.furukawa, Math.floor(t * 2), f.x - cam.x, f.y - cam.y + 1, { alpha: 0.95 }) });
+        const bf = buddy.moving ? Math.floor(buddy.walkT * 6) : Math.floor(t * 1.5);
+        list.push({ y: buddy.y - 0.1, draw: () => drawArt(ctx, ART.furukawa, bf, buddy.x - cam.x, buddy.y - cam.y + 1, { flip: buddy.flip }) });
       }
       const frame2 = moving ? Math.floor(walkT * 6) % 2 : Math.floor(t * 1.5) % 2;
       list.push({ y: g.pos.y, draw: () => drawArt(ctx, ART.koori, frame2, g.pos.x - cam.x, g.pos.y - cam.y + 2, { flip: g.pos.dir === "left" }) });
@@ -3125,7 +3187,7 @@ body.nopad #pad { display: none; }
         text(ctx, "さがすレンズ", 160, 30, { size: 16, align: "center", bold: true, color: COLORS.ice });
         panel(ctx, 20, 44, 280, 130, { fill: "rgba(255,255,255,0.05)" });
         text(ctx, "ここを なぞって レンズを 動かす", 160, 104, { size: 13, align: "center", color: COLORS.sub });
-        text(ctx, "(十字キーでも 動く)", 160, 124, { size: 11, align: "center", color: COLORS.dim });
+        text(ctx, "(十字キー・上画面の マウスでも 動く)", 160, 124, { size: 11, align: "center", color: COLORS.dim });
         text(ctx, lens.spot ? "……なにか いる！ そのまま！" : "あやしい ところに レンズを 合わせよう", 160, 196, { size: 13, align: "center", bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
         text(ctx, "B で やめる", 160, 226, { size: 11, align: "center", color: COLORS.dim });
         return;
@@ -3147,10 +3209,10 @@ body.nopad #pad { display: none; }
       text(ctx, "もくてき", 14, 162, { size: 10, color: COLORS.accent, bold: true });
       wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * 15, { size: 12 }));
       text(ctx, "A: しらべる・はなす   B (おしたまま): はしる", 160, 220, { size: 10.5, align: "center", color: COLORS.dim });
-      text(ctx, "十字キー: あるく", 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
+      text(ctx, "PC: WASD で 歩く / J=A K=B I=X U=Y", 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
       app2.talk.drawBottom(ctx);
     }
-    return { name: "field", update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam } };
+    return { name: "field", update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy } };
   }
   const WHEEL = { x: 100, y: 126, r: 70 };
   const SP_BTN = [0, 1, 2].map((i) => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -3899,11 +3961,12 @@ body.nopad #pad { display: none; }
   const screens = setupScreens(topCanvas, bottomCanvas);
   if (!matchMedia("(pointer: coarse)").matches) document.body.classList.add("nopad");
   screens.layout();
-  const input = createInput({ bottomCanvas, padRoot: document.getElementById("pad"), onPadChange: () => screens.layout() });
+  const input = createInput({ bottomCanvas, topCanvas, padRoot: document.getElementById("pad"), onPadChange: () => screens.layout() });
   const params = new URLSearchParams(location.search);
   const app = {
     version: params.get("v") === "menkyo" ? "menkyo" : "naitei",
     g: null,
+    input,
     rng: createRng(Date.now() & 4294967295),
     talk: createTalk(),
     scene: null,

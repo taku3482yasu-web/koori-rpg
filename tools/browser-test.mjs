@@ -44,7 +44,7 @@ const evaluate = async expr => {
     return r.result.value;
 };
 const check = (ok, name) => { results.push(`${ok ? '✔' : '✘'} ${name}`); };
-const KEYCODES = { Enter: 13, KeyC: 67, KeyX: 88, KeyQ: 81, KeyE: 69, KeyY: 89, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39, Digit1: 49, KeyZ: 90, Tab: 9 };
+const KEYCODES = { Enter: 13, KeyC: 67, KeyX: 88, KeyQ: 81, KeyE: 69, KeyY: 89, ArrowUp: 38, ArrowDown: 40, ArrowLeft: 37, ArrowRight: 39, Digit1: 49, KeyZ: 90, Tab: 9, KeyJ: 74, KeyK: 75, KeyU: 85, KeyI: 73, KeyW: 87, KeyA: 65, KeyS: 83, KeyD: 68 };
 async function key(code, hold = 80) {
     await send('Input.dispatchKeyEvent', { type: 'keyDown', code, key: code, windowsVirtualKeyCode: KEYCODES[code] });
     await sleep(hold);
@@ -95,19 +95,22 @@ try {
     await sleep(1200);
     await evaluate('localStorage.clear(), true');
 
-    // ----- タイトル → はじめから -----
+    // ----- タイトル → はじめから (J キーで 決定) -----
     await shot('title');
     check(await evaluate('Boolean(window.__app && window.__app.scene)'), 'タイトルが 出る');
-    await key('Enter');
+    await key('KeyJ');
     await sleep(300);
-    check(await evaluate('window.__app.g && window.__app.g.story === "intro"'), 'はじめから で 始まる');
+    check(await evaluate('window.__app.g && window.__app.g.story === "intro"'), 'J キーで 決定して はじめから 始まる');
     await shot('intro-talk');
     await skipTalk();
 
     // ----- 歩く -----
     const before = await evaluate('window.__app.g.pos.x');
-    await key('ArrowRight', 500);
-    check(await evaluate(`window.__app.g.pos.x > ${before}`), '十字キーで 歩く');
+    await key('KeyD', 500);
+    check(await evaluate(`window.__app.g.pos.x > ${before}`), 'D キーで 右へ 歩く');
+    const beforeY = await evaluate('window.__app.g.pos.y');
+    await key('KeyS', 300);
+    check(await evaluate(`window.__app.g.pos.y > ${beforeY}`), 'S キーで 下へ 歩く');
     await shot('field');
 
     // ----- 神社で ウォッチを もらう -----
@@ -119,13 +122,25 @@ try {
     await skipTalk();
     check(await evaluate('window.__app.g.story === "friends" && window.__app.g.medals.length === 1'), 'ウォッチと ダイチョウエンキンの メダルを もらう');
 
+    // ----- ふるカワが なめらかに ついてくる (1 コマで 大きく 飛ばない・離れすぎない) -----
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', code: 'KeyD', key: 'KeyD', windowsVirtualKeyCode: 68 });
+    const samples = await evaluate('new Promise(r => { const out = []; let n = 0; const tick = () => { const b = window.__app.field.debug.buddy, p = window.__app.g.pos; out.push([b.x, b.y, p.x, p.y]); if (++n < 60) requestAnimationFrame(tick); else r(out); }; requestAnimationFrame(tick); })');
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', code: 'KeyD', key: 'KeyD', windowsVirtualKeyCode: 68 });
+    const steps = samples.slice(1).map((v, i) => Math.hypot(v[0] - samples[i][0], v[1] - samples[i][1]));
+    const far = Math.max(...samples.map(v => Math.hypot(v[0] - v[2], v[1] - v[3])));
+    check(Math.max(...steps) < 4 && far < 40, `ふるカワが なめらかに ついてくる (1 コマ 最大 ${Math.max(...steps).toFixed(2)} ドット・離れて 最大 ${far.toFixed(1)})`);
+
     // ----- レンズで さがす (川原の石ころの 上に こおりくんを 立たせて、レンズを まんなかの まま 待つ) -----
     await evaluate('(() => { const g = window.__app.g; g.pos.x = 28 * 16 + 8; g.pos.y = 11 * 16 + 14; return true; })()');
-    await key('KeyC');
+    await key('KeyU');
     await shot('lens');
-    check(await evaluate('Boolean(window.__app.field.debug.lens())'), 'Y (C キー) で レンズが 出る');
-    // レンズを 場所に 合わせる
-    await evaluate(`(() => { const f = window.__app.field; const l = f.debug.lens(); l.x = 28 * 16 + 8 - f.debug.cam.x; l.y = 11 * 16 + 8 - f.debug.cam.y; return true; })()`);
+    check(await evaluate('Boolean(window.__app.field.debug.lens())'), 'Y (U キー) で レンズが 出る');
+    // マウスで レンズを 場所に 合わせる (上画面の 上で マウスを 動かす)
+    const target = await evaluate(`(() => { const f = window.__app.field; const r = document.getElementById('top').getBoundingClientRect(); const sx = 28 * 16 + 8 - f.debug.cam.x, sy = 11 * 16 + 8 - f.debug.cam.y; return { x: r.x + sx / 400 * r.width, y: r.y + sy / 240 * r.height, sx, sy }; })()`);
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: target.x - 40, y: target.y });
+    await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: target.x, y: target.y });
+    await sleep(100);
+    check(await evaluate(`(() => { const l = window.__app.field.debug.lens(); return l && Math.abs(l.x - ${target.sx}) < 2 && Math.abs(l.y - ${target.sy}) < 2; })()`), 'マウスで レンズが 動く');
     await sleep(1600);
     check(await sceneIs('battle'), 'レンズを 合わせて 待つと バトルが 始まる');
     await sleep(1500);
@@ -164,7 +179,7 @@ try {
     await clickBottom(42, 17);   // ウォッチの タブ
     await clickBottom(57, 58);   // 1 つ目の 場所
     await shot('menu-pick');
-    await key('KeyX');
+    await key('KeyK');
     await key('Tab');
     check(await sceneIs('field'), 'メニューを 閉じる');
 

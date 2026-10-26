@@ -28,7 +28,8 @@ export function createField(app) {
     if (!fieldCanvas) { fieldCanvas = buildFieldCanvas(); miniCanvas = buildMiniMap(3); }
     let t = 0, walkT = 0, moving = false;
     let lens = null;     // { x, y, charge, spot, drag }
-    const trail = [];    // ふるカワが ついてくる 道すじ
+    const trail = [];    // こおりくんの 歩いた 道すじ (ふるカワが なぞって ついてくる)
+    const buddy = { x: g.pos.x - 14, y: g.pos.y, flip: false, walkT: 0, moving: false };
     const cam = { x: 0, y: 0 };
 
     function camera() {
@@ -54,6 +55,8 @@ export function createField(app) {
         receiveWatch(g);
         sfx('watch');
         trail.length = 0;
+        buddy.x = 7 * TILE + 8;
+        buddy.y = 6 * TILE + 16;
     }
 
     function talkToPerson(p) {
@@ -160,6 +163,7 @@ export function createField(app) {
             lens.drag = { x: input.touch.x, y: input.touch.y };
         }
         if (!input.touch.down) lens.drag = null;
+        if (input.mouse && input.mouse.moved) { lens.x = input.mouse.x; lens.y = input.mouse.y; }
         lens.x = Math.max(10, Math.min(390, lens.x));
         lens.y = Math.max(10, Math.min(230, lens.y));
         let found = null;
@@ -211,11 +215,13 @@ export function createField(app) {
             moveHero(g, dx * speed, dy * speed);
             walkT += dt;
             if (before.x !== g.pos.x || before.y !== g.pos.y) {
-                trail.push({ x: g.pos.x, y: g.pos.y, dir: g.pos.dir });
-                if (trail.length > 40) trail.shift();
+                const lastP = trail[trail.length - 1];
+                if (!lastP || Math.hypot(lastP.x - g.pos.x, lastP.y - g.pos.y) >= 1) trail.push({ x: g.pos.x, y: g.pos.y });
+                if (trail.length > 120) trail.shift();
             }
         }
         camera();
+        followBuddy(dt);
         if (g.story === 'intro' && inShrine(g)) { meetFurukawa(); return; }
         if (input.pressed.a) {
             const target = lookAt(g);
@@ -223,9 +229,39 @@ export function createField(app) {
         }
     }
 
+    // ふるカワ: 道すじを 18 ドット うしろから なぞり、なめらかに 近づく (2026-10-26 ユーザー指定: かくかく しないように)
+    const FOLLOW = 18;
+    function followBuddy(dt) {
+        let tx = g.pos.x - 14, ty = g.pos.y, left = FOLLOW;
+        let prev = { x: g.pos.x, y: g.pos.y };
+        for (let i = trail.length - 1; i >= 0; i--) {
+            const d = Math.hypot(trail[i].x - prev.x, trail[i].y - prev.y);
+            if (d >= left) {
+                const k = left / d;
+                tx = prev.x + (trail[i].x - prev.x) * k;
+                ty = prev.y + (trail[i].y - prev.y) * k;
+                left = 0;
+                break;
+            }
+            left -= d;
+            prev = trail[i];
+            tx = prev.x;
+            ty = prev.y;
+        }
+        // 遠くに 飛んだとき (負けて 家に もどった など) は すぐ そばへ
+        if (Math.hypot(tx - buddy.x, ty - buddy.y) > 64) { buddy.x = tx; buddy.y = ty; trail.length = 0; }
+        const dx = (tx - buddy.x) * Math.min(1, dt * 10), dy = (ty - buddy.y) * Math.min(1, dt * 10);
+        buddy.x += dx;
+        buddy.y += dy;
+        buddy.moving = Math.hypot(dx, dy) > 0.05;
+        if (Math.abs(dx) > 0.05) buddy.flip = dx < 0;
+        if (buddy.moving) buddy.walkT += dt;
+    }
+
     function startLens() {
         sfx('lens');
         lens = { x: 200, y: 120, charge: 0, spot: null, drag: null };
+        if (app.input && app.input.mouse.inside) { lens.x = app.input.mouse.x; lens.y = app.input.mouse.y; }
     }
 
     // ----- 描く -----
@@ -236,8 +272,8 @@ export function createField(app) {
         }
         // ふるカワ (ウォッチを もらったあとは ついてくる)
         if (hasWatch(g)) {
-            const f = trail.length > 14 ? trail[trail.length - 15] : { x: g.pos.x - 14, y: g.pos.y - 2 };
-            list.push({ y: f.y, draw: () => drawArt(ctx, ART.furukawa, Math.floor(t * 2), f.x - cam.x, f.y - cam.y + 1, { alpha: 0.95 }) });
+            const bf = buddy.moving ? Math.floor(buddy.walkT * 6) : Math.floor(t * 1.5);
+            list.push({ y: buddy.y - 0.1, draw: () => drawArt(ctx, ART.furukawa, bf, buddy.x - cam.x, buddy.y - cam.y + 1, { flip: buddy.flip }) });
         }
         const frame = moving ? Math.floor(walkT * 6) % 2 : Math.floor(t * 1.5) % 2;
         list.push({ y: g.pos.y, draw: () => drawArt(ctx, ART.koori, frame, g.pos.x - cam.x, g.pos.y - cam.y + 2, { flip: g.pos.dir === 'left' }) });
@@ -328,7 +364,7 @@ export function createField(app) {
             text(ctx, 'さがすレンズ', 160, 30, { size: 16, align: 'center', bold: true, color: COLORS.ice });
             panel(ctx, 20, 44, 280, 130, { fill: 'rgba(255,255,255,0.05)' });
             text(ctx, 'ここを なぞって レンズを 動かす', 160, 104, { size: 13, align: 'center', color: COLORS.sub });
-            text(ctx, '(十字キーでも 動く)', 160, 124, { size: 11, align: 'center', color: COLORS.dim });
+            text(ctx, '(十字キー・上画面の マウスでも 動く)', 160, 124, { size: 11, align: 'center', color: COLORS.dim });
             text(ctx, lens.spot ? '……なにか いる！ そのまま！' : 'あやしい ところに レンズを 合わせよう', 160, 196, { size: 13, align: 'center', bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
             text(ctx, 'B で やめる', 160, 226, { size: 11, align: 'center', color: COLORS.dim });
             return;
@@ -352,11 +388,11 @@ export function createField(app) {
         text(ctx, 'もくてき', 14, 162, { size: 10, color: COLORS.accent, bold: true });
         wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * 15, { size: 12 }));
         text(ctx, 'A: しらべる・はなす   B (おしたまま): はしる', 160, 220, { size: 10.5, align: 'center', color: COLORS.dim });
-        text(ctx, '十字キー: あるく', 160, 234, { size: 10.5, align: 'center', color: COLORS.dim });
+        text(ctx, 'PC: WASD で 歩く / J=A K=B I=X U=Y', 160, 234, { size: 10.5, align: 'center', color: COLORS.dim });
         app.talk.drawBottom(ctx);
     }
 
-    return { name: 'field', update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam } };
+    return { name: 'field', update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy } };
 }
 
 export const nakamaName = id => NAKAMA[id]?.name || id;
