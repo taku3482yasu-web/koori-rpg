@@ -894,7 +894,7 @@ body.nopad #pad { display: none; }
     [[26, 12], [25, 13], [22, 13], [16, 26], [26, 33], [21, 30], [38, 14], [44, 14], [37, 31], [44, 30], [45, 22], [9, 14], [3, 14], [6, 15]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
-    return t.map((row) => row.join(""));
+    return t.map((row2) => row2.join(""));
   }
   const TILES = build();
   const BUILDINGS = [
@@ -2224,7 +2224,7 @@ body.nopad #pad { display: none; }
       ]
     }
   };
-  const bob = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
+  const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
   const blink$1 = (rows, from, to) => [rows, rows.map((r2) => r2.split(from).join(to))];
   const NEW_ART = {
     // イシコロン: 川原の丸い石。おこった まゆ
@@ -2232,7 +2232,7 @@ body.nopad #pad { display: none; }
       w: 16,
       h: 16,
       palette: { o: "#3a3a40", G: "#d4d4dc", g: "#a4a4ae", d: "#70707c", k: "#10162a", w: "#ffffff" },
-      frames: bob([
+      frames: bob$1([
         "................",
         "................",
         ".....oooooo.....",
@@ -2256,7 +2256,7 @@ body.nopad #pad { display: none; }
       w: 16,
       h: 16,
       palette: { o: "#2a3a4a", S: "#e4ecf2", s: "#b8c8d4", d: "#7a8a98", k: "#10162a", b: "#4aa8e0", B: "#bff0ff" },
-      frames: bob([
+      frames: bob$1([
         "................",
         "................",
         "................",
@@ -2280,7 +2280,7 @@ body.nopad #pad { display: none; }
       w: 16,
       h: 16,
       palette: { w: "#f8f4e8", W: "#d8ccb0", k: "#10162a", p: "#ff9eb5", b: "#4aa8e0", g: "#5aa05a", G: "#3a7a3a" },
-      frames: bob([
+      frames: bob$1([
         "................",
         ".....w.w.w......",
         "....wWwWwWw.....",
@@ -2304,7 +2304,7 @@ body.nopad #pad { display: none; }
       w: 16,
       h: 16,
       palette: { o: "#1e3a1e", g: "#5ab04a", G: "#8ad07a", s: "#e8d8a0", y: "#ffd84a", k: "#10162a", w: "#ffffff", t: "#7a5a2a" },
-      frames: bob([
+      frames: bob$1([
         "................",
         ".....oooooo.....",
         "....ogsssssgo...",
@@ -2428,9 +2428,9 @@ body.nopad #pad { display: none; }
     const before = ctx.globalAlpha;
     ctx.globalAlpha = before * alpha;
     for (let ry = 0; ry < rows.length; ry++) {
-      const row = rows[ry];
-      for (let rx = 0; rx < row.length; rx++) {
-        const ch = row[rx];
+      const row2 = rows[ry];
+      for (let rx = 0; rx < row2.length; rx++) {
+        const ch = row2[rx];
         if (ch === ".") continue;
         ctx.fillStyle = tint || art.palette[ch];
         const dx = flip ? art.w - 1 - rx : rx;
@@ -2546,7 +2546,7 @@ body.nopad #pad { display: none; }
   ];
   const CAST = ["koori", "furukawa", "daichouenkin", "ishikoron", "kozarappa", "haribaby", "kogame", "hashishita"];
   function createTitle(app2) {
-    let t = 0, v = VERSION_IDS.indexOf(app2.version), row = 0, confirm = false;
+    let t = 0, v = VERSION_IDS.indexOf(app2.version), row2 = 0, confirm = false;
     const canContinue = () => hasSave(VERSION_IDS[v]);
     function choose(act2) {
       const id = VERSION_IDS[v];
@@ -2586,10 +2586,10 @@ body.nopad #pad { display: none; }
         sfx("cursor");
       }
       if (input2.pressed.up || input2.pressed.down) {
-        row = 1 - row;
+        row2 = 1 - row2;
         sfx("cursor");
       }
-      if (input2.pressed.a || input2.pressed.start) choose(ACT[canContinue() ? row : 1].act);
+      if (input2.pressed.a || input2.pressed.start) choose(ACT[canContinue() ? row2 : 1].act);
       if (tc.justDown) {
         const vi = VBTN.findIndex((b) => hit(b, tc.x, tc.y));
         if (vi >= 0) {
@@ -2629,7 +2629,7 @@ body.nopad #pad { display: none; }
       ctx.fillRect(0, 0, 320, 240);
       text(ctx, "バージョンを えらぶ", 160, 20, { size: 11, align: "center", color: COLORS.sub });
       VBTN.forEach((b, i) => button(ctx, b, { active: i === v }));
-      ACT.forEach((b, i) => button(ctx, b, { active: (canContinue() ? row : 1) === i, disabled: b.act === "continue" && !canContinue() }));
+      ACT.forEach((b, i) => button(ctx, b, { active: (canContinue() ? row2 : 1) === i, disabled: b.act === "continue" && !canContinue() }));
       text(ctx, `${moveName()}・タップで えらぶ　${btn("a")} で 決定`, 160, 222, { size: 10.5, align: "center", color: COLORS.dim });
       if (confirm) {
         ctx.fillStyle = "rgba(0,0,0,0.75)";
@@ -3526,7 +3526,7 @@ body.nopad #pad { display: none; }
     if (cache.has(art)) return cache.get(art);
     const freq = {};
     let total = 0;
-    for (const row of art.frames[0]) for (const ch of row) if (ch !== ".") {
+    for (const row2 of art.frames[0]) for (const ch of row2) if (ch !== ".") {
       freq[ch] = (freq[ch] || 0) + 1;
       total++;
     }
@@ -3535,6 +3535,274 @@ body.nopad #pad { display: none; }
     cache.set(art, back);
     return back;
   }
+  const FRONT = { ...LEGACY_ART, ...NEW_ART };
+  const W = 16;
+  const row = (r2) => {
+    if (r2.length >= W) return r2;
+    const left = Math.floor((W - r2.length) / 2);
+    return ".".repeat(left) + r2 + ".".repeat(W - r2.length - left);
+  };
+  const bob = (rows) => [rows, [...rows.slice(1), ".".repeat(W)]];
+  const drawn = (palette, rows, { still = false } = {}) => {
+    const r2 = rows.map(row);
+    return { w: W, h: r2.length, palette, frames: still ? [r2, r2] : bob(r2) };
+  };
+  const faceless = (id, swap, { mirror = true, still = false } = {}) => {
+    const f = FRONT[id];
+    const r2 = f.frames[0].map((line) => {
+      let s = [...line].map((ch) => swap[ch] || ch).join("");
+      if (mirror) s = [...s].reverse().join("");
+      return s;
+    });
+    return { w: f.w, h: f.h, palette: f.palette, frames: still ? [r2, r2] : bob(r2) };
+  };
+  const pal = (id) => FRONT[id].palette;
+  const BACK_ART = {
+    // ハリベビー: まるい 背中 いっぱいの トゲ
+    haribaby: drawn(pal("haribaby"), [
+      "",
+      "",
+      "s.s.s.s",
+      "sSsSsSsSs",
+      "sSsSsSsSsSs",
+      "sSsSsSsSsSsSs",
+      "sSsSsSsSsSsSs",
+      "sSsSsSsSsSsSs",
+      "sSsSsSsSsSsSs",
+      "sSsSsSsSsSs",
+      "bbbbbbbbb",
+      "b.b...b.b",
+      "",
+      "",
+      "",
+      ""
+    ]),
+    // ムメンキョバチ: 赤い 髪の うしろ・しましまの 体・広げた 羽・おしりの 針
+    mumenbachi: drawn(pal("mumenbachi"), [
+      "",
+      "hhhh",
+      "hhhhhh",
+      "hhhhhh",
+      "yyyyyy",
+      "www..yyyyyy..www",
+      ".wwwkkkkkkkkwww.",
+      "yyyyyyyy",
+      "kkkkkkkk",
+      "yyyyyy",
+      "kkkk",
+      "kk",
+      "k",
+      "",
+      "",
+      ""
+    ]),
+    // ドングリコ: ぼうしと つるんとした 背中 (光は 左に)
+    donguriko: drawn(pal("donguriko"), [
+      "cc",
+      "cCcCcCcC",
+      "CcCcCcCcCc",
+      "cccccccccc",
+      "nnnnnnnn",
+      "lnnnnnnnnn",
+      "lnnnnnnnnn",
+      "lnnnnnnnnn",
+      "nnnnnnnnnn",
+      "nnnnnnnn",
+      "nnnnnn",
+      "nnnn",
+      "f....f",
+      "",
+      "",
+      ""
+    ]),
+    // ネムリダケ: かさの 水玉 (左右 反転)・顔の ない 柄
+    nemuridake: faceless("nemuridake", { k: "s", p: "s" }),
+    // ペコリス: 耳と、背中を おおう ふさふさの しっぽ
+    pekorisu: drawn(pal("pekorisu"), [
+      "",
+      "b......b",
+      "bb....bb",
+      "bbbbbbbb",
+      "bbbbbbbbbb",
+      "bbttttttbb",
+      "bttttttttttb",
+      "bccttttttttb",
+      "bttttttttttb",
+      "bbttttttttbb",
+      "bbbttttbbb",
+      "b......b",
+      "",
+      "",
+      "",
+      ""
+    ]),
+    // ツタンコブ: 顔の ない ツタ
+    tsutankobu: faceless("tsutankobu", { w: "n", k: "n" }),
+    // ヨフカシフクロウ: 耳の 羽・たたんだ 翼の もよう
+    yofukashi: drawn(pal("yofukashi"), [
+      "...b........b...",
+      "...bb......bb...",
+      "...bbbbbbbbbb...",
+      "..bbbbbbbbbbbb..",
+      "..bbbbbbbbbbbb..",
+      "..bbbbbbbbbbbb..",
+      "..bbbbbbbbbbbb..",
+      ".bbblbbbbbblbbb.",
+      "bbbllbbbbbbllbbb",
+      ".bbllbbbbbbllbb.",
+      "..bbbbblbbbbbb..",
+      "...bbbblbbbbb...",
+      "....yy....yy....",
+      "",
+      "",
+      ""
+    ]),
+    // コガメ: こうらの もようと、ちょこんと 出た しっぽ
+    kogame: drawn(pal("kogame"), [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "....aaaaaaaa....",
+      "...aaaaaaaaaa...",
+      "...aabbaabbaa...",
+      "...abbaabbaba...",
+      "...aaaabbaaaa...",
+      "...aabbaabbaa...",
+      "...aaaaaaaaaa...",
+      "...cc...c...cc..",
+      "...cc.......cc..",
+      ""
+    ]),
+    // ツリバリウオ: 背びれ・横びれ・こちらを 向いた 尾びれ
+    tsuribariuo: drawn(pal("tsuribariuo"), [
+      "",
+      "",
+      "",
+      ".......bb.......",
+      "......aaaa......",
+      ".....aaaaaa.....",
+      "....aaaaaaaa....",
+      "....aaaaaaaa....",
+      "...caaaaaaaac...",
+      ".....aaaaaa.....",
+      "......abba......",
+      ".....bbbbbb.....",
+      "....bbb..bbb....",
+      "....bb....bb....",
+      "",
+      ""
+    ]),
+    // モクギョロ: 木の わっか 2 本と、反対がわに 見える ばち
+    mokugyoro: drawn(pal("mokugyoro"), [
+      ".eee............",
+      "..e.............",
+      "..e.............",
+      "..e.............",
+      "..eaaaaaaaaaa...",
+      "..aaaaaaaaaaaa..",
+      "..aaaaaaaaaaaa..",
+      "..eeeeeeeeeeee..",
+      "..aaaaaaaaaaaa..",
+      "..aaaaaaaaaaaa..",
+      "..eeeeeeeeeeee..",
+      "..aaaaaaaaaaaa..",
+      "..aaaaaaaaaaaa..",
+      "..aaaaaaaaaaaa..",
+      "",
+      ""
+    ]),
+    // ロウソクビ: 顔の ない ろうそく
+    rousokubi: faceless("rousokubi", { d: "a" }),
+    // ダイチョウエンキン: 顔の ない つぶつぶ
+    daichouenkin: faceless("daichouenkin", { b: "a", c: "a" }),
+    // クナイスズメ: はちまきの むすび目・たたんだ 羽・しっぽ
+    kunaisuzume: drawn(pal("kunaisuzume"), [
+      "",
+      "",
+      "",
+      "",
+      "......d...d.....",
+      "....cccccccc....",
+      "....aaaddaaa....",
+      "...gaaaaaaaag...",
+      "...ggaaaaaagg...",
+      "...gggaaaaggg...",
+      "...gggaaaaggg...",
+      "....ggaaaagg....",
+      "......aaaa......",
+      ".....gaaaag.....",
+      "......f..f......",
+      ""
+    ]),
+    // カワリミダヌキ: 頭の 葉っぱ・耳・しましまの しっぽ
+    kawarimidanuki: drawn(pal("kawarimidanuki"), [
+      "",
+      "........f.......",
+      "......eeee......",
+      "......eeee......",
+      "......eeee......",
+      "...bb......bb...",
+      "...bbaaaaaabb...",
+      "...aaaaaaaaaa...",
+      "...aaaaaaaaaa...",
+      "...aaaaaaaaaa...",
+      "...aaaaaaaaaa...",
+      "...aaaabbaaaa...",
+      "...aaaaddaaaa...",
+      "...aaaabbaaaa...",
+      "....bb....bb....",
+      ""
+    ]),
+    // シノビガエル: 目の でっぱり・赤い まきものの むすび目・背中の もよう
+    shinobigaeru: drawn(pal("shinobigaeru"), [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "...aaa....aaa...",
+      "...aaa....aaa...",
+      "...aaaaaaaaaa...",
+      "...aaaaaaaaaa...",
+      "...eeeeeeeeee...",
+      "...aaaaeeaaaa...",
+      "...aaaeaaeaaa...",
+      "...acaaaaaaca...",
+      "..fffaaaaaafff..",
+      "..fff......fff..",
+      ""
+    ]),
+    // イシコロン: 顔の ない 石 (左右 反転で 影が 左に)
+    ishikoron: faceless("ishikoron", { k: "g", w: "g" }),
+    // ミズキリン: 顔の ない 平たい 石
+    mizukirin: faceless("mizukirin", { k: "s" }),
+    // ソウメンナガレ: 顔の ない そうめん (とい は 動かない)
+    soumennagare: faceless("soumennagare", { k: "w", p: "w" }),
+    // コザラッパ: 皿の ない 頭のてっぺん・背中の こうら
+    kozarappa: drawn({ ...pal("kozarappa"), T: "#5a3a1a" }, [
+      "",
+      ".....oooooo.....",
+      "....ogsssssgo...",
+      "...oggsssssggo..",
+      "..oggggggggggo..",
+      "..oggggggggggo..",
+      "..oggggggggggo..",
+      "..ogttttttttgo..",
+      "..ottTTttTTtto..",
+      ".gotTttTTttTtog.",
+      "..ottTTttTTtto..",
+      "..oottttttttoo..",
+      "...ogggoogggo...",
+      "...oGGo..oGGo...",
+      "...ooo....ooo...",
+      ""
+    ]),
+    // ハシシタボウズ: 頭巾の うしろ (橋の 板は そのまま)
+    hashishita: faceless("hashishita", { s: "p", k: "p", w: "p" }, { still: true })
+  };
   const WHEEL = { x: 100, y: 126, r: 70 };
   const SP_BTN = [0, 1, 2].map((i) => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
   const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: "どうぐ" };
@@ -3783,7 +4051,7 @@ body.nopad #pad { display: none; }
       ctx.beginPath();
       ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
       ctx.fill();
-      const art = back ? backArt(ART[u.art]) : ART[u.art];
+      const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
       drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null });
       const w = 44, head = p.y - art.h * scale;
       const barY = head - 10, nameY = head - 14;

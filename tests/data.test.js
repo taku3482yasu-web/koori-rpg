@@ -5,6 +5,7 @@ import { NAKAMA, NAKAMA_IDS, BOSSES, ROLES, ELEMENTS } from '../src/data/nakama.
 import { ITEMS } from '../src/data/items.js';
 import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
+import { BACK_ART } from '../src/art/back-art.js';
 import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -63,5 +64,22 @@ test('歩きまわる 場所には 通れる マスが ある', () => {
         for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) if (!['T', 'W'].includes(TILES[y][x])) free++;
         assert.ok(free >= 4, `${r.id}: ${free} マス`);
         for (const k of r.kinds) assert.ok(NAKAMA[k.id], `${r.id} の ${k.id}`);
+    }
+});
+
+test('20 体 全員に うしろ姿の 絵が あり、前向きと 同じ 大きさ・色の 文字が 正しい', () => {
+    for (const id of NAKAMA_IDS) {
+        const back = BACK_ART[NAKAMA[id].art], front = ART[NAKAMA[id].art];
+        assert.ok(back, `${id} の うしろ姿`);
+        assert.equal(back.w, front.w, `${id} の 幅`);
+        assert.equal(back.frames.length, 2);
+        for (const frame of back.frames) {
+            assert.equal(frame.length, back.h, `${id} の 高さ`);
+            for (const r of frame) {
+                assert.equal(r.length, back.w, `${id} の 行: ${r}`);
+                for (const ch of r) assert.ok(ch === '.' || back.palette[ch], `${id} の 色 ${ch}`);
+            }
+        }
+        assert.notDeepEqual(back.frames[0], front.frames[0], `${id} は 前向きと ちがう`);
     }
 });

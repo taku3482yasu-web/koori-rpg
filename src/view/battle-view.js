@@ -6,6 +6,7 @@
 // =====================================================================
 import { ART } from '../art/index.js';
 import { backArt } from '../art/back.js';
+import { BACK_ART } from '../art/back-art.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect } from '../core/draw.js';
@@ -222,7 +223,8 @@ export function createBattleView(app, battle, place) {
         ctx.beginPath();
         ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
         ctx.fill();
-        const art = back ? backArt(ART[u.art]) : ART[u.art];
+        // うしろ姿: 描いた 絵 (back-art.js) が なければ 顔を 消して 作る (back.js)
+        const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null });
         const w = 44, head = p.y - art.h * scale;
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)

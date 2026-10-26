@@ -49,7 +49,7 @@ src/
   logic/  battle.js バトル / game.js 進み具合・出会い・仲間になる / units.js 能力とレベル / world.js 歩く・調べる   ← 画面にふれない
   data/   nakama.js なかま 20 体 + ボス / items.js 道具 / map.js 石の川タウン
   view/   title.js / field.js 町とレンズ / battle-view.js / result.js / menu.js / talk.js 会話
-  art/    legacy-art.js 前作の絵（tools/extract-art.mjs が作る）/ new-art.js 新キャラの絵
+  art/    legacy-art.js 前作の絵（tools/extract-art.mjs が作る）/ new-art.js 新キャラの絵 / back-art.js 20 体の うしろ姿（バトルの 味方）
 tests/    自動テスト（画面なし）
 tools/    build-file.mjs play.html を作る / browser-test.mjs 本物のブラウザで遊ぶテスト / extract-art.mjs 前作の絵を写す
 ```
