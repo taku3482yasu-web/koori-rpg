@@ -1,0 +1,144 @@
+/* =====================================================================
+   画面のかたち: 上下 2 画面の携帯ゲーム機 (設計書 7 章)
+   ---------------------------------------------------------------------
+   上画面 400×240・下画面 320×240 (ドット)。--u は 1 ドットの大きさ (screen.js が決める)
+   スマホは縦持ち。画面の下に十字キー・ABXY・L/R・START を出す (#pad)。
+   PC とゲームパッドでは #pad を出さない (body.nopad)
+   ===================================================================== */
+:root {
+    --u: 2px;
+    --body: #1b2233;
+    --shell: #2b3a5c;
+    --shell-hi: #3d5080;
+    --btn: #1a2440;
+    --btn-ink: #dfe8ff;
+}
+body.v-menkyo {
+    --shell: #2f5a3a;
+    --shell-hi: #457a52;
+    --btn: #1d3524;
+}
+
+* { box-sizing: border-box; }
+html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--body);
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", sans-serif;
+}
+
+#device {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(var(--u) * 6) calc(var(--u) * 6) 0;
+    background: var(--shell);
+    border-radius: 0 0 calc(var(--u) * 14) calc(var(--u) * 14);
+    box-shadow: 0 0 0 2px var(--shell-hi) inset;
+}
+
+#screens {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+canvas {
+    display: block;
+    background: #000;
+    image-rendering: pixelated;
+    border-radius: calc(var(--u) * 2);
+}
+#top { width: calc(var(--u) * 400); height: calc(var(--u) * 240); }
+#bottom { width: calc(var(--u) * 320); height: calc(var(--u) * 240); }
+#hinge { height: calc(var(--u) * 8); }
+
+/* ----- ボタン (スマホだけ) ----- */
+#pad {
+    position: relative;
+    width: calc(var(--u) * 400);
+    height: var(--padh, 200px);
+}
+body.nopad #pad { display: none; }
+#pad button {
+    position: absolute;
+    border: none;
+    background: var(--btn);
+    color: var(--btn-ink);
+    font: inherit;
+    font-weight: bold;
+    touch-action: none;
+}
+#pad button.on { filter: brightness(1.8); }
+.sh { top: 8px; width: 30%; height: 34px; font-size: 15px; }
+.sh[data-btn="l"] { left: 0; border-radius: 6px 18px 18px 6px; }
+.sh[data-btn="r"] { right: 0; border-radius: 18px 6px 6px 18px; }
+
+#dpad {
+    position: absolute;
+    left: 6%;
+    top: 58px;
+    width: 132px;
+    height: 132px;
+}
+.d { width: 44px; height: 44px; border-radius: 6px; }
+.d.up { left: 44px; top: 0; }
+.d.down { left: 44px; top: 88px; }
+.d.left { left: 0; top: 44px; }
+.d.right { left: 88px; top: 44px; }
+#dpad::after {
+    content: "";
+    position: absolute;
+    left: 44px;
+    top: 44px;
+    width: 44px;
+    height: 44px;
+    background: var(--btn);
+}
+
+#abxy {
+    position: absolute;
+    right: 6%;
+    top: 58px;
+    width: 140px;
+    height: 132px;
+}
+.f { width: 48px; height: 48px; border-radius: 50%; font-size: 17px; }
+.f.x { left: 46px; top: 0; }
+.f.b { left: 46px; top: 84px; }
+.f.y { left: 0; top: 42px; }
+.f.a { left: 92px; top: 42px; background: #b03048 !important; }
+
+#start {
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    width: 76px;
+    height: 24px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+/* ----- スマホを横に持ったとき ----- */
+#rotate {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--body);
+    color: #fff;
+    font-size: 22px;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+    #rotate { display: flex; }
+}

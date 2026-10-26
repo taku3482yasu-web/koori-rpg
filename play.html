@@ -1,0 +1,3989 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1b3a6b">
+    <title>こおりくんの大冒険～大集合だヨ！おともだち！～</title>
+  
+  <style>/* =====================================================================
+   画面のかたち: 上下 2 画面の携帯ゲーム機 (設計書 7 章)
+   ---------------------------------------------------------------------
+   上画面 400×240・下画面 320×240 (ドット)。--u は 1 ドットの大きさ (screen.js が決める)
+   スマホは縦持ち。画面の下に十字キー・ABXY・L/R・START を出す (#pad)。
+   PC とゲームパッドでは #pad を出さない (body.nopad)
+   ===================================================================== */
+:root {
+    --u: 2px;
+    --body: #1b2233;
+    --shell: #2b3a5c;
+    --shell-hi: #3d5080;
+    --btn: #1a2440;
+    --btn-ink: #dfe8ff;
+}
+body.v-menkyo {
+    --shell: #2f5a3a;
+    --shell-hi: #457a52;
+    --btn: #1d3524;
+}
+
+* { box-sizing: border-box; }
+html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--body);
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    font-family: "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", sans-serif;
+}
+
+#device {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: calc(var(--u) * 6) calc(var(--u) * 6) 0;
+    background: var(--shell);
+    border-radius: 0 0 calc(var(--u) * 14) calc(var(--u) * 14);
+    box-shadow: 0 0 0 2px var(--shell-hi) inset;
+}
+
+#screens {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+canvas {
+    display: block;
+    background: #000;
+    image-rendering: pixelated;
+    border-radius: calc(var(--u) * 2);
+}
+#top { width: calc(var(--u) * 400); height: calc(var(--u) * 240); }
+#bottom { width: calc(var(--u) * 320); height: calc(var(--u) * 240); }
+#hinge { height: calc(var(--u) * 8); }
+
+/* ----- ボタン (スマホだけ) ----- */
+#pad {
+    position: relative;
+    width: calc(var(--u) * 400);
+    height: var(--padh, 200px);
+}
+body.nopad #pad { display: none; }
+#pad button {
+    position: absolute;
+    border: none;
+    background: var(--btn);
+    color: var(--btn-ink);
+    font: inherit;
+    font-weight: bold;
+    touch-action: none;
+}
+#pad button.on { filter: brightness(1.8); }
+.sh { top: 8px; width: 30%; height: 34px; font-size: 15px; }
+.sh[data-btn="l"] { left: 0; border-radius: 6px 18px 18px 6px; }
+.sh[data-btn="r"] { right: 0; border-radius: 18px 6px 6px 18px; }
+
+#dpad {
+    position: absolute;
+    left: 6%;
+    top: 58px;
+    width: 132px;
+    height: 132px;
+}
+.d { width: 44px; height: 44px; border-radius: 6px; }
+.d.up { left: 44px; top: 0; }
+.d.down { left: 44px; top: 88px; }
+.d.left { left: 0; top: 44px; }
+.d.right { left: 88px; top: 44px; }
+#dpad::after {
+    content: "";
+    position: absolute;
+    left: 44px;
+    top: 44px;
+    width: 44px;
+    height: 44px;
+    background: var(--btn);
+}
+
+#abxy {
+    position: absolute;
+    right: 6%;
+    top: 58px;
+    width: 140px;
+    height: 132px;
+}
+.f { width: 48px; height: 48px; border-radius: 50%; font-size: 17px; }
+.f.x { left: 46px; top: 0; }
+.f.b { left: 46px; top: 84px; }
+.f.y { left: 0; top: 42px; }
+.f.a { left: 92px; top: 42px; background: #b03048 !important; }
+
+#start {
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    width: 76px;
+    height: 24px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+/* ----- スマホを横に持ったとき ----- */
+#rotate {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--body);
+    color: #fff;
+    font-size: 22px;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+    #rotate { display: flex; }
+}
+</style>
+</head>
+<body>
+    <div id="device">
+        <div id="screens">
+            <canvas id="top" aria-label="上画面"></canvas>
+            <div id="hinge"></div>
+            <canvas id="bottom" aria-label="下画面 (さわれる)"></canvas>
+        </div>
+        <div id="pad" aria-hidden="true">
+            <button class="sh" data-btn="l">L</button>
+            <button class="sh" data-btn="r">R</button>
+            <div id="dpad">
+                <button data-btn="up" class="d up"></button>
+                <button data-btn="left" class="d left"></button>
+                <button data-btn="right" class="d right"></button>
+                <button data-btn="down" class="d down"></button>
+            </div>
+            <div id="abxy">
+                <button data-btn="x" class="f x">X</button>
+                <button data-btn="y" class="f y">Y</button>
+                <button data-btn="a" class="f a">A</button>
+                <button data-btn="b" class="f b">B</button>
+            </div>
+            <button id="start" data-btn="start">START</button>
+        </div>
+    </div>
+    <div id="rotate">スマホを たてに してね</div>
+<script>(function() {
+  "use strict";
+  const TOP_W = 400, TOP_H = 240, BOTTOM_W = 320, BOTTOM_H = 240;
+  const DETAIL = 3;
+  const PAD_MIN = 210;
+  function setupScreens(topCanvas2, bottomCanvas2) {
+    const prepare = (canvas, w, h) => {
+      canvas.width = w * DETAIL;
+      canvas.height = h * DETAIL;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(DETAIL, 0, 0, DETAIL, 0, 0);
+      ctx.imageSmoothingEnabled = false;
+      return ctx;
+    };
+    const top = prepare(topCanvas2, TOP_W, TOP_H);
+    const bottom = prepare(bottomCanvas2, BOTTOM_W, BOTTOM_H);
+    function layout() {
+      const padShown = !document.body.classList.contains("nopad");
+      const height = window.innerHeight, width = window.innerWidth;
+      const deviceH = 6 + TOP_H + 8 + BOTTOM_H;
+      const u = Math.max(0.5, Math.min(width / 412, (height - (padShown ? PAD_MIN : 12)) / deviceH));
+      document.documentElement.style.setProperty("--u", `${u}px`);
+      document.documentElement.style.setProperty("--padh", `${Math.max(PAD_MIN, height - deviceH * u)}px`);
+    }
+    window.addEventListener("resize", layout);
+    layout();
+    return { top, bottom, layout };
+  }
+  const BUTTONS = ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "start", "sp1", "sp2", "sp3"];
+  const KEYS = {
+    ArrowUp: "up",
+    KeyW: "up",
+    ArrowDown: "down",
+    KeyS: "down",
+    ArrowLeft: "left",
+    KeyA: "left",
+    ArrowRight: "right",
+    KeyD: "right",
+    KeyZ: "a",
+    Enter: "a",
+    Space: "a",
+    KeyX: "b",
+    Escape: "b",
+    Backspace: "b",
+    Tab: "x",
+    KeyC: "y",
+    KeyQ: "l",
+    KeyE: "r",
+    ShiftLeft: "start",
+    ShiftRight: "start",
+    Digit1: "sp1",
+    Digit2: "sp2",
+    Digit3: "sp3"
+  };
+  const PAD = { 1: "a", 0: "b", 2: "y", 3: "x", 4: "l", 5: "r", 6: "l", 7: "r", 9: "start", 12: "up", 13: "down", 14: "left", 15: "right" };
+  function createInput({ bottomCanvas: bottomCanvas2 = null, padRoot = null, onPadChange = () => {
+  } } = {}) {
+    const sources = { key: {}, pad: {}, touchBtn: {}, fake: {} };
+    const held = {}, pressed = {}, prev = {};
+    const touch = { down: false, justDown: false, justUp: false, x: 0, y: 0, startX: 0, startY: 0 };
+    let touchDown = false, touchUpQueued = false, touchDownQueued = false;
+    let lastKind = null;
+    const usePad = (kind, show) => {
+      if (lastKind === kind) return;
+      lastKind = kind;
+      if (typeof document !== "undefined") document.body.classList.toggle("nopad", !show);
+      onPadChange();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("keydown", (e) => {
+        const b = KEYS[e.code];
+        if (!b) return;
+        e.preventDefault();
+        sources.key[b] = true;
+        usePad("key", false);
+      });
+      window.addEventListener("keyup", (e) => {
+        const b = KEYS[e.code];
+        if (b) sources.key[b] = false;
+      });
+      window.addEventListener("blur", () => {
+        sources.key = {};
+        sources.touchBtn = {};
+      });
+      window.addEventListener("touchstart", () => usePad("touch", true), { passive: true });
+    }
+    if (padRoot) {
+      const active = /* @__PURE__ */ new Map();
+      const set = (el, v) => {
+        sources.touchBtn[el.dataset.btn] = v;
+        el.classList.toggle("on", v);
+      };
+      padRoot.addEventListener("pointerdown", (e) => {
+        const el = e.target.closest("[data-btn]");
+        if (!el) return;
+        e.preventDefault();
+        active.set(e.pointerId, el);
+        set(el, true);
+      });
+      padRoot.addEventListener("pointermove", (e) => {
+        var _a;
+        const old = active.get(e.pointerId);
+        if (!old || !old.closest("#dpad")) return;
+        const el = (_a = document.elementFromPoint(e.clientX, e.clientY)) == null ? void 0 : _a.closest("[data-btn]");
+        if (el && el !== old && el.closest("#dpad")) {
+          set(old, false);
+          set(el, true);
+          active.set(e.pointerId, el);
+        }
+      });
+      const up = (e) => {
+        const el = active.get(e.pointerId);
+        if (el) {
+          set(el, false);
+          active.delete(e.pointerId);
+        }
+      };
+      padRoot.addEventListener("pointerup", up);
+      padRoot.addEventListener("pointercancel", up);
+    }
+    if (bottomCanvas2) {
+      const pos = (e) => {
+        const r = bottomCanvas2.getBoundingClientRect();
+        return { x: (e.clientX - r.left) / r.width * 320, y: (e.clientY - r.top) / r.height * 240 };
+      };
+      bottomCanvas2.addEventListener("pointerdown", (e) => {
+        var _a;
+        e.preventDefault();
+        (_a = bottomCanvas2.setPointerCapture) == null ? void 0 : _a.call(bottomCanvas2, e.pointerId);
+        const p = pos(e);
+        touch.x = touch.startX = p.x;
+        touch.y = touch.startY = p.y;
+        touchDown = true;
+        touchDownQueued = true;
+        if (e.pointerType === "touch") usePad("touch", true);
+      });
+      bottomCanvas2.addEventListener("pointermove", (e) => {
+        if (!touchDown) return;
+        const p = pos(e);
+        touch.x = p.x;
+        touch.y = p.y;
+      });
+      const up = () => {
+        if (touchDown) {
+          touchDown = false;
+          touchUpQueued = true;
+        }
+      };
+      bottomCanvas2.addEventListener("pointerup", up);
+      bottomCanvas2.addEventListener("pointercancel", up);
+    }
+    function pollPad() {
+      sources.pad = {};
+      const pads = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads() : [];
+      for (const gp of pads) {
+        if (!gp) continue;
+        gp.buttons.forEach((btn, i) => {
+          if (btn.pressed && PAD[i]) {
+            sources.pad[PAD[i]] = true;
+            usePad("pad", false);
+          }
+        });
+        const [ax = 0, ay = 0] = gp.axes;
+        if (ax < -0.5) sources.pad.left = true;
+        if (ax > 0.5) sources.pad.right = true;
+        if (ay < -0.5) sources.pad.up = true;
+        if (ay > 0.5) sources.pad.down = true;
+      }
+    }
+    function update() {
+      pollPad();
+      for (const b of BUTTONS) {
+        const now = Boolean(sources.key[b] || sources.pad[b] || sources.touchBtn[b] || sources.fake[b]);
+        pressed[b] = now && !prev[b];
+        held[b] = now;
+        prev[b] = now;
+      }
+      touch.justDown = touchDownQueued;
+      touch.justUp = touchUpQueued && !touchDownQueued;
+      touch.down = touchDown || touchDownQueued;
+      touchDownQueued = false;
+      touchUpQueued = false;
+    }
+    const press = (b, v = true) => {
+      sources.fake[b] = v;
+    };
+    const fakeTouch = (x, y, phase) => {
+      touch.x = x;
+      touch.y = y;
+      if (phase === "down") {
+        touch.startX = x;
+        touch.startY = y;
+        touchDown = true;
+        touchDownQueued = true;
+      }
+      if (phase === "up") {
+        touchDown = false;
+        touchUpQueued = true;
+      }
+    };
+    return { held, pressed, touch, update, press, fakeTouch, usesTouch: () => lastKind === "touch" };
+  }
+  function createRng(seed = Date.now()) {
+    let a = seed >>> 0;
+    const next = () => {
+      a = a + 1831565813 >>> 0;
+      let t = a;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+    return {
+      next,
+      int: (n) => Math.floor(next() * n),
+      chance: (p) => next() < p,
+      pick: (list) => list[Math.floor(next() * list.length)],
+      // [{ ..., w: 重み }] から 1 つ
+      weighted: (list) => {
+        const total = list.reduce((s, x) => s + (x.w ?? 1), 0);
+        let r = next() * total;
+        for (const x of list) {
+          r -= x.w ?? 1;
+          if (r < 0) return x;
+        }
+        return list[list.length - 1];
+      }
+    };
+  }
+  const key = (version) => `koori-rpg:save:${version}`;
+  function loadSave(version) {
+    try {
+      const raw = localStorage.getItem(key(version));
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function writeSave(version, data) {
+    try {
+      localStorage.setItem(key(version), JSON.stringify(data));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function hasSave(version) {
+    return loadSave(version) !== null;
+  }
+  let ac = null;
+  let muted = false;
+  function unlockSound() {
+    if (typeof window === "undefined" || muted) return;
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ac = new AC();
+    }
+    if (ac.state === "suspended") ac.resume();
+  }
+  function tone(freq, start, dur, { type = "square", vol = 0.06, slide = 0 } = {}) {
+    const t = ac.currentTime + start;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, t + dur);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(1e-4, t + dur);
+    osc.connect(gain).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+  }
+  const SOUNDS = {
+    cursor: () => tone(880, 0, 0.05, { vol: 0.03 }),
+    ok: () => {
+      tone(988, 0, 0.06);
+      tone(1318, 0.05, 0.08);
+    },
+    cancel: () => tone(440, 0, 0.08, { slide: -120 }),
+    step: () => tone(200, 0, 0.03, { type: "triangle", vol: 0.02 }),
+    lens: () => tone(1500, 0, 0.04, { type: "sine", vol: 0.04 }),
+    found: () => {
+      [660, 880, 1100, 1320].forEach((f, i) => tone(f, i * 0.06, 0.1));
+    },
+    hit: () => tone(180, 0, 0.08, { type: "sawtooth", vol: 0.05, slide: -80 }),
+    big: () => {
+      tone(120, 0, 0.25, { type: "sawtooth", vol: 0.08, slide: -60 });
+      tone(240, 0.02, 0.2, { vol: 0.05 });
+    },
+    heal: () => {
+      [784, 988, 1175].forEach((f, i) => tone(f, i * 0.07, 0.12, { type: "triangle" }));
+    },
+    rotate: () => tone(600, 0, 0.06, { type: "triangle", slide: 300 }),
+    special: () => {
+      [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.05, 0.12));
+    },
+    mash: () => tone(1200 + Math.random() * 300, 0, 0.03, { vol: 0.03 }),
+    win: () => {
+      [784, 784, 784, 1047].forEach((f, i) => tone(f, i * 0.12, i === 3 ? 0.4 : 0.1));
+    },
+    lose: () => {
+      [440, 392, 349, 262].forEach((f, i) => tone(f, i * 0.18, 0.2, { type: "triangle" }));
+    },
+    friend: () => {
+      [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.09, 0.25, { type: "triangle", vol: 0.05 }));
+    },
+    watch: () => {
+      tone(1047, 0, 0.1);
+      tone(1568, 0.1, 0.3, { type: "sine" });
+    }
+  };
+  function sfx(name) {
+    var _a;
+    if (!ac || muted || ac.state !== "running") return;
+    (_a = SOUNDS[name]) == null ? void 0 : _a.call(SOUNDS);
+  }
+  const ROLES = {
+    attacker: "攻める",
+    defender: "守る",
+    healer: "治す",
+    jammer: "じゃまする",
+    supporter: "支える"
+  };
+  const CHART = {
+    "こおり": { "ほのお": 0.67, "しぜん": 1.5, "かぜ": 1.5 },
+    "ほのお": { "こおり": 1.5, "みず": 0.67, "しぜん": 1.5 },
+    "みず": { "ほのお": 1.5, "しぜん": 0.67 },
+    "しぜん": { "ほのお": 0.67, "みず": 1.5, "かぜ": 0.67 },
+    "かぜ": { "こおり": 0.67, "しぜん": 1.5 },
+    "ふしぎ": { "ふしぎ": 1.5, "ふつう": 0.67 },
+    "ふつう": { "ふしぎ": 0.67 }
+  };
+  const ELEMENT_COLORS = {
+    "こおり": "#bff0ff",
+    "ほのお": "#ff8a4a",
+    "みず": "#4aa8e0",
+    "しぜん": "#5ad06a",
+    "かぜ": "#c8f08a",
+    "ふしぎ": "#d8a8ff",
+    "ふつう": "#e0e0e0"
+  };
+  const SKILL_BY_ELEMENT = {
+    "こおり": "こおりのつぶて",
+    "ほのお": "ひのこ",
+    "みず": "みずでっぽう",
+    "しぜん": "はっぱカッター",
+    "かぜ": "かまいたち",
+    "ふしぎ": "ふしぎなひかり",
+    "ふつう": "たいあたり"
+  };
+  const ROLE_BASE = {
+    attacker: { hp: 52, atk: 15, def: 9, spd: 13, mag: 9 },
+    defender: { hp: 70, atk: 10, def: 15, spd: 8, mag: 9 },
+    healer: { hp: 56, atk: 8, def: 10, spd: 11, mag: 15 },
+    jammer: { hp: 54, atk: 9, def: 10, spd: 12, mag: 14 },
+    supporter: { hp: 56, atk: 11, def: 11, spd: 13, mag: 11 }
+  };
+  const sp = (name, effects) => ({ name, effects });
+  const atk = (target, power, extra = {}) => ({ kind: "attack", target, power, ...extra });
+  const LIST = [
+    // ----- 前作 (ダンジョン) から 15 体 -----
+    {
+      id: "haribaby",
+      name: "ハリベビー",
+      from: "ダンジョン 001",
+      element: "ふつう",
+      role: "attacker",
+      mul: { hp: 0.9, atk: 1.05 },
+      line: "ハリ…！",
+      favorite: "cider",
+      title: "ハリーの子供",
+      desc: "ハリーの子供。車を運転することにあこがれており、いつか免許を取りたいと思っている。",
+      special: sp("ハリハリ突進", [atk("one", 2.6)])
+    },
+    {
+      id: "mumenbachi",
+      name: "ムメンキョバチ",
+      from: "ダンジョン 002",
+      element: "かぜ",
+      role: "attacker",
+      mul: { hp: 0.8, spd: 1.25 },
+      line: "メンキョナイー！",
+      favorite: "choco",
+      title: "無免許で空を飛ぶ蜂",
+      desc: "無免許で空を飛んでいる。警察に見つかったら５０万円の罰金、もしくは刑務所行きになる。",
+      special: sp("無免許スピン", [atk("all", 1.6)])
+    },
+    {
+      id: "donguriko",
+      name: "ドングリコ",
+      from: "ダンジョン 003",
+      element: "しぜん",
+      role: "defender",
+      mul: { hp: 0.9 },
+      line: "コロコロ～",
+      favorite: "kyuuri",
+      title: "意思を持つドングリ",
+      desc: "食べられないように意思を持ったドングリ。でもドングリなので、すぐ食べられる。",
+      special: sp("ころころガード", [{ kind: "buff", target: "party", stat: "def", amount: 0.5, time: 10 }])
+    },
+    {
+      id: "nemuridake",
+      name: "ネムリダケ",
+      from: "ダンジョン 004",
+      element: "しぜん",
+      role: "jammer",
+      mul: {},
+      line: "ふぁ～…",
+      favorite: "melonpan",
+      skillStatus: "sleep",
+      title: "眠いキノコ",
+      desc: "いつも不眠症なキノコ。周りにいるものも不眠症にする。",
+      special: sp("ねむりの胞子", [atk("all", 0.6), { kind: "status", target: "all", status: "sleep", chance: 0.6 }])
+    },
+    {
+      id: "pekorisu",
+      name: "ペコリス",
+      from: "ダンジョン 005",
+      element: "ふつう",
+      role: "supporter",
+      mul: { spd: 1.1 },
+      line: "いただきっ！",
+      favorite: "onigiri",
+      title: "森の盗人",
+      desc: "いつもおなかがすいており、周りから食べ物を奪うことで生きている。",
+      special: sp("いただきます", [atk("one", 2, { drain: 0.5 })])
+    },
+    {
+      id: "tsutankobu",
+      name: "ツタンコブ",
+      from: "ダンジョン 006",
+      element: "しぜん",
+      role: "defender",
+      mul: { hp: 1.1, atk: 1.1 },
+      line: "からまっちゃえ",
+      favorite: "kyuuri",
+      skillStatus: "slow",
+      title: "生きたツタ",
+      desc: "自我があるツタの生物。さいきん昆布なのかもしれないという論文が発表された。",
+      special: sp("ツタしばり", [atk("all", 0.8), { kind: "status", target: "all", status: "slow", chance: 0.8 }])
+    },
+    {
+      id: "yofukashi",
+      name: "ヨフカシフクロウ",
+      from: "ダンジョン 007",
+      element: "かぜ",
+      role: "jammer",
+      mul: { atk: 1.1 },
+      line: "まだ寝ないホー",
+      favorite: "cider",
+      skillStatus: "confuse",
+      title: "夜更かしする鳥",
+      desc: "夜更かしを日課にしているフクロウ。仲間内では何日寝らずにいられるかを競っているらしい。",
+      special: sp("夜ふかしの歌", [atk("all", 0.5), { kind: "status", target: "all", status: "confuse", chance: 0.6 }])
+    },
+    {
+      id: "kogame",
+      name: "コガメ",
+      from: "ダンジョン 008",
+      element: "みず",
+      role: "defender",
+      mul: { def: 1.2, spd: 0.9 },
+      line: "…（こもる）",
+      favorite: "kyuuri",
+      title: "小さな亀",
+      desc: "小さな亀。それ以外の何物でもない。",
+      special: sp("こうらにこもる", [{ kind: "buff", target: "party", stat: "def", amount: 0.6, time: 12 }, { kind: "heal", target: "self", power: 1.2 }])
+    },
+    {
+      id: "tsuribariuo",
+      name: "ツリバリウオ",
+      from: "ダンジョン 010",
+      element: "みず",
+      role: "jammer",
+      mul: { atk: 1.15, hp: 0.9 },
+      line: "つれた～！",
+      favorite: "niboshi",
+      skillStatus: "slow",
+      title: "魚を釣る魚",
+      desc: "口が釣り針になっており、魚を釣って食べている。まれにゴミを釣ってしまい、釣り針が使い物にならなくなり、餓死してしまう個体もいる。",
+      special: sp("一本釣り", [atk("one", 2.8)])
+    },
+    {
+      id: "mokugyoro",
+      name: "モクギョロ",
+      from: "ダンジョン 017",
+      element: "ふつう",
+      role: "jammer",
+      mul: { def: 1.1 },
+      line: "ポクポクポク…",
+      favorite: "onigiri",
+      skillStatus: "sleep",
+      title: "木魚",
+      desc: "木魚が使い続けられ、命を宿した。右斜めあたりをたたかれると気持ちいいらしい。",
+      special: sp("ポクポク連打", [atk("one", 0.7, { hits: 5 })])
+    },
+    {
+      id: "rousokubi",
+      name: "ロウソクビ",
+      from: "ダンジョン 021",
+      element: "ほのお",
+      role: "attacker",
+      mul: { mag: 1.2 },
+      line: "ゆら～り",
+      favorite: "choco",
+      title: "ろうそくの怪異",
+      desc: "ろうそくの火が消えると現れる怪異。こいつの火が消えると、周りの人の命が一つ消える。",
+      special: sp("ろうそくの灯", [atk("all", 1.7)])
+    },
+    {
+      id: "daichouenkin",
+      name: "ダイチョウエンキン",
+      from: "ダンジョン 051",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { hp: 1.05 },
+      line: "おなか、ぐるぐる～",
+      favorite: "melonpan",
+      skillStatus: "poison",
+      title: "大腸菌",
+      desc: "大腸炎が肉眼で見える形になったもの。友好型。こおりくんとは昔からの友達。",
+      special: sp("大腸炎ウェーブ", [atk("all", 0.6), { kind: "status", target: "all", status: "poison", chance: 0.9 }])
+    },
+    {
+      id: "kunaisuzume",
+      name: "クナイスズメ",
+      from: "ダンジョン 023",
+      element: "かぜ",
+      role: "attacker",
+      mul: { spd: 1.2, hp: 0.9 },
+      line: "チュンッ！",
+      favorite: "melonpan",
+      title: "クナイをもつスズメ",
+      desc: "クナイを口に持ち、敵を狙って攻撃する。",
+      special: sp("クナイ乱れ投げ", [atk("all", 0.6, { hits: 3 })])
+    },
+    {
+      id: "kawarimidanuki",
+      name: "カワリミダヌキ",
+      from: "ダンジョン 024",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: {},
+      line: "ドロン！",
+      favorite: "onigiri",
+      skillStatus: "confuse",
+      title: "変身の達人",
+      desc: "様々な姿に変身できる特殊な忍者。",
+      special: sp("どろんチェンジ", [atk("one", 1.2), { kind: "buff", target: "party", stat: "def", amount: 0.6, time: 10 }])
+    },
+    {
+      id: "shinobigaeru",
+      name: "シノビガエル",
+      from: "ダンジョン 027",
+      element: "みず",
+      role: "attacker",
+      mul: { mag: 1.1 },
+      line: "ゲロッと参上",
+      favorite: "niboshi",
+      title: "忍者の蛙",
+      desc: "蛙の忍者。最近ナルトを見たらしい。",
+      special: sp("水遁の術", [atk("all", 1.7)])
+    },
+    // ----- 新キャラ 5 体 (設計書 4.6) -----
+    {
+      id: "ishikoron",
+      name: "イシコロン",
+      from: "新",
+      element: "しぜん",
+      role: "defender",
+      mul: { def: 1.15 },
+      line: "ふむなっ！",
+      favorite: "onigiri",
+      title: "怒りっぽい石",
+      desc: "川原の丸い石に意思が宿った。踏まれると怒って転がってくる。石の川タウンの名前の由来と言いはっている。",
+      special: sp("ごろごろアタック", [atk("one", 2.6)])
+    },
+    {
+      id: "mizukirin",
+      name: "ミズキリン",
+      from: "新",
+      element: "かぜ",
+      role: "attacker",
+      mul: { spd: 1.15 },
+      line: "まだまだ跳ねるぜ",
+      favorite: "cider",
+      title: "水切りの石",
+      desc: "水切りで何回はねたかを自慢する平たい石。最高記録は 31 回と言いはるが、誰も見ていない。",
+      special: sp("水切り31段", [atk("one", 0.45, { hits: 8 })])
+    },
+    {
+      id: "soumennagare",
+      name: "ソウメンナガレ",
+      from: "新",
+      element: "みず",
+      role: "supporter",
+      mul: { spd: 1.1 },
+      line: "ながされたい～",
+      favorite: "niboshi",
+      title: "流しそうめんの精",
+      desc: "流しそうめんで取りそこねられたそうめんの精。流されるのが大好きで、仲間のすばやさを上げる。",
+      special: sp("ながしそうめん", [{ kind: "buff", target: "party", stat: "spd", amount: 0.5, time: 12 }, { kind: "heal", target: "party", power: 0.6 }])
+    },
+    {
+      id: "kozarappa",
+      name: "コザラッパ",
+      from: "新",
+      element: "みず",
+      role: "healer",
+      mul: {},
+      line: "おさら、どこ～？",
+      favorite: "kyuuri",
+      title: "皿をなくした河童の子",
+      desc: "頭の皿を川に落とした河童の子。皿を探しながら、ケガした仲間に水をかけて治す。",
+      special: sp("さらの水", [{ kind: "heal", target: "party", power: 1.6 }])
+    },
+    {
+      id: "hashishita",
+      name: "ハシシタボウズ",
+      from: "新",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { mag: 1.1 },
+      line: "ひとつ、ふたつ…",
+      favorite: "choco",
+      skillStatus: "confuse",
+      title: "橋の下の坊主",
+      desc: "橋の下に住み、通る人の足音を数えている。数えまちがえると機嫌が悪くなり、相手を混乱させる。",
+      special: sp("足音かぞえ", [atk("all", 0.5), { kind: "status", target: "all", status: "confuse", chance: 0.8 }])
+    }
+  ];
+  const NAKAMA = {};
+  LIST.forEach((n, i) => {
+    const base = {};
+    for (const [k, v] of Object.entries(ROLE_BASE[n.role])) base[k] = Math.round(v * (n.mul[k] || 1));
+    const skill = n.role === "healer" ? { name: "いやしの水", effects: [{ kind: "heal", target: "lowest", power: 1 }] } : {
+      name: SKILL_BY_ELEMENT[n.element],
+      effects: [{ kind: "attack", target: "one", power: 1.4, magic: true }, ...n.skillStatus ? [{ kind: "status", target: "one", status: n.skillStatus, chance: 0.25 }] : []]
+    };
+    NAKAMA[n.id] = { ...n, no: i + 1, rank: "E", base, skill, art: n.id };
+  });
+  const NAKAMA_IDS = LIST.map((n) => n.id);
+  const BOSSES = {
+    nushi: {
+      id: "nushi",
+      name: "ヌシ・ハシシタボウズ",
+      element: "ふしぎ",
+      role: "jammer",
+      art: "hashishita",
+      scale: 2,
+      base: { hp: 340, atk: 14, def: 12, spd: 9, mag: 15 },
+      skill: { name: "ふしぎなひかり", effects: [{ kind: "attack", target: "one", power: 1.4, magic: true }, { kind: "status", target: "one", status: "confuse", chance: 0.3 }] },
+      // 大技: 2.5 秒 前に 予告が 出る。そのあいだに 輪を 回して よけられる (設計書 3.5)
+      bigMove: { name: "足音 百かぞえ", every: 12, warn: 2.5, effects: [atk("all", 1.6, { magic: true })] },
+      befriends: "hashishita"
+    }
+  };
+  const TILE = 16;
+  const MAP_W = 48, MAP_H = 36;
+  const BLOCK = /* @__PURE__ */ new Set(["T", "W"]);
+  function build() {
+    const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("G"));
+    const fill = (x0, y0, x1, y1, c) => {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) t[y][x] = c;
+    };
+    fill(0, 0, MAP_W - 1, 0, "T");
+    fill(0, MAP_H - 1, MAP_W - 1, MAP_H - 1, "T");
+    fill(0, 0, 0, MAP_H - 1, "T");
+    fill(MAP_W - 1, 0, MAP_W - 1, MAP_H - 1, "T");
+    fill(2, 2, 10, 9, "K");
+    fill(1, 10, 9, 10, "T");
+    fill(36, 2, 46, 10, "K");
+    fill(30, 1, 33, MAP_H - 2, "W");
+    fill(28, 1, 29, MAP_H - 2, "P");
+    fill(34, 1, 35, MAP_H - 2, "P");
+    fill(1, 17, 27, 18, "R");
+    fill(36, 17, 46, 18, "R");
+    fill(12, 2, 13, 33, "R");
+    fill(40, 2, 41, 33, "R");
+    fill(14, 8, 27, 9, "R");
+    fill(28, 17, 35, 18, "B");
+    fill(16, 26, 26, 33, "S");
+    fill(16, 31, 18, 33, "F");
+    fill(2, 26, 9, 27, "F");
+    fill(2, 29, 9, 33, "A");
+    fill(36, 24, 39, 28, "F");
+    [[26, 12], [25, 13], [22, 13], [16, 26], [26, 33], [21, 30], [38, 14], [44, 14], [37, 31], [44, 30], [45, 22], [9, 14], [3, 14], [6, 15]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
+    return t.map((row) => row.join(""));
+  }
+  const TILES = build();
+  const BUILDINGS = [
+    { id: "home", label: "こおりくんの家", x: 3, y: 20, w: 6, h: 4, wall: "#f0e0c0", roof: "#4a7ac0", door: { x: 6, y: 23 } },
+    { id: "dagashi", label: "駄菓子屋", x: 15, y: 20, w: 6, h: 4, wall: "#f8d8a0", roof: "#d05a3a", door: { x: 17, y: 23 } },
+    { id: "school", label: "石の川小学校", x: 15, y: 2, w: 10, h: 5, wall: "#f4f0e8", roof: "#8a6a4a", door: { x: 19, y: 6 } },
+    { id: "shrine", label: "石の川神社", x: 4, y: 2, w: 4, h: 3, wall: "#c84a3a", roof: "#3a3a40", door: { x: 5, y: 4 } },
+    { id: "toilet", label: "トイレ", x: 24, y: 27, w: 2, h: 2, wall: "#d8e8f0", roof: "#5a8aa0", door: { x: 24, y: 28 } },
+    { id: "temple", label: "石の川寺", x: 42, y: 3, w: 5, h: 4, wall: "#a87a4a", roof: "#3a3a40", door: { x: 44, y: 6 } }
+  ];
+  const PROPS = [
+    { id: "torii-l", kind: "torii", x: 5, y: 9 },
+    { id: "torii-r", kind: "torii", x: 8, y: 9 }
+  ];
+  const SPOTS = [
+    { id: "kawara", label: "川原の石ころ", x: 28, y: 11, kinds: [{ id: "ishikoron", w: 3 }, { id: "mizukirin", w: 2 }] },
+    { id: "riverTree", label: "川原の木の下", x: 25, y: 12, kinds: [{ id: "donguriko", w: 1 }] },
+    { id: "park", label: "公園のしげみ", x: 17, y: 27, kinds: [{ id: "nemuridake", w: 1 }, { id: "nemuridake", w: 3, time: ["night"] }] },
+    { id: "dagashiBack", label: "駄菓子屋の裏", x: 21, y: 21, kinds: [{ id: "pekorisu", w: 1 }] },
+    { id: "ishigaki", label: "石垣のツタ", x: 11, y: 3, kinds: [{ id: "tsutankobu", w: 1 }] },
+    { id: "shrineTree", label: "神社の大きな木", x: 2, y: 3, kinds: [{ id: "yofukashi", w: 1, time: ["night"] }] },
+    { id: "densen", label: "商店の電線", x: 14, y: 19, kinds: [{ id: "kunaisuzume", w: 1 }] },
+    { id: "asase", label: "川の浅いところ", x: 29, y: 26, kinds: [{ id: "kogame", w: 3 }, { id: "shinobigaeru", w: 3, weather: "rain" }] },
+    { id: "hashiue", label: "橋から見る川", x: 29, y: 16, kinds: [{ id: "tsuribariuo", w: 1 }] },
+    { id: "toiletSide", label: "公園のトイレ", x: 26, y: 28, kinds: [{ id: "daichouenkin", w: 1 }] },
+    { id: "uraYama", label: "小学校の裏山", x: 25, y: 3, kinds: [{ id: "kawarimidanuki", w: 1 }] },
+    { id: "kadan", label: "花だん", x: 5, y: 26, kinds: [{ id: "mumenbachi", w: 1 }] },
+    { id: "parking", label: "駐車場の車の下", x: 4, y: 31, kinds: [{ id: "haribaby", w: 1 }] },
+    { id: "kawakami", label: "夏の川上", x: 29, y: 2, kinds: [{ id: "soumennagare", w: 1 }] },
+    { id: "hashishita", label: "橋の下の水たまり", x: 28, y: 20, kinds: [{ id: "kozarappa", w: 2 }, { id: "hashishita", w: 2, after: "clear" }] },
+    { id: "hondou", label: "お寺の本堂", x: 43, y: 8, kinds: [{ id: "mokugyoro", w: 1 }] },
+    { id: "teraUra", label: "お寺の裏", x: 37, y: 3, kinds: [{ id: "rousokubi", w: 1, time: ["night"] }] }
+  ];
+  const PEOPLE = [
+    { id: "mama", name: "ともいし", art: "tomoishi", x: 8, y: 24 },
+    { id: "furukawaShrine", name: "ふるカワ", art: "furukawa", x: 7, y: 6, only: "beforeWatch" },
+    { id: "nushi", name: "ヌシ", art: "hashishita", x: 31, y: 17, h: 2, only: "beforeClear", scale: 2 }
+  ];
+  const START = { x: 6, y: 24 };
+  const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
+  const MAX_LV = 99;
+  const STAT_KEYS = ["hp", "atk", "def", "spd", "mag"];
+  const speciesOf = (id) => NAKAMA[id] || BOSSES[id];
+  function statsAt(id, lv) {
+    const s = speciesOf(id);
+    const k = 1 + 0.07 * (lv - 1);
+    const out = {};
+    for (const key2 of STAT_KEYS) out[key2] = Math.round(s.base[key2] * k);
+    return out;
+  }
+  const expFor = (lv) => lv <= 1 ? 0 : Math.round(8 * Math.pow(lv - 1, 1.9));
+  function gainExp(medal, exp) {
+    const before = medal.lv;
+    medal.exp += exp;
+    while (medal.lv < MAX_LV && medal.exp >= expFor(medal.lv + 1)) medal.lv++;
+    return medal.lv - before;
+  }
+  const expReward = (id, lv) => Math.round((10 + lv * 6) * (BOSSES[id] ? 4 : 1));
+  const moneyReward = (id, lv) => Math.round((8 + lv * 4) * (BOSSES[id] ? 5 : 1));
+  const SAVE_VERSION = 1;
+  const VERSIONS = { naitei: "内定", menkyo: "免許" };
+  const TIMES = ["朝", "昼", "夕方", "夜"];
+  const TIME_IDS = ["morning", "day", "evening", "night"];
+  const FRIENDS_GOAL = 3;
+  const PITY_WINS = 10;
+  const BEFRIEND_BASE = { E: 0.25, D: 0.15, C: 0.1, B: 0.06, A: 0.04, S: 0.02 };
+  function newGame(version, seed = 1) {
+    return {
+      saveVersion: SAVE_VERSION,
+      version,
+      chapter: 1,
+      story: "intro",
+      friendsAtWatch: 0,
+      day: 1,
+      time: 0,
+      weather: "sun",
+      pos: { x: START.x * 16 + 8, y: START.y * 16 + 12, dir: "down" },
+      money: 300,
+      items: { onigiri: 3, melonpan: 1 },
+      medals: [],
+      watch: [null, null, null, null, null, null],
+      zukan: { seen: {}, friends: {} },
+      wins: {},
+      nextUid: 1,
+      seed,
+      playTime: 0,
+      spotCooldown: {}
+    };
+  }
+  function migrate(save) {
+    const base = newGame(save.version);
+    return { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {} };
+  }
+  const hasWatch = (g) => g.story !== "intro";
+  const timeId = (g) => TIME_IDS[g.time];
+  const friendCount = (g) => Object.keys(g.zukan.friends).length;
+  function addMedal(g, id, lv) {
+    const medal = { uid: `m${g.nextUid++}`, id, lv, exp: expFor(lv) };
+    g.medals.push(medal);
+    g.zukan.friends[id] = true;
+    g.zukan.seen[id] = true;
+    const free = g.watch.indexOf(null);
+    if (free >= 0) g.watch[free] = medal.uid;
+    return medal;
+  }
+  const medalByUid = (g, uid) => g.medals.find((m) => m.uid === uid) || null;
+  const watchMedals = (g) => g.watch.map((uid) => uid ? medalByUid(g, uid) : null);
+  function advanceTime(g, rng) {
+    g.time = (g.time + 1) % 4;
+    if (g.time === 0) {
+      g.day++;
+      g.weather = rng.chance(0.3) ? "rain" : "sun";
+    }
+  }
+  function spotKinds(g, spot) {
+    return spot.kinds.filter((k) => (!k.time || k.time.includes(timeId(g))) && (!k.weather || k.weather === g.weather) && (!k.after || g.story === k.after));
+  }
+  function spotActive(g, spot, now) {
+    return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
+  }
+  function encounter(g, spot, rng) {
+    const kinds = spotKinds(g, spot);
+    const pick = rng.weighted(kinds);
+    const [lo, hi] = g.story === "clear" ? [4, 9] : [2, 5];
+    const lv = lo + rng.int(hi - lo + 1);
+    const enemies = [{ id: pick.id, lv }];
+    if (rng.chance(0.2)) {
+      const other = rng.weighted(kinds);
+      enemies.push({ id: other.id, lv: Math.max(1, lv - 1) });
+    }
+    enemies.forEach((e) => {
+      g.zukan.seen[e.id] = true;
+    });
+    return enemies;
+  }
+  const bossEnemies = () => [{ id: "nushi", lv: 8 }];
+  function befriendRate(g, id, food) {
+    const sp2 = NAKAMA[id];
+    if (!sp2) return 0;
+    if ((g.wins[id] || 0) >= PITY_WINS) return 1;
+    let rate = BEFRIEND_BASE[sp2.rank] ?? 0.1;
+    if (food && food.target === id) rate *= food.favorite ? 2 : 1.3;
+    return Math.min(0.9, rate);
+  }
+  function applyBattleResult(g, battle, rng) {
+    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === "boss" };
+    if (battle.outcome !== "win") {
+      out.money = -Math.floor(g.money * 0.1);
+      g.money += out.money;
+      return out;
+    }
+    for (const e of battle.enemies) {
+      out.exp += expReward(e.id, e.lv);
+      out.money += moneyReward(e.id, e.lv);
+      if (NAKAMA[e.id]) g.wins[e.id] = (g.wins[e.id] || 0) + 1;
+    }
+    g.money += out.money;
+    for (const m of watchMedals(g)) {
+      if (!m) continue;
+      const up = gainExp(m, out.exp);
+      if (up) out.levelUps.push({ uid: m.uid, id: m.id, lv: m.lv });
+    }
+    if (out.boss) {
+      const id = BOSSES.nushi.befriends;
+      out.befriend = { id, medal: addMedal(g, id, 6), forced: true };
+      g.story = "clear";
+      return out;
+    }
+    const ids = [...new Set(battle.enemies.map((e) => e.id))];
+    for (const id of ids) {
+      if (rng.chance(befriendRate(g, id, battle.food))) {
+        const lv = battle.enemies.find((e) => e.id === id).lv;
+        out.befriend = { id, medal: addMedal(g, id, lv) };
+        g.wins[id] = 0;
+        break;
+      }
+    }
+    out.storyChanged = updateStory(g);
+    return out;
+  }
+  function updateStory(g) {
+    if (g.story === "friends" && g.medals.length - g.friendsAtWatch >= FRIENDS_GOAL) {
+      g.story = "bridge";
+      return "bridge";
+    }
+    return null;
+  }
+  function receiveWatch(g) {
+    if (g.story !== "intro") return null;
+    const medal = addMedal(g, "daichouenkin", 5);
+    g.story = "friends";
+    g.friendsAtWatch = g.medals.length;
+    return medal;
+  }
+  function objective(g) {
+    switch (g.story) {
+      case "intro":
+        return "石の川神社に 行ってみよう";
+      case "friends":
+        return `レンズで さがして、なかまを ふやそう (${Math.min(FRIENDS_GOAL, g.medals.length - g.friendsAtWatch)}/${FRIENDS_GOAL})`;
+      case "bridge":
+        return "石の川橋の ヌシを なんとかしよう";
+      default:
+        return `石の川タウンの なかまを あつめよう (${friendCount(g)}/${NAKAMA_IDS.length})`;
+    }
+  }
+  const ITEMS = {
+    onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
+    melonpan: { name: "メロンパン", heal: 50, price: 50, desc: "なかま 1 体の HP を 50 回復。パンが好きな なかまの 好物" },
+    choco: { name: "チョコ", heal: 30, gauge: 30, price: 40, desc: "HP を 30 回復し、必殺技ゲージが 30 たまる。あまいもの好きの 好物" },
+    cider: { name: "サイダー", heal: 40, price: 40, desc: "なかま 1 体の HP を 40 回復。シュワシュワ好きの 好物" },
+    kyuuri: { name: "きゅうり", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。やさい好きの 好物" },
+    niboshi: { name: "にぼし", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。さかな好きの 好物" }
+  };
+  const SHOP = ["onigiri", "melonpan", "choco", "cider", "kyuuri", "niboshi"];
+  const GAUGE_MAX = 100;
+  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8 };
+  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく" };
+  const BACK_REGEN = 4e-3;
+  const ROTATE_COOLDOWN = 0.35;
+  const ITEM_COOLDOWN = 4;
+  let uidSeq = 0;
+  function makeUnit({ uid, id, lv }, side) {
+    const sp2 = speciesOf(id);
+    const st = statsAt(id, lv);
+    return {
+      uid: uid ?? `${side}-${++uidSeq}`,
+      id,
+      lv,
+      side,
+      name: sp2.name,
+      element: sp2.element,
+      role: sp2.role,
+      art: sp2.art,
+      scale: sp2.scale || 1,
+      skill: sp2.skill,
+      special: sp2.special || null,
+      bigMove: sp2.bigMove || null,
+      boss: Boolean(sp2.bigMove),
+      max: st.hp,
+      hp: st.hp,
+      s: st,
+      timer: 0,
+      gauge: 0,
+      status: {},
+      buffs: {},
+      ko: false
+    };
+  }
+  function createBattle({ allies, enemies, rng, kind = "wild" }) {
+    const b = {
+      kind,
+      rng,
+      t: 0,
+      rot: 0,
+      wheel: Array.from({ length: 6 }, (_, i) => allies[i] ? makeUnit(allies[i], "ally") : null),
+      enemies: enemies.map((e) => makeUnit(e, "enemy")),
+      events: [],
+      outcome: null,
+      paused: false,
+      rotateCooldown: 0,
+      itemCooldown: 0,
+      frontDownTime: 0,
+      bossTimer: 0,
+      warned: false,
+      food: null
+    };
+    b.enemies.forEach((e, i) => {
+      e.timer = -0.6 - i * 0.5;
+    });
+    b.front = () => [0, 1, 2].map((i) => b.wheel[(b.rot + i) % 6]);
+    b.frontAlive = () => b.front().filter((u) => u && !u.ko);
+    b.enemiesAlive = () => b.enemies.filter((u) => !u.ko);
+    return b;
+  }
+  const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
+  const buffOf = (u, stat) => u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0;
+  const interval = (u) => 3 * 20 / (u.s.spd * (1 + buffOf(u, "spd")) + 10) * (u.status.slow > 0 ? 1.6 : 1);
+  const effectOf = (element, target) => CHART[element] && CHART[element][target] || 1;
+  function damage(b, from, to, power, { magic = false, mult = 1 } = {}) {
+    if (to.ko) return 0;
+    const A = (magic ? from.s.mag : from.s.atk) * (1 + buffOf(from, "atk"));
+    const D = to.s.def * (1 + buffOf(to, "def"));
+    const element = magic ? from.element : "ふつう";
+    const eff = effectOf(element, to.element);
+    const stab = magic ? 1.2 : 1;
+    const crit = !magic && b.rng.chance(0.06);
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1);
+    dmg = Math.max(1, Math.round(dmg));
+    to.hp = Math.max(0, to.hp - dmg);
+    if (to.status.sleep > 0) to.status.sleep = 0;
+    if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
+    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff });
+    if (to.hp <= 0) {
+      to.ko = true;
+      to.status = {};
+      emit(b, "ko", { target: to.uid, side: to.side });
+    }
+    return dmg;
+  }
+  function heal(b, from, to, amount) {
+    if (!to || to.ko) return;
+    const before = to.hp;
+    to.hp = Math.min(to.max, to.hp + Math.round(amount));
+    emit(b, "heal", { target: to.uid, amount: Math.round(to.hp - before) });
+  }
+  function addStatus(b, to, status, chance) {
+    if (to.ko) return;
+    const resist = to.boss ? 0.4 : 1;
+    if (!b.rng.chance(Math.min(0.95, chance * resist))) return;
+    to.status[status] = STATUS_TIME[status];
+    emit(b, "status", { target: to.uid, status });
+  }
+  function opponents(b, side) {
+    return side === "ally" ? b.enemiesAlive() : b.frontAlive();
+  }
+  function friends(b, side) {
+    return side === "ally" ? b.frontAlive() : b.enemiesAlive();
+  }
+  function pickOne(b, side) {
+    const list = opponents(b, side);
+    if (!list.length) return null;
+    return b.rng.weighted(list.map((u) => ({ u, w: side === "enemy" && u.role === "defender" ? 2 : 1 }))).u;
+  }
+  function applyEffects(b, user, effects, mult = 1) {
+    let firstTarget = null;
+    for (const fx of effects) {
+      let targets;
+      if (fx.target === "self") targets = [user];
+      else if (fx.target === "party") targets = friends(b, user.side);
+      else if (fx.target === "lowest") {
+        const list = friends(b, user.side);
+        targets = list.length ? [list.reduce((a, c) => c.hp / c.max < a.hp / a.max ? c : a)] : [];
+      } else if (fx.target === "all") targets = opponents(b, user.side);
+      else {
+        if (!firstTarget || firstTarget.ko) firstTarget = pickOne(b, user.side);
+        targets = firstTarget ? [firstTarget] : [];
+      }
+      for (const to of targets) {
+        if (fx.kind === "attack") {
+          for (let h = 0; h < (fx.hits || 1); h++) {
+            const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult });
+            if (fx.drain) heal(b, user, user, dmg * fx.drain);
+          }
+        } else if (fx.kind === "heal") {
+          heal(b, user, to, fx.power * user.s.mag * 1.6 * mult);
+        } else if (fx.kind === "status") {
+          addStatus(b, to, fx.status, fx.chance * mult);
+        } else if (fx.kind === "buff") {
+          to.buffs[fx.stat] = { amount: fx.amount * Math.min(1.5, mult), t: fx.time };
+          emit(b, "buff", { target: to.uid, stat: fx.stat });
+        }
+      }
+    }
+  }
+  function act(b, u) {
+    if (u.status.confuse > 0 && b.rng.chance(0.5)) {
+      emit(b, "confused", { actor: u.uid });
+      return;
+    }
+    if (u.side === "enemy" && u.special && u.gauge >= GAUGE_MAX) {
+      u.gauge = 0;
+      emit(b, "special", { actor: u.uid, name: u.special.name, side: "enemy" });
+      applyEffects(b, u, u.special.effects, 0.8);
+      return;
+    }
+    const hurt = friends(b, u.side).some((f) => f.hp < f.max * 0.6);
+    const useSkill = u.role === "healer" ? hurt : b.rng.chance(0.3);
+    if (useSkill) {
+      emit(b, "skill", { actor: u.uid, name: u.skill.name });
+      applyEffects(b, u, u.skill.effects);
+    } else {
+      const to = pickOne(b, u.side);
+      if (!to) return;
+      emit(b, "attack", { actor: u.uid, target: to.uid });
+      damage(b, u, to, 1);
+    }
+    u.gauge = Math.min(GAUGE_MAX, u.gauge + (u.side === "ally" ? 15 : 8));
+  }
+  function tickUnit(b, u, dt, acting) {
+    for (const k of Object.keys(u.status)) {
+      u.status[k] -= dt;
+      if (u.status[k] <= 0) delete u.status[k];
+    }
+    for (const k of Object.keys(u.buffs)) {
+      u.buffs[k].t -= dt;
+      if (u.buffs[k].t <= 0) delete u.buffs[k];
+    }
+    if (u.status.poison > 0) {
+      u.hp = Math.max(1, u.hp - u.max * 0.03 * dt);
+    }
+    if (!acting || u.status.sleep > 0) return;
+    u.timer += dt;
+    if (u.timer >= interval(u)) {
+      u.timer = 0;
+      act(b, u);
+    }
+  }
+  function checkOutcome(b) {
+    if (b.outcome) return;
+    if (b.enemies.every((e) => e.ko)) {
+      b.outcome = "win";
+      emit(b, "win");
+    } else if (b.wheel.filter(Boolean).every((u) => u.ko)) {
+      b.outcome = "lose";
+      emit(b, "lose");
+    }
+  }
+  function step(b, dt) {
+    if (b.outcome || b.paused) return;
+    b.t += dt;
+    b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
+    b.itemCooldown = Math.max(0, b.itemCooldown - dt);
+    const front = b.front();
+    for (const u of b.wheel) {
+      if (!u || u.ko) continue;
+      const isFront = front.includes(u);
+      if (!isFront) u.hp = Math.min(u.max, u.hp + u.max * BACK_REGEN * dt);
+      tickUnit(b, u, dt, isFront);
+      if (b.outcome) return;
+      checkOutcome(b);
+    }
+    for (const e of b.enemies) {
+      if (e.ko) continue;
+      tickUnit(b, e, dt, true);
+      if (e.bigMove) bossTick(b, e, dt);
+      checkOutcome(b);
+      if (b.outcome) return;
+    }
+    if (!b.frontAlive().length && b.wheel.some((u) => u && !u.ko)) {
+      b.frontDownTime += dt;
+      if (b.frontDownTime > 2) {
+        b.rot = (b.rot + 3) % 6;
+        b.frontDownTime = 0;
+        emit(b, "rotate", { auto: true });
+      }
+    } else b.frontDownTime = 0;
+    checkOutcome(b);
+  }
+  function bossTick(b, e, dt) {
+    const m = e.bigMove;
+    b.bossTimer += dt;
+    if (!b.warned && b.bossTimer >= m.every - m.warn) {
+      b.warned = true;
+      emit(b, "telegraph", { actor: e.uid, name: m.name, warn: m.warn });
+    }
+    if (b.bossTimer >= m.every) {
+      b.bossTimer = 0;
+      b.warned = false;
+      emit(b, "special", { actor: e.uid, name: m.name, side: "enemy", big: true });
+      applyEffects(b, e, m.effects);
+    }
+  }
+  function rotate(b, dir) {
+    if (b.outcome || b.paused || b.rotateCooldown > 0) return false;
+    b.rot = (b.rot + (dir > 0 ? 1 : 5)) % 6;
+    b.rotateCooldown = ROTATE_COOLDOWN;
+    emit(b, "rotate", { dir });
+    return true;
+  }
+  const canSpecial = (b, pos) => {
+    const u = b.front()[pos];
+    return Boolean(u && !u.ko && u.special && u.gauge >= GAUGE_MAX && !b.outcome && !b.paused);
+  };
+  function startSpecial(b, pos) {
+    if (!canSpecial(b, pos)) return null;
+    b.paused = true;
+    return b.front()[pos];
+  }
+  function resolveSpecial(b, unit, mult) {
+    b.paused = false;
+    if (!unit || unit.ko) return;
+    unit.gauge = 0;
+    emit(b, "special", { actor: unit.uid, name: unit.special.name, side: "ally", mult });
+    applyEffects(b, unit, unit.special.effects, mult);
+    checkOutcome(b);
+  }
+  function useItem(b, itemId, pos = null) {
+    const item = ITEMS[itemId];
+    if (!item || b.outcome || b.paused || b.itemCooldown > 0) return false;
+    const target = pos === null ? b.frontAlive().reduce((a, c) => !a || c.hp / c.max < a.hp / a.max ? c : a, null) : b.front()[pos];
+    if (!target || target.ko) return false;
+    heal(b, target, target, item.heal);
+    if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
+    b.itemCooldown = ITEM_COOLDOWN;
+    emit(b, "item", { target: target.uid, itemId });
+    return true;
+  }
+  function throwFood(b, itemId) {
+    if (b.food || b.kind !== "wild" || b.outcome || b.paused || !ITEMS[itemId]) return false;
+    const to = b.enemiesAlive()[0];
+    if (!to) return false;
+    const fav = speciesOf(to.id).favorite === itemId;
+    b.food = { itemId, target: to.id, favorite: fav };
+    emit(b, "food", { target: to.uid, itemId, favorite: fav });
+    return true;
+  }
+  const LEGACY_ART = {
+    koori: {
+      w: 16,
+      h: 16,
+      palette: { "o": "#1b3a6b", "w": "#ffffff", "c": "#bff0ff", "b": "#7fd3f7", "d": "#4aa8e0", "k": "#10162a", "p": "#ff9eb5" },
+      frames: [
+        [
+          "................",
+          ".oooooooooooooo.",
+          ".owwwcccccccbbo.",
+          ".owwccccccccbbo.",
+          ".owcccccccccbbo.",
+          ".occckcccckccbo.",
+          ".occckcccckccbo.",
+          ".ocpcccccccpcbo.",
+          ".occccckkccccbo.",
+          ".occcccccccccbo.",
+          ".obcccccccccbbo.",
+          ".obbbbbbbbbbbdo.",
+          ".oooooooooooooo.",
+          "...odo....odo...",
+          "...ooo....ooo...",
+          "................"
+        ],
+        [
+          "................",
+          ".oooooooooooooo.",
+          ".owwwcccccccbbo.",
+          ".owwccccccccbbo.",
+          ".owcccccccccbbo.",
+          ".occckcccckccbo.",
+          ".occckcccckccbo.",
+          ".ocpcccccccpcbo.",
+          ".occccckkccccbo.",
+          ".occcccccccccbo.",
+          ".obcccccccccbbo.",
+          ".obbbbbbbbbbbdo.",
+          ".oooooooooooooo.",
+          "....odo..odo....",
+          "....ooo..ooo....",
+          "................"
+        ]
+      ]
+    },
+    tomoishi: {
+      w: 16,
+      h: 18,
+      palette: { "o": "#2a2a30", "h": "#7a4ab0", "H": "#a87ad8", "G": "#d0d0da", "g": "#a0a0ac", "d": "#70707c", "k": "#10162a", "p": "#ff9eb5", "m": "#c03048", "a": "#ffe08a", "A": "#d8a840", "f": "#4a4a54" },
+      frames: [
+        [
+          "...hHhhHhhHh....",
+          "..hhhhhhhhhhhh..",
+          ".hHhhhHhhhhHhhh.",
+          ".hoooooooooooohh",
+          ".oGGGgggggggggo.",
+          "oGGgggggggggggdo",
+          "oGgggkgggggkggdo",
+          "oggggkgggggkggdo",
+          "ogpgggggggggpgdo",
+          "oggggggmmgggggdo",
+          "oggggggggggggddo",
+          "oggaggggggggaddo",
+          "oggaaaaaaaaaaddo",
+          "odgaaaappaaaAddo",
+          ".oddAAAAAAAAddo.",
+          "..oooooooooooo..",
+          "...ofo....ofo...",
+          "...ooo....ooo..."
+        ],
+        [
+          "...hHhhHhhHh....",
+          "..hhhhhhhhhhhh..",
+          ".hHhhhHhhhhHhhh.",
+          ".hoooooooooooohh",
+          ".oGGGgggggggggo.",
+          "oGGgggggggggggdo",
+          "oGgggkgggggkggdo",
+          "oggggkgggggkggdo",
+          "ogpgggggggggpgdo",
+          "oggggmmmmmggggdo",
+          "oggggmmkmmgggddo",
+          "oggaggggggggaddo",
+          "oggaaaaaaaaaaddo",
+          "odgaaaappaaaAddo",
+          ".oddAAAAAAAAddo.",
+          "..oooooooooooo..",
+          "...ofo....ofo...",
+          "...ooo....ooo..."
+        ]
+      ]
+    },
+    furukawa: {
+      w: 16,
+      h: 20,
+      palette: { "o": "#2a1a1a", "h": "#7a4a2a", "H": "#b07a48", "r": "#ff4f8b", "s": "#ffe2cc", "e": "#2a1830", "w": "#ffffff", "p": "#ff9eb5", "k": "#a03048", "d": "#ff8ab8", "D": "#e0609a", "f": "#6a3a2a" },
+      frames: [
+        [
+          "....oooooooo....",
+          "...ohhhhhhhhorr.",
+          "..ohhHHhhhhhhorr",
+          "..ohhhhhhhhhhho.",
+          ".ohhhsssssshhhho",
+          ".ohhsssssssshho.",
+          ".ohssewssewssho.",
+          ".ohsseessseesho.",
+          ".ohspsssssspsho.",
+          ".ohhssskkssshho.",
+          "..ohhsssssshhho.",
+          "...oooddddooo...",
+          "...odDddddDdo...",
+          "..osdddrrdddso..",
+          "..osddddddddso..",
+          "...oDddddddDo...",
+          "...oDDDDDDDDo...",
+          "....oso..oso....",
+          "....off..off....",
+          "....ooo..ooo...."
+        ],
+        [
+          "....oooooooo....",
+          "...ohhhhhhhhorr.",
+          "..ohhHHhhhhhhorr",
+          "..ohhhhhhhhhhho.",
+          ".ohhhsssssshhhho",
+          ".ohhsssssssshho.",
+          ".ohssewssewssho.",
+          ".ohsseessseesho.",
+          ".ohspsssssspsho.",
+          ".ohhssskkssshho.",
+          "..ohhsskksshhho.",
+          "...oooddddooo...",
+          "...odDddddDdo...",
+          "..osdddrrdddso..",
+          "..osddddddddso..",
+          "...oDddddddDo...",
+          "...oDDDDDDDDo...",
+          "....oso..oso....",
+          "....off..off....",
+          "....ooo..ooo...."
+        ]
+      ]
+    },
+    onioni: {
+      w: 16,
+      h: 16,
+      palette: { "h": "#f0e0a0", "k": "#1a1a1a", "r": "#d83a2a", "d": "#b02a1a", "y": "#ffe040", "w": "#ffffff", "m": "#5a0a0a", "t": "#f0b020", "g": "#4a3a2a", "s": "#d0d0d0" },
+      frames: [
+        [
+          ".h.......h...gg.",
+          ".hkkkkkkkh...gs.",
+          ".kkkkkkkkkk..gg.",
+          ".krrrrrrrrk..sg.",
+          ".rkkrrrrkkr..gg.",
+          ".rykrrrrykr..gs.",
+          ".rrrrddrrrr..gg.",
+          ".rwmmmmmmwr.rsg.",
+          "..rrrrrrrr.rrgg.",
+          ".rrdrrrrdrrr.gg.",
+          "rr.rrrrrr.rr.gg.",
+          "dd.tktttkt.dd...",
+          "...tttttttt.....",
+          "...rr....rr.....",
+          "..ddd...ddd.....",
+          "................"
+        ],
+        [
+          ".h.......h...gg.",
+          ".hkkkkkkkh...gs.",
+          ".kkkkkkkkkk..gg.",
+          ".krrrrrrrrk..sg.",
+          ".rkkrrrrkkr..gg.",
+          ".rykrrrrykr..gs.",
+          ".rrrrddrrrr..gg.",
+          ".rwmmmmmmwr.rsg.",
+          "..rrrrrrrr.rrgg.",
+          ".rrdrrrrdrrr.gg.",
+          "rr.rrrrrr.rr.gg.",
+          "dd.tktttkt.dd...",
+          "...tttttttt.....",
+          "....rr..rr......",
+          "...ddd.ddd......",
+          "................"
+        ]
+      ]
+    },
+    haribaby: {
+      w: 16,
+      h: 16,
+      palette: { "s": "#c8a070", "S": "#a07848", "b": "#8a5a3a", "f": "#f0d0a0", "k": "#10162a", "n": "#ff8aa0" },
+      frames: [
+        [
+          "................",
+          "................",
+          ".....s.s.s......",
+          "...s.sSsSs.s....",
+          "..sSsSsSsSss....",
+          ".sSsSsSsSsssff..",
+          ".sSsSsSsSsffkf..",
+          ".sSsSsSsSfffffn.",
+          ".sSsSsSsSsfffff.",
+          "..sSsSsSsSssff..",
+          "..bbbbbbbbbbb...",
+          "...b.b....b.b...",
+          "................",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          ".....s.s.s......",
+          "...s.sSsSs.s....",
+          "..sSsSsSsSss....",
+          ".sSsSsSsSsssff..",
+          ".sSsSsSsSsffkf..",
+          ".sSsSsSsSfffffn.",
+          ".sSsSsSsSsfffff.",
+          "..sSsSsSsSssff..",
+          "..bbbbbbbbbbb...",
+          "....b.b..b.b....",
+          "................",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    mumenbachi: {
+      w: 16,
+      h: 16,
+      palette: { "h": "#e04040", "v": "#ffffff", "y": "#ffd040", "k": "#1a1a1a", "w": "#d8f0ff" },
+      frames: [
+        [
+          "................",
+          "......hhhh......",
+          ".....hhhhhh.....",
+          ".....hhhhhhhv...",
+          ".....ykyyky.....",
+          "www..yyyyyy..www",
+          ".wwwkkkkkkkkwww.",
+          "....yyyyyyyy....",
+          "....kkkkkkkk....",
+          ".....yyyyyy.....",
+          "......kkkk......",
+          ".......kk.......",
+          "................",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "......hhhh......",
+          ".....hhhhhh.....",
+          ".www.hhhhhhhvww.",
+          "wwww.ykyyky.wwww",
+          ".....yyyyyy.....",
+          "....kkkkkkkk....",
+          "....yyyyyyyy....",
+          "....kkkkkkkk....",
+          ".....yyyyyy.....",
+          "......kkkk......",
+          ".......kk.......",
+          "................",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    donguriko: {
+      w: 16,
+      h: 16,
+      palette: { "c": "#7a4a20", "C": "#5a3410", "n": "#c88a40", "l": "#e0a860", "k": "#10162a", "f": "#5a3410" },
+      frames: [
+        [
+          ".......cc.......",
+          "....cCcCcCcC....",
+          "...CcCcCcCcCc...",
+          "...cccccccccc...",
+          "....nnnnnnnn....",
+          "...nlnnnnnnnn...",
+          "...nlknnnnknn...",
+          "...nlknnnnknn...",
+          "...nnnnnnnnnn...",
+          "....nnnkknnn....",
+          ".....nnnnnn.....",
+          "......nnnn......",
+          ".....f....f.....",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          ".......cc.......",
+          "....cCcCcCcC....",
+          "...CcCcCcCcCc...",
+          "...cccccccccc...",
+          "....nnnnnnnn....",
+          "...nlnnnnnnnn...",
+          "...nlknnnnknn...",
+          "...nlknnnnknn...",
+          "...nnnnnnnnnn...",
+          "....nnnkknnn....",
+          ".....nnnnnn.....",
+          "......nnnn......",
+          "......f..f......",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    nemuridake: {
+      w: 16,
+      h: 16,
+      palette: { "r": "#c84a6a", "w": "#ffffff", "s": "#f0e0c0", "k": "#5a3a2a", "p": "#a05060", "z": "#ffffff" },
+      frames: [
+        [
+          "................",
+          ".....rrrrrr.....",
+          "...rrrwwrrrrr...",
+          "..rrrrwwrrrwwrr.",
+          ".rrwwrrrrrrwwrrr",
+          ".rrwwrrrrrrrrrrr",
+          "..rrrrrrrrrrrrr.",
+          "....ssssssss....",
+          "....skkssskks...",
+          "....ssssssss....",
+          "....sssppsss....",
+          "....ssssssss....",
+          ".....ssssss.....",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          ".............zz.",
+          ".....rrrrrr...z.",
+          "...rrrwwrrrrr...",
+          "..rrrrwwrrrwwrr.",
+          ".rrwwrrrrrrwwrrr",
+          ".rrwwrrrrrrrrrrr",
+          "..rrrrrrrrrrrrr.",
+          "....ssssssss....",
+          "....skkssskks...",
+          "....ssssssss....",
+          "....sssppsss....",
+          "....ssssssss....",
+          ".....ssssss.....",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    pekorisu: {
+      w: 16,
+      h: 16,
+      palette: { "b": "#c87a3a", "t": "#e09a50", "c": "#f0c890", "k": "#10162a", "w": "#f8e8d0" },
+      frames: [
+        [
+          "..ttt...........",
+          ".ttttt....b.b...",
+          "tttttt...bbbbb..",
+          "ttt.tt..bbbbkbb.",
+          "tt..tt..bccbbbbb",
+          "tt...tt.ccccccb.",
+          ".tt..tt.bccccbb.",
+          "..ttttt.bbwwbb..",
+          "...tttbbbwwwbb..",
+          ".....bbbbwwwbb..",
+          "......bbbbbbb...",
+          "......b...b.....",
+          "................",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "..ttt...........",
+          ".ttttt....b.b...",
+          "tttttt...bbbbb..",
+          "ttt.tt..bbbbkbb.",
+          "tt..tt..bccbbbbb",
+          "tt...tt.ccccccb.",
+          ".tt..tt.bccccbb.",
+          "..ttttt.bbwwbb..",
+          "...tttbbbwwwbb..",
+          ".....bbbbwwwbb..",
+          "......bbbbbbb...",
+          ".......b.b......",
+          "................",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    tsutankobu: {
+      w: 16,
+      h: 16,
+      palette: { "g": "#3a8a3a", "d": "#2a6a2a", "n": "#6aa84a", "w": "#ffffff", "k": "#10162a" },
+      frames: [
+        [
+          "......gg........",
+          ".....gnng.......",
+          "....gnnnng......",
+          "....gnwknwkg....",
+          "....gnnnnnng....",
+          "...ggnnddnngg...",
+          "..gg.gnnnng.gg..",
+          ".gg..gnnnng..gg.",
+          "g....ggnngg....g",
+          "......gnng......",
+          ".....dgggd......",
+          "....dd.g.dd.....",
+          "...d...g...d....",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "......gg........",
+          ".....gnng.......",
+          "....gnnnng......",
+          "....gnwknwkg....",
+          "....gnnnnnng....",
+          "...ggnnddnngg...",
+          ".gg..gnnnng..gg.",
+          "g....gnnnng....g",
+          ".....ggnngg.....",
+          "......gnng......",
+          ".....dgggd......",
+          "....dd.g.dd.....",
+          "...d...g...d....",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    yofukashi: {
+      w: 16,
+      h: 16,
+      palette: { "b": "#7a6a5a", "l": "#b8a890", "w": "#ffffff", "k": "#10162a", "u": "#5a3a6a", "y": "#f0b030" },
+      frames: [
+        [
+          "...b........b...",
+          "...bb......bb...",
+          "...bbbbbbbbbb...",
+          "..bwwwbbbbwwwb..",
+          "..bwkwbbbbwkwb..",
+          "..buuubyybuuub..",
+          "..bbbbbyybbbbb..",
+          ".bbbllllllllbbb.",
+          "bbbllllllllllbbb",
+          ".bbllllllllllbb.",
+          "..bbllllllllbb..",
+          "...bbbbbbbbbb...",
+          "....yy....yy....",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "...b........b...",
+          "...bb......bb...",
+          "...bbbbbbbbbb...",
+          "..bwwwbbbbwwwb..",
+          "..bwkwbbbbwkwb..",
+          "..buuubyybuuub..",
+          "..bbbbbyybbbbb..",
+          ".bbbllllllllbbb.",
+          "bbbllllllllllbbb",
+          ".bbllllllllllbb.",
+          "..bbllllllllbb..",
+          "...bbbbbbbbbb...",
+          ".....yy..yy.....",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    kogame: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#3a7a3a", "b": "#5aa05a", "c": "#9ad07a", "d": "#111111" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aabbaabbacdc.",
+          "...aabbaabbaccc.",
+          "...aaaabbaaaccc.",
+          "...aaaabbaaaa...",
+          "...aaaaaaaaaa...",
+          "....cc....cc....",
+          "....cc....cc....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aabbaabbacdc.",
+          "...aabbaabbaccc.",
+          "...aaaabbaaaccc.",
+          "...aaaabbaaaa...",
+          "...aaaaaaaaaa...",
+          ".....cc..cc.....",
+          ".....cc..cc.....",
+          "................"
+        ]
+      ]
+    },
+    tsuribariuo: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#5a8ad0", "b": "#4a7ac0", "c": "#a0c8f0", "d": "#ffffff", "e": "#111111", "f": "#dddddd", "g": "#bbbbbb" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "................",
+          "............bbb.",
+          "...aaaaaaaaabbb.",
+          "...aaddaaaaabbb.",
+          "...aaedaaaaabbb.",
+          "fffaaaaaaaaabbb.",
+          "g..acccccccabbb.",
+          "g..acccccccabbb.",
+          "............bbb.",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "............bbb.",
+          "...aaaaaaaaabbb.",
+          "...aaddaaaaabbb.",
+          "...aaedaaaaabbb.",
+          "fffaaaaaaaaabbb.",
+          "g..acccccccabbb.",
+          "g..acccccccabbb.",
+          "............bbb.",
+          "................",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    mokugyoro: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#a0602a", "b": "#3a1a0a", "c": "#ffffff", "d": "#111111", "e": "#d0a060" },
+      frames: [
+        [
+          "............eee.",
+          ".............e..",
+          ".............e..",
+          ".............e..",
+          "...aaaaaaaaaae..",
+          "..aaaaaaaaaaaa..",
+          "..aacccaacccaa..",
+          "..aacdcaacdcaa..",
+          "..aacccaacccaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aabbbbbbbbaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ],
+        [
+          ".............e..",
+          ".............e..",
+          ".............e..",
+          ".............e..",
+          "...aaaaaaaaaa...",
+          "..aaaaaaaaaaaa..",
+          "..aacccaacccaa..",
+          "..aaccdaaccdaa..",
+          "..aacccaacccaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aabbbbbbbbaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    rousokubi: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#f0f0d0", "b": "#ff9a2a", "c": "#ffe040", "d": "#111111", "e": "#e0e0c0" },
+      frames: [
+        [
+          ".......cb.......",
+          ".......bb.......",
+          ".....aaaaaa.....",
+          ".....adaada.....",
+          ".....aaaaaa.....",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".....aaaaaa.....",
+          ".....aaaaae.....",
+          ".....eaaaae.....",
+          ".....eaaaae.....",
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          "................"
+        ],
+        [
+          ".......bb.......",
+          ".....aaaaaa.....",
+          ".....adaada.....",
+          ".....aaaaaa.....",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".....aaaaaa.....",
+          ".....aaaaae.....",
+          ".....eaaaae.....",
+          ".....eaaaae.....",
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          "................"
+        ]
+      ]
+    },
+    daichouenkin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#6ac84a", "b": "#111111", "c": "#2a6a1a" },
+      frames: [
+        [
+          "................",
+          ".......aa.......",
+          ".......aa.......",
+          "...aa..aa..aa...",
+          "...aaaaaaaaaa...",
+          "....aaaaaaaa....",
+          "...aaabaabaaa...",
+          ".aaaaabaabaaaaa.",
+          ".aaaaaaaaaaaaaa.",
+          "...aaaaccaaaa...",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aa..aa..aa...",
+          ".......aa.......",
+          ".......aa.......",
+          "................"
+        ],
+        [
+          ".......aa.......",
+          ".......aa.......",
+          "...aa..aa..aa...",
+          "...aaaaaaaaaa...",
+          "....aaaaaaaa....",
+          "...aaabaabaaa...",
+          ".aaaaabaabaaaaa.",
+          ".aaaaaaaaaaaaaa.",
+          "...aaaaccaaaa...",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aa..aa..aa...",
+          ".......aa.......",
+          ".......aa.......",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    kunaisuzume: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#a07a4a", "b": "#f0e0c0", "c": "#5a6a8a", "d": "#d0d0d0", "e": "#111111", "f": "#f0b030", "g": "#7a5a3a", "h": "#c0c0c0" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          ".............h..",
+          ".............h..",
+          "....cccddccc.h..",
+          "....aaaaaaaa....",
+          "....aaaaaeaa....",
+          "....gggaaaaaff..",
+          "....gggbbbaa....",
+          "....gggbbbaa....",
+          "....aabbbbaa....",
+          "....aaaaaaaa....",
+          "......f..f......",
+          "......f..f......",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          ".............h..",
+          ".............h..",
+          "....cccddccc.h..",
+          "....aaaaaaaa....",
+          "....gggaaeaa....",
+          "....gggaaaaaff..",
+          "....gggbbbaa....",
+          "....aabbbbaa....",
+          "....aabbbbaa....",
+          "....aaaaaaaa....",
+          "......f..f......",
+          "......f..f......",
+          "................"
+        ]
+      ]
+    },
+    kawarimidanuki: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#a0703a", "b": "#5a3a1a", "c": "#ffffff", "d": "#e0c090", "e": "#5aa04a", "f": "#3a7a2a" },
+      frames: [
+        [
+          "................",
+          "........f.......",
+          "......eeee......",
+          "......eeee......",
+          "......eeee......",
+          "...bb......bb...",
+          "...bbaaaaaabb...",
+          "...abbbbbbbba...",
+          "...abcbbbbcba...",
+          "...abbbbbbbba...",
+          "...aaddddddaa...",
+          "...aaddddddaa...",
+          "...aaddddddaa...",
+          "...aaaaaaaaaa...",
+          "....bb....bb....",
+          "................"
+        ],
+        [
+          "........f.......",
+          "......eeee......",
+          "......eeee......",
+          "......eeee......",
+          "................",
+          "...bb......bb...",
+          "...bbaaaaaabb...",
+          "...abbbbbbbba...",
+          "...abcbbbbcba...",
+          "...abbbbbbbba...",
+          "...aaddddddaa...",
+          "...aaddddddaa...",
+          "...aaddddddaa...",
+          "...aaaaaaaaaa...",
+          "....bb....bb....",
+          "................"
+        ]
+      ]
+    },
+    shinobigaeru: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#4aa04a", "b": "#111111", "c": "#2a6a2a", "d": "#f0e0b0", "e": "#a02a2a", "f": "#3a8a3a" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "................",
+          "...aaa....aaa...",
+          "...aba....aba...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaeddddea...",
+          "...aaceddddea...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..fffaaaaaafff..",
+          "..fff......fff..",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "...aaa....aaa...",
+          "...aba....aba...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaeddddea...",
+          "...aaceddddea...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..fff......fff..",
+          "..fff......fff..",
+          "................"
+        ]
+      ]
+    }
+  };
+  const bob = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
+  const blink = (rows, from, to) => [rows, rows.map((r) => r.split(from).join(to))];
+  const NEW_ART = {
+    // イシコロン: 川原の丸い石。おこった まゆ
+    ishikoron: {
+      w: 16,
+      h: 16,
+      palette: { o: "#3a3a40", G: "#d4d4dc", g: "#a4a4ae", d: "#70707c", k: "#10162a", w: "#ffffff" },
+      frames: bob([
+        "................",
+        "................",
+        ".....oooooo.....",
+        "...ooGGGgggoo...",
+        "..oGGgggggggdo..",
+        ".oGGkkgggggkkdo.",
+        ".oGggkwggggwkdo.",
+        ".oggggkggggkgddo",
+        ".ogggggggggggddo",
+        ".oggggkkkkgggddo",
+        ".odgggggggggdddo",
+        "..oddgggggddddo.",
+        "...oodddddddoo..",
+        ".....oooooooo...",
+        "................",
+        "................"
+      ])
+    },
+    // ミズキリン: 水切りの平たい石。水しぶき
+    mizukirin: {
+      w: 16,
+      h: 16,
+      palette: { o: "#2a3a4a", S: "#e4ecf2", s: "#b8c8d4", d: "#7a8a98", k: "#10162a", b: "#4aa8e0", B: "#bff0ff" },
+      frames: bob([
+        "................",
+        "................",
+        "................",
+        "................",
+        "..B.........B...",
+        ".B...oooooo...B.",
+        "...ooSSSssssoo..",
+        "..oSSsksssskssdo",
+        "..osssssssssssdo",
+        "...odsskksssddo.",
+        "....ooddddddoo..",
+        ".bbbbbbbbbbbbbb.",
+        "..BbbBbbbBbbbB..",
+        "................",
+        "................",
+        "................"
+      ])
+    },
+    // ソウメンナガレ: 流しそうめんの そうめん。竹のとい の上
+    soumennagare: {
+      w: 16,
+      h: 16,
+      palette: { w: "#f8f4e8", W: "#d8ccb0", k: "#10162a", p: "#ff9eb5", b: "#4aa8e0", g: "#5aa05a", G: "#3a7a3a" },
+      frames: bob([
+        "................",
+        ".....w.w.w......",
+        "....wWwWwWw.....",
+        "...wwwwwwwwww...",
+        "..wWwwwwwwwwWw..",
+        "..wwkwwwwwwkww..",
+        "..wwkwwwwwwkww..",
+        "..wpwwwwwwwwpw..",
+        "..wwwwwkkwwwww..",
+        "...wWwwwwwwWw...",
+        ".w.wwwwwwwwww.w.",
+        "bbbbbbbbbbbbbbbb",
+        "gggggggggggggggg",
+        "GGGGGGGGGGGGGGGG",
+        "................",
+        "................"
+      ])
+    },
+    // コザラッパ: 頭の皿を落とした河童の子 (皿のところは はげている)
+    kozarappa: {
+      w: 16,
+      h: 16,
+      palette: { o: "#1e3a1e", g: "#5ab04a", G: "#8ad07a", s: "#e8d8a0", y: "#ffd84a", k: "#10162a", w: "#ffffff", t: "#7a5a2a" },
+      frames: bob([
+        "................",
+        ".....oooooo.....",
+        "....ogsssssgo...",
+        "...oggGsssGggo..",
+        "..oggggggggggo..",
+        "..ogwkggggwkgo..",
+        "..oggggyyggggo..",
+        "..oggGyyyyGggo..",
+        "...oggggggggo...",
+        "..ttoGGGGGGottt.",
+        ".gtoggggggggotg.",
+        "..toggggggggot..",
+        "...ogggoogggo...",
+        "...oGGo..oGGo...",
+        "...ooo....ooo...",
+        "................"
+      ])
+    },
+    // ハシシタボウズ: 橋の下から のぞく坊主。黄色く光る目 (待機 1 でまばたき)
+    hashishita: {
+      w: 16,
+      h: 16,
+      palette: { N: "#b07a48", n: "#8a5a2a", o: "#1a1424", P: "#6a5a9a", p: "#4a3a6a", s: "#2a2238", k: "#ffe040", w: "#ffffff", b: "#3a5a8a" },
+      frames: blink([
+        "NNNNNNNNNNNNNNNN",
+        "nnnnnnnnnnnnnnnn",
+        ".n............n.",
+        ".n...oooooo...n.",
+        ".n..oPPPpppo..n.",
+        ".n.oPPppppppo.n.",
+        ".n.opsssssspo.n.",
+        ".n.opsksskspo.n.",
+        ".n.opsswwsspo.n.",
+        ".n.oppppppppo.n.",
+        ".n.oPpppppppo.n.",
+        ".n..opppppo...n.",
+        ".n..o.o.o.o...n.",
+        ".n............n.",
+        "bbbbbbbbbbbbbbbb",
+        "................"
+      ], "k", "s")
+    }
+  };
+  const ART = { ...LEGACY_ART, ...NEW_ART };
+  const FONT = '"Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", "Yu Gothic", sans-serif';
+  const COLORS = {
+    ink: "#ffffff",
+    sub: "#b8c4e0",
+    dim: "#7a86a6",
+    panel: "rgba(16, 22, 42, 0.88)",
+    panelEdge: "#7fd3f7",
+    accent: "#ffd84a",
+    hp: "#5ad06a",
+    hpLow: "#ff5a5a",
+    gauge: "#ff9ad8",
+    ice: "#bff0ff"
+  };
+  function text(ctx, str, x, y, { size = 12, color = COLORS.ink, align = "left", bold = false, shadow = true, baseline = "alphabetic", maxWidth } = {}) {
+    ctx.font = `${bold ? "bold " : ""}${size}px ${FONT}`;
+    ctx.textAlign = align;
+    ctx.textBaseline = baseline;
+    if (shadow) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+      ctx.fillText(str, x + 1, y + 1, maxWidth);
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(str, x, y, maxWidth);
+  }
+  function textWidth(ctx, str, size = 12, bold = false) {
+    ctx.font = `${bold ? "bold " : ""}${size}px ${FONT}`;
+    return ctx.measureText(str).width;
+  }
+  function wrap(ctx, str, width, size = 12) {
+    const lines = [];
+    for (const para of String(str).split("\n")) {
+      let line = "";
+      for (const ch of para) {
+        if (textWidth(ctx, line + ch, size) > width && line) {
+          lines.push(line);
+          line = ch;
+        } else line += ch;
+      }
+      lines.push(line);
+    }
+    return lines;
+  }
+  function roundRect(ctx, x, y, w, h, r = 6) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function panel(ctx, x, y, w, h, { fill = COLORS.panel, edge = COLORS.panelEdge, r = 6, lineWidth = 1.5 } = {}) {
+    roundRect(ctx, x, y, w, h, r);
+    ctx.fillStyle = fill;
+    ctx.fill();
+    if (edge) {
+      ctx.strokeStyle = edge;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+    }
+  }
+  function button(ctx, b, { active = false, disabled = false, size = 13 } = {}) {
+    panel(ctx, b.x, b.y, b.w, b.h, {
+      fill: disabled ? "rgba(40, 44, 60, 0.9)" : active ? "#2d5aa8" : "rgba(26, 36, 64, 0.95)",
+      edge: disabled ? "#4a5068" : active ? COLORS.accent : COLORS.panelEdge,
+      r: 6
+    });
+    text(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + size / 3 + 1, { size, align: "center", bold: true, color: disabled ? COLORS.dim : COLORS.ink });
+  }
+  const hit = (b, x, y) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  function drawArt(ctx, art, frame2, x, y, { scale = 1, flip = false, alpha = 1, tint = null } = {}) {
+    if (!art) return;
+    const n = art.frames.length;
+    const rows = art.frames[(Math.floor(frame2) % n + n) % n];
+    const left = Math.round(x - art.w * scale / 2);
+    const top = Math.round(y - art.h * scale);
+    const before = ctx.globalAlpha;
+    ctx.globalAlpha = before * alpha;
+    for (let ry = 0; ry < rows.length; ry++) {
+      const row = rows[ry];
+      for (let rx = 0; rx < row.length; rx++) {
+        const ch = row[rx];
+        if (ch === ".") continue;
+        ctx.fillStyle = tint || art.palette[ch];
+        const dx = flip ? art.w - 1 - rx : rx;
+        ctx.fillRect(left + dx * scale, top + ry * scale, scale + 0.05, scale + 0.05);
+      }
+    }
+    ctx.globalAlpha = before;
+  }
+  function bar(ctx, x, y, w, h, ratio, color, back = "rgba(0, 0, 0, 0.6)") {
+    ctx.fillStyle = back;
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, Math.max(0, Math.min(1, ratio)) * w, h);
+  }
+  function createTalk() {
+    let lines = [], index = 0, shown = 0, opts = {}, cursor = 0, active = false;
+    const choiceButtons = () => (opts.choices || []).map((label, i) => ({ x: 40, y: 40 + i * 44, w: 240, h: 36, label }));
+    function open(list, options = {}) {
+      lines = list;
+      index = 0;
+      shown = 0;
+      cursor = 0;
+      opts = options;
+      active = true;
+    }
+    const atLast = () => index === lines.length - 1;
+    const full = () => shown >= lines[index].text.length;
+    function finish(choice) {
+      var _a;
+      active = false;
+      (_a = opts.done) == null ? void 0 : _a.call(opts, choice);
+    }
+    function update(dt, input2) {
+      if (!active) return;
+      shown = Math.min(lines[index].text.length, shown + dt * 40);
+      const choosing = atLast() && full() && opts.choices;
+      if (choosing) {
+        const bs = choiceButtons();
+        if (input2.pressed.up) {
+          cursor = (cursor + bs.length - 1) % bs.length;
+          sfx("cursor");
+        }
+        if (input2.pressed.down) {
+          cursor = (cursor + 1) % bs.length;
+          sfx("cursor");
+        }
+        if (input2.touch.justDown) {
+          const i = bs.findIndex((b) => hit(b, input2.touch.x, input2.touch.y));
+          if (i >= 0) {
+            sfx("ok");
+            finish(i);
+            return;
+          }
+        }
+        if (input2.pressed.a) {
+          sfx("ok");
+          finish(cursor);
+          return;
+        }
+        if (input2.pressed.b) {
+          sfx("cancel");
+          finish(bs.length - 1);
+        }
+        return;
+      }
+      if (input2.pressed.a || input2.pressed.b || input2.touch.justDown) {
+        if (!full()) shown = lines[index].text.length;
+        else if (atLast()) {
+          sfx("cursor");
+          finish(null);
+        } else {
+          index++;
+          shown = 0;
+          sfx("cursor");
+        }
+      }
+    }
+    function drawTop(ctx, t) {
+      if (!active) return;
+      const line = lines[index];
+      if (line.art && ART[line.art]) {
+        panel(ctx, 12, 96, 76, 70, { fill: "rgba(255,255,255,0.12)", edge: null });
+        drawArt(ctx, ART[line.art], Math.floor(t * 2) % 2, 50, 160, { scale: 4 });
+      }
+      panel(ctx, 8, 166, 384, 68);
+      if (line.who) {
+        panel(ctx, 14, 154, 100, 20, { fill: "#1b3a6b" });
+        text(ctx, line.who, 64, 168, { size: 12, align: "center", bold: true });
+      }
+      const rows = wrap(ctx, line.text.slice(0, Math.floor(shown)), 360, 13);
+      rows.slice(0, 3).forEach((r, i) => text(ctx, r, 20, 190 + i * 18, { size: 13 }));
+      if (full() && !(atLast() && opts.choices) && Math.floor(t * 3) % 2) text(ctx, "▼", 380, 228, { size: 10, align: "right", color: COLORS.accent });
+    }
+    function drawBottom(ctx) {
+      if (!active) return;
+      if (atLast() && full() && opts.choices) {
+        ctx.fillStyle = "rgba(0,0,0,0.55)";
+        ctx.fillRect(0, 0, 320, 240);
+        choiceButtons().forEach((b, i) => button(ctx, b, { active: i === cursor }));
+      } else {
+        text(ctx, "A か タップで つぎへ", 160, 228, { size: 11, align: "center", color: COLORS.sub });
+      }
+    }
+    return { open, update, drawTop, drawBottom, isActive: () => active };
+  }
+  const VERSION_IDS = Object.keys(VERSIONS);
+  const VBTN = VERSION_IDS.map((id, i) => ({ x: 20 + i * 146, y: 30, w: 134, h: 46, label: `${VERSIONS[id]}バージョン`, id }));
+  const ACT = [
+    { x: 60, y: 104, w: 200, h: 40, label: "つづきから", act: "continue" },
+    { x: 60, y: 152, w: 200, h: 40, label: "はじめから", act: "new" }
+  ];
+  const CAST = ["koori", "furukawa", "daichouenkin", "ishikoron", "kozarappa", "haribaby", "kogame", "hashishita"];
+  function createTitle(app2) {
+    let t = 0, v = VERSION_IDS.indexOf(app2.version), row = 0, confirm = false;
+    const canContinue = () => hasSave(VERSION_IDS[v]);
+    function choose(act2) {
+      const id = VERSION_IDS[v];
+      if (act2 === "continue") {
+        if (!canContinue()) {
+          sfx("cancel");
+          return;
+        }
+        sfx("ok");
+        app2.start(id, false);
+      } else if (act2 === "new" && canContinue()) {
+        confirm = true;
+        sfx("cursor");
+      } else {
+        sfx("ok");
+        app2.start(id, true);
+      }
+    }
+    function update(dt, input2) {
+      t += dt;
+      const tc = input2.touch;
+      if (confirm) {
+        if (input2.pressed.a || tc.justDown && hit(YES, tc.x, tc.y)) {
+          confirm = false;
+          choose("new-ok");
+          return;
+        }
+        if (input2.pressed.b || tc.justDown && hit(NO, tc.x, tc.y)) {
+          confirm = false;
+          sfx("cancel");
+        }
+        return;
+      }
+      if (input2.pressed.left || input2.pressed.right || input2.pressed.l || input2.pressed.r) {
+        v = 1 - v;
+        app2.setVersion(VERSION_IDS[v]);
+        sfx("cursor");
+      }
+      if (input2.pressed.up || input2.pressed.down) {
+        row = 1 - row;
+        sfx("cursor");
+      }
+      if (input2.pressed.a || input2.pressed.start) choose(ACT[canContinue() ? row : 1].act);
+      if (tc.justDown) {
+        const vi = VBTN.findIndex((b) => hit(b, tc.x, tc.y));
+        if (vi >= 0) {
+          v = vi;
+          app2.setVersion(VERSION_IDS[v]);
+          sfx("cursor");
+        }
+        const ai = ACT.findIndex((b) => hit(b, tc.x, tc.y));
+        if (ai >= 0) choose(ACT[ai].act);
+      }
+    }
+    const YES = { x: 40, y: 150, w: 110, h: 40, label: "はい" };
+    const NO = { x: 170, y: 150, w: 110, h: 40, label: "いいえ" };
+    function drawTop(ctx) {
+      const naitei = VERSION_IDS[v] === "naitei";
+      const grad = ctx.createLinearGradient(0, 0, 0, 240);
+      grad.addColorStop(0, naitei ? "#16285a" : "#1d4a2c");
+      grad.addColorStop(1, naitei ? "#4a6ab0" : "#5aa06a");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 400, 240);
+      for (let i = 0; i < 30; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${0.2 + 0.3 * Math.sin(t * 2 + i)})`;
+        ctx.fillRect(i * 71 % 400, i * 37 % 120, 2, 2);
+      }
+      text(ctx, "こおりくんの大冒険", 200, 46, { size: 26, align: "center", bold: true, color: "#bff0ff" });
+      text(ctx, "～大集合だヨ！おともだち！～", 200, 74, { size: 17, align: "center", bold: true, color: "#ffffff" });
+      panel(ctx, 140, 84, 120, 30, { fill: naitei ? "#d8a840" : "#e06a2a", edge: "#ffffff", r: 8, lineWidth: 2 });
+      text(ctx, VERSIONS[VERSION_IDS[v]], 200, 106, { size: 20, align: "center", bold: true, color: "#ffffff" });
+      CAST.forEach((id, i) => {
+        const x = 40 + i * 46;
+        drawArt(ctx, ART[id], Math.floor(t * 2 + i), x, 200 + Math.sin(t * 3 + i) * 3, { scale: id === "koori" ? 3 : 2.4 });
+      });
+      if (Math.floor(t * 2) % 2) text(ctx, "PRESS A", 200, 230, { size: 11, align: "center", color: COLORS.sub });
+    }
+    function drawBottom(ctx) {
+      ctx.fillStyle = "#16203a";
+      ctx.fillRect(0, 0, 320, 240);
+      text(ctx, "バージョンを えらぶ", 160, 20, { size: 11, align: "center", color: COLORS.sub });
+      VBTN.forEach((b, i) => button(ctx, b, { active: i === v }));
+      ACT.forEach((b, i) => button(ctx, b, { active: (canContinue() ? row : 1) === i, disabled: b.act === "continue" && !canContinue() }));
+      text(ctx, "十字キー・タップで えらぶ / A で 決定", 160, 222, { size: 10.5, align: "center", color: COLORS.dim });
+      if (confirm) {
+        ctx.fillStyle = "rgba(0,0,0,0.75)";
+        ctx.fillRect(0, 0, 320, 240);
+        text(ctx, `${VERSIONS[VERSION_IDS[v]]}バージョンの セーブが 消えます。`, 160, 96, { size: 13, align: "center", bold: true });
+        text(ctx, "はじめから で いい？", 160, 120, { size: 13, align: "center" });
+        button(ctx, YES);
+        button(ctx, NO);
+      }
+    }
+    return { name: "title", update, drawTop, drawBottom };
+  }
+  const HALF_W = 5, BOX_H = 6;
+  function peopleHere(g) {
+    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && g.story !== "clear");
+  }
+  function blockedTile(g, tx, ty) {
+    if (BLOCK.has(tileAt(tx, ty))) return true;
+    if (BUILDINGS.some((b) => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
+    if (PROPS.some((p) => p.x === tx && p.y === ty)) return true;
+    return peopleHere(g).some((p) => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
+  }
+  function boxFree(g, x, y) {
+    const x0 = Math.floor((x - HALF_W) / TILE), x1 = Math.floor((x + HALF_W - 0.01) / TILE);
+    const y0 = Math.floor((y - BOX_H) / TILE), y1 = Math.floor((y - 0.01) / TILE);
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (blockedTile(g, tx, ty)) return false;
+    return true;
+  }
+  function moveHero(g, dx, dy) {
+    const p = g.pos;
+    if (dx && boxFree(g, p.x + dx, p.y)) p.x += dx;
+    if (dy && boxFree(g, p.x, p.y + dy)) p.y += dy;
+    if (Math.abs(dx) > Math.abs(dy)) p.dir = dx > 0 ? "right" : "left";
+    else if (dy) p.dir = dy > 0 ? "down" : "up";
+  }
+  const heroTile = (g) => ({ x: Math.floor(g.pos.x / TILE), y: Math.floor((g.pos.y - 3) / TILE) });
+  function facingTile(g) {
+    const t = heroTile(g);
+    const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[g.pos.dir];
+    return { x: t.x + d[0], y: t.y + d[1] };
+  }
+  function lookAt(g) {
+    const f = facingTile(g);
+    const person = peopleHere(g).find((p) => p.x === f.x && f.y >= p.y && f.y < p.y + (p.h || 1));
+    if (person) return { type: "person", person };
+    const door = BUILDINGS.find((b) => b.door.x === f.x && b.door.y === f.y);
+    if (door) return { type: "door", building: door };
+    return null;
+  }
+  const inShrine = (g) => {
+    const t = heroTile(g);
+    return t.x >= 2 && t.x <= 10 && t.y >= 2 && t.y <= 9;
+  };
+  const hash = (x, y, k = 0) => {
+    let h = x * 374761393 + y * 668265263 + k * 2147483647 >>> 0;
+    h = Math.imul(h ^ h >>> 13, 1274126177) >>> 0;
+    return (h ^ h >>> 16) / 4294967296;
+  };
+  const MINI_COLORS = { G: "#6cc04a", F: "#8ad070", T: "#2e6e2e", R: "#b8b0a0", W: "#3a8ad0", B: "#b07a48", P: "#c8c0b0", S: "#e8d8a0", K: "#c8c8c0", A: "#6a6a72" };
+  function drawTile(c, ch, x, y) {
+    const px = x * TILE, py = y * TILE;
+    const r = (dx, dy, w, h, color) => {
+      c.fillStyle = color;
+      c.fillRect(px + dx, py + dy, w, h);
+    };
+    const grass = () => {
+      r(0, 0, 16, 16, "#6cc04a");
+      for (let i = 0; i < 5; i++) r(Math.floor(hash(x, y, i) * 15), Math.floor(hash(x, y, i + 9) * 14), 1, 2, "#58a83a");
+    };
+    switch (ch) {
+      case "G":
+        grass();
+        break;
+      case "F": {
+        grass();
+        const colors = ["#ff6a8a", "#ffd84a", "#ffffff", "#c88aff"];
+        for (let i = 0; i < 4; i++) {
+          const fx = 1 + Math.floor(hash(x, y, i + 20) * 13), fy = 1 + Math.floor(hash(x, y, i + 30) * 13);
+          r(fx, fy, 2, 2, colors[i % 4]);
+          r(fx, fy + 2, 1, 1, "#3a8a3a");
+        }
+        break;
+      }
+      case "T":
+        grass();
+        r(6, 10, 4, 6, "#7a4a2a");
+        r(1, 2, 14, 9, "#2e7d32");
+        r(3, 0, 10, 2, "#2e7d32");
+        r(3, 3, 5, 3, "#4aa04a");
+        r(9, 6, 3, 2, "#256a28");
+        break;
+      case "R":
+        r(0, 0, 16, 16, "#b8b0a0");
+        if (hash(x, y) < 0.3) r(Math.floor(hash(x, y, 2) * 13), Math.floor(hash(x, y, 3) * 13), 2, 1, "#a09888");
+        break;
+      case "W":
+        r(0, 0, 16, 16, "#3a8ad0");
+        r(Math.floor(hash(x, y, 4) * 10), 4 + Math.floor(hash(x, y, 5) * 8), 5, 1, "#6ab0e8");
+        break;
+      case "B": {
+        r(0, 0, 16, 16, "#b07a48");
+        for (let i = 0; i < 16; i += 4) r(i, 0, 1, 16, "#8a5a2a");
+        if (tileAt(x, y - 1) !== "B") r(0, 0, 16, 3, "#6a4020");
+        if (tileAt(x, y + 1) !== "B") r(0, 13, 16, 3, "#6a4020");
+        break;
+      }
+      case "P":
+        r(0, 0, 16, 16, "#c8c0b0");
+        for (let i = 0; i < 4; i++) {
+          const sx = Math.floor(hash(x, y, i + 40) * 12), sy = Math.floor(hash(x, y, i + 50) * 12);
+          r(sx, sy, 4, 3, "#9a948a");
+          r(sx + 1, sy, 2, 1, "#e0dad0");
+        }
+        break;
+      case "S":
+        r(0, 0, 16, 16, "#e8d8a0");
+        if (hash(x, y, 7) < 0.5) r(Math.floor(hash(x, y, 8) * 14), Math.floor(hash(x, y, 9) * 14), 1, 1, "#d0bc80");
+        break;
+      case "K":
+        r(0, 0, 16, 16, "#c8c8c0");
+        r(0, 7, 16, 1, "#b0b0a8");
+        r(y % 2 * 8, 0, 1, 7, "#b0b0a8");
+        r((y + 1) % 2 * 8, 8, 1, 8, "#b0b0a8");
+        break;
+      case "A":
+        r(0, 0, 16, 16, "#6a6a72");
+        if (x % 2 === 0) r(0, 2, 1, 12, "#f0f0f0");
+        break;
+      default:
+        r(0, 0, 16, 16, "#ff00ff");
+    }
+  }
+  function drawBuilding(c, b) {
+    const px = b.x * TILE, py = b.y * TILE, w = b.w * TILE, h = b.h * TILE;
+    const roofH = Math.round(h * 0.45);
+    c.fillStyle = b.roof;
+    c.fillRect(px - 2, py, w + 4, roofH);
+    c.fillStyle = "rgba(0,0,0,0.18)";
+    for (let i = 4; i < roofH; i += 4) c.fillRect(px - 2, py + i, w + 4, 1);
+    c.fillStyle = b.wall;
+    c.fillRect(px, py + roofH, w, h - roofH);
+    c.fillStyle = "rgba(0,0,0,0.15)";
+    c.fillRect(px, py + roofH, w, 2);
+    for (let tx = 0; tx < b.w; tx++) {
+      const wx = px + tx * TILE + 4;
+      if (b.x + tx === b.door.x) continue;
+      if (h - roofH > 20) {
+        c.fillStyle = "#5a8ac0";
+        c.fillRect(wx, py + roofH + 6, 8, 7);
+        c.fillStyle = "#bfe0ff";
+        c.fillRect(wx + 1, py + roofH + 7, 3, 2);
+      }
+    }
+    const dx = b.door.x * TILE, dy = b.door.y * TILE;
+    c.fillStyle = "#5a3a20";
+    c.fillRect(dx + 3, dy + 3, 10, 13);
+    c.fillStyle = "#ffd84a";
+    c.fillRect(dx + 10, dy + 9, 1, 2);
+  }
+  function drawProp(c, p) {
+    if (p.kind !== "torii") return;
+    const px = p.x * TILE, py = p.y * TILE;
+    c.fillStyle = "#d0402a";
+    c.fillRect(px + 6, py - 6, 4, 22);
+  }
+  function buildFieldCanvas() {
+    const cv = document.createElement("canvas");
+    cv.width = MAP_W * TILE;
+    cv.height = MAP_H * TILE;
+    const c = cv.getContext("2d");
+    for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) drawTile(c, TILES[y][x], x, y);
+    BUILDINGS.forEach((b) => drawBuilding(c, b));
+    PROPS.forEach((p) => drawProp(c, p));
+    const l = PROPS.find((p) => p.id === "torii-l"), rr = PROPS.find((p) => p.id === "torii-r");
+    if (l && rr) {
+      c.fillStyle = "#d0402a";
+      c.fillRect(l.x * TILE + 2, l.y * TILE - 8, (rr.x - l.x) * TILE + 12, 3);
+      c.fillStyle = "#2a2a2a";
+      c.fillRect(l.x * TILE, l.y * TILE - 11, (rr.x - l.x) * TILE + 16, 3);
+    }
+    return cv;
+  }
+  function buildMiniMap(scale = 3) {
+    const cv = document.createElement("canvas");
+    cv.width = MAP_W * scale;
+    cv.height = MAP_H * scale;
+    const c = cv.getContext("2d");
+    for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) {
+      c.fillStyle = MINI_COLORS[TILES[y][x]] || "#000";
+      c.fillRect(x * scale, y * scale, scale, scale);
+    }
+    BUILDINGS.forEach((b) => {
+      c.fillStyle = b.roof;
+      c.fillRect(b.x * scale, b.y * scale, b.w * scale, b.h * scale);
+    });
+    return cv;
+  }
+  const WALK = 72, RUN = 124;
+  const LENS_R = 26, LENS_FIND = 14, LENS_TIME = 1.2;
+  const SPOT_COOLDOWN = 25;
+  const TINT = ["rgba(255, 220, 160, 0.10)", null, "rgba(255, 120, 40, 0.20)", "rgba(20, 30, 90, 0.48)"];
+  const BTN = {
+    lens: { x: 164, y: 28, w: 148, h: 40, label: "レンズ (Y)" },
+    menu: { x: 164, y: 76, w: 148, h: 40, label: "メニュー (X)" }
+  };
+  let fieldCanvas = null, miniCanvas = null;
+  function createField(app2) {
+    const g = app2.g;
+    if (!fieldCanvas) {
+      fieldCanvas = buildFieldCanvas();
+      miniCanvas = buildMiniMap(3);
+    }
+    let t = 0, walkT = 0, moving = false;
+    let lens = null;
+    const trail = [];
+    const cam = { x: 0, y: 0 };
+    function camera() {
+      cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
+      cam.y = Math.max(0, Math.min(MAP_H * TILE - 240, Math.round(g.pos.y - 128)));
+    }
+    camera();
+    const say = (lines, opts) => app2.talk.open(lines, opts);
+    const furu = (text2) => ({ who: "ふるカワ", art: "furukawa", text: text2 });
+    function meetFurukawa() {
+      say([
+        furu("あっ、こおりくん！ ちょうど よかった！"),
+        furu("この 町には、ふしぎな キャラが いっぱい かくれてるの。この「さがすレンズ」で のぞくと 見つかるんだよ。"),
+        furu("それと これ！「おなかまウォッチ」。おなかまメダルを セットすると、なかまを 呼び出せるの。"),
+        { who: "", text: "おなかまウォッチ と さがすレンズ を もらった！" },
+        { who: "ダイチョウエンキン", art: "daichouenkin", text: "おなか、ぐるぐる～。こおりくん、ひさしぶり！ ぼくも 手伝うよ！" },
+        { who: "", text: "ダイチョウエンキンの おなかまメダルを もらった！" },
+        furu("レンズ (Y) で 町を のぞいて、かくれてる キャラを さがそう。まずは なかまを 3 人 ふやしてみて！")
+      ], { done: () => app2.save() });
+      receiveWatch(g);
+      sfx("watch");
+      trail.length = 0;
+    }
+    function talkToPerson(p) {
+      if (p.id === "mama") {
+        const lines = {
+          intro: ["こおりくん、夏休みだからって ゴロゴロしてないで、外で 遊んできなさい！", "神社の ほうで ふるカワちゃんが さがしてたわよ。"],
+          friends: ["あら、おともだちが ふえたのね。おやつは 駄菓子屋で 買えるわよ。"],
+          bridge: ["石の川橋が 通れないんですって。こまったわねえ。"],
+          clear: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`]
+        }[g.story];
+        say(lines.map((text2) => ({ who: "ともいし", art: "tomoishi", text: text2 })));
+      } else if (p.id === "furukawaShrine") {
+        meetFurukawa();
+      } else if (p.id === "nushi") {
+        if (g.story === "bridge") {
+          say([
+            { who: "ヌシ", art: "hashishita", text: "ひとつ、ふたつ、みっつ……だれだ！ おれの 数を じゃまするのは！" },
+            furu("こおりくん、ウォッチで なかまを 呼び出して！")
+          ], { done: () => app2.startBattle({ enemies: bossEnemies(), kind: "boss", place: "bridge" }) });
+        } else {
+          say([
+            { who: "", text: "大きな 坊主が 橋の まんなかで 足音を 数えている……。通れそうに ない。" },
+            ...hasWatch(g) ? [furu("いまの なかまだけじゃ 心配だよ。もう少し なかまを ふやそう！")] : []
+          ]);
+        }
+      }
+    }
+    function openDoor(b) {
+      if (b.id === "home") {
+        say([{ who: "", text: `こおりくんの 家。いまは ${g.day}日目の ${TIMES[g.time]}。` }], {
+          choices: ["ねる (時間を すすめる)", "セーブする", "やめる"],
+          done: (i) => {
+            if (i === 0) {
+              advanceTime(g, app2.rng);
+              sfx("heal");
+              app2.save();
+              say([{ who: "", text: `ぐっすり ねた。……${g.day}日目の ${TIMES[g.time]}に なった。${g.weather === "rain" && g.time === 0 ? "今日は 雨だ。" : ""}` }]);
+            } else if (i === 1) {
+              app2.save();
+              say([{ who: "", text: "セーブした！" }]);
+            }
+          }
+        });
+      } else if (b.id === "dagashi") {
+        shop();
+      } else {
+        const msg = {
+          school: "夏休みで しまっている。",
+          shrine: "おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……",
+          toilet: "……だれも 入っていない。なのに、なんだか おなかが ぐるぐる する。",
+          temple: "ポク……ポク……。中から 木魚の 音が する。"
+        }[b.id];
+        say([{ who: "", text: msg }]);
+      }
+    }
+    function shop() {
+      const labels = SHOP.map((id) => `${ITEMS[id].name}  ${ITEMS[id].price}円 (${g.items[id] || 0}こ)`);
+      say([{ who: "駄菓子屋の おばあちゃん", text: `いらっしゃい。なにに するかね？ (おこづかい ${g.money}円)` }], {
+        choices: [...labels, "やめる"],
+        done: (i) => {
+          const id = SHOP[i];
+          if (!id) return;
+          if (g.money < ITEMS[id].price) {
+            sfx("cancel");
+            say([{ who: "駄菓子屋の おばあちゃん", text: "おこづかいが たりないねえ。" }], { done: shop });
+            return;
+          }
+          g.money -= ITEMS[id].price;
+          g.items[id] = (g.items[id] || 0) + 1;
+          sfx("ok");
+          shop();
+        }
+      });
+    }
+    function afterBattle(result) {
+      camera();
+      if (result.boss && result.outcome === "win") {
+        say([
+          { who: "ハシシタボウズ", art: "hashishita", text: "数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。" },
+          furu("やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！"),
+          { who: "", text: "１章 クリア！ ―― ２章は つぎの アップデートで。石の川タウンの なかま 20 人を あつめてみよう！" }
+        ], { done: () => app2.save() });
+      } else if (result.storyChanged === "bridge") {
+        say([furu("なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！")], { done: () => app2.save() });
+      } else if (result.outcome === "lose") {
+        say([{ who: "", text: `こおりくんは 家に 逃げかえった……。(${-result.money}円 落とした)` }]);
+      }
+    }
+    function updateLens(dt, input2) {
+      if (input2.pressed.b || input2.pressed.y) {
+        lens = null;
+        sfx("cancel");
+        return;
+      }
+      const sp2 = 110 * dt;
+      if (input2.held.left) lens.x -= sp2;
+      if (input2.held.right) lens.x += sp2;
+      if (input2.held.up) lens.y -= sp2;
+      if (input2.held.down) lens.y += sp2;
+      if (input2.touch.justDown) lens.drag = { x: input2.touch.x, y: input2.touch.y };
+      if (input2.touch.down && lens.drag) {
+        lens.x += (input2.touch.x - lens.drag.x) * 1.25;
+        lens.y += (input2.touch.y - lens.drag.y) * 1.25;
+        lens.drag = { x: input2.touch.x, y: input2.touch.y };
+      }
+      if (!input2.touch.down) lens.drag = null;
+      lens.x = Math.max(10, Math.min(390, lens.x));
+      lens.y = Math.max(10, Math.min(230, lens.y));
+      let found = null;
+      for (const s of SPOTS) {
+        const sx = s.x * TILE + 8 - cam.x, sy = s.y * TILE + 8 - cam.y;
+        if (Math.hypot(sx - lens.x, sy - lens.y) < LENS_FIND && spotActive(g, s, g.playTime)) found = s;
+      }
+      if (found) {
+        if (lens.spot !== found) {
+          lens.spot = found;
+          lens.charge = 0;
+        }
+        lens.charge += dt;
+        if (Math.floor(lens.charge * 10) !== Math.floor((lens.charge - dt) * 10)) sfx("lens");
+        if (lens.charge >= LENS_TIME) {
+          sfx("found");
+          g.spotCooldown[found.id] = g.playTime + SPOT_COOLDOWN;
+          const enemies = encounter(g, found, app2.rng);
+          lens = null;
+          app2.startBattle({ enemies, kind: "wild", place: found.id });
+        }
+      } else {
+        lens.spot = null;
+        lens.charge = Math.max(0, lens.charge - dt * 2);
+      }
+    }
+    function update(dt, input2) {
+      t += dt;
+      g.playTime += dt;
+      camera();
+      if (app2.talk.isActive()) return;
+      if (lens) {
+        updateLens(dt, input2);
+        return;
+      }
+      if (input2.touch.justDown) {
+        if (hasWatch(g) && hit(BTN.lens, input2.touch.x, input2.touch.y)) {
+          startLens();
+          return;
+        }
+        if (hit(BTN.menu, input2.touch.x, input2.touch.y)) {
+          sfx("ok");
+          app2.go("menu");
+          return;
+        }
+      }
+      if (input2.pressed.y && hasWatch(g)) {
+        startLens();
+        return;
+      }
+      if (input2.pressed.x || input2.pressed.start) {
+        sfx("ok");
+        app2.go("menu");
+        return;
+      }
+      let dx = 0, dy = 0;
+      if (input2.held.left) dx -= 1;
+      if (input2.held.right) dx += 1;
+      if (input2.held.up) dy -= 1;
+      if (input2.held.down) dy += 1;
+      moving = dx || dy;
+      if (moving) {
+        const speed = (input2.held.b ? RUN : WALK) * dt / (dx && dy ? Math.SQRT2 : 1);
+        const before = { x: g.pos.x, y: g.pos.y };
+        moveHero(g, dx * speed, dy * speed);
+        walkT += dt;
+        if (before.x !== g.pos.x || before.y !== g.pos.y) {
+          trail.push({ x: g.pos.x, y: g.pos.y, dir: g.pos.dir });
+          if (trail.length > 40) trail.shift();
+        }
+      }
+      camera();
+      if (g.story === "intro" && inShrine(g)) {
+        meetFurukawa();
+        return;
+      }
+      if (input2.pressed.a) {
+        const target = lookAt(g);
+        if ((target == null ? void 0 : target.type) === "person") {
+          sfx("ok");
+          talkToPerson(target.person);
+        } else if ((target == null ? void 0 : target.type) === "door") {
+          sfx("ok");
+          openDoor(target.building);
+        }
+      }
+    }
+    function startLens() {
+      sfx("lens");
+      lens = { x: 200, y: 120, charge: 0, spot: null, drag: null };
+    }
+    function drawPeople(ctx) {
+      const list = [];
+      for (const p of peopleHere(g)) {
+        list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
+      }
+      if (hasWatch(g)) {
+        const f = trail.length > 14 ? trail[trail.length - 15] : { x: g.pos.x - 14, y: g.pos.y - 2 };
+        list.push({ y: f.y, draw: () => drawArt(ctx, ART.furukawa, Math.floor(t * 2), f.x - cam.x, f.y - cam.y + 1, { alpha: 0.95 }) });
+      }
+      const frame2 = moving ? Math.floor(walkT * 6) % 2 : Math.floor(t * 1.5) % 2;
+      list.push({ y: g.pos.y, draw: () => drawArt(ctx, ART.koori, frame2, g.pos.x - cam.x, g.pos.y - cam.y + 2, { flip: g.pos.dir === "left" }) });
+      list.sort((a, b) => a.y - b.y).forEach((o) => o.draw());
+    }
+    function drawTop(ctx) {
+      ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      for (let i = 0; i < 6; i++) {
+        const wy = (i * 97 + t * 30) % (MAP_H * TILE);
+        ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
+      }
+      for (const b of BUILDINGS) {
+        const sx = b.door.x * TILE + 8 - cam.x, sy = b.y * TILE + 10 - cam.y;
+        if (sx > -60 && sx < 460 && sy > -20 && sy < 260) {
+          panel(ctx, sx - b.label.length * 5 - 4, sy - 9, b.label.length * 10 + 8, 13, { fill: "rgba(255,250,235,0.92)", edge: "#5a3a20", r: 2, lineWidth: 1 });
+          text(ctx, b.label, sx, sy + 1, { size: 9.5, align: "center", color: "#3a2410", shadow: false, bold: true });
+        }
+      }
+      drawPeople(ctx);
+      if (TINT[g.time]) {
+        ctx.fillStyle = TINT[g.time];
+        ctx.fillRect(0, 0, 400, 240);
+      }
+      if (g.weather === "rain") {
+        ctx.fillStyle = "rgba(40, 60, 100, 0.15)";
+        ctx.fillRect(0, 0, 400, 240);
+        ctx.strokeStyle = "rgba(200, 220, 255, 0.55)";
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        for (let i = 0; i < 40; i++) {
+          const rx = (i * 53 + t * 40) % 420 - 10, ry = (i * 37 + t * 260) % 260 - 10;
+          ctx.moveTo(rx, ry);
+          ctx.lineTo(rx - 3, ry + 9);
+        }
+        ctx.stroke();
+      }
+      if (lens) drawLens(ctx);
+      app2.talk.drawTop(ctx, t);
+    }
+    function drawLens(ctx) {
+      const shake = lens.spot ? Math.sin(t * 60) * Math.min(2, lens.charge * 2) : 0;
+      const lx = lens.x + shake, ly = lens.y;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, 400, 240);
+      ctx.arc(lx, ly, LENS_R, 0, Math.PI * 2, true);
+      ctx.fillStyle = "rgba(8, 12, 30, 0.62)";
+      ctx.fill("evenodd");
+      ctx.restore();
+      for (const s of SPOTS) {
+        if (!spotActive(g, s, g.playTime)) continue;
+        const sx = s.x * TILE + 8 - cam.x, sy = s.y * TILE + 8 - cam.y;
+        const d = Math.hypot(sx - lx, sy - ly);
+        if (d < LENS_R + 4) {
+          ctx.fillStyle = `rgba(255, 240, 140, ${0.5 + 0.5 * Math.sin(t * 8)})`;
+          ctx.fillRect(sx - 1, sy - 4, 2, 8);
+          ctx.fillRect(sx - 4, sy - 1, 8, 2);
+        }
+      }
+      ctx.strokeStyle = lens.spot ? COLORS.accent : "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(lx, ly, LENS_R, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "#1b3a6b";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(lx, ly, LENS_R + 2, 0, Math.PI * 2);
+      ctx.stroke();
+      if (lens.spot) {
+        ctx.strokeStyle = COLORS.accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(lx, ly, LENS_R + 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (lens.charge / LENS_TIME));
+        ctx.stroke();
+      }
+    }
+    function drawBottom(ctx) {
+      ctx.fillStyle = "#16203a";
+      ctx.fillRect(0, 0, 320, 240);
+      if (lens) {
+        text(ctx, "さがすレンズ", 160, 30, { size: 16, align: "center", bold: true, color: COLORS.ice });
+        panel(ctx, 20, 44, 280, 130, { fill: "rgba(255,255,255,0.05)" });
+        text(ctx, "ここを なぞって レンズを 動かす", 160, 104, { size: 13, align: "center", color: COLORS.sub });
+        text(ctx, "(十字キーでも 動く)", 160, 124, { size: 11, align: "center", color: COLORS.dim });
+        text(ctx, lens.spot ? "……なにか いる！ そのまま！" : "あやしい ところに レンズを 合わせよう", 160, 196, { size: 13, align: "center", bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
+        text(ctx, "B で やめる", 160, 226, { size: 11, align: "center", color: COLORS.dim });
+        return;
+      }
+      text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}`, 10, 18, { size: 12, bold: true });
+      text(ctx, `${g.money}円`, 310, 18, { size: 12, align: "right", color: COLORS.accent });
+      panel(ctx, 6, 26, 148, 112, { fill: "#000", r: 3 });
+      ctx.drawImage(miniCanvas, 8, 28, 144, 108);
+      if (Math.floor(t * 4) % 2) {
+        ctx.fillStyle = "#ff3a5a";
+        ctx.fillRect(8 + g.pos.x / TILE * 3 - 2, 28 + g.pos.y / TILE * 3 - 4, 4, 4);
+      }
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : null;
+      if (goal) text(ctx, "!", 8 + goal.x * 3, 28 + goal.y * 3 + 4, { size: 12, bold: true, align: "center", color: COLORS.accent });
+      button(ctx, BTN.lens, { disabled: !hasWatch(g) });
+      button(ctx, BTN.menu);
+      text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : "ウォッチを まだ もっていない", 238, 132, { size: 11, align: "center", color: COLORS.sub });
+      panel(ctx, 6, 146, 308, 52);
+      text(ctx, "もくてき", 14, 162, { size: 10, color: COLORS.accent, bold: true });
+      wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * 15, { size: 12 }));
+      text(ctx, "A: しらべる・はなす   B (おしたまま): はしる", 160, 220, { size: 10.5, align: "center", color: COLORS.dim });
+      text(ctx, "十字キー: あるく", 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
+      app2.talk.drawBottom(ctx);
+    }
+    return { name: "field", update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam } };
+  }
+  const WHEEL = { x: 100, y: 126, r: 70 };
+  const SP_BTN = [0, 1, 2].map((i) => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
+  const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: "どうぐ" };
+  const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: "おやつ" };
+  const ALLY_POS = [{ x: 92, y: 104 }, { x: 54, y: 154 }, { x: 92, y: 204 }];
+  const MASH_TIME = 3;
+  const RIVER = ["kawara", "asase", "hashiue", "hashishita", "kawakami", "bridge", "riverTree"];
+  function createBattleView(app2, battle, place) {
+    const g = app2.g;
+    let t = 0, endT = 0;
+    let shownRot = battle.rot;
+    let cursor = 0;
+    let menu = null;
+    let mg = null;
+    let drag = null;
+    let banner = null;
+    let warn = null;
+    const pops = [];
+    const flash = {};
+    const enemyPos = (i) => {
+      const n = battle.enemies.length;
+      if (n === 1) return { x: 300, y: 190, scale: battle.enemies[0].boss ? 5 : 4 };
+      return [{ x: 290, y: 130, scale: 3 }, { x: 340, y: 205, scale: 3 }][i];
+    };
+    function posOf(uid) {
+      const fi = battle.front().findIndex((u) => u && u.uid === uid);
+      if (fi >= 0) return ALLY_POS[fi];
+      const ei = battle.enemies.findIndex((u) => u.uid === uid);
+      return ei >= 0 ? enemyPos(ei) : null;
+    }
+    const nameOf = (uid) => {
+      var _a;
+      return ((_a = [...battle.wheel, ...battle.enemies].find((u) => u && u.uid === uid)) == null ? void 0 : _a.name) || "";
+    };
+    function readEvents() {
+      for (const e of battle.events.splice(0)) {
+        if (e.type === "damage") {
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? "#ffd84a" : e.eff < 1 ? "#a0a0b0" : "#ffffff", big: e.crit || e.eff > 1, until: t + 0.9 });
+          flash[e.target] = t + 0.15;
+          sfx(e.amount > 30 ? "big" : "hit");
+        } else if (e.type === "heal" && e.amount > 0) {
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x, y: p.y - 40, text: `+${e.amount}`, color: "#7aff8a", until: t + 0.9 });
+        } else if (e.type === "status") {
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: "#ff9ad8", until: t + 1 });
+        } else if (e.type === "special") {
+          banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === "ally" ? COLORS.accent : "#ff6a6a", until: t + 1.4 };
+          sfx("special");
+          if (e.big) warn = null;
+        } else if (e.type === "telegraph") {
+          warn = { name: e.name, until: t + e.warn };
+          sfx("cancel");
+        } else if (e.type === "food") {
+          banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: "#ff9ad8", until: t + 1.6 };
+          sfx(e.favorite ? "friend" : "ok");
+        } else if (e.type === "item") sfx("heal");
+        else if (e.type === "rotate") sfx("rotate");
+        else if (e.type === "win") sfx("win");
+        else if (e.type === "lose") sfx("lose");
+      }
+    }
+    function trySpecial(pos) {
+      if (!canSpecial(battle, pos)) {
+        sfx("cancel");
+        return;
+      }
+      const unit = startSpecial(battle, pos);
+      mg = { unit, t: 0, count: 0, done: null };
+      sfx("ok");
+    }
+    function updateMinigame(dt, input2) {
+      mg.t += dt;
+      if (mg.done) {
+        if (mg.t > MASH_TIME + 0.8) {
+          resolveSpecial(battle, mg.unit, mg.done.mult);
+          mg = null;
+        }
+        return;
+      }
+      if (input2.pressed.a || input2.touch.justDown || input2.pressed.sp1 || input2.pressed.sp2 || input2.pressed.sp3) {
+        mg.count++;
+        sfx("mash");
+      }
+      if (mg.t >= MASH_TIME) {
+        const mult = mg.count >= 15 ? 1.5 : mg.count >= 8 ? 1 : 0.5;
+        mg.done = { mult, label: mult > 1 ? "大成功！" : mult === 1 ? "成功！" : "しっぱい…" };
+      }
+    }
+    const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0);
+    function useMenu(id) {
+      const ok = menu.kind === "item" ? useItem(battle, id) : throwFood(battle, id);
+      if (ok) {
+        g.items[id]--;
+        menu = null;
+      } else sfx("cancel");
+    }
+    function updateMenu(input2) {
+      const list = owned();
+      if (input2.pressed.b || menu.kind === "item" && input2.pressed.y || menu.kind === "food" && input2.pressed.x) {
+        menu = null;
+        sfx("cancel");
+        return;
+      }
+      if (!list.length) return;
+      if (input2.pressed.up) {
+        menu.index = (menu.index + list.length - 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.pressed.down) {
+        menu.index = (menu.index + 1) % list.length;
+        sfx("cursor");
+      }
+      menu.index = Math.min(menu.index, list.length - 1);
+      if (input2.pressed.a) useMenu(list[menu.index]);
+      if (input2.touch.justDown) {
+        const i = list.findIndex((_, k) => hit(menuRow(k), input2.touch.x, input2.touch.y));
+        if (i >= 0) useMenu(list[i]);
+        else if (!hit({ x: 20, y: 20, w: 280, h: 200 }, input2.touch.x, input2.touch.y)) menu = null;
+      }
+    }
+    const menuRow = (k) => ({ x: 30, y: 46 + k * 28, w: 260, h: 24 });
+    function update(dt, input2) {
+      t += dt;
+      g.playTime += dt;
+      if (mg) {
+        updateMinigame(dt, input2);
+        readEvents();
+        return;
+      }
+      step(battle, dt);
+      readEvents();
+      let diff = battle.rot - shownRot;
+      if (diff > 3) diff -= 6;
+      if (diff < -3) diff += 6;
+      shownRot += diff * Math.min(1, dt * 14);
+      if (Math.abs(diff) < 0.01) shownRot = battle.rot;
+      if (battle.outcome) {
+        endT += dt;
+        if (endT > 1.6) app2.endBattle(battle);
+        return;
+      }
+      if (menu) {
+        updateMenu(input2);
+        return;
+      }
+      if (input2.pressed.l) rotate(battle, -1);
+      if (input2.pressed.r) rotate(battle, 1);
+      if (input2.pressed.left) {
+        cursor = (cursor + 2) % 3;
+        sfx("cursor");
+      }
+      if (input2.pressed.right) {
+        cursor = (cursor + 1) % 3;
+        sfx("cursor");
+      }
+      if (input2.pressed.a) trySpecial(cursor);
+      if (input2.pressed.sp1) trySpecial(0);
+      if (input2.pressed.sp2) trySpecial(1);
+      if (input2.pressed.sp3) trySpecial(2);
+      if (input2.pressed.y) {
+        menu = { kind: "item", index: 0 };
+        sfx("ok");
+      }
+      if (input2.pressed.x && battle.kind === "wild") {
+        menu = { kind: "food", index: 0 };
+        sfx("ok");
+      }
+      const tc = input2.touch;
+      if (tc.justDown) {
+        const sp2 = SP_BTN.findIndex((bn) => hit(bn, tc.x, tc.y));
+        if (sp2 >= 0) {
+          cursor = sp2;
+          trySpecial(sp2);
+        } else if (hit(ITEM_BTN, tc.x, tc.y)) {
+          menu = { kind: "item", index: 0 };
+          sfx("ok");
+        } else if (hit(FOOD_BTN, tc.x, tc.y) && battle.kind === "wild") {
+          menu = { kind: "food", index: 0 };
+          sfx("ok");
+        } else if (Math.hypot(tc.x - WHEEL.x, tc.y - WHEEL.y) < WHEEL.r + 30) {
+          drag = { a: Math.atan2(tc.y - WHEEL.y, tc.x - WHEEL.x), acc: 0 };
+        }
+      }
+      if (drag && tc.down) {
+        const a = Math.atan2(tc.y - WHEEL.y, tc.x - WHEEL.x);
+        let d = a - drag.a;
+        if (d > Math.PI) d -= Math.PI * 2;
+        if (d < -Math.PI) d += Math.PI * 2;
+        drag.acc += d;
+        drag.a = a;
+        if (drag.acc > 0.6) {
+          if (rotate(battle, -1)) drag.acc = 0;
+        }
+        if (drag.acc < -0.6) {
+          if (rotate(battle, 1)) drag.acc = 0;
+        }
+      }
+      if (!tc.down) drag = null;
+    }
+    function drawBackground(ctx) {
+      const river = RIVER.includes(place);
+      const sky = g.time === 3 ? ["#141a3a", "#2a2a5a"] : g.time === 2 ? ["#f08a4a", "#f8c070"] : ["#7ac8f8", "#c8ecff"];
+      const grad = ctx.createLinearGradient(0, 0, 0, 120);
+      grad.addColorStop(0, sky[0]);
+      grad.addColorStop(1, sky[1]);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 400, 120);
+      ctx.fillStyle = river ? "#3a8ad0" : place === "park" || place === "toiletSide" ? "#e8d8a0" : "#6cc04a";
+      ctx.fillRect(0, 96, 400, 144);
+      ctx.fillStyle = river ? "#c8c0b0" : "rgba(0,0,0,0.08)";
+      ctx.fillRect(0, 96, 400, 10);
+      if (river) {
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, 130 + i * 17 % 90, 18, 2);
+      }
+      ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
+      [[20, 60, 40], [70, 70, 30], [300, 50, 50], [360, 66, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, 96 - y));
+    }
+    function drawUnit(ctx, u, p, { scale = 3, flip = false } = {}) {
+      if (!u) return;
+      const lit = (flash[u.uid] || 0) > t;
+      const sleeping = u.status.sleep > 0;
+      const bobY = u.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5;
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawArt(ctx, ART[u.art], sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null });
+      const w = 44;
+      bar(ctx, p.x - w / 2, p.y + 6, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
+      text(ctx, `${u.name} Lv${u.lv}`, p.x, p.y + 20, { size: 9.5, align: "center" });
+      const marks = Object.keys(u.status).map((k) => STATUS_NAMES[k]);
+      if (u.ko) marks.push("たおれた");
+      if (marks.length) text(ctx, marks.join(" "), p.x, p.y - ART[u.art].h * scale - 4, { size: 9.5, align: "center", color: "#ff9ad8", bold: true });
+    }
+    function drawTop(ctx) {
+      drawBackground(ctx);
+      battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
+      battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { flip: true }));
+      for (let i = pops.length - 1; i >= 0; i--) {
+        const p = pops[i];
+        if (p.until < t) {
+          pops.splice(i, 1);
+          continue;
+        }
+        const k = 1 - (p.until - t) / 0.9;
+        text(ctx, p.text, p.x, p.y - k * 14, { size: p.big ? 16 : 13, align: "center", bold: true, color: p.color });
+      }
+      if (warn && warn.until > t) {
+        panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
+        text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
+      } else if (banner && banner.until > t) {
+        panel(ctx, 40, 12, 320, 26, { fill: "rgba(16,22,42,0.9)", edge: banner.color });
+        text(ctx, banner.text, 200, 30, { size: 13, align: "center", bold: true, color: banner.color });
+      }
+      if (battle.outcome) {
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.fillRect(0, 0, 400, 240);
+        text(ctx, battle.outcome === "win" ? "かった！" : "まけた……", 200, 128, { size: 34, align: "center", bold: true, color: battle.outcome === "win" ? COLORS.accent : "#a0b0d0" });
+      }
+      if (mg) drawMinigameTop(ctx);
+    }
+    function drawMinigameTop(ctx) {
+      ctx.fillStyle = "rgba(10, 14, 40, 0.8)";
+      ctx.fillRect(0, 0, 400, 240);
+      const u = mg.unit;
+      ctx.strokeStyle = "rgba(255, 216, 74, 0.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < 24; i++) {
+        const a = i / 24 * Math.PI * 2 + t;
+        ctx.moveTo(200 + Math.cos(a) * 60, 130 + Math.sin(a) * 60);
+        ctx.lineTo(200 + Math.cos(a) * 240, 130 + Math.sin(a) * 240);
+      }
+      ctx.stroke();
+      drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
+      text(ctx, `必殺技「${u.special.name}」`, 200, 36, { size: 18, align: "center", bold: true, color: COLORS.accent });
+      if (mg.done) text(ctx, mg.done.label, 200, 216, { size: 26, align: "center", bold: true, color: mg.done.mult > 1 ? COLORS.accent : "#ffffff" });
+    }
+    function drawWheel(ctx) {
+      ctx.strokeStyle = "rgba(127, 211, 247, 0.35)";
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.arc(WHEEL.x, WHEEL.y, WHEEL.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 216, 74, 0.5)";
+      ctx.lineWidth = 12;
+      ctx.beginPath();
+      ctx.arc(WHEEL.x, WHEEL.y, WHEEL.r, -Math.PI * 5 / 6 - 0.4, -Math.PI / 6 + 0.4);
+      ctx.stroke();
+      text(ctx, "まえ", WHEEL.x, WHEEL.y - WHEEL.r - 12, { size: 10, align: "center", color: COLORS.accent, bold: true });
+      panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: "#1b3a6b", edge: "#bff0ff", r: 20 });
+      text(ctx, "おなかま", WHEEL.x, WHEEL.y - 2, { size: 10, align: "center", bold: true });
+      text(ctx, "ウォッチ", WHEEL.x, WHEEL.y + 12, { size: 10, align: "center", bold: true });
+      battle.wheel.forEach((u, i) => {
+        const pos = ((i - shownRot) % 6 + 6) % 6;
+        const ang = (-150 + pos * 60) * Math.PI / 180;
+        const x = WHEEL.x + Math.cos(ang) * WHEEL.r, y = WHEEL.y + Math.sin(ang) * WHEEL.r;
+        const front = Math.round(pos) % 6 < 3;
+        ctx.beginPath();
+        ctx.arc(x, y, 21, 0, Math.PI * 2);
+        ctx.fillStyle = u ? front ? "#2a3a66" : "#1a2240" : "#10162a";
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = u ? ELEMENT_COLORS[u.element] : "#3a4060";
+        ctx.stroke();
+        if (!u) return;
+        drawArt(ctx, ART[u.art], 0, x, y + 13, { scale: 1.6, alpha: u.ko ? 0.3 : front ? 1 : 0.7 });
+        bar(ctx, x - 16, y + 15, 32, 3, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
+        if (u.ko) text(ctx, "×", x, y + 6, { size: 22, align: "center", bold: true, color: "#ff6a6a" });
+      });
+      text(ctx, "L ◀ なぞって回す ▶ R", WHEEL.x, 232, { size: 10.5, align: "center", color: COLORS.sub });
+    }
+    function drawSpecialButtons(ctx) {
+      battle.front().forEach((u, i) => {
+        const b = SP_BTN[i];
+        const ready = canSpecial(battle, i);
+        panel(ctx, b.x, b.y, b.w, b.h, {
+          fill: ready ? Math.floor(t * 4) % 2 ? "#7a2a6a" : "#5a1a50" : "rgba(26,36,64,0.95)",
+          edge: i === cursor ? COLORS.accent : ready ? "#ff9ad8" : "#3a4a70"
+        });
+        if (!u) {
+          text(ctx, "(あき)", b.x + b.w / 2, b.y + 28, { size: 11, align: "center", color: COLORS.dim });
+          return;
+        }
+        drawArt(ctx, ART[u.art], 0, b.x + 18, b.y + 34, { scale: 1.5, alpha: u.ko ? 0.3 : 1 });
+        text(ctx, u.name.length > 6 ? `${u.name.slice(0, 6)}…` : u.name, b.x + 34, b.y + 16, { size: 10, bold: true });
+        bar(ctx, b.x + 34, b.y + 22, 70, 6, u.gauge / GAUGE_MAX, COLORS.gauge);
+        text(ctx, ready ? `必殺技！ (${i + 1})` : u.ko ? "たおれている" : "ゲージ", b.x + 34, b.y + 40, { size: 9.5, color: ready ? "#ffffff" : COLORS.dim, bold: ready });
+      });
+      button(ctx, ITEM_BTN, { size: 11 });
+      button(ctx, FOOD_BTN, { size: 11, disabled: battle.kind !== "wild" || Boolean(battle.food) });
+      text(ctx, "Y", ITEM_BTN.x + ITEM_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
+      text(ctx, "X", FOOD_BTN.x + FOOD_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
+      if (battle.itemCooldown > 0) text(ctx, `どうぐ まで ${battle.itemCooldown.toFixed(1)}`, 259, 232, { size: 9.5, align: "center", color: COLORS.dim });
+    }
+    function drawMenu(ctx) {
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(0, 0, 320, 240);
+      panel(ctx, 20, 14, 280, 212);
+      text(ctx, menu.kind === "item" ? "どうぐ: HP の 少ない なかまに 使う" : "おやつ: 敵に 投げる (好物なら 大よろこび)", 160, 34, { size: 11.5, align: "center", bold: true, color: COLORS.accent });
+      const list = owned();
+      if (!list.length) text(ctx, "なにも もっていない", 160, 110, { size: 13, align: "center", color: COLORS.sub });
+      list.forEach((id, k) => {
+        const r = menuRow(k);
+        if (k === menu.index) {
+          roundRect(ctx, r.x, r.y, r.w, r.h, 4);
+          ctx.fillStyle = "#2d5aa8";
+          ctx.fill();
+        }
+        text(ctx, `${ITEMS[id].name}`, r.x + 10, r.y + 17, { size: 13 });
+        text(ctx, `×${g.items[id]}`, r.x + r.w - 10, r.y + 17, { size: 13, align: "right" });
+      });
+      text(ctx, "B で とじる", 160, 220, { size: 10, align: "center", color: COLORS.dim });
+    }
+    function drawBottom(ctx) {
+      ctx.fillStyle = "#16203a";
+      ctx.fillRect(0, 0, 320, 240);
+      if (mg) {
+        const left = Math.max(0, MASH_TIME - mg.t);
+        text(ctx, mg.done ? "" : "A か 画面を れんだ！", 160, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
+        const pulse = mg.done ? 1 : 1 + 0.06 * Math.sin(t * 30);
+        const w = 200 * pulse, h = 110 * pulse;
+        panel(ctx, 160 - w / 2, 120 - h / 2, w, h, { fill: "#b03048", edge: "#ffd0d8", r: 20, lineWidth: 3 });
+        text(ctx, `${mg.count}`, 160, 136, { size: 40, align: "center", bold: true });
+        bar(ctx, 40, 196, 240, 10, left / MASH_TIME, COLORS.accent);
+        text(ctx, "15回で 大成功 / 8回で 成功", 160, 226, { size: 11, align: "center", color: COLORS.sub });
+        return;
+      }
+      drawWheel(ctx);
+      drawSpecialButtons(ctx);
+      if (menu) drawMenu(ctx);
+    }
+    return { name: "battle", update, drawTop, drawBottom, battle };
+  }
+  function createResult(app2, result) {
+    const pages = [result.outcome === "win" ? "reward" : "lose"];
+    if (result.befriend) pages.push("look", "medal");
+    let page = 0, t = 0;
+    const friend = result.befriend ? NAKAMA[result.befriend.id] : null;
+    function update(dt, input2) {
+      t += dt;
+      if (t < 0.4) return;
+      if (input2.pressed.a || input2.pressed.b || input2.touch.justDown) {
+        page++;
+        t = 0;
+        if (pages[page] === "medal") sfx("watch");
+        else if (pages[page] === "look") sfx("friend");
+        else sfx("cursor");
+        if (page >= pages.length) app2.backToField(result);
+      }
+    }
+    function drawTop(ctx) {
+      const grad = ctx.createLinearGradient(0, 0, 0, 240);
+      grad.addColorStop(0, "#1b3a6b");
+      grad.addColorStop(1, "#0c1630");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 400, 240);
+      const kind = pages[page];
+      if (kind === "reward") {
+        text(ctx, "バトルに かった！", 200, 40, { size: 20, align: "center", bold: true, color: COLORS.accent });
+        text(ctx, `けいけんち ${result.exp}　お金 ${result.money}円`, 200, 78, { size: 14, align: "center" });
+        result.levelUps.slice(0, 6).forEach((u, i) => {
+          const x = 60 + i % 3 * 140, y = 150 + Math.floor(i / 3) * 70;
+          drawArt(ctx, ART[NAKAMA[u.id].art], Math.floor(t * 3), x, y, { scale: 2.5 });
+          text(ctx, `${NAKAMA[u.id].name}`, x, y + 14, { size: 10.5, align: "center" });
+          text(ctx, `Lv${u.lv} に アップ！`, x, y + 28, { size: 11, align: "center", bold: true, color: COLORS.accent });
+        });
+        if (!result.levelUps.length) text(ctx, "なかまが 少し 強くなった。", 200, 150, { size: 13, align: "center", color: COLORS.sub });
+      } else if (kind === "lose") {
+        text(ctx, "まけてしまった……", 200, 110, { size: 20, align: "center", bold: true, color: "#a0b0d0" });
+        text(ctx, "家に もどって 体勢を たてなおそう。", 200, 140, { size: 13, align: "center" });
+      } else if (kind === "look" || kind === "medal") {
+        ctx.strokeStyle = `rgba(255, 216, 74, ${0.3 + 0.2 * Math.sin(t * 6)})`;
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.arc(200, 120, 50 + i * 22 + t * 30 % 22, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (kind === "look") {
+          drawArt(ctx, ART[friend.art], Math.floor(t * 4), 200, 170 + Math.abs(Math.sin(t * 5)) * -8, { scale: 5 });
+          panel(ctx, 20, 186, 360, 46);
+          wrap(ctx, `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, 340, 13).slice(0, 2).forEach((r, i) => text(ctx, r, 30, 204 + i * 18, { size: 13 }));
+        } else {
+          ctx.beginPath();
+          ctx.arc(200, 110, 58, 0, Math.PI * 2);
+          ctx.fillStyle = "#d8a840";
+          ctx.fill();
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = "#ffe08a";
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(200, 110, 44, 0, Math.PI * 2);
+          ctx.fillStyle = "#1b3a6b";
+          ctx.fill();
+          drawArt(ctx, ART[friend.art], 0, 200, 134, { scale: 3 });
+          panel(ctx, 20, 186, 360, 46);
+          text(ctx, `${friend.name}の おなかまメダルを もらった！`, 200, 205, { size: 14, align: "center", bold: true, color: COLORS.accent });
+          text(ctx, result.befriend.medal && app2.g.watch.includes(result.befriend.medal.uid) ? "ウォッチに セットした。" : "メダル帳に しまった。(メニューで ウォッチに セットできる)", 200, 224, { size: 11, align: "center", color: COLORS.sub });
+        }
+      }
+    }
+    function drawBottom(ctx) {
+      ctx.fillStyle = "#16203a";
+      ctx.fillRect(0, 0, 320, 240);
+      const kind = pages[page];
+      if ((kind === "look" || kind === "medal") && friend) {
+        panel(ctx, 10, 10, 300, 180);
+        text(ctx, `No.${String(friend.no).padStart(3, "0")} ${friend.name}`, 20, 32, { size: 14, bold: true });
+        text(ctx, `${friend.rank}ランク　${friend.element}　${friend.title}`, 20, 52, { size: 11, color: COLORS.sub });
+        wrap(ctx, friend.desc, 280, 12).slice(0, 6).forEach((r, i) => text(ctx, r, 20, 76 + i * 17, { size: 12 }));
+      }
+      if (Math.floor(t * 2) % 2 || t < 0.4) text(ctx, "A か タップで つぎへ", 160, 222, { size: 12, align: "center", color: COLORS.sub });
+    }
+    return { name: "result", update, drawTop, drawBottom };
+  }
+  const TABS = ["ウォッチ", "図鑑", "もちもの", "セーブ"];
+  const TAB_BTN = TABS.map((label, i) => ({ x: 4 + i * 79, y: 4, w: 75, h: 26, label }));
+  const SLOT_BTN = Array.from({ length: 6 }, (_, i) => ({ x: 8 + i % 3 * 102, y: 38 + Math.floor(i / 3) * 44, w: 98, h: 40 }));
+  const LIST_TOP = 132, ROW_H = 20, ROWS = 5;
+  const ZUKAN_ROWS = 9;
+  function createMenu(app2) {
+    const g = app2.g;
+    let tab = 0, t = 0;
+    let slot = 0, picking = false, listIndex = 0;
+    let zIndex = 0;
+    let iIndex = 0;
+    let saved = 0;
+    const box = () => g.medals;
+    const scroll = (index, rows, len) => Math.max(0, Math.min(len - rows, index - Math.floor(rows / 2)));
+    function setMedal(uid) {
+      const other = g.watch.indexOf(uid);
+      if (other >= 0) g.watch[other] = g.watch[slot];
+      g.watch[slot] = uid;
+      sfx("watch");
+    }
+    function update(dt, input2) {
+      t += dt;
+      g.playTime += dt;
+      const tc = input2.touch;
+      if (input2.pressed.l) {
+        tab = (tab + 3) % 4;
+        picking = false;
+        sfx("cursor");
+      }
+      if (input2.pressed.r) {
+        tab = (tab + 1) % 4;
+        picking = false;
+        sfx("cursor");
+      }
+      if (tc.justDown) {
+        const i = TAB_BTN.findIndex((b) => hit(b, tc.x, tc.y));
+        if (i >= 0) {
+          tab = i;
+          picking = false;
+          sfx("cursor");
+          return;
+        }
+        if (tc.y > 214 && tc.x > 230) {
+          sfx("cancel");
+          app2.go("field");
+          return;
+        }
+      }
+      if (input2.pressed.b && !picking || input2.pressed.x || input2.pressed.start) {
+        sfx("cancel");
+        app2.go("field");
+        return;
+      }
+      if (tab === 0) updateWatch(input2);
+      else if (tab === 1) zIndex = moveList(input2, zIndex, NAKAMA_IDS.length, (k) => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
+      else if (tab === 2) iIndex = moveList(input2, iIndex, Object.keys(ITEMS).length, (k) => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), 0, 9);
+      else if (tab === 3) {
+        if (input2.pressed.a || tc.justDown && hit(SAVE_BTN, tc.x, tc.y)) {
+          app2.save();
+          saved = t;
+          sfx("ok");
+        }
+      }
+    }
+    const SAVE_BTN = { x: 80, y: 120, w: 160, h: 44, label: "セーブする" };
+    function moveList(input2, index, len, rowRect, top, rows) {
+      if (input2.pressed.up) {
+        index = (index + len - 1) % len;
+        sfx("cursor");
+      }
+      if (input2.pressed.down) {
+        index = (index + 1) % len;
+        sfx("cursor");
+      }
+      if (input2.touch.justDown) {
+        for (let k = 0; k < rows && top + k < len; k++) if (hit(rowRect(k), input2.touch.x, input2.touch.y)) {
+          index = top + k;
+          sfx("cursor");
+        }
+      }
+      return index;
+    }
+    function updateWatch(input2) {
+      const tc = input2.touch;
+      const list = box();
+      if (!picking) {
+        if (input2.pressed.left) {
+          slot = (slot + 5) % 6;
+          sfx("cursor");
+        }
+        if (input2.pressed.right) {
+          slot = (slot + 1) % 6;
+          sfx("cursor");
+        }
+        if (input2.pressed.up || input2.pressed.down) {
+          slot = (slot + 3) % 6;
+          sfx("cursor");
+        }
+        if (input2.pressed.a && list.length) {
+          picking = true;
+          listIndex = 0;
+          sfx("ok");
+        }
+        if (input2.pressed.y) removeFromSlot();
+        if (tc.justDown) {
+          const i = SLOT_BTN.findIndex((b) => hit(b, tc.x, tc.y));
+          if (i >= 0) {
+            slot = i;
+            picking = list.length > 0;
+            listIndex = 0;
+            sfx("ok");
+          }
+        }
+        return;
+      }
+      if (input2.pressed.b) {
+        picking = false;
+        sfx("cancel");
+        return;
+      }
+      if (input2.pressed.up) {
+        listIndex = (listIndex + list.length - 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.pressed.down) {
+        listIndex = (listIndex + 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.pressed.a) {
+        setMedal(list[listIndex].uid);
+        picking = false;
+      }
+      if (tc.justDown) {
+        const top = scroll(listIndex, ROWS, list.length);
+        for (let k = 0; k < ROWS && top + k < list.length; k++) {
+          if (hit({ x: 8, y: LIST_TOP + k * ROW_H, w: 304, h: ROW_H }, tc.x, tc.y)) {
+            if (listIndex === top + k) {
+              setMedal(list[top + k].uid);
+              picking = false;
+            } else {
+              listIndex = top + k;
+              sfx("cursor");
+            }
+          }
+        }
+      }
+    }
+    function removeFromSlot() {
+      if (g.watch.filter(Boolean).length <= 1 || !g.watch[slot]) {
+        sfx("cancel");
+        return;
+      }
+      g.watch[slot] = null;
+      sfx("cancel");
+    }
+    function drawNakama(ctx, id, medal, { known = true } = {}) {
+      const n = NAKAMA[id];
+      panel(ctx, 10, 10, 150, 220, { fill: "rgba(255,255,255,0.06)" });
+      if (known) drawArt(ctx, ART[n.art], Math.floor(t * 2), 85, 130, { scale: 6 });
+      else drawArt(ctx, ART[n.art], 0, 85, 130, { scale: 6, tint: "#0a0f20" });
+      text(ctx, `No.${String(n.no).padStart(3, "0")}`, 20, 30, { size: 11, color: COLORS.sub });
+      text(ctx, known ? n.name : "？？？", 170, 30, { size: 17, bold: true });
+      if (!known) {
+        text(ctx, "まだ 会っていない", 170, 56, { size: 12, color: COLORS.sub });
+        return;
+      }
+      text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
+      text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
+      wrap(ctx, n.desc, 215, 11.5).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * 15, { size: 11.5 }));
+      text(ctx, `必殺技: ${n.special.name}`, 170, 160, { size: 11.5 });
+      text(ctx, `好物: ${ITEMS[n.favorite].name}`, 170, 176, { size: 11.5 });
+      if (medal) {
+        const s = statsAt(id, medal.lv);
+        text(ctx, `Lv${medal.lv}  HP${s.hp} こうげき${s.atk} ぼうぎょ${s.def}`, 170, 196, { size: 11 });
+        text(ctx, `すばやさ${s.spd} ようじゅつ${s.mag}`, 170, 211, { size: 11 });
+        const need = expFor(medal.lv + 1) - expFor(medal.lv);
+        bar(ctx, 170, 218, 210, 4, (medal.exp - expFor(medal.lv)) / need, COLORS.ice);
+      } else {
+        const where = SPOTS.filter((s) => s.kinds.some((k) => k.id === id)).map((s) => s.label);
+        text(ctx, `いる場所: ${g.zukan.friends[id] || g.zukan.seen[id] ? where.join("・") : "？？？"}`, 170, 200, { size: 11, maxWidth: 220 });
+      }
+    }
+    function drawTop(ctx) {
+      var _a;
+      ctx.fillStyle = "#0f1a36";
+      ctx.fillRect(0, 0, 400, 240);
+      if (tab === 0) {
+        const uid = picking ? (_a = box()[listIndex]) == null ? void 0 : _a.uid : g.watch[slot];
+        const m = uid ? medalByUid(g, uid) : null;
+        if (m) drawNakama(ctx, m.id, m);
+        else text(ctx, "この 場所は あいている", 200, 120, { size: 14, align: "center", color: COLORS.sub });
+      } else if (tab === 1) {
+        const id = NAKAMA_IDS[zIndex];
+        drawNakama(ctx, id, null, { known: Boolean(g.zukan.seen[id] || g.zukan.friends[id]) });
+      } else if (tab === 2) {
+        const id = Object.keys(ITEMS)[iIndex];
+        text(ctx, ITEMS[id].name, 200, 80, { size: 20, align: "center", bold: true });
+        wrap(ctx, ITEMS[id].desc, 340, 13).forEach((r, i) => text(ctx, r, 30, 120 + i * 20, { size: 13 }));
+        text(ctx, `もっている数: ${g.items[id] || 0}`, 200, 200, { size: 13, align: "center", color: COLORS.accent });
+      } else {
+        drawArt(ctx, ART.koori, Math.floor(t * 2), 200, 120, { scale: 5 });
+        text(ctx, `${app2.versionName}`, 200, 40, { size: 16, align: "center", bold: true, color: COLORS.accent });
+        text(ctx, `${g.day}日目　なかま ${g.medals.length}　図鑑 ${friendCount(g)}/${NAKAMA_IDS.length}　${g.money}円`, 200, 160, { size: 13, align: "center" });
+        text(ctx, `あそんだ時間 ${Math.floor(g.playTime / 3600)}時間${Math.floor(g.playTime / 60) % 60}分`, 200, 182, { size: 12, align: "center", color: COLORS.sub });
+      }
+    }
+    function drawBottom(ctx) {
+      ctx.fillStyle = "#16203a";
+      ctx.fillRect(0, 0, 320, 240);
+      TAB_BTN.forEach((b, i) => button(ctx, b, { active: i === tab, size: 11.5 }));
+      if (tab === 0) drawWatch(ctx);
+      else if (tab === 1) drawZukan(ctx);
+      else if (tab === 2) drawItems(ctx);
+      else {
+        button(ctx, SAVE_BTN);
+        text(ctx, "ページを 閉じたときも 自動で セーブします", 160, 186, { size: 11, align: "center", color: COLORS.sub });
+        if (saved && t - saved < 1.5) text(ctx, "セーブした！", 160, 104, { size: 14, align: "center", bold: true, color: COLORS.accent });
+      }
+      text(ctx, "B / X: もどる", 312, 232, { size: 10.5, align: "right", color: COLORS.dim });
+    }
+    function drawWatch(ctx) {
+      SLOT_BTN.forEach((b, i) => {
+        const m = g.watch[i] ? medalByUid(g, g.watch[i]) : null;
+        panel(ctx, b.x, b.y, b.w, b.h, { fill: i === slot ? "#2d5aa8" : "rgba(26,36,64,0.95)", edge: i === slot ? COLORS.accent : i < 3 ? "#ffd84a66" : COLORS.panelEdge });
+        if (!m) {
+          text(ctx, "あき", b.x + b.w / 2, b.y + 25, { size: 11, align: "center", color: COLORS.dim });
+          return;
+        }
+        drawArt(ctx, ART[NAKAMA[m.id].art], 0, b.x + 18, b.y + 34, { scale: 1.6 });
+        text(ctx, NAKAMA[m.id].name.slice(0, 6), b.x + 36, b.y + 17, { size: 10, bold: true });
+        text(ctx, `Lv${m.lv}`, b.x + 36, b.y + 32, { size: 10, color: COLORS.sub });
+      });
+      if (!picking) {
+        text(ctx, "上の 3 つが はじめに 前に 出る", 8, 140, { size: 9.5, color: COLORS.dim });
+        text(ctx, "A / タップ: メダルを 入れる　Y: はずす", 160, 160, { size: 11, align: "center", color: COLORS.sub });
+        text(ctx, `メダル帳: ${g.medals.length} 枚`, 160, 180, { size: 11, align: "center", color: COLORS.sub });
+        return;
+      }
+      const list = box();
+      const top = scroll(listIndex, ROWS, list.length);
+      for (let k = 0; k < ROWS && top + k < list.length; k++) {
+        const m = list[top + k], y = LIST_TOP + k * ROW_H;
+        if (top + k === listIndex) {
+          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          ctx.fillStyle = "#2d5aa8";
+          ctx.fill();
+        }
+        const inWatch = g.watch.indexOf(m.uid);
+        text(ctx, `${NAKAMA[m.id].name}`, 16, y + 14, { size: 12 });
+        text(ctx, `Lv${m.lv}${inWatch >= 0 ? `  [${inWatch + 1}]` : ""}`, 304, y + 14, { size: 11, align: "right", color: COLORS.sub });
+      }
+    }
+    function drawZukan(ctx) {
+      const top = scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length);
+      for (let k = 0; k < ZUKAN_ROWS && top + k < NAKAMA_IDS.length; k++) {
+        const id = NAKAMA_IDS[top + k], y = 36 + k * ROW_H;
+        if (top + k === zIndex) {
+          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          ctx.fillStyle = "#2d5aa8";
+          ctx.fill();
+        }
+        const seen = g.zukan.seen[id] || g.zukan.friends[id];
+        text(ctx, `${String(NAKAMA[id].no).padStart(3, "0")}  ${seen ? NAKAMA[id].name : "？？？"}`, 16, y + 14, { size: 12, color: seen ? COLORS.ink : COLORS.dim });
+        if (g.zukan.friends[id]) text(ctx, "なかま", 304, y + 14, { size: 10.5, align: "right", color: COLORS.accent, bold: true });
+      }
+      text(ctx, `なかまに した: ${friendCount(g)} / ${NAKAMA_IDS.length}`, 8, 232, { size: 10.5, color: COLORS.sub });
+    }
+    function drawItems(ctx) {
+      Object.keys(ITEMS).forEach((id, k) => {
+        const y = 36 + k * ROW_H;
+        if (k === iIndex) {
+          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          ctx.fillStyle = "#2d5aa8";
+          ctx.fill();
+        }
+        text(ctx, ITEMS[id].name, 16, y + 14, { size: 12 });
+        text(ctx, `×${g.items[id] || 0}`, 304, y + 14, { size: 12, align: "right" });
+      });
+      text(ctx, `お金: ${g.money}円 (駄菓子屋で 買える)`, 8, 200, { size: 11, color: COLORS.sub });
+    }
+    return { name: "menu", update, drawTop, drawBottom };
+  }
+  const topCanvas = document.getElementById("top");
+  const bottomCanvas = document.getElementById("bottom");
+  const screens = setupScreens(topCanvas, bottomCanvas);
+  if (!matchMedia("(pointer: coarse)").matches) document.body.classList.add("nopad");
+  screens.layout();
+  const input = createInput({ bottomCanvas, padRoot: document.getElementById("pad"), onPadChange: () => screens.layout() });
+  const params = new URLSearchParams(location.search);
+  const app = {
+    version: params.get("v") === "menkyo" ? "menkyo" : "naitei",
+    g: null,
+    rng: createRng(Date.now() & 4294967295),
+    talk: createTalk(),
+    scene: null,
+    field: null,
+    get versionName() {
+      return `${VERSIONS[this.version]}バージョン`;
+    },
+    setVersion(v) {
+      this.version = v;
+      document.body.classList.toggle("v-menkyo", v === "menkyo");
+    },
+    start(version, fresh) {
+      this.setVersion(version);
+      const saved = fresh ? null : loadSave(version);
+      this.g = saved ? migrate(saved) : newGame(version, Date.now() & 65535);
+      this.field = createField(this);
+      this.scene = this.field;
+      if (fresh) {
+        this.talk.open([
+          { who: "ともいし", art: "tomoishi", text: "こおりくん、夏休みだからって 家で ゴロゴロしてないで、外で 遊んできなさい！" },
+          { who: "ともいし", art: "tomoishi", text: "そうそう、神社の ほうで ふるカワちゃんが さがしてたわよ。" }
+        ]);
+        this.save();
+      }
+    },
+    save() {
+      if (this.g) writeSave(this.version, this.g);
+    },
+    go(name) {
+      if (name === "field") this.scene = this.field;
+      else if (name === "menu") this.scene = createMenu(this);
+      else if (name === "title") this.scene = createTitle(this);
+    },
+    startBattle({ enemies, kind, place }) {
+      const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv } : null);
+      const battle = createBattle({ allies, enemies, rng: this.rng, kind });
+      this.scene = createBattleView(this, battle, place);
+    },
+    endBattle(battle) {
+      const result = applyBattleResult(this.g, battle, this.rng);
+      if (result.outcome === "lose") {
+        this.g.pos = { x: 6 * 16 + 8, y: 24 * 16 + 12, dir: "down" };
+      }
+      this.save();
+      this.scene = createResult(this, result);
+    },
+    backToField(result) {
+      this.scene = this.field;
+      this.field.afterBattle(result);
+      this.save();
+    }
+  };
+  app.setVersion(app.version);
+  app.scene = createTitle(app);
+  window.__app = app;
+  let last = performance.now(), saveTimer = 0;
+  function frame(now) {
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1e3));
+    last = now;
+    input.update();
+    if (input.touch.justDown || Object.values(input.pressed).some(Boolean)) unlockSound();
+    if (app.talk.isActive()) app.talk.update(dt, input);
+    else app.scene.update(dt, input);
+    app.scene.drawTop(screens.top);
+    app.scene.drawBottom(screens.bottom);
+    if (app.g && app.scene === app.field) {
+      saveTimer += dt;
+      if (saveTimer > 30) {
+        saveTimer = 0;
+        app.save();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) app.save();
+  });
+  window.addEventListener("pagehide", () => app.save());
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+#!/bin/sh
+# コミットの前に: 自動テスト → play.html を作り直す → ブラウザのテスト
+# (git config core.hooksPath .githooks で 有効にする。急ぐときは git commit --no-verify)
+if ! command -v node >/dev/null 2>&1; then
+    for d in "$HOME"/AppData/Local/Microsoft/WinGet/Packages/OpenJS.NodeJS.LTS_*/node-v*-win-x64; do PATH="$PATH:$d"; done
+fi
+echo "自動テストを実行中… (git commit --no-verify で飛ばせます)"
+if ! result=$(node --test tests/*.test.js 2>&1); then
+    echo "$result" | grep -E "✖|not ok" | head -20
+    echo "自動テストが失敗したので、コミットを中止しました"
+    exit 1
+fi
+echo "$result" | grep -E "^ℹ (pass|fail)"
+node tools/build-file.mjs || exit 1
+git add play.html
+if ! result=$(node tools/browser-test.mjs 2>&1); then
+    echo "$result" | grep -E "✘"
+    echo "ブラウザのテストが失敗したので、コミットを中止しました"
+    exit 1
+fi
+echo "$result" | tail -1

@@ -1,0 +1,66 @@
+# こおりくんの大冒険～大集合だヨ！おともだち！～ 内定 / 免許
+
+こおりくんシリーズの続編にして集大成。町を歩いて、かくれている キャラを レンズで 見つけ、バトルの あとに「なかま」にして 育てる RPG（妖怪ウォッチ 1・2 風）。
+これまでの 4 シリーズ（スロット・パチンコ・ダンジョン・ASO 摩天楼）の キャラを 総動員する。
+
+- 設計書（Claude Docs）: https://claude.ai/artifact/F4U4T1NJg6qNmFsEuP67pN
+- ネットで遊ぶ: https://taku3482yasu-web.github.io/koori-rpg/
+- 手元で遊ぶ: **`play.html` をダブルクリック**（ブラウザだけで動く 1 つのファイル）。`index.html` は開発用（直接開くと動かない）
+
+## いまの中身（段階 1 = 1 章・石の川タウン）
+
+| もの | 中身 |
+|---|---|
+| 画面 | 上下 2 画面（上 400×240：町・バトル / 下 320×240：地図・ウォッチの輪。下はさわれる）。スマホは縦持ちで、画面の下に 十字キー・ABXY・L/R・START |
+| バージョン | タイトルで 内定 / 免許 を選ぶ。セーブはバージョンごと。1 章の中身は同じ |
+| 1 章の流れ | 家の前 → 神社で ふるカワから おなかまウォッチ・さがすレンズ・ダイチョウエンキンの メダル → なかまを 3 体ふやす → 石の川橋の ヌシ（ボス）→ 1 章クリア（東側が開く） |
+| なかま | 20 体（ダンジョンから 15 体 + 新キャラ 5 体。全員 E ランク）。`src/data/nakama.js` |
+| レンズ | 町の 17 か所。夜だけ・雨の日だけ・クリア後だけ の キャラもいる。`src/data/map.js` の SPOTS |
+| バトル | なかまは自動で戦う。L・R か 輪をなぞって回す（前の 3 体が入れかわる・後ろは HP が少し戻る）。ゲージがたまったら 必殺技（3 秒の れんだ：15 回で大成功 1.5 倍・8 回で成功・それ未満は 0.5 倍）。どうぐ（回復）・おやつ（敵に投げると仲間になりやすい・好物なら 2 倍） |
+| 仲間になる | E ランクは 25%。同じキャラに 10 回勝つと必ず。1 回のバトルで 1 体まで |
+| ボス | 大技の 2.5 秒前に予告。輪を回して じょうぶな なかまを前に出せる |
+| 時間と天気 | 家で「ねる」と 朝 → 昼 → 夕方 → 夜 → 次の日（30% で雨） |
+| 店 | 駄菓子屋で 食べ物を買える |
+| セーブ | 町に戻るたび・メニュー・家・30 秒ごと・ページを閉じるとき |
+
+まだ無いもの（設計書のとおり 後の段階で）: おたすけ・とりつき、ロックオン、進化・合体、2 章から先、バージョン限定のなかま・ライバル、BGM。
+
+## 操作
+
+| 操作 | 携帯機・ゲームパッド | PC キーボード | スマホ |
+|---|---|---|---|
+| 移動 | 十字キー・左スティック | 矢印・WASD | 画面の十字キー |
+| 調べる・決定 | A | Z・Enter・Space | A |
+| 戻る・はしる（おしたまま） | B | X・Esc | B |
+| メニュー | X | Tab | X / 下画面のボタン |
+| レンズ | Y | C | Y / 下画面のボタン |
+| 輪を回す | L・R | Q・E | L・R / 下画面の輪をなぞる |
+| 必殺技 | 十字キー左右で選んで A | 1・2・3 | 下画面の絵をタップ |
+| START | START | Shift | START |
+
+## 作り
+
+Vite + 素の JavaScript + Canvas 2D（React は使わない）。設計書 8 章。
+
+```
+src/
+  core/   rng.js 乱数 / input.js 入力 / screen.js 2 画面 / draw.js 描く道具 / sound.js 効果音 / save.js セーブ
+  logic/  battle.js バトル / game.js 進み具合・出会い・仲間になる / units.js 能力とレベル / world.js 歩く・調べる   ← 画面にふれない
+  data/   nakama.js なかま 20 体 + ボス / items.js 道具 / map.js 石の川タウン
+  view/   title.js / field.js 町とレンズ / battle-view.js / result.js / menu.js / talk.js 会話
+  art/    legacy-art.js 前作の絵（tools/extract-art.mjs が作る）/ new-art.js 新キャラの絵
+tests/    自動テスト（画面なし）
+tools/    build-file.mjs play.html を作る / browser-test.mjs 本物のブラウザで遊ぶテスト / extract-art.mjs 前作の絵を写す
+```
+
+```sh
+npm install
+npm run dev          # 開発用 (http://localhost:5173)
+npm test             # 自動テスト
+npm run build:file   # play.html を作り直す (コミットの前に)
+node tools/browser-test.mjs --shots shots   # Chrome で遊ぶテスト (--shots で 画面を PNG 保存)
+node tools/extract-art.mjs ../koori-dungeon # 前作の絵を 写しなおす
+git config core.hooksPath .githooks         # コミットの前に テスト・play.html・ブラウザのテストを 自動で
+```
+
+URL に `?v=menkyo` を付けると 免許バージョンから始まる。デバッグ用に `window.__app` からゲームの中身が見られる。

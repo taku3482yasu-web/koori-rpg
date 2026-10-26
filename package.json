@@ -1,0 +1,17 @@
+{
+  "name": "koori-rpg",
+  "private": true,
+  "version": "0.1.0",
+  "description": "こおりくんの大冒険～大集合だヨ！おともだち！～ (妖怪ウォッチ風 RPG・こおりくんシリーズの集大成)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=./",
+    "build:file": "node tools/build-file.mjs",
+    "preview": "vite preview",
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
+  }
+}

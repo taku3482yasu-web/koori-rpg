@@ -1,0 +1,304 @@
+// =====================================================================
+// バトル (設計書 3 章): なかまは 自動で 戦い、プレイヤーは 輪を 回す・必殺技を 打つ・道具を 使う
+// ---------------------------------------------------------------------
+// 画面に ふれない。view/battle-view.js が 毎コマ step(dt) を 呼び、events を 読んで 絵と 音を 出す。
+//
+//   wheel: おなかまウォッチに セットした 6 枚 (null は あき)。前の 3 体 = wheel[rot], wheel[rot+1], wheel[rot+2]
+//   なかまは spd で 決まる 間かくで 動く。ゲージ (100) が たまると 必殺技が 打てる (ミニゲームの 結果で 威力が 変わる)
+//   後ろの なかまは 少しずつ HP が 戻る。前の 3 体が 全員 たおれたら 2 秒後に 自動で 半分 回す
+//   ボスは 大技の 前に 予告 (telegraph) を 出す。そのあいだに 輪を 回して 守りの 強い なかまを 前に 出せる
+// =====================================================================
+import { CHART } from '../data/nakama.js';
+import { ITEMS } from '../data/items.js';
+import { speciesOf, statsAt } from './units.js';
+
+export const GAUGE_MAX = 100;
+const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8 };
+export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく' };
+const BACK_REGEN = 0.004;      // 後ろに いる あいだ、1 秒に 最大HP の 0.4% 戻る (5 秒で 2%)
+const ROTATE_COOLDOWN = 0.35;
+const ITEM_COOLDOWN = 4;
+
+let uidSeq = 0;
+function makeUnit({ uid, id, lv }, side) {
+    const sp = speciesOf(id);
+    const st = statsAt(id, lv);
+    return {
+        uid: uid ?? `${side}-${++uidSeq}`,
+        id, lv, side,
+        name: sp.name, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
+        skill: sp.skill, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove),
+        max: st.hp, hp: st.hp, s: st,
+        timer: 0, gauge: 0, status: {}, buffs: {}, ko: false
+    };
+}
+
+export function createBattle({ allies, enemies, rng, kind = 'wild' }) {
+    const b = {
+        kind, rng, t: 0, rot: 0,
+        wheel: Array.from({ length: 6 }, (_, i) => (allies[i] ? makeUnit(allies[i], 'ally') : null)),
+        enemies: enemies.map(e => makeUnit(e, 'enemy')),
+        events: [], outcome: null, paused: false,
+        rotateCooldown: 0, itemCooldown: 0, frontDownTime: 0,
+        bossTimer: 0, warned: false, food: null
+    };
+    // 敵は 少しずつ ずらして 動き出す
+    b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
+    b.front = () => [0, 1, 2].map(i => b.wheel[(b.rot + i) % 6]);
+    b.frontAlive = () => b.front().filter(u => u && !u.ko);
+    b.enemiesAlive = () => b.enemies.filter(u => !u.ko);
+    return b;
+}
+
+const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
+const buffOf = (u, stat) => (u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0);
+const interval = u => (3.0 * 20 / (u.s.spd * (1 + buffOf(u, 'spd')) + 10)) * (u.status.slow > 0 ? 1.6 : 1);
+const effectOf = (element, target) => (CHART[element] && CHART[element][target]) || 1;
+
+// ----- 攻撃・回復・状態異常 -----
+function damage(b, from, to, power, { magic = false, mult = 1 } = {}) {
+    if (to.ko) return 0;
+    const A = (magic ? from.s.mag : from.s.atk) * (1 + buffOf(from, 'atk'));
+    const D = to.s.def * (1 + buffOf(to, 'def'));
+    const element = magic ? from.element : 'ふつう';
+    const eff = effectOf(element, to.element);
+    const stab = magic ? 1.2 : 1;
+    const crit = !magic && b.rng.chance(0.06);
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1);
+    dmg = Math.max(1, Math.round(dmg));
+    to.hp = Math.max(0, to.hp - dmg);
+    if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
+    if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
+    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff });
+    if (to.hp <= 0) {
+        to.ko = true;
+        to.status = {};
+        emit(b, 'ko', { target: to.uid, side: to.side });
+    }
+    return dmg;
+}
+
+function heal(b, from, to, amount) {
+    if (!to || to.ko) return;
+    const before = to.hp;
+    to.hp = Math.min(to.max, to.hp + Math.round(amount));
+    emit(b, 'heal', { target: to.uid, amount: Math.round(to.hp - before) });
+}
+
+function addStatus(b, to, status, chance) {
+    if (to.ko) return;
+    const resist = to.boss ? 0.4 : 1;
+    if (!b.rng.chance(Math.min(0.95, chance * resist))) return;
+    to.status[status] = STATUS_TIME[status];
+    emit(b, 'status', { target: to.uid, status });
+}
+
+// ----- だれに 当てるか -----
+function opponents(b, side) {
+    return side === 'ally' ? b.enemiesAlive() : b.frontAlive();
+}
+function friends(b, side) {
+    return side === 'ally' ? b.frontAlive() : b.enemiesAlive();
+}
+function pickOne(b, side) {
+    const list = opponents(b, side);
+    if (!list.length) return null;
+    // 敵は 守る役の なかまを ねらいやすい
+    return b.rng.weighted(list.map(u => ({ u, w: side === 'enemy' && u.role === 'defender' ? 2 : 1 }))).u;
+}
+
+function applyEffects(b, user, effects, mult = 1) {
+    let firstTarget = null;
+    for (const fx of effects) {
+        let targets;
+        if (fx.target === 'self') targets = [user];
+        else if (fx.target === 'party') targets = friends(b, user.side);
+        else if (fx.target === 'lowest') {
+            const list = friends(b, user.side);
+            targets = list.length ? [list.reduce((a, c) => (c.hp / c.max < a.hp / a.max ? c : a))] : [];
+        } else if (fx.target === 'all') targets = opponents(b, user.side);
+        else {
+            if (!firstTarget || firstTarget.ko) firstTarget = pickOne(b, user.side);
+            targets = firstTarget ? [firstTarget] : [];
+        }
+        for (const to of targets) {
+            if (fx.kind === 'attack') {
+                for (let h = 0; h < (fx.hits || 1); h++) {
+                    const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult });
+                    if (fx.drain) heal(b, user, user, dmg * fx.drain);
+                }
+            } else if (fx.kind === 'heal') {
+                heal(b, user, to, fx.power * user.s.mag * 1.6 * mult);
+            } else if (fx.kind === 'status') {
+                addStatus(b, to, fx.status, fx.chance * mult);
+            } else if (fx.kind === 'buff') {
+                to.buffs[fx.stat] = { amount: fx.amount * Math.min(1.5, mult), t: fx.time };
+                emit(b, 'buff', { target: to.uid, stat: fx.stat });
+            }
+        }
+    }
+}
+
+// ----- 1 回 動く (自動) -----
+function act(b, u) {
+    if (u.status.confuse > 0 && b.rng.chance(0.5)) {
+        emit(b, 'confused', { actor: u.uid });
+        return;
+    }
+    // 敵は ゲージが たまったら 必殺技
+    if (u.side === 'enemy' && u.special && u.gauge >= GAUGE_MAX) {
+        u.gauge = 0;
+        emit(b, 'special', { actor: u.uid, name: u.special.name, side: 'enemy' });
+        applyEffects(b, u, u.special.effects, 0.8);
+        return;
+    }
+    const hurt = friends(b, u.side).some(f => f.hp < f.max * 0.6);
+    const useSkill = u.role === 'healer' ? hurt : b.rng.chance(0.3);
+    if (useSkill) {
+        emit(b, 'skill', { actor: u.uid, name: u.skill.name });
+        applyEffects(b, u, u.skill.effects);
+    } else {
+        const to = pickOne(b, u.side);
+        if (!to) return;
+        emit(b, 'attack', { actor: u.uid, target: to.uid });
+        damage(b, u, to, 1.0);
+    }
+    u.gauge = Math.min(GAUGE_MAX, u.gauge + (u.side === 'ally' ? 15 : 8));
+}
+
+function tickUnit(b, u, dt, acting) {
+    for (const k of Object.keys(u.status)) {
+        u.status[k] -= dt;
+        if (u.status[k] <= 0) delete u.status[k];
+    }
+    for (const k of Object.keys(u.buffs)) {
+        u.buffs[k].t -= dt;
+        if (u.buffs[k].t <= 0) delete u.buffs[k];
+    }
+    if (u.status.poison > 0) {
+        u.hp = Math.max(1, u.hp - u.max * 0.03 * dt);   // どくでは たおれない
+    }
+    if (!acting || u.status.sleep > 0) return;
+    u.timer += dt;
+    if (u.timer >= interval(u)) {
+        u.timer = 0;
+        act(b, u);
+    }
+}
+
+function checkOutcome(b) {
+    if (b.outcome) return;
+    if (b.enemies.every(e => e.ko)) {
+        b.outcome = 'win';
+        emit(b, 'win');
+    } else if (b.wheel.filter(Boolean).every(u => u.ko)) {
+        b.outcome = 'lose';
+        emit(b, 'lose');
+    }
+}
+
+export function step(b, dt) {
+    if (b.outcome || b.paused) return;
+    b.t += dt;
+    b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
+    b.itemCooldown = Math.max(0, b.itemCooldown - dt);
+    const front = b.front();
+    for (const u of b.wheel) {
+        if (!u || u.ko) continue;
+        const isFront = front.includes(u);
+        if (!isFront) u.hp = Math.min(u.max, u.hp + u.max * BACK_REGEN * dt);
+        tickUnit(b, u, dt, isFront);
+        if (b.outcome) return;
+        checkOutcome(b);
+    }
+    for (const e of b.enemies) {
+        if (e.ko) continue;
+        tickUnit(b, e, dt, true);
+        if (e.bigMove) bossTick(b, e, dt);
+        checkOutcome(b);
+        if (b.outcome) return;
+    }
+    // 前の 3 体が 全員 たおれたら、少し 待って 半分 回す
+    if (!b.frontAlive().length && b.wheel.some(u => u && !u.ko)) {
+        b.frontDownTime += dt;
+        if (b.frontDownTime > 2) {
+            b.rot = (b.rot + 3) % 6;
+            b.frontDownTime = 0;
+            emit(b, 'rotate', { auto: true });
+        }
+    } else b.frontDownTime = 0;
+    checkOutcome(b);
+}
+
+function bossTick(b, e, dt) {
+    const m = e.bigMove;
+    b.bossTimer += dt;
+    if (!b.warned && b.bossTimer >= m.every - m.warn) {
+        b.warned = true;
+        emit(b, 'telegraph', { actor: e.uid, name: m.name, warn: m.warn });
+    }
+    if (b.bossTimer >= m.every) {
+        b.bossTimer = 0;
+        b.warned = false;
+        emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
+        applyEffects(b, e, m.effects);
+    }
+}
+
+// ----- プレイヤーの 操作 -----
+// dir: +1 (R) / -1 (L)
+export function rotate(b, dir) {
+    if (b.outcome || b.paused || b.rotateCooldown > 0) return false;
+    b.rot = (b.rot + (dir > 0 ? 1 : 5)) % 6;
+    b.rotateCooldown = ROTATE_COOLDOWN;
+    emit(b, 'rotate', { dir });
+    return true;
+}
+
+export const canSpecial = (b, pos) => {
+    const u = b.front()[pos];
+    return Boolean(u && !u.ko && u.special && u.gauge >= GAUGE_MAX && !b.outcome && !b.paused);
+};
+
+// ミニゲームの あいだは バトルを 止める
+export function startSpecial(b, pos) {
+    if (!canSpecial(b, pos)) return null;
+    b.paused = true;
+    return b.front()[pos];
+}
+
+// mult: ミニゲームの 結果 (大成功 1.5・成功 1.0・失敗 0.5)
+export function resolveSpecial(b, unit, mult) {
+    b.paused = false;
+    if (!unit || unit.ko) return;
+    unit.gauge = 0;
+    emit(b, 'special', { actor: unit.uid, name: unit.special.name, side: 'ally', mult });
+    applyEffects(b, unit, unit.special.effects, mult);
+    checkOutcome(b);
+}
+
+// 道具を なかまに 使う (pos を 決めなければ、前で いちばん HP の 少ない なかま)
+export function useItem(b, itemId, pos = null) {
+    const item = ITEMS[itemId];
+    if (!item || b.outcome || b.paused || b.itemCooldown > 0) return false;
+    const target = pos === null
+        ? b.frontAlive().reduce((a, c) => (!a || c.hp / c.max < a.hp / a.max ? c : a), null)
+        : b.front()[pos];
+    if (!target || target.ko) return false;
+    heal(b, target, target, item.heal);
+    if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
+    b.itemCooldown = ITEM_COOLDOWN;
+    emit(b, 'item', { target: target.uid, itemId });
+    return true;
+}
+
+// 食べ物を 敵に 投げる (1 回の バトルで 1 回。仲間に なりやすくなる)
+export function throwFood(b, itemId) {
+    if (b.food || b.kind !== 'wild' || b.outcome || b.paused || !ITEMS[itemId]) return false;
+    const to = b.enemiesAlive()[0];
+    if (!to) return false;
+    const fav = speciesOf(to.id).favorite === itemId;
+    b.food = { itemId, target: to.id, favorite: fav };
+    emit(b, 'food', { target: to.uid, itemId, favorite: fav });
+    return true;
+}
