@@ -7,6 +7,7 @@
 import { ART } from '../art/index.js';
 import { backArt } from '../art/back.js';
 import { BACK_ART } from '../art/back-art.js';
+import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMMAND_NAMES } from './special-fx.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect } from '../core/draw.js';
@@ -22,7 +23,6 @@ const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: 'おやつ' };
 const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
 const ALLY_SCALE = 4;
 const HORIZON = 70;
-const MASH_TIME = 3;
 const RIVER = ['kawara', 'kawaraN', 'kawaraS', 'hashiue', 'hashishita', 'kawakami', 'bridge'];
 
 export function createBattleView(app, battle, place) {
@@ -31,7 +31,7 @@ export function createBattleView(app, battle, place) {
     let shownRot = battle.rot;     // 輪の 回る アニメーション
     let cursor = 0;                // 必殺技を えらぶ カーソル (前の 3 体)
     let menu = null;               // { kind: 'item' | 'food', index }
-    let mg = null;                 // れんだの ミニゲーム
+    let mg = null;                 // 必殺技 (コマンド → カットイン → 動き)
     let drag = null;
     let banner = null;             // { text, color, until }
     let warn = null;               // ボスの 予告 { name, until }
@@ -51,22 +51,116 @@ export function createBattleView(app, battle, place) {
     }
     const nameOf = uid => [...battle.wheel, ...battle.enemies].find(u => u && u.uid === uid)?.name || '';
 
+    // ----- 動き (2026-10-26 ユーザー指定: 攻撃した キャラが 動いて 分かるように) -----
+    //   attack: 相手の ほうへ 飛びこんで もどる / skill: その場で はねて、属性の 色の 玉が 相手へ 飛ぶ
+    //   special: 高く ジャンプして 着地で 衝撃波 / 当たった 相手は ゆれて 火花。ダメージの 数字は 当たった ときに 出る
+    const motions = {};            // uid → { kind, start, dur, dx, dy }
+    const shakes = {};             // uid → ゆれおわる 時間
+    const effects = [];            // 玉・火花・衝撃波・回復の きらきら
+    const later = [];              // { at, fn } 当たる ときに やること
+    const HIT_DELAY = { attack: 0.14, skill: 0.32, special: 0.5, perf: 0 };
+    const unitOf = uid => [...battle.wheel, ...battle.enemies].find(u => u && u.uid === uid);
+    // 体の まんなか (足元から 半分 上)
+    function centerOf(uid) {
+        const p = posOf(uid), u = unitOf(uid);
+        if (!p || !u) return null;
+        const scale = u.side === 'ally' ? ALLY_SCALE : p.scale || 3;
+        return { x: p.x, y: p.y - ART[u.art].h * scale / 2 };
+    }
+    function startMotion(uid, kind, targetUid) {
+        const dur = { attack: 0.34, skill: 0.42, special: 0.7 }[kind];
+        let dx = 0, dy = 0;
+        const a = posOf(uid), b = targetUid ? posOf(targetUid) : null;
+        if (kind === 'attack' && a && b) {
+            const d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+            dx = (b.x - a.x) / d * 26;
+            dy = (b.y - a.y) / d * 26;
+        }
+        motions[uid] = { kind, start: t, dur, dx, dy };
+    }
+    // 食らった とき (2026-10-27 ユーザー指定): 攻撃した 相手と 反対へ はじかれ、ぺしゃっと つぶれて もどる
+    //   たおれた ときは 大きく はじかれて つぶれたまま
+    function startHurt(uid, fromUid, ko = false) {
+        const a = posOf(uid), b = fromUid ? posOf(fromUid) : null;
+        const u = unitOf(uid);
+        let dx = 0, dy = u && u.side === 'ally' ? 1 : -1;
+        if (a && b) {
+            const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+            dx = (a.x - b.x) / d;
+            dy = (a.y - b.y) / d;
+        }
+        const power = ko ? 16 : 9;
+        motions[uid] = { kind: ko ? 'ko' : 'hurt', start: t, dur: ko ? 0.6 : 0.4, dx: dx * power, dy: dy * power };
+    }
+    // ずれ (ox, oy) と のびちぢみ (sx, sy)
+    function offsetOf(u) {
+        let ox = 0, oy = 0, sx = 1, sy = 1;
+        const m = motions[u.uid];
+        if (m) {
+            const k = (t - m.start) / m.dur;
+            if (k >= 1 && m.kind !== 'ko') delete motions[u.uid];
+            else if (m.kind === 'attack') {
+                const f = k < 0.35 ? k / 0.35 : 1 - (k - 0.35) / 0.65;
+                ox += m.dx * f;
+                oy += m.dy * f;
+            } else if (m.kind === 'skill') oy -= Math.sin(Math.PI * k) * 10;
+            else if (m.kind === 'special') oy -= Math.sin(Math.PI * k) * 26;
+            else if (m.kind === 'hurt') {
+                const f = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8;
+                ox += m.dx * f;
+                oy += m.dy * f;
+                sy = 1 - 0.22 * f;
+                sx = 1 + 0.14 * f;
+            } else if (m.kind === 'ko') {
+                const f = Math.min(1, k / 0.3);
+                ox += m.dx * f;
+                oy += m.dy * f;
+                sy = 1 - 0.45 * f;
+                sx = 1 + 0.2 * f;
+            }
+        }
+        if ((shakes[u.uid] || 0) > t) ox += Math.sin(t * 70) * 2.5;
+        return { ox, oy, sx, sy };
+    }
+    const at = (delay, fn) => later.push({ at: t + delay, fn });
+
     function readEvents() {
+        let actor = null, kind = 'attack';      // いま 動いている キャラ (つづく ダメージは その キャラの 攻撃)
         for (const e of battle.events.splice(0)) {
+            if (e.type === 'attack' || e.type === 'skill' || e.type === 'special') {
+                actor = e.actor;
+                kind = e.type;
+                // 味方の 必殺技は 必殺技の 動き (special-fx.js) が もう 当たったところ。ふつうの 動きは つけない
+                if (e.type === 'special' && e.side === 'ally' && mg) kind = 'perf';
+                else startMotion(e.actor, e.type, e.target);
+            }
             if (e.type === 'damage') {
-                const p = posOf(e.target);
-                if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
-                flash[e.target] = t + 0.15;
-                sfx(e.amount > 30 ? 'big' : 'hit');
+                const p = posOf(e.target), from = centerOf(actor), to = centerOf(e.target);
+                const delay = actor ? HIT_DELAY[kind] : 0;
+                const color = actor ? ELEMENT_COLORS[unitOf(actor)?.element] || '#ffffff' : '#ffffff';
+                if (actor && (kind === 'skill' || kind === 'special') && from && to) effects.push({ kind: 'orb', from, to, start: t + (kind === 'special' ? 0.3 : 0.05), dur: delay - (kind === 'special' ? 0.3 : 0.05), color });
+                const by = actor;
+                at(delay, () => {
+                    if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
+                    flash[e.target] = t + 0.15;
+                    if (!motions[e.target] || motions[e.target].kind !== 'ko') startHurt(e.target, by, unitOf(e.target)?.ko);
+                    if (to) effects.push({ kind: 'spark', x: to.x, y: to.y, start: t, dur: 0.3, color: kind === 'attack' ? '#ffffff' : color });
+                    sfx(e.amount > 30 ? 'big' : 'hit');
+                });
             } else if (e.type === 'heal' && e.amount > 0) {
-                const p = posOf(e.target);
-                if (p) pops.push({ x: p.x, y: p.y - 40, text: `+${e.amount}`, color: '#7aff8a', until: t + 0.9 });
+                const p = posOf(e.target), c = centerOf(e.target);
+                at(actor && kind !== 'perf' ? 0.2 : 0, () => {
+                    if (p) pops.push({ x: p.x, y: p.y - 40, text: `+${e.amount}`, color: '#7aff8a', until: t + 0.9 });
+                    if (c) effects.push({ kind: 'heal', x: c.x, y: c.y, start: t, dur: 0.7 });
+                });
             } else if (e.type === 'status') {
                 const p = posOf(e.target);
-                if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: '#ff9ad8', until: t + 1 });
+                at(actor ? HIT_DELAY[kind] : 0, () => { if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: '#ff9ad8', until: t + 1 }); });
             } else if (e.type === 'special') {
                 banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === 'ally' ? COLORS.accent : '#ff6a6a', until: t + 1.4 };
                 sfx('special');
+                const c = centerOf(e.actor), p = posOf(e.actor);
+                if (c && p && kind !== 'perf') at(0.62, () => effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[unitOf(e.actor)?.element] || '#ffffff' }));
                 if (e.big) warn = null;
             } else if (e.type === 'telegraph') {
                 warn = { name: e.name, until: t + e.warn };
@@ -82,25 +176,39 @@ export function createBattleView(app, battle, place) {
     }
 
     // ----- 必殺技 -----
+    // 流れ: cmd (キャラごとの コマンド) → result (大成功など) → cutin (カットイン) → act (キャラごとの 動き。当たる ときに 効果) → おわり
+    const PHASE_TIME = { result: 0.7, cutin: 0.75 };
     function trySpecial(pos) {
         if (!canSpecial(battle, pos)) { sfx('cancel'); return; }
         const unit = startSpecial(battle, pos);
-        mg = { unit, t: 0, count: 0, done: null };
+        const sp = specialOf(unit.id);
+        mg = { unit, pos, sp, phase: 'cmd', t: 0, cmd: createCommand(sp.command, app.rng), mult: 1, resolved: false };
         sfx('ok');
     }
     function updateMinigame(dt, input) {
         mg.t += dt;
-        if (mg.done) {
-            if (mg.t > MASH_TIME + 0.8) {
-                resolveSpecial(battle, mg.unit, mg.done.mult);
+        if (mg.phase === 'cmd') {
+            mg.cmd.update(dt, input);
+            if (mg.cmd.done) { mg.mult = mg.cmd.done.mult; mg.phase = 'result'; mg.t = 0; sfx(mg.mult > 1 ? 'special' : 'ok'); }
+        } else if (mg.phase === 'result' && mg.t > PHASE_TIME.result) {
+            mg.phase = 'cutin';
+            mg.t = 0;
+            sfx('special');
+        } else if (mg.phase === 'cutin' && mg.t > PHASE_TIME.cutin) {
+            mg.phase = 'act';
+            mg.t = 0;
+        } else if (mg.phase === 'act') {
+            const [dur, hit] = MOTION_TIME[mg.sp.motion];
+            if (!mg.resolved && mg.t >= hit) {
+                mg.resolved = true;
+                resolveSpecial(battle, mg.unit, mg.mult);
+                battle.paused = !battle.outcome;   // 動きが 終わるまで バトルは 止めておく
+                readEvents();
+            }
+            if (mg.t >= dur) {
+                battle.paused = false;
                 mg = null;
             }
-            return;
-        }
-        if (input.pressed.a || input.touch.justDown || input.pressed.sp1 || input.pressed.sp2 || input.pressed.sp3) { mg.count++; sfx('mash'); }
-        if (mg.t >= MASH_TIME) {
-            const mult = mg.count >= 15 ? 1.5 : mg.count >= 8 ? 1 : 0.5;
-            mg.done = { mult, label: mult > 1 ? '大成功！' : mult === 1 ? '成功！' : 'しっぱい…' };
         }
     }
 
@@ -126,9 +234,69 @@ export function createBattleView(app, battle, place) {
     }
     const menuRow = k => ({ x: 30, y: 46 + k * 28, w: 260, h: 24 });
 
+    // 当たる 時間に なった ことを する (ダメージの 数字・ゆれ・火花)
+    function runLater() {
+        for (let i = later.length - 1; i >= 0; i--) {
+            if (later[i].at <= t) { const f = later[i].fn; later.splice(i, 1); f(); }
+        }
+    }
+
+    function drawEffects(ctx) {
+        for (let i = effects.length - 1; i >= 0; i--) {
+            const fx = effects[i];
+            const k = (t - fx.start) / fx.dur;
+            if (k >= 1) { effects.splice(i, 1); continue; }
+            if (k < 0) continue;
+            if (fx.kind === 'orb') {
+                // 玉: 少し 山なりに 飛ぶ
+                const x = fx.from.x + (fx.to.x - fx.from.x) * k, y = fx.from.y + (fx.to.y - fx.from.y) * k - Math.sin(Math.PI * k) * 18;
+                ctx.fillStyle = fx.color;
+                ctx.globalAlpha = 0.35;
+                ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(x - 1, y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+            } else if (fx.kind === 'spark') {
+                // 火花: 8 方向に 線が 飛び出す
+                ctx.strokeStyle = fx.color;
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 1 - k;
+                ctx.beginPath();
+                for (let a = 0; a < 8; a++) {
+                    const ang = a * Math.PI / 4 + 0.3, r0 = 4 + k * 8, r1 = 10 + k * 16;
+                    ctx.moveTo(fx.x + Math.cos(ang) * r0, fx.y + Math.sin(ang) * r0);
+                    ctx.lineTo(fx.x + Math.cos(ang) * r1, fx.y + Math.sin(ang) * r1);
+                }
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            } else if (fx.kind === 'wave') {
+                // 着地の 衝撃波: 地面に 広がる 輪
+                ctx.strokeStyle = fx.color;
+                ctx.lineWidth = 3 * (1 - k) + 1;
+                ctx.globalAlpha = 1 - k;
+                ctx.beginPath();
+                ctx.ellipse(fx.x, fx.y, 14 + k * 70, 4 + k * 18, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            } else if (fx.kind === 'heal') {
+                // 回復: みどりの きらきらが のぼる
+                ctx.fillStyle = '#7aff8a';
+                ctx.globalAlpha = 1 - k;
+                for (let n = 0; n < 6; n++) {
+                    const sx = fx.x + Math.sin(n * 2.1) * 16, sy = fx.y + 16 - k * 34 - (n % 3) * 6;
+                    ctx.fillRect(sx - 1, sy - 3, 2, 6);
+                    ctx.fillRect(sx - 3, sy - 1, 6, 2);
+                }
+                ctx.globalAlpha = 1;
+            }
+        }
+    }
+
     function update(dt, input) {
         t += dt;
         g.playTime += dt;
+        runLater();
         if (mg) { updateMinigame(dt, input); readEvents(); return; }
         step(battle, dt);
         readEvents();
@@ -219,13 +387,18 @@ export function createBattleView(app, battle, place) {
         const lit = (flash[u.uid] || 0) > t;
         const sleeping = u.status.sleep > 0;
         const bobY = u.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5;
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        // 動き (飛びこむ・はねる) の ぶん ずらす。影は 地面に 残す (ジャンプが 分かるように)
+        const { ox, oy, sx, sy } = offsetOf(u);
+        const ground = { x: p.x + ox, y: Math.max(p.y, p.y + oy) };
+        p = { ...p, x: p.x + ox, y: p.y + oy };
+        const lift = Math.max(0, ground.y - p.y);
+        ctx.fillStyle = `rgba(0,0,0,${0.25 * Math.max(0.4, 1 - lift / 40)})`;
         ctx.beginPath();
-        ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(ground.x, ground.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
         ctx.fill();
         // うしろ姿: 描いた 絵 (back-art.js) が なければ 顔を 消して 作る (back.js)
         const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
-        drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null });
+        drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null, sx, sy });
         const w = 44, head = p.y - art.h * scale;
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
         const barY = head - 10, nameY = head - 14;
@@ -239,7 +412,10 @@ export function createBattleView(app, battle, place) {
     function drawTop(ctx) {
         drawBackground(ctx);
         battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
-        battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }));
+        // 必殺技の 動きの あいだは、その キャラは 動きの ほうで 描く
+        battle.front().forEach((u, i) => { if (!(mg && mg.phase === 'act' && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }); });
+        if (mg && mg.phase === 'act') drawAct(ctx);
+        drawEffects(ctx);
         for (let i = pops.length - 1; i >= 0; i--) {
             const p = pops[i];
             if (p.until < t) { pops.splice(i, 1); continue; }
@@ -254,7 +430,8 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 40, 12, 320, 26, { fill: 'rgba(16,22,42,0.9)', edge: banner.color });
             text(ctx, banner.text, 200, 30, { size: 13, align: 'center', bold: true, color: banner.color });
         }
-        if (battle.outcome) {
+        // 最後の 一撃の 動きが 見えるように、少し 待ってから「かった！」
+        if (battle.outcome && endT > 0.5) {
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
             ctx.fillRect(0, 0, 400, 240);
             text(ctx, battle.outcome === 'win' ? 'かった！' : 'まけた……', 200, 128, { size: 34, align: 'center', bold: true, color: battle.outcome === 'win' ? COLORS.accent : '#a0b0d0' });
@@ -263,6 +440,8 @@ export function createBattleView(app, battle, place) {
     }
 
     function drawMinigameTop(ctx) {
+        if (mg.phase === 'cutin') { drawCutin(ctx, mg.unit, mg.sp, mg.t / PHASE_TIME.cutin); return; }
+        if (mg.phase === 'act') return;
         ctx.fillStyle = 'rgba(10, 14, 40, 0.8)';
         ctx.fillRect(0, 0, 400, 240);
         const u = mg.unit;
@@ -277,8 +456,21 @@ export function createBattleView(app, battle, place) {
         }
         ctx.stroke();
         drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
-        text(ctx, `必殺技「${u.special.name}」`, 200, 36, { size: 18, align: 'center', bold: true, color: COLORS.accent });
-        if (mg.done) text(ctx, mg.done.label, 200, 216, { size: 26, align: 'center', bold: true, color: mg.done.mult > 1 ? COLORS.accent : '#ffffff' });
+        text(ctx, `必殺技「${u.special.name}」`, 200, 30, { size: 18, align: 'center', bold: true, color: COLORS.accent });
+        text(ctx, COMMAND_NAMES[mg.sp.command], 200, 52, { size: 13, align: 'center', bold: true });
+        if (mg.phase === 'result') text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
+    }
+
+    // キャラごとの 必殺技の 動き (味方の 場所 → いちばん 前の 敵)
+    function drawAct(ctx) {
+        const a = ALLY_POS[mg.pos];
+        const target = battle.enemiesAlive()[0] || battle.enemies[0];
+        const e = centerOf(target.uid) || { x: 200, y: 110 };
+        const [dur] = MOTION_TIME[mg.sp.motion];
+        const art = BACK_ART[mg.unit.art] || backArt(ART[mg.unit.art]);
+        const drawActor = (x, y, o) => drawArt(ctx, art, Math.floor(t * 8), x, y, { scale: o.scale || ALLY_SCALE, flip: o.flip, alpha: o.alpha ?? 1, sx: o.sx || 1, sy: o.sy || 1 });
+        const allies = battle.front().map((u, i) => (u && !u.ko ? ALLY_POS[i] : null)).filter(Boolean);
+        drawPerformance(ctx, mg.sp, a, e, Math.min(1, mg.t / dur), t, drawActor, allies);
     }
 
     // ----- 描く: 下画面 -----
@@ -359,15 +551,13 @@ export function createBattleView(app, battle, place) {
     function drawBottom(ctx) {
         ctx.fillStyle = '#16203a';
         ctx.fillRect(0, 0, 320, 240);
-        if (mg) {
-            const left = Math.max(0, MASH_TIME - mg.t);
-            text(ctx, mg.done ? '' : `${btn('a')} か 画面を れんだ！`, 160, 34, { size: 18, align: 'center', bold: true, color: COLORS.accent });
-            const pulse = mg.done ? 1 : 1 + 0.06 * Math.sin(t * 30);
-            const w = 200 * pulse, h = 110 * pulse;
-            panel(ctx, 160 - w / 2, 120 - h / 2, w, h, { fill: '#b03048', edge: '#ffd0d8', r: 20, lineWidth: 3 });
-            text(ctx, `${mg.count}`, 160, 136, { size: 40, align: 'center', bold: true });
-            bar(ctx, 40, 196, 240, 10, left / MASH_TIME, COLORS.accent);
-            text(ctx, '15回で 大成功 / 8回で 成功', 160, 226, { size: 11, align: 'center', color: COLORS.sub });
+        if (mg && (mg.phase === 'cmd' || mg.phase === 'result')) {
+            mg.cmd.drawBottom(ctx, t);
+            if (mg.phase === 'result') {
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.fillRect(0, 0, 320, 240);
+                text(ctx, mg.cmd.done.label, 160, 130, { size: 30, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
+            }
             return;
         }
         drawWheel(ctx);
@@ -375,5 +565,5 @@ export function createBattleView(app, battle, place) {
         if (menu) drawMenu(ctx);
     }
 
-    return { name: 'battle', update, drawTop, drawBottom, battle };
+    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg } };
 }

@@ -83,12 +83,14 @@ export function button(ctx, b, { active = false, disabled = false, size = 13 } =
 export const hit = (b, x, y) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
 
 // ドット絵 ({ w, h, palette, frames }) を描く。(x, y) は足元のまんなか。scale: 1 ドットの大きさ
-export function drawArt(ctx, art, frame, x, y, { scale = 1, flip = false, alpha = 1, tint = null } = {}) {
+// sx, sy: 横・たての のびちぢみ (攻撃を 食らった ときに つぶれる など。足元は 動かない)
+export function drawArt(ctx, art, frame, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {
     if (!art) return;
     const n = art.frames.length;
     const rows = art.frames[((Math.floor(frame) % n) + n) % n];
-    const left = Math.round(x - (art.w * scale) / 2);
-    const top = Math.round(y - art.h * scale);
+    const pw = scale * sx, ph = scale * sy;
+    const left = Math.round(x - (art.w * pw) / 2);
+    const top = Math.round(y - art.h * ph);
     const before = ctx.globalAlpha;
     ctx.globalAlpha = before * alpha;
     for (let ry = 0; ry < rows.length; ry++) {
@@ -98,7 +100,7 @@ export function drawArt(ctx, art, frame, x, y, { scale = 1, flip = false, alpha 
             if (ch === '.') continue;
             ctx.fillStyle = tint || art.palette[ch];
             const dx = flip ? art.w - 1 - rx : rx;
-            ctx.fillRect(left + dx * scale, top + ry * scale, scale + 0.05, scale + 0.05);
+            ctx.fillRect(left + dx * pw, top + ry * ph, pw + 0.05, ph + 0.05);
         }
     }
     ctx.globalAlpha = before;

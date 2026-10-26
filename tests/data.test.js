@@ -83,3 +83,37 @@ test('20 体 全員に うしろ姿の 絵が あり、前向きと 同じ 大�
         assert.notDeepEqual(back.frames[0], front.frames[0], `${id} は 前向きと ちがう`);
     }
 });
+
+test('20 体 全員に 必殺技の コマンドと 動きが あり、コマンドは 4 種類 全部 使う', async () => {
+    const { SPECIALS, MOTION_TIME, COMMAND_NAMES } = await import('../src/view/special-fx.js');
+    const commands = new Set();
+    for (const id of NAKAMA_IDS) {
+        const sp = SPECIALS[id];
+        assert.ok(sp, `${id} の 必殺技`);
+        assert.ok(COMMAND_NAMES[sp.command], `${id} の コマンド ${sp.command}`);
+        assert.ok(MOTION_TIME[sp.motion], `${id} の 動き ${sp.motion}`);
+        commands.add(sp.command);
+    }
+    assert.deepEqual([...commands].sort(), ['mash', 'reel', 'spin', 'trace']);
+});
+
+test('必殺技の コマンド: 目押しは こおりが そろうと 大成功・れんだは 押した 数で 決まる', async () => {
+    const { createCommand } = await import('../src/view/special-fx.js');
+    const { createRng } = await import('../src/core/rng.js');
+    const idle = { pressed: {}, held: {}, touch: {} };
+    // れんだ: 16 回 押すと 大成功
+    const m = createCommand('mash', createRng(1));
+    for (let i = 0; i < 16; i++) m.update(0.1, { ...idle, pressed: { a: true } });
+    m.update(2, idle);
+    assert.equal(m.done.mult, 1.5);
+    // 目押し: こおりの すぐ 前で 止めると すべって そろう
+    const r = createCommand('reel', createRng(1));
+    r.reels.forEach(x => { x.speed = 0; x.pos = 5.6; });
+    for (let i = 0; i < 3; i++) r.update(0.01, { ...idle, pressed: { a: true } });
+    assert.equal(r.done.mult, 1.5);
+    // ぐるぐる: ボタンで 上→右→下→左 を 4 回 で 大成功
+    const s = createCommand('spin', createRng(1));
+    for (let i = 0; i < 4; i++) for (const d of ['up', 'right', 'down', 'left']) s.update(0.01, { ...idle, pressed: { [d]: true } });
+    s.update(3, idle);
+    assert.equal(s.done.mult, 1.5);
+});

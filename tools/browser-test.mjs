@@ -169,6 +169,10 @@ try {
     await sleep(1500);
     await shot('battle');
 
+    // ----- バトル: 攻撃した キャラが 動く (飛びこみ・はねる)・当たると 火花 -----
+    const moved = await evaluate('new Promise(r => { let m = false, f = false, n = 0; const tick = () => { const d = window.__app.scene.debug; if (d) { if (Object.keys(d.motions).length) m = true; if (d.effects.some(e => e.kind === "spark")) f = true; } if ((m && f) || ++n > 360) r({ m, f }); else requestAnimationFrame(tick); }; tick(); })');
+    check(moved.m && moved.f, `攻撃した キャラが 動き、当たると 火花が 出る (${JSON.stringify(moved)})`);
+
     // ----- バトル: 輪を 回す・必殺技・道具 -----
     await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.s.atk = 1; e.s.mag = 1; }); return true; })()');
     await evaluate('window.__app.g.items.onigiri = 3');
@@ -178,11 +182,14 @@ try {
     await key('KeyQ');
     await evaluate('(() => { const b = window.__app.scene.battle; b.front()[0].gauge = 100; return true; })()');
     await key('Digit1');
-    check(await evaluate('window.__app.scene.battle.paused'), '必殺技で れんだの ミニゲーム');
-    await shot('minigame');
-    for (let i = 0; i < 16; i++) await key('Enter', 30);
-    await sleep(3200);
-    check(await evaluate('!window.__app.scene.battle || window.__app.scene.battle.events !== undefined'), 'ミニゲームが 終わる');
+    check(await evaluate('window.__app.scene.battle.paused && window.__app.scene.debug.mg().sp.command === "spin"'), '必殺技で キャラごとの コマンド (ダイチョウエンキンは ぐるぐる)');
+    await shot('command');
+    // ぐるぐる: 上→右→下→左 を 5 回
+    for (let i = 0; i < 5; i++) for (const k of ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft']) await key(k, 20);
+    // コマンド → 結果 → カットイン → 動き を 見とどける (動きの 中で 敵が 食らう モーション)
+    const flow = await evaluate('new Promise(r => { const seen = new Set(); let hurt = false, n = 0; const tick = () => { const s = window.__app.scene, m = s.debug && s.debug.mg(); if (m) seen.add(m.phase); if (s.debug && Object.values(s.debug.motions).some(x => x.kind === "hurt" || x.kind === "ko")) hurt = true; if ((!m && seen.size) || ++n > 900) r({ phases: [...seen], hurt, mult: null }); else requestAnimationFrame(tick); }; tick(); })');
+    check(['result', 'cutin', 'act'].every(p => flow.phases.includes(p)), `必殺技: コマンドの あと 結果 → カットイン → キャラの 動き (${flow.phases.join(' → ')})`);
+    check(flow.hurt, '必殺技が 当たると 敵が 食らった モーション');
     // 敵を 弱らせて 勝つ
     await evaluate('(() => { const b = window.__app.scene.battle; if (b) b.enemies.forEach(e => { e.hp = 1; }); return true; })()');
     for (let i = 0; i < 40 && await sceneIs('battle'); i++) await sleep(250);
@@ -238,6 +245,8 @@ try {
     await evaluate('(() => { const a = window.__app; a.startBattle({ enemies: [{ id: "nushi", lv: 8 }], kind: "boss", place: "bridge" }); return true; })()');
     await sleep(1500);
     await shot('phone-battle');
+    // 動きを 見るための 連写 (--shots の ときだけ)
+    for (let i = 0; SHOTS && i < 8; i++) { await shot('phone-motion'); await sleep(90); }
     await evaluate('(() => { const b = window.__app.scene.battle; b.bossTimer = 9.6; return true; })()');
     await sleep(500);
     await shot('phone-telegraph');

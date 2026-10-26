@@ -2419,12 +2419,13 @@ body.nopad #pad { display: none; }
     text(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + size / 3 + 1, { size, align: "center", bold: true, color: disabled ? COLORS.dim : COLORS.ink });
   }
   const hit = (b, x, y) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
-  function drawArt(ctx, art, frame2, x, y, { scale = 1, flip = false, alpha = 1, tint = null } = {}) {
+  function drawArt(ctx, art, frame2, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {
     if (!art) return;
     const n = art.frames.length;
     const rows = art.frames[(Math.floor(frame2) % n + n) % n];
-    const left = Math.round(x - art.w * scale / 2);
-    const top = Math.round(y - art.h * scale);
+    const pw = scale * sx, ph = scale * sy;
+    const left = Math.round(x - art.w * pw / 2);
+    const top = Math.round(y - art.h * ph);
     const before = ctx.globalAlpha;
     ctx.globalAlpha = before * alpha;
     for (let ry = 0; ry < rows.length; ry++) {
@@ -2434,7 +2435,7 @@ body.nopad #pad { display: none; }
         if (ch === ".") continue;
         ctx.fillStyle = tint || art.palette[ch];
         const dx = flip ? art.w - 1 - rx : rx;
-        ctx.fillRect(left + dx * scale, top + ry * scale, scale + 0.05, scale + 0.05);
+        ctx.fillRect(left + dx * pw, top + ry * ph, pw + 0.05, ph + 0.05);
       }
     }
     ctx.globalAlpha = before;
@@ -3165,23 +3166,23 @@ body.nopad #pad { display: none; }
         }
       });
     }
-    function afterBattle(result) {
+    function afterBattle(result2) {
       camera();
       if (fighting) {
         if (fighting.spot) g.spotCooldown[fighting.spot] = g.playTime + SPOT_COOLDOWN;
         wild.remove(fighting);
         fighting = null;
       }
-      if (result.boss && result.outcome === "win") {
+      if (result2.boss && result2.outcome === "win") {
         say([
           { who: "ハシシタボウズ", art: "hashishita", text: "数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。" },
           furu("やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！"),
           { who: "", text: "１章 クリア！ ―― ２章は つぎの アップデートで。石の川タウンの なかま 20 人を あつめてみよう！" }
         ], { done: () => app2.save() });
-      } else if (result.storyChanged === "bridge") {
+      } else if (result2.storyChanged === "bridge") {
         say([furu("なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！")], { done: () => app2.save() });
-      } else if (result.outcome === "lose") {
-        say([{ who: "", text: `こおりくんは 家に 逃げかえった……。(${-result.money}円 落とした)` }]);
+      } else if (result2.outcome === "lose") {
+        say([{ who: "", text: `こおりくんは 家に 逃げかえった……。(${-result2.money}円 落とした)` }]);
       }
     }
     function updateLens(dt, input2) {
@@ -3803,6 +3804,431 @@ body.nopad #pad { display: none; }
     // ハシシタボウズ: 頭巾の うしろ (橋の 板は そのまま)
     hashishita: faceless("hashishita", { s: "p", k: "p", w: "p" }, { still: true })
   };
+  const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
+  const SPECIALS = {
+    haribaby: { command: "mash", motion: "dash", color: "#e0b070" },
+    mumenbachi: { command: "spin", motion: "spin", color: "#ffd040" },
+    donguriko: { command: "reel", motion: "aura", color: "#c88a40", glyph: "◆" },
+    nemuridake: { command: "trace", motion: "cloud", color: "#ff9ad8", glyph: "Zz" },
+    pekorisu: { command: "mash", motion: "dash", color: "#f0c890", drain: true },
+    tsutankobu: { command: "trace", motion: "beam", color: "#5ad06a" },
+    yofukashi: { command: "trace", motion: "cloud", color: "#d8a8ff", glyph: "♪" },
+    kogame: { command: "reel", motion: "aura", color: "#9ad07a", glyph: "◆" },
+    tsuribariuo: { command: "reel", motion: "line", color: "#dddddd" },
+    mokugyoro: { command: "mash", motion: "multi", color: "#d0a060", glyph: "ポク", hits: 5 },
+    rousokubi: { command: "spin", motion: "rain", color: "#ff8a3a", glyph: "▲" },
+    daichouenkin: { command: "spin", motion: "cloud", color: "#a8d060", glyph: "@" },
+    kunaisuzume: { command: "mash", motion: "rain", color: "#d0d0d0", glyph: "↓" },
+    kawarimidanuki: { command: "trace", motion: "dash", color: "#e0e0e0", puff: true },
+    shinobigaeru: { command: "trace", motion: "rain", color: "#6ab0f0", glyph: "●" },
+    ishikoron: { command: "mash", motion: "roll", color: "#b4b4bc" },
+    mizukirin: { command: "reel", motion: "skip", color: "#bff0ff", hits: 8 },
+    soumennagare: { command: "spin", motion: "aura", color: "#f8f4e8", glyph: "〜" },
+    kozarappa: { command: "reel", motion: "aura", color: "#4aa8e0", glyph: "●" },
+    hashishita: { command: "trace", motion: "cloud", color: "#ffe040", glyph: "1 2 3" }
+  };
+  const specialOf = (id) => SPECIALS[id] || { command: "mash", motion: "dash", color: "#ffffff" };
+  const COMMAND_NAMES = { mash: "れんだ！", reel: "目押しで こおりを そろえろ！", trace: "なぞれ！", spin: "ぐるぐる まわせ！" };
+  function createCommand(type, rng) {
+    if (type === "reel") return reelCommand(rng);
+    if (type === "trace") return traceCommand(rng);
+    if (type === "spin") return spinCommand();
+    return mashCommand();
+  }
+  function mashCommand() {
+    const c = { type: "mash", t: 0, count: 0, done: null, limit: 3 };
+    c.update = (dt, input2) => {
+      c.t += dt;
+      if (input2.pressed.a || input2.touch.justDown || input2.pressed.sp1 || input2.pressed.sp2 || input2.pressed.sp3) {
+        c.count++;
+        sfx("mash");
+      }
+      if (c.t >= c.limit) c.done = result(c.count, 15, 8);
+    };
+    c.drawBottom = (ctx, t) => {
+      text(ctx, `${btn("a")} か 画面を れんだ！`, 160, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
+      const pulse = 1 + 0.06 * Math.sin(t * 30), w = 200 * pulse, h = 110 * pulse;
+      panel(ctx, 160 - w / 2, 120 - h / 2, w, h, { fill: "#b03048", edge: "#ffd0d8", r: 20, lineWidth: 3 });
+      text(ctx, `${c.count}`, 160, 136, { size: 40, align: "center", bold: true });
+      bar(ctx, 40, 196, 240, 10, Math.max(0, c.limit - c.t) / c.limit, COLORS.accent);
+      text(ctx, "15回で 大成功 / 8回で 成功", 160, 226, { size: 11, align: "center", color: COLORS.sub });
+    };
+    return c;
+  }
+  const SYMBOLS = ["こおり", "7", "BAR", "ベル", "チェリー", "スイカ"];
+  const SYM_COLOR = ["#bff0ff", "#ff4a4a", "#e0e0e0", "#ffd84a", "#ff6a8a", "#5ad06a"];
+  function reelCommand(rng) {
+    const c = { type: "reel", t: 0, done: null, limit: 6, reels: [0, 1, 2].map((i) => ({ pos: rng.next() * 6, stopped: false, speed: 6.5 + i * 0.9, hit: false })) };
+    const stopNext = () => {
+      const r2 = c.reels.find((x) => !x.stopped);
+      if (!r2) return;
+      const near = Math.round(r2.pos);
+      let stop = near;
+      for (const d of [0, 1, -1]) if (((near + d) % 6 + 6) % 6 === 0) {
+        stop = near + d;
+        break;
+      }
+      r2.pos = stop;
+      r2.stopped = true;
+      r2.hit = (stop % 6 + 6) % 6 === 0;
+      sfx(r2.hit ? "ok" : "cursor");
+    };
+    c.update = (dt, input2) => {
+      c.t += dt;
+      for (const r2 of c.reels) if (!r2.stopped) r2.pos = (r2.pos + r2.speed * dt) % 6;
+      if (input2.pressed.a || input2.touch.justDown) stopNext();
+      if (c.t >= c.limit) while (c.reels.some((r2) => !r2.stopped)) stopNext();
+      if (c.reels.every((r2) => r2.stopped) && !c.done) c.done = result(c.reels.filter((r2) => r2.hit).length, 3, 2);
+    };
+    c.drawBottom = (ctx) => {
+      text(ctx, `${btn("a")} か タップで 止めて「こおり」を そろえろ！`, 160, 26, { size: 12.5, align: "center", bold: true, color: COLORS.accent });
+      c.reels.forEach((r2, i) => {
+        const x = 50 + i * 80, y0 = 50, h = 132;
+        panel(ctx, x - 34, y0, 68, h, { fill: "#f4f0e8", edge: r2.stopped ? r2.hit ? COLORS.accent : "#7a86a6" : COLORS.panelEdge, r: 6, lineWidth: 3 });
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(x - 32, y0 + 2, 64, h - 4);
+        ctx.clip();
+        for (let k = -2; k <= 2; k++) {
+          const idx = ((Math.floor(r2.pos) + k) % 6 + 6) % 6;
+          const y = y0 + h / 2 + (k - (r2.pos - Math.floor(r2.pos))) * 44;
+          if (idx === 0) drawArt(ctx, ART.koori, 0, x, y + 14, { scale: 1.8 });
+          else text(ctx, SYMBOLS[idx], x, y + 6, { size: SYMBOLS[idx].length > 3 ? 11 : 16, align: "center", bold: true, color: SYM_COLOR[idx], shadow: false });
+        }
+        ctx.restore();
+        ctx.fillStyle = "rgba(255, 60, 60, 0.6)";
+        ctx.fillRect(x - 34, y0 + h / 2, 68, 1.5);
+      });
+      bar(ctx, 40, 200, 240, 8, Math.max(0, c.limit - c.t) / c.limit, COLORS.accent);
+      text(ctx, "3 つ そろうと 大成功 / 2 つで 成功", 160, 226, { size: 11, align: "center", color: COLORS.sub });
+    };
+    return c;
+  }
+  const SHAPES = [
+    [[0, 0], [4, 0], [4, 4], [0, 4], [0, 0]],
+    [[0, 0], [4, 0], [4, 2], [0, 2], [0, 4], [4, 4]],
+    [[4, 0], [0, 0], [0, 4], [4, 4]],
+    [[0, 4], [0, 2], [2, 2], [2, 0], [4, 0]],
+    [[0, 0], [0, 4], [4, 4], [4, 0]]
+  ];
+  const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+  const ARROW = { up: "↑", down: "↓", left: "←", right: "→" };
+  function traceCommand(rng) {
+    const shape = SHAPES[rng.int(SHAPES.length)];
+    const pt = ([gx, gy]) => ({ x: 90 + gx * 35, y: 50 + gy * 33 });
+    const segs = shape.slice(1).map((p, i) => {
+      const a = shape[i];
+      const dx = Math.sign(p[0] - a[0]), dy = Math.sign(p[1] - a[1]);
+      return Object.keys(DIRS).find((k) => DIRS[k][0] === dx && DIRS[k][1] === dy);
+    });
+    const c = { type: "trace", t: 0, done: null, limit: 4.5, reached: 1, miss: 0 };
+    const finish = () => {
+      c.done = result((c.reached - 1) / segs.length, 1, 0.6);
+    };
+    c.update = (dt, input2) => {
+      c.t += dt;
+      for (const d of Object.keys(DIRS)) {
+        if (!input2.pressed[d]) continue;
+        if (segs[c.reached - 1] === d) {
+          c.reached++;
+          sfx("cursor");
+        } else {
+          c.miss = c.t;
+          sfx("cancel");
+        }
+      }
+      if (input2.touch.down && c.reached < shape.length) {
+        const p = pt(shape[c.reached]);
+        if (Math.hypot(input2.touch.x - p.x, input2.touch.y - p.y) < 16) {
+          c.reached++;
+          sfx("cursor");
+        }
+      }
+      if (c.reached >= shape.length || c.t >= c.limit) finish();
+    };
+    c.drawBottom = (ctx, t) => {
+      text(ctx, "なぞれ！ (ボタンなら 矢印の 向きを 順に)", 160, 24, { size: 12.5, align: "center", bold: true, color: COLORS.accent });
+      ctx.lineCap = "round";
+      for (let i = 1; i < shape.length; i++) {
+        const a = pt(shape[i - 1]), b = pt(shape[i]);
+        ctx.strokeStyle = i < c.reached ? COLORS.accent : "rgba(255,255,255,0.25)";
+        ctx.lineWidth = i < c.reached ? 6 : 4;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      shape.forEach((g, i) => {
+        const p = pt(g);
+        const next2 = i === c.reached;
+        ctx.fillStyle = i < c.reached ? COLORS.accent : next2 ? Math.floor(t * 6) % 2 ? "#ffffff" : "#ff9ad8" : "#7a86a6";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, next2 ? 8 : 6, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      const shake = c.t - c.miss < 0.2 ? Math.sin(t * 80) * 3 : 0;
+      const next = segs[c.reached - 1];
+      if (next) text(ctx, `つぎ: ${ARROW[next]}`, 160 + shake, 210, { size: 15, align: "center", bold: true });
+      bar(ctx, 40, 222, 240, 8, Math.max(0, c.limit - c.t) / c.limit, COLORS.accent);
+    };
+    return c;
+  }
+  function spinCommand() {
+    const ORDER = ["up", "right", "down", "left"];
+    const c = { type: "spin", t: 0, done: null, limit: 3, turns: 0, angle: 0, last: null, step: 0 };
+    const CX = 160, CY = 120;
+    c.update = (dt, input2) => {
+      c.t += dt;
+      for (const d of ORDER) {
+        if (!input2.pressed[d]) continue;
+        if (d === ORDER[c.step % 4]) {
+          c.step++;
+          c.angle += Math.PI / 2;
+          sfx("mash");
+        }
+      }
+      if (input2.touch.down) {
+        const a = Math.atan2(input2.touch.y - CY, input2.touch.x - CX);
+        if (c.last !== null) {
+          let d = a - c.last;
+          if (d > Math.PI) d -= Math.PI * 2;
+          if (d < -Math.PI) d += Math.PI * 2;
+          c.angle += Math.abs(d);
+        }
+        c.last = a;
+      } else c.last = null;
+      const turns = Math.floor(c.angle / (Math.PI * 2));
+      if (turns > c.turns) {
+        c.turns = turns;
+        sfx("ok");
+      }
+      if (c.t >= c.limit) c.done = result(c.angle / (Math.PI * 2), 4, 2);
+    };
+    c.drawBottom = (ctx, t) => {
+      text(ctx, "ぐるぐる まわせ！ (ボタンなら ↑→↓← の 順)", 160, 24, { size: 12.5, align: "center", bold: true, color: COLORS.accent });
+      ctx.strokeStyle = "rgba(127,211,247,0.4)";
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.arc(CX, CY, 62, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = COLORS.accent;
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.arc(CX, CY, 62, -Math.PI / 2, -Math.PI / 2 + c.angle % (Math.PI * 2));
+      ctx.stroke();
+      const a = -Math.PI / 2 + c.angle;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(CX + Math.cos(a) * 62, CY + Math.sin(a) * 62, 9, 0, Math.PI * 2);
+      ctx.fill();
+      text(ctx, `${(c.angle / (Math.PI * 2)).toFixed(1)} 回`, CX, CY + 8, { size: 22, align: "center", bold: true });
+      bar(ctx, 40, 202, 240, 8, Math.max(0, c.limit - c.t) / c.limit, COLORS.accent);
+      text(ctx, "4 回で 大成功 / 2 回で 成功", 160, 226, { size: 11, align: "center", color: COLORS.sub });
+    };
+    return c;
+  }
+  const MOTION_TIME = {
+    dash: [1, 0.45],
+    spin: [1.15, 0.65],
+    roll: [1, 0.5],
+    rain: [1.15, 0.7],
+    beam: [1, 0.55],
+    line: [1.15, 0.6],
+    multi: [1.25, 0.45],
+    skip: [1.3, 0.95],
+    cloud: [1.15, 0.7],
+    aura: [1, 0.45]
+  };
+  function drawPerformance(ctx, sp2, a, e, k, t, drawActor, allies) {
+    const lerp = (p, q, f) => p + (q - p) * f;
+    const ease = (f) => 1 - (1 - f) * (1 - f);
+    const glyph = (s, x, y, size = 14, alpha = 1) => {
+      ctx.globalAlpha = alpha;
+      text(ctx, s, x, y, { size, align: "center", bold: true, color: sp2.color });
+      ctx.globalAlpha = 1;
+    };
+    const [dur, hit2] = MOTION_TIME[sp2.motion];
+    const at = k * dur;
+    switch (sp2.motion) {
+      case "dash": {
+        if (sp2.puff && at < 0.25) {
+          ctx.fillStyle = `rgba(240,240,240,${1 - at * 4})`;
+          for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.arc(a.x + Math.cos(i) * 16, a.y - 30 + Math.sin(i * 2) * 10, 10 + at * 30, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          text(ctx, "ドロン！", a.x, a.y - 64, { size: 14, align: "center", bold: true });
+        }
+        const go = at < hit2 ? ease(at / hit2) : 1 - ease((at - hit2) / (dur - hit2));
+        const x = lerp(a.x, e.x, go), y = lerp(a.y, e.y + 30, go);
+        for (let g = 1; g <= 3; g++) if (at < hit2) drawActor(lerp(a.x, e.x, Math.max(0, go - g * 0.12)), lerp(a.y, e.y + 30, Math.max(0, go - g * 0.12)), { alpha: 0.25 });
+        drawActor(x, y, {});
+        if (sp2.drain && at > hit2) glyph("♥", lerp(e.x, a.x, (at - hit2) / (dur - hit2)), lerp(e.y, a.y - 40, (at - hit2) / (dur - hit2)), 16);
+        break;
+      }
+      case "spin": {
+        const go = Math.min(1, at / hit2);
+        const back = at > hit2 ? (at - hit2) / (dur - hit2) : 0;
+        const x = lerp(lerp(a.x, e.x, ease(go)), a.x, back), y = lerp(lerp(a.y, e.y + 20, ease(go)), a.y, back) - Math.sin(Math.PI * go) * 30;
+        ctx.strokeStyle = sp2.color;
+        ctx.lineWidth = 2;
+        for (let r2 = 0; r2 < 3; r2++) {
+          ctx.beginPath();
+          ctx.arc(x, y - 30, 26 + r2 * 6, t * 12 + r2, t * 12 + r2 + 2);
+          ctx.stroke();
+        }
+        drawActor(x, y, { flip: Math.floor(t * 16) % 2 === 0 });
+        break;
+      }
+      case "roll": {
+        const go = at < hit2 ? at / hit2 : 1 - (at - hit2) / (dur - hit2);
+        const x = lerp(a.x, e.x, go), y = lerp(a.y, e.y + 30, go) - Math.abs(Math.sin(at * 18)) * 6;
+        drawActor(x, y, { flip: Math.floor(t * 14) % 2 === 0, sy: 0.9 + 0.1 * Math.abs(Math.cos(at * 18)) });
+        ctx.fillStyle = "rgba(200,190,170,0.5)";
+        for (let i = 0; i < 4; i++) ctx.fillRect(x - 20 - i * 10, y - 4 - i % 2 * 3, 6, 3);
+        break;
+      }
+      case "rain": {
+        drawActor(a.x, a.y - Math.sin(Math.min(1, at / 0.4) * Math.PI) * 14, {});
+        for (let i = 0; i < 10; i++) {
+          const start = 0.25 + i * 0.045;
+          const f = (at - start) / 0.3;
+          if (f < 0 || f > 1.2) continue;
+          const x = e.x - 50 + i * 37 % 100;
+          glyph(sp2.glyph, x, lerp(-10, e.y + 10, Math.min(1, f)), 16, f > 1 ? 1.2 - f : 1);
+        }
+        drawActor(a.x, a.y, { alpha: 0 });
+        break;
+      }
+      case "beam": {
+        drawActor(a.x, a.y, {});
+        if (at > 0.2 && at < dur - 0.15) {
+          const w = Math.sin(Math.min(1, (at - 0.2) / 0.5) * Math.PI) * 10 + 2;
+          ctx.strokeStyle = sp2.color;
+          ctx.globalAlpha = 0.5;
+          ctx.lineWidth = w + 6;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y - 40);
+          ctx.lineTo(e.x, e.y);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = w / 2;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y - 40);
+          ctx.lineTo(e.x, e.y);
+          ctx.stroke();
+        }
+        break;
+      }
+      case "line": {
+        drawActor(a.x, a.y - (at > hit2 ? 8 : 0), {});
+        const reach = Math.min(1, at / (hit2 * 0.8));
+        const tx = lerp(a.x, e.x, reach), ty = lerp(a.y - 40, e.y, reach) - Math.sin(Math.PI * reach) * 30;
+        ctx.strokeStyle = sp2.color;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(a.x + 6, a.y - 44);
+        ctx.quadraticCurveTo((a.x + tx) / 2, Math.min(a.y, ty) - 50, tx, ty);
+        ctx.stroke();
+        text(ctx, "J", tx, ty + 4, { size: 12, align: "center", bold: true, color: "#cccccc" });
+        if (at > hit2) text(ctx, "つれた～！", a.x, a.y - 76, { size: 13, align: "center", bold: true, color: COLORS.accent });
+        break;
+      }
+      case "multi": {
+        const go = Math.min(1, at / 0.3), back = at > dur - 0.25 ? (at - (dur - 0.25)) / 0.25 : 0;
+        const x = lerp(lerp(a.x, e.x - 30, ease(go)), a.x, back), y = lerp(lerp(a.y, e.y + 30, ease(go)), a.y, back) - Math.abs(Math.sin(at * 20)) * 8;
+        drawActor(x, y, {});
+        const n = sp2.hits || 5;
+        for (let i = 0; i < n; i++) {
+          const ht = hit2 + i * 0.09;
+          if (at > ht && at < ht + 0.25) glyph(sp2.glyph || "!", e.x - 20 + i % 3 * 20, e.y - 20 - i % 2 * 14 - (at - ht) * 40, 13);
+        }
+        break;
+      }
+      case "skip": {
+        const n = sp2.hits || 8;
+        const f = Math.min(1, at / hit2);
+        const seg = Math.min(n - 1, Math.floor(f * n)), local = f * n - seg;
+        const x0 = lerp(a.x, e.x, seg / n), x1 = lerp(a.x, e.x, (seg + 1) / n);
+        const y0 = lerp(a.y, e.y + 30, seg / n), y1 = lerp(a.y, e.y + 30, (seg + 1) / n);
+        const h = 24 * (1 - seg / n);
+        const x = at < hit2 ? lerp(x0, x1, local) : e.x, y = at < hit2 ? lerp(y0, y1, local) - Math.sin(Math.PI * local) * h : e.y + 30;
+        drawActor(at < hit2 ? x : lerp(e.x, a.x, (at - hit2) / (dur - hit2)), at < hit2 ? y : lerp(e.y + 30, a.y, (at - hit2) / (dur - hit2)), { scale: 3 });
+        for (let i = 1; i <= seg; i++) {
+          const sx = lerp(a.x, e.x, i / n), sy = lerp(a.y, e.y + 30, i / n);
+          ctx.strokeStyle = "rgba(255,255,255,0.6)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(sx, sy, 6 + (seg - i) * 2, 2 + (seg - i) * 0.6, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        if (at < hit2) text(ctx, `${seg + 1}段！`, a.x, a.y - 80, { size: 12, align: "center", bold: true, color: COLORS.accent });
+        break;
+      }
+      case "cloud": {
+        drawActor(a.x, a.y - Math.sin(at * 8) * 2, { sx: 1 + Math.sin(at * 10) * 0.05 });
+        for (let i = 0; i < 8; i++) {
+          const start = 0.15 + i * 0.06;
+          const f = (at - start) / 0.55;
+          if (f < 0 || f > 1.3) continue;
+          const x = lerp(a.x + (i % 3 - 1) * 14, e.x + (i % 4 - 1.5) * 18, Math.min(1, f));
+          const y = lerp(a.y - 40, e.y - 6 + i % 3 * 8, Math.min(1, f)) - Math.sin(Math.PI * Math.min(1, f)) * 20;
+          glyph(sp2.glyph || "●", x, y, 13, f > 1 ? 1.3 - f : 1);
+        }
+        break;
+      }
+      case "aura": {
+        for (const p of allies) {
+          for (let r2 = 0; r2 < 2; r2++) {
+            const f = (at * 1.6 + r2 * 0.5) % 1;
+            ctx.strokeStyle = sp2.color;
+            ctx.globalAlpha = 1 - f;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(p.x, p.y, 20 + f * 22, 6 + f * 6, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+          if (sp2.glyph && at > 0.2) glyph(sp2.glyph, p.x + Math.sin(at * 6 + p.x) * 14, p.y - 30 - (at * 40 + p.x) % 40, 12, 0.9);
+        }
+        drawActor(a.x, a.y - Math.sin(Math.min(1, at / 0.5) * Math.PI) * 12, {});
+        break;
+      }
+      default:
+        drawActor(a.x, a.y, {});
+    }
+  }
+  function drawCutin(ctx, unit, sp2, k) {
+    const slide = k < 0.25 ? 1 - k / 0.25 : k > 0.85 ? -(k - 0.85) / 0.15 : 0;
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+    ctx.fillRect(0, 0, 400, 240);
+    ctx.save();
+    ctx.translate(slide * 400, 0);
+    ctx.beginPath();
+    ctx.moveTo(0, 70);
+    ctx.lineTo(400, 40);
+    ctx.lineTo(400, 180);
+    ctx.lineTo(0, 210);
+    ctx.closePath();
+    ctx.fillStyle = sp2.color;
+    ctx.globalAlpha = 0.85;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    for (let i = 0; i < 12; i++) {
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.fillRect((i * 53 + k * 600) % 440 - 20, 60 + i * 29 % 130, 30, 2);
+    }
+    drawArt(ctx, ART[unit.art], Math.floor(k * 12), 110, 200, { scale: 8 });
+    text(ctx, "必殺技", 290, 92, { size: 14, align: "center", bold: true, color: "#1b3a6b", shadow: false });
+    text(ctx, `「${unit.special.name}」`, 270, 128, { size: 20, align: "center", bold: true });
+    text(ctx, unit.name, 290, 156, { size: 12, align: "center", bold: true });
+    ctx.restore();
+  }
   const WHEEL = { x: 100, y: 126, r: 70 };
   const SP_BTN = [0, 1, 2].map((i) => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
   const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: "どうぐ" };
@@ -3810,7 +4236,6 @@ body.nopad #pad { display: none; }
   const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
   const ALLY_SCALE = 4;
   const HORIZON = 70;
-  const MASH_TIME = 3;
   const RIVER = ["kawara", "kawaraN", "kawaraS", "hashiue", "hashishita", "kawakami", "bridge"];
   function createBattleView(app2, battle, place) {
     const g = app2.g;
@@ -3839,22 +4264,114 @@ body.nopad #pad { display: none; }
       var _a;
       return ((_a = [...battle.wheel, ...battle.enemies].find((u) => u && u.uid === uid)) == null ? void 0 : _a.name) || "";
     };
+    const motions = {};
+    const shakes = {};
+    const effects = [];
+    const later = [];
+    const HIT_DELAY = { attack: 0.14, skill: 0.32, special: 0.5, perf: 0 };
+    const unitOf = (uid) => [...battle.wheel, ...battle.enemies].find((u) => u && u.uid === uid);
+    function centerOf(uid) {
+      const p = posOf(uid), u = unitOf(uid);
+      if (!p || !u) return null;
+      const scale = u.side === "ally" ? ALLY_SCALE : p.scale || 3;
+      return { x: p.x, y: p.y - ART[u.art].h * scale / 2 };
+    }
+    function startMotion(uid, kind, targetUid) {
+      const dur = { attack: 0.34, skill: 0.42, special: 0.7 }[kind];
+      let dx = 0, dy = 0;
+      const a = posOf(uid), b = targetUid ? posOf(targetUid) : null;
+      if (kind === "attack" && a && b) {
+        const d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+        dx = (b.x - a.x) / d * 26;
+        dy = (b.y - a.y) / d * 26;
+      }
+      motions[uid] = { kind, start: t, dur, dx, dy };
+    }
+    function startHurt(uid, fromUid, ko = false) {
+      const a = posOf(uid), b = fromUid ? posOf(fromUid) : null;
+      const u = unitOf(uid);
+      let dx = 0, dy = u && u.side === "ally" ? 1 : -1;
+      if (a && b) {
+        const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+        dx = (a.x - b.x) / d;
+        dy = (a.y - b.y) / d;
+      }
+      const power = ko ? 16 : 9;
+      motions[uid] = { kind: ko ? "ko" : "hurt", start: t, dur: ko ? 0.6 : 0.4, dx: dx * power, dy: dy * power };
+    }
+    function offsetOf(u) {
+      let ox = 0, oy = 0, sx = 1, sy = 1;
+      const m = motions[u.uid];
+      if (m) {
+        const k = (t - m.start) / m.dur;
+        if (k >= 1 && m.kind !== "ko") delete motions[u.uid];
+        else if (m.kind === "attack") {
+          const f = k < 0.35 ? k / 0.35 : 1 - (k - 0.35) / 0.65;
+          ox += m.dx * f;
+          oy += m.dy * f;
+        } else if (m.kind === "skill") oy -= Math.sin(Math.PI * k) * 10;
+        else if (m.kind === "special") oy -= Math.sin(Math.PI * k) * 26;
+        else if (m.kind === "hurt") {
+          const f = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8;
+          ox += m.dx * f;
+          oy += m.dy * f;
+          sy = 1 - 0.22 * f;
+          sx = 1 + 0.14 * f;
+        } else if (m.kind === "ko") {
+          const f = Math.min(1, k / 0.3);
+          ox += m.dx * f;
+          oy += m.dy * f;
+          sy = 1 - 0.45 * f;
+          sx = 1 + 0.2 * f;
+        }
+      }
+      if ((shakes[u.uid] || 0) > t) ox += Math.sin(t * 70) * 2.5;
+      return { ox, oy, sx, sy };
+    }
+    const at = (delay, fn) => later.push({ at: t + delay, fn });
     function readEvents() {
+      var _a;
+      let actor = null, kind = "attack";
       for (const e of battle.events.splice(0)) {
+        if (e.type === "attack" || e.type === "skill" || e.type === "special") {
+          actor = e.actor;
+          kind = e.type;
+          if (e.type === "special" && e.side === "ally" && mg) kind = "perf";
+          else startMotion(e.actor, e.type, e.target);
+        }
         if (e.type === "damage") {
-          const p = posOf(e.target);
-          if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? "#ffd84a" : e.eff < 1 ? "#a0a0b0" : "#ffffff", big: e.crit || e.eff > 1, until: t + 0.9 });
-          flash[e.target] = t + 0.15;
-          sfx(e.amount > 30 ? "big" : "hit");
+          const p = posOf(e.target), from = centerOf(actor), to = centerOf(e.target);
+          const delay = actor ? HIT_DELAY[kind] : 0;
+          const color = actor ? ELEMENT_COLORS[(_a = unitOf(actor)) == null ? void 0 : _a.element] || "#ffffff" : "#ffffff";
+          if (actor && (kind === "skill" || kind === "special") && from && to) effects.push({ kind: "orb", from, to, start: t + (kind === "special" ? 0.3 : 0.05), dur: delay - (kind === "special" ? 0.3 : 0.05), color });
+          const by = actor;
+          at(delay, () => {
+            var _a2;
+            if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? "#ffd84a" : e.eff < 1 ? "#a0a0b0" : "#ffffff", big: e.crit || e.eff > 1, until: t + 0.9 });
+            flash[e.target] = t + 0.15;
+            if (!motions[e.target] || motions[e.target].kind !== "ko") startHurt(e.target, by, (_a2 = unitOf(e.target)) == null ? void 0 : _a2.ko);
+            if (to) effects.push({ kind: "spark", x: to.x, y: to.y, start: t, dur: 0.3, color: kind === "attack" ? "#ffffff" : color });
+            sfx(e.amount > 30 ? "big" : "hit");
+          });
         } else if (e.type === "heal" && e.amount > 0) {
-          const p = posOf(e.target);
-          if (p) pops.push({ x: p.x, y: p.y - 40, text: `+${e.amount}`, color: "#7aff8a", until: t + 0.9 });
+          const p = posOf(e.target), c = centerOf(e.target);
+          at(actor && kind !== "perf" ? 0.2 : 0, () => {
+            if (p) pops.push({ x: p.x, y: p.y - 40, text: `+${e.amount}`, color: "#7aff8a", until: t + 0.9 });
+            if (c) effects.push({ kind: "heal", x: c.x, y: c.y, start: t, dur: 0.7 });
+          });
         } else if (e.type === "status") {
           const p = posOf(e.target);
-          if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: "#ff9ad8", until: t + 1 });
+          at(actor ? HIT_DELAY[kind] : 0, () => {
+            if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: "#ff9ad8", until: t + 1 });
+          });
         } else if (e.type === "special") {
           banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === "ally" ? COLORS.accent : "#ff6a6a", until: t + 1.4 };
           sfx("special");
+          const c = centerOf(e.actor), p = posOf(e.actor);
+          if (c && p && kind !== "perf") at(0.62, () => {
+            var _a2;
+            return effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[(_a2 = unitOf(e.actor)) == null ? void 0 : _a2.element] || "#ffffff" });
+          });
           if (e.big) warn = null;
         } else if (e.type === "telegraph") {
           warn = { name: e.name, until: t + e.warn };
@@ -3868,31 +4385,46 @@ body.nopad #pad { display: none; }
         else if (e.type === "lose") sfx("lose");
       }
     }
+    const PHASE_TIME = { result: 0.7, cutin: 0.75 };
     function trySpecial(pos) {
       if (!canSpecial(battle, pos)) {
         sfx("cancel");
         return;
       }
       const unit = startSpecial(battle, pos);
-      mg = { unit, t: 0, count: 0, done: null };
+      const sp2 = specialOf(unit.id);
+      mg = { unit, pos, sp: sp2, phase: "cmd", t: 0, cmd: createCommand(sp2.command, app2.rng), mult: 1, resolved: false };
       sfx("ok");
     }
     function updateMinigame(dt, input2) {
       mg.t += dt;
-      if (mg.done) {
-        if (mg.t > MASH_TIME + 0.8) {
-          resolveSpecial(battle, mg.unit, mg.done.mult);
+      if (mg.phase === "cmd") {
+        mg.cmd.update(dt, input2);
+        if (mg.cmd.done) {
+          mg.mult = mg.cmd.done.mult;
+          mg.phase = "result";
+          mg.t = 0;
+          sfx(mg.mult > 1 ? "special" : "ok");
+        }
+      } else if (mg.phase === "result" && mg.t > PHASE_TIME.result) {
+        mg.phase = "cutin";
+        mg.t = 0;
+        sfx("special");
+      } else if (mg.phase === "cutin" && mg.t > PHASE_TIME.cutin) {
+        mg.phase = "act";
+        mg.t = 0;
+      } else if (mg.phase === "act") {
+        const [dur, hit2] = MOTION_TIME[mg.sp.motion];
+        if (!mg.resolved && mg.t >= hit2) {
+          mg.resolved = true;
+          resolveSpecial(battle, mg.unit, mg.mult);
+          battle.paused = !battle.outcome;
+          readEvents();
+        }
+        if (mg.t >= dur) {
+          battle.paused = false;
           mg = null;
         }
-        return;
-      }
-      if (input2.pressed.a || input2.touch.justDown || input2.pressed.sp1 || input2.pressed.sp2 || input2.pressed.sp3) {
-        mg.count++;
-        sfx("mash");
-      }
-      if (mg.t >= MASH_TIME) {
-        const mult = mg.count >= 15 ? 1.5 : mg.count >= 8 ? 1 : 0.5;
-        mg.done = { mult, label: mult > 1 ? "大成功！" : mult === 1 ? "成功！" : "しっぱい…" };
       }
     }
     const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0);
@@ -3928,9 +4460,75 @@ body.nopad #pad { display: none; }
       }
     }
     const menuRow = (k) => ({ x: 30, y: 46 + k * 28, w: 260, h: 24 });
+    function runLater() {
+      for (let i = later.length - 1; i >= 0; i--) {
+        if (later[i].at <= t) {
+          const f = later[i].fn;
+          later.splice(i, 1);
+          f();
+        }
+      }
+    }
+    function drawEffects(ctx) {
+      for (let i = effects.length - 1; i >= 0; i--) {
+        const fx = effects[i];
+        const k = (t - fx.start) / fx.dur;
+        if (k >= 1) {
+          effects.splice(i, 1);
+          continue;
+        }
+        if (k < 0) continue;
+        if (fx.kind === "orb") {
+          const x = fx.from.x + (fx.to.x - fx.from.x) * k, y = fx.from.y + (fx.to.y - fx.from.y) * k - Math.sin(Math.PI * k) * 18;
+          ctx.fillStyle = fx.color;
+          ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          ctx.arc(x, y, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffffff";
+          ctx.beginPath();
+          ctx.arc(x - 1, y - 1, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (fx.kind === "spark") {
+          ctx.strokeStyle = fx.color;
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 1 - k;
+          ctx.beginPath();
+          for (let a = 0; a < 8; a++) {
+            const ang = a * Math.PI / 4 + 0.3, r0 = 4 + k * 8, r1 = 10 + k * 16;
+            ctx.moveTo(fx.x + Math.cos(ang) * r0, fx.y + Math.sin(ang) * r0);
+            ctx.lineTo(fx.x + Math.cos(ang) * r1, fx.y + Math.sin(ang) * r1);
+          }
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (fx.kind === "wave") {
+          ctx.strokeStyle = fx.color;
+          ctx.lineWidth = 3 * (1 - k) + 1;
+          ctx.globalAlpha = 1 - k;
+          ctx.beginPath();
+          ctx.ellipse(fx.x, fx.y, 14 + k * 70, 4 + k * 18, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else if (fx.kind === "heal") {
+          ctx.fillStyle = "#7aff8a";
+          ctx.globalAlpha = 1 - k;
+          for (let n = 0; n < 6; n++) {
+            const sx = fx.x + Math.sin(n * 2.1) * 16, sy = fx.y + 16 - k * 34 - n % 3 * 6;
+            ctx.fillRect(sx - 1, sy - 3, 2, 6);
+            ctx.fillRect(sx - 3, sy - 1, 6, 2);
+          }
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
     function update(dt, input2) {
       t += dt;
       g.playTime += dt;
+      runLater();
       if (mg) {
         updateMinigame(dt, input2);
         readEvents();
@@ -4047,12 +4645,16 @@ body.nopad #pad { display: none; }
       const lit = (flash[u.uid] || 0) > t;
       const sleeping = u.status.sleep > 0;
       const bobY = u.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5;
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      const { ox, oy, sx, sy } = offsetOf(u);
+      const ground = { x: p.x + ox, y: Math.max(p.y, p.y + oy) };
+      p = { ...p, x: p.x + ox, y: p.y + oy };
+      const lift = Math.max(0, ground.y - p.y);
+      ctx.fillStyle = `rgba(0,0,0,${0.25 * Math.max(0.4, 1 - lift / 40)})`;
       ctx.beginPath();
-      ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(ground.x, ground.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
       ctx.fill();
       const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
-      drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null });
+      drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null, sx, sy });
       const w = 44, head = p.y - art.h * scale;
       const barY = head - 10, nameY = head - 14;
       bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
@@ -4064,7 +4666,11 @@ body.nopad #pad { display: none; }
     function drawTop(ctx) {
       drawBackground(ctx);
       battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
-      battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }));
+      battle.front().forEach((u, i) => {
+        if (!(mg && mg.phase === "act" && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true });
+      });
+      if (mg && mg.phase === "act") drawAct(ctx);
+      drawEffects(ctx);
       for (let i = pops.length - 1; i >= 0; i--) {
         const p = pops[i];
         if (p.until < t) {
@@ -4082,7 +4688,7 @@ body.nopad #pad { display: none; }
         panel(ctx, 40, 12, 320, 26, { fill: "rgba(16,22,42,0.9)", edge: banner.color });
         text(ctx, banner.text, 200, 30, { size: 13, align: "center", bold: true, color: banner.color });
       }
-      if (battle.outcome) {
+      if (battle.outcome && endT > 0.5) {
         ctx.fillStyle = "rgba(0,0,0,0.35)";
         ctx.fillRect(0, 0, 400, 240);
         text(ctx, battle.outcome === "win" ? "かった！" : "まけた……", 200, 128, { size: 34, align: "center", bold: true, color: battle.outcome === "win" ? COLORS.accent : "#a0b0d0" });
@@ -4090,6 +4696,11 @@ body.nopad #pad { display: none; }
       if (mg) drawMinigameTop(ctx);
     }
     function drawMinigameTop(ctx) {
+      if (mg.phase === "cutin") {
+        drawCutin(ctx, mg.unit, mg.sp, mg.t / PHASE_TIME.cutin);
+        return;
+      }
+      if (mg.phase === "act") return;
       ctx.fillStyle = "rgba(10, 14, 40, 0.8)";
       ctx.fillRect(0, 0, 400, 240);
       const u = mg.unit;
@@ -4103,8 +4714,19 @@ body.nopad #pad { display: none; }
       }
       ctx.stroke();
       drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
-      text(ctx, `必殺技「${u.special.name}」`, 200, 36, { size: 18, align: "center", bold: true, color: COLORS.accent });
-      if (mg.done) text(ctx, mg.done.label, 200, 216, { size: 26, align: "center", bold: true, color: mg.done.mult > 1 ? COLORS.accent : "#ffffff" });
+      text(ctx, `必殺技「${u.special.name}」`, 200, 30, { size: 18, align: "center", bold: true, color: COLORS.accent });
+      text(ctx, COMMAND_NAMES[mg.sp.command], 200, 52, { size: 13, align: "center", bold: true });
+      if (mg.phase === "result") text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: "center", bold: true, color: mg.mult > 1 ? COLORS.accent : "#ffffff" });
+    }
+    function drawAct(ctx) {
+      const a = ALLY_POS[mg.pos];
+      const target = battle.enemiesAlive()[0] || battle.enemies[0];
+      const e = centerOf(target.uid) || { x: 200, y: 110 };
+      const [dur] = MOTION_TIME[mg.sp.motion];
+      const art = BACK_ART[mg.unit.art] || backArt(ART[mg.unit.art]);
+      const drawActor = (x, y, o) => drawArt(ctx, art, Math.floor(t * 8), x, y, { scale: o.scale || ALLY_SCALE, flip: o.flip, alpha: o.alpha ?? 1, sx: o.sx || 1, sy: o.sy || 1 });
+      const allies = battle.front().map((u, i) => u && !u.ko ? ALLY_POS[i] : null).filter(Boolean);
+      drawPerformance(ctx, mg.sp, a, e, Math.min(1, mg.t / dur), t, drawActor, allies);
     }
     function drawWheel(ctx) {
       ctx.strokeStyle = "rgba(127, 211, 247, 0.35)";
@@ -4185,28 +4807,26 @@ body.nopad #pad { display: none; }
     function drawBottom(ctx) {
       ctx.fillStyle = "#16203a";
       ctx.fillRect(0, 0, 320, 240);
-      if (mg) {
-        const left = Math.max(0, MASH_TIME - mg.t);
-        text(ctx, mg.done ? "" : `${btn("a")} か 画面を れんだ！`, 160, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
-        const pulse = mg.done ? 1 : 1 + 0.06 * Math.sin(t * 30);
-        const w = 200 * pulse, h = 110 * pulse;
-        panel(ctx, 160 - w / 2, 120 - h / 2, w, h, { fill: "#b03048", edge: "#ffd0d8", r: 20, lineWidth: 3 });
-        text(ctx, `${mg.count}`, 160, 136, { size: 40, align: "center", bold: true });
-        bar(ctx, 40, 196, 240, 10, left / MASH_TIME, COLORS.accent);
-        text(ctx, "15回で 大成功 / 8回で 成功", 160, 226, { size: 11, align: "center", color: COLORS.sub });
+      if (mg && (mg.phase === "cmd" || mg.phase === "result")) {
+        mg.cmd.drawBottom(ctx, t);
+        if (mg.phase === "result") {
+          ctx.fillStyle = "rgba(0,0,0,0.55)";
+          ctx.fillRect(0, 0, 320, 240);
+          text(ctx, mg.cmd.done.label, 160, 130, { size: 30, align: "center", bold: true, color: mg.mult > 1 ? COLORS.accent : "#ffffff" });
+        }
         return;
       }
       drawWheel(ctx);
       drawSpecialButtons(ctx);
       if (menu) drawMenu(ctx);
     }
-    return { name: "battle", update, drawTop, drawBottom, battle };
+    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg } };
   }
-  function createResult(app2, result) {
-    const pages = [result.outcome === "win" ? "reward" : "lose"];
-    if (result.befriend) pages.push("look", "medal");
+  function createResult(app2, result2) {
+    const pages = [result2.outcome === "win" ? "reward" : "lose"];
+    if (result2.befriend) pages.push("look", "medal");
     let page = 0, t = 0;
-    const friend = result.befriend ? NAKAMA[result.befriend.id] : null;
+    const friend = result2.befriend ? NAKAMA[result2.befriend.id] : null;
     function update(dt, input2) {
       t += dt;
       if (t < 0.4) return;
@@ -4216,7 +4836,7 @@ body.nopad #pad { display: none; }
         if (pages[page] === "medal") sfx("watch");
         else if (pages[page] === "look") sfx("friend");
         else sfx("cursor");
-        if (page >= pages.length) app2.backToField(result);
+        if (page >= pages.length) app2.backToField(result2);
       }
     }
     function drawTop(ctx) {
@@ -4228,14 +4848,14 @@ body.nopad #pad { display: none; }
       const kind = pages[page];
       if (kind === "reward") {
         text(ctx, "バトルに かった！", 200, 40, { size: 20, align: "center", bold: true, color: COLORS.accent });
-        text(ctx, `けいけんち ${result.exp}　お金 ${result.money}円`, 200, 78, { size: 14, align: "center" });
-        result.levelUps.slice(0, 6).forEach((u, i) => {
+        text(ctx, `けいけんち ${result2.exp}　お金 ${result2.money}円`, 200, 78, { size: 14, align: "center" });
+        result2.levelUps.slice(0, 6).forEach((u, i) => {
           const x = 60 + i % 3 * 140, y = 150 + Math.floor(i / 3) * 70;
           drawArt(ctx, ART[NAKAMA[u.id].art], Math.floor(t * 3), x, y, { scale: 2.5 });
           text(ctx, `${NAKAMA[u.id].name}`, x, y + 14, { size: 10.5, align: "center" });
           text(ctx, `Lv${u.lv} に アップ！`, x, y + 28, { size: 11, align: "center", bold: true, color: COLORS.accent });
         });
-        if (!result.levelUps.length) text(ctx, "なかまが 少し 強くなった。", 200, 150, { size: 13, align: "center", color: COLORS.sub });
+        if (!result2.levelUps.length) text(ctx, "なかまが 少し 強くなった。", 200, 150, { size: 13, align: "center", color: COLORS.sub });
       } else if (kind === "lose") {
         text(ctx, "まけてしまった……", 200, 110, { size: 20, align: "center", bold: true, color: "#a0b0d0" });
         text(ctx, "家に もどって 体勢を たてなおそう。", 200, 140, { size: 13, align: "center" });
@@ -4266,7 +4886,7 @@ body.nopad #pad { display: none; }
           drawArt(ctx, ART[friend.art], 0, 200, 134, { scale: 3 });
           panel(ctx, 20, 186, 360, 46);
           text(ctx, `${friend.name}の おなかまメダルを もらった！`, 200, 205, { size: 14, align: "center", bold: true, color: COLORS.accent });
-          text(ctx, result.befriend.medal && app2.g.watch.includes(result.befriend.medal.uid) ? "ウォッチに セットした。" : "メダル帳に しまった。(メニューで ウォッチに セットできる)", 200, 224, { size: 11, align: "center", color: COLORS.sub });
+          text(ctx, result2.befriend.medal && app2.g.watch.includes(result2.befriend.medal.uid) ? "ウォッチに セットした。" : "メダル帳に しまった。(メニューで ウォッチに セットできる)", 200, 224, { size: 11, align: "center", color: COLORS.sub });
         }
       }
     }
@@ -4616,16 +5236,16 @@ body.nopad #pad { display: none; }
       this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {
-      const result = applyBattleResult(this.g, battle, this.rng);
-      if (result.outcome === "lose") {
+      const result2 = applyBattleResult(this.g, battle, this.rng);
+      if (result2.outcome === "lose") {
         this.g.pos = { x: 6 * 16 + 8, y: 24 * 16 + 12, dir: "down" };
       }
       this.save();
-      this.scene = createResult(this, result);
+      this.scene = createResult(this, result2);
     },
-    backToField(result) {
+    backToField(result2) {
       this.scene = this.field;
-      this.field.afterBattle(result);
+      this.field.afterBattle(result2);
       this.save();
     }
   };
