@@ -49,13 +49,33 @@ test('レンズで 見つけた キャラは その場に 出てきて、前に 
     const spot = SPOTS.find(s => s.id === 'kawara');
     const c = wild.reveal(spot, 'ishikoron');
     assert.equal(c.x, spot.x * TILE + 8);
-    g.pos = { x: c.x, y: c.y + 14, dir: 'up' };
+    // 少し はなれていても、向いていれば 話しかけられる
+    g.pos = { x: c.x + 4, y: c.y + 22, dir: 'up' };
     assert.equal(wild.facing(g.pos), c);
+    // 背中を 向けていたら だめ
     g.pos.dir = 'down';
+    assert.equal(wild.facing(g.pos), null);
+    // すぐ そばなら 向きは 問わない
+    g.pos = { x: c.x, y: c.y + 10, dir: 'down' };
+    assert.equal(wild.facing(g.pos), c);
+    // 遠いと だめ
+    g.pos = { x: c.x, y: c.y + 40, dir: 'up' };
     assert.equal(wild.facing(g.pos), null);
     // 戦ったら いなくなる
     wild.remove(c);
     assert.ok(!wild.list.includes(c));
+});
+
+test('こおりくんが 近づくと 歩いている キャラは 立ち止まって こっちを 向く', () => {
+    const { g, wild } = setup();
+    run(g, wild, 30);
+    const c = wild.list.find(x => x.roam);
+    g.pos = { x: c.x - 20, y: c.y, dir: 'right' };
+    const before = { x: c.x, y: c.y };
+    run(g, wild, 3);
+    assert.ok(Math.hypot(c.x - before.x, c.y - before.y) < 1, '止まる');
+    assert.equal(c.flip, true, 'こおりくんの ほう (左) を 向く');
+    assert.equal(wild.facing(g.pos), c);
 });
 
 test('戦った キャラの 場所は しばらく 出ない', () => {

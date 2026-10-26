@@ -5,6 +5,7 @@ import { ART } from '../art/index.js';
 import { NAKAMA } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, wrap } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
+import { btn } from '../core/keys.js';
 
 export function createResult(app, result) {
     // 出す 順: 0 けいけんち → 1 なかまに なりたそう → 2 メダルを もらった
@@ -90,7 +91,7 @@ export function createResult(app, result) {
             text(ctx, `${friend.rank}ランク　${friend.element}　${friend.title}`, 20, 52, { size: 11, color: COLORS.sub });
             wrap(ctx, friend.desc, 280, 12).slice(0, 6).forEach((r, i) => text(ctx, r, 20, 76 + i * 17, { size: 12 }));
         }
-        if (Math.floor(t * 2) % 2 || t < 0.4) text(ctx, 'A か タップで つぎへ', 160, 222, { size: 12, align: 'center', color: COLORS.sub });
+        if (Math.floor(t * 2) % 2 || t < 0.4) text(ctx, `${btn('a')} か タップで つぎへ`, 160, 222, { size: 12, align: 'center', color: COLORS.sub });
     }
 
     return { name: 'result', update, drawTop, drawBottom };

@@ -5,6 +5,8 @@
 // input.held.a は押している間 true、input.pressed.a はそのコマで押されたときだけ true
 // 下画面のタッチは input.touch (x, y は下画面のドット。down / justDown / justUp)
 // =====================================================================
+import { setKeyMode } from './keys.js';
+
 const BUTTONS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'l', 'r', 'start', 'sp1', 'sp2', 'sp3'];
 // PC: 左手の WASD (か 矢印) で 動き、右手で ボタン。J=A (決定)・K=B (戻る)・I=X・U=Y・Q=L・E=R (2026-10-26 ユーザー指定)
 const KEYS = {
@@ -38,6 +40,7 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
     const usePad = (kind, show) => {
         if (lastKind === kind) return;
         lastKind = kind;
+        setKeyMode(kind);
         if (typeof document !== 'undefined') document.body.classList.toggle('nopad', !show);
         onPadChange();
     };

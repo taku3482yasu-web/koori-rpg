@@ -206,6 +206,13 @@ body.nopad #pad { display: none; }
     layout();
     return { top, bottom, layout };
   }
+  const KEY_NAMES = { a: "J", b: "K", x: "I", y: "U", l: "Q", r: "E", start: "Shift" };
+  let mode = typeof matchMedia !== "undefined" && matchMedia("(pointer: coarse)").matches ? "button" : "key";
+  function setKeyMode(kind) {
+    mode = kind === "key" ? "key" : "button";
+  }
+  const btn = (b) => `[${mode === "key" ? KEY_NAMES[b] : b.toUpperCase()}]`;
+  const moveName = () => mode === "key" ? "[WASD]" : "[十字キー]";
   const BUTTONS = ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "start", "sp1", "sp2", "sp3"];
   const KEYS = {
     ArrowUp: "up",
@@ -260,6 +267,7 @@ body.nopad #pad { display: none; }
     const usePad = (kind, show) => {
       if (lastKind === kind) return;
       lastKind = kind;
+      setKeyMode(kind);
       if (typeof document !== "undefined") document.body.classList.toggle("nopad", !show);
       onPadChange();
     };
@@ -351,8 +359,8 @@ body.nopad #pad { display: none; }
       const pads = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads() : [];
       for (const gp of pads) {
         if (!gp) continue;
-        gp.buttons.forEach((btn, i) => {
-          if (btn.pressed && PAD[i]) {
+        gp.buttons.forEach((btn2, i) => {
+          if (btn2.pressed && PAD[i]) {
             sources.pad[PAD[i]] = true;
             usePad("pad", false);
           }
@@ -2525,7 +2533,7 @@ body.nopad #pad { display: none; }
       } else {
         ctx.fillStyle = "#16203a";
         ctx.fillRect(0, 206, 320, 34);
-        text(ctx, "A か タップで つぎへ", 160, 228, { size: 11, align: "center", color: COLORS.sub });
+        text(ctx, `${btn("a")} か タップで つぎへ`, 160, 228, { size: 11, align: "center", color: COLORS.sub });
       }
     }
     return { open, update, drawTop, drawBottom, isActive: () => active };
@@ -2614,7 +2622,7 @@ body.nopad #pad { display: none; }
         const x = 40 + i * 46;
         drawArt(ctx, ART[id], Math.floor(t * 2 + i), x, 200 + Math.sin(t * 3 + i) * 3, { scale: id === "koori" ? 3 : 2.4 });
       });
-      if (Math.floor(t * 2) % 2) text(ctx, "PRESS A", 200, 230, { size: 11, align: "center", color: COLORS.sub });
+      if (Math.floor(t * 2) % 2) text(ctx, `${btn("a")} を おしてね`, 200, 230, { size: 11, align: "center", color: COLORS.sub });
     }
     function drawBottom(ctx) {
       ctx.fillStyle = "#16203a";
@@ -2622,7 +2630,7 @@ body.nopad #pad { display: none; }
       text(ctx, "バージョンを えらぶ", 160, 20, { size: 11, align: "center", color: COLORS.sub });
       VBTN.forEach((b, i) => button(ctx, b, { active: i === v }));
       ACT.forEach((b, i) => button(ctx, b, { active: (canContinue() ? row : 1) === i, disabled: b.act === "continue" && !canContinue() }));
-      text(ctx, "十字キー・タップで えらぶ / A (PC は J か Enter) で 決定", 160, 222, { size: 10.5, align: "center", color: COLORS.dim });
+      text(ctx, `${moveName()}・タップで えらぶ　${btn("a")} で 決定`, 160, 222, { size: 10.5, align: "center", color: COLORS.dim });
       if (confirm) {
         ctx.fillStyle = "rgba(0,0,0,0.75)";
         ctx.fillRect(0, 0, 320, 240);
@@ -2678,6 +2686,8 @@ body.nopad #pad { display: none; }
   const RESPAWN = 20;
   const WALK$1 = 22;
   const REVEALED_LIFE = 90;
+  const NOTICE = 34;
+  const TALK = 26;
   function createWild(g, rng) {
     const list = [];
     const wait = {};
@@ -2729,6 +2739,12 @@ body.nopad #pad { display: none; }
           continue;
         }
         const r2 = ROAMS.find((z) => z.id === c.roam);
+        if (hero && Math.hypot(c.x - hero.x, c.y - hero.y) < NOTICE) {
+          c.target = null;
+          c.pause = Math.max(c.pause, 0.8);
+          c.flip = c.x > hero.x;
+          continue;
+        }
         if (c.pause > 0) {
           c.pause -= dt;
           if (c.pause <= 0) c.target = freeTileIn(r2, null);
@@ -2759,10 +2775,11 @@ body.nopad #pad { display: none; }
     }
     function facing(pos) {
       const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[pos.dir];
-      const fx = pos.x + d[0] * 14, fy = pos.y + d[1] * 14;
-      let best = null, bestD = 16;
+      let best = null, bestD = Infinity;
       for (const c of list) {
-        const dist = Math.hypot(c.x - fx, c.y - fy);
+        const dx = c.x - pos.x, dy = c.y - pos.y, dist = Math.hypot(dx, dy);
+        const ahead = dx * d[0] + dy * d[1];
+        if (dist > TALK || dist > 14 && ahead < dist * 0.4) continue;
         if (dist < bestD) {
           best = c;
           bestD = dist;
@@ -3035,8 +3052,8 @@ body.nopad #pad { display: none; }
   const SPOT_COOLDOWN = 25;
   const TINT = ["rgba(255, 220, 160, 0.10)", null, "rgba(255, 120, 40, 0.20)", "rgba(20, 30, 90, 0.48)"];
   const BTN = {
-    lens: { x: 164, y: 28, w: 148, h: 40, label: "レンズ (Y)" },
-    menu: { x: 164, y: 76, w: 148, h: 40, label: "メニュー (X)" }
+    lens: { x: 164, y: 28, w: 148, h: 40, label: "レンズ" },
+    menu: { x: 164, y: 76, w: 148, h: 40, label: "メニュー" }
   };
   let fieldCanvas = null, miniCanvas = null;
   function createField(app2) {
@@ -3068,7 +3085,7 @@ body.nopad #pad { display: none; }
         { who: "", text: "おなかまウォッチ と さがすレンズ を もらった！" },
         { who: "ダイチョウエンキン", art: "daichouenkin", text: "おなか、ぐるぐる～。こおりくん、ひさしぶり！ ぼくも 手伝うよ！" },
         { who: "", text: "ダイチョウエンキンの おなかまメダルを もらった！" },
-        furu("レンズ (Y) で 町を のぞいて、かくれてる キャラを さがそう。まずは なかまを 3 人 ふやしてみて！")
+        furu(`町を 歩いてる キャラには 話しかけると 勝負できるよ。かくれてる キャラは レンズ (${btn("y")}) で さがしてね。まずは なかまを 3 人 ふやしてみて！`)
       ], { done: () => app2.save() });
       receiveWatch(g);
       sfx("watch");
@@ -3345,6 +3362,7 @@ body.nopad #pad { display: none; }
       for (const p of peopleHere(g)) {
         list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
       }
+      const talkable = !lens && !app2.talk.isActive() ? wild.facing(g.pos) : null;
       for (const c of wild.list) {
         const n = NAKAMA[c.id];
         const born = c.pop ? Math.min(1, (t - c.pop) / 0.4) : 1;
@@ -3357,6 +3375,11 @@ body.nopad #pad { display: none; }
           const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
           drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
           if (c.revealed) text(ctx, "!", x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: "center", bold: true, color: COLORS.accent });
+          if (c === talkable) {
+            const label = `${btn("a")} はなす`;
+            panel(ctx, x - 22, y - 36, 44, 13, { fill: "rgba(255,255,255,0.95)", edge: "#1b3a6b", r: 4, lineWidth: 1 });
+            text(ctx, label, x, y - 26.5, { size: 9, align: "center", bold: true, color: "#1b3a6b", shadow: false });
+          }
         } });
       }
       if (hasWatch(g)) {
@@ -3450,7 +3473,7 @@ body.nopad #pad { display: none; }
         text(ctx, "ここを なぞって レンズを 動かす", 160, 104, { size: 13, align: "center", color: COLORS.sub });
         text(ctx, "(十字キー・上画面の マウスでも 動く)", 160, 124, { size: 11, align: "center", color: COLORS.dim });
         text(ctx, lens.spot ? "……なにか いる！ そのまま！" : "へんな ところに レンズを 合わせよう", 160, 196, { size: 13, align: "center", bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
-        text(ctx, "B で やめる", 160, 226, { size: 11, align: "center", color: COLORS.dim });
+        text(ctx, `${btn("b")} で やめる`, 160, 226, { size: 11, align: "center", color: COLORS.dim });
         return;
       }
       text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}`, 10, 18, { size: 12, bold: true });
@@ -3469,17 +3492,56 @@ body.nopad #pad { display: none; }
       panel(ctx, 6, 146, 308, 52);
       text(ctx, "もくてき", 14, 162, { size: 10, color: COLORS.accent, bold: true });
       wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r2, i) => text(ctx, r2, 14, 178 + i * 15, { size: 12 }));
-      text(ctx, "A: しらべる・はなす   B (おしたまま): はしる", 160, 220, { size: 10.5, align: "center", color: COLORS.dim });
-      text(ctx, "PC: WASD で 歩く / J=A K=B I=X U=Y", 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
+      text(ctx, `${moveName()} 歩く　${btn("a")} はなす・しらべる　${btn("b")} おしたまま はしる`, 160, 220, { size: 10.5, align: "center", color: COLORS.dim });
+      text(ctx, `${btn("y")} レンズ　${btn("x")} メニュー`, 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
       app2.talk.drawBottom(ctx);
     }
     return { name: "field", update, drawTop, drawBottom, afterBattle, debug: { lens: () => lens, cam, buddy, wild } };
+  }
+  const cache = /* @__PURE__ */ new Map();
+  function backFrame(rows, rare) {
+    const h = rows.length, w = rows[0].length;
+    const at = (x, y) => x < 0 || y < 0 || x >= w || y >= h ? "." : rows[y][x];
+    const out = rows.map((r2) => r2.split(""));
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const ch = rows[y][x];
+        if (ch === "." || !rare.has(ch) || y > h * 0.75) continue;
+        const n4 = [at(x - 1, y), at(x + 1, y), at(x, y - 1), at(x, y + 1)];
+        if (n4.includes(".")) continue;
+        const count = {};
+        for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+          const c = at(x + dx, y + dy);
+          if (c === "." || rare.has(c)) continue;
+          count[c] = (count[c] || 0) + 1;
+        }
+        const best = Object.entries(count).sort((a, b) => b[1] - a[1])[0];
+        if (best) out[y][x] = best[0];
+      }
+    }
+    return out.map((r2) => r2.join(""));
+  }
+  function backArt(art) {
+    if (!art) return art;
+    if (cache.has(art)) return cache.get(art);
+    const freq = {};
+    let total = 0;
+    for (const row of art.frames[0]) for (const ch of row) if (ch !== ".") {
+      freq[ch] = (freq[ch] || 0) + 1;
+      total++;
+    }
+    const rare = new Set(Object.keys(freq).filter((ch) => freq[ch] < total * 0.12));
+    const back = { ...art, frames: art.frames.map((f) => backFrame(f, rare)) };
+    cache.set(art, back);
+    return back;
   }
   const WHEEL = { x: 100, y: 126, r: 70 };
   const SP_BTN = [0, 1, 2].map((i) => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
   const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: "どうぐ" };
   const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: "おやつ" };
-  const ALLY_POS = [{ x: 92, y: 104 }, { x: 54, y: 154 }, { x: 92, y: 204 }];
+  const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
+  const ALLY_SCALE = 4;
+  const HORIZON = 70;
   const MASH_TIME = 3;
   const RIVER = ["kawara", "kawaraN", "kawaraS", "hashiue", "hashishita", "kawakami", "bridge"];
   function createBattleView(app2, battle, place) {
@@ -3496,8 +3558,8 @@ body.nopad #pad { display: none; }
     const flash = {};
     const enemyPos = (i) => {
       const n = battle.enemies.length;
-      if (n === 1) return { x: 300, y: 190, scale: battle.enemies[0].boss ? 5 : 4 };
-      return [{ x: 290, y: 130, scale: 3 }, { x: 340, y: 205, scale: 3 }][i];
+      if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
+      return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
     };
     function posOf(uid) {
       const fi = battle.front().findIndex((u) => u && u.uid === uid);
@@ -3679,23 +3741,40 @@ body.nopad #pad { display: none; }
     function drawBackground(ctx) {
       const river = RIVER.includes(place);
       const sky = g.time === 3 ? ["#141a3a", "#2a2a5a"] : g.time === 2 ? ["#f08a4a", "#f8c070"] : ["#7ac8f8", "#c8ecff"];
-      const grad = ctx.createLinearGradient(0, 0, 0, 120);
+      const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
       grad.addColorStop(0, sky[0]);
       grad.addColorStop(1, sky[1]);
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 400, 120);
-      ctx.fillStyle = river ? "#3a8ad0" : place === "park" ? "#e8d8a0" : "#6cc04a";
-      ctx.fillRect(0, 96, 400, 144);
-      ctx.fillStyle = river ? "#c8c0b0" : "rgba(0,0,0,0.08)";
-      ctx.fillRect(0, 96, 400, 10);
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
+      [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : ["#4a9a3a", "#7ad05a"];
+      const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+      gg.addColorStop(0, ground[0]);
+      gg.addColorStop(1, ground[1]);
+      ctx.fillStyle = gg;
+      ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+      ctx.fillStyle = river ? "#c8c0b0" : "rgba(0,0,0,0.12)";
+      ctx.fillRect(0, HORIZON, 400, 4);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = -6; i <= 6; i++) {
+        ctx.moveTo(200 + i * 12, HORIZON);
+        ctx.lineTo(200 + i * 80, 240);
+      }
+      for (let k = 1; k <= 5; k++) {
+        const y = HORIZON + (240 - HORIZON) * Math.pow(k / 5, 1.8);
+        ctx.moveTo(0, y);
+        ctx.lineTo(400, y);
+      }
+      ctx.stroke();
       if (river) {
         ctx.fillStyle = "rgba(255,255,255,0.3)";
-        for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, 130 + i * 17 % 90, 18, 2);
+        for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, HORIZON + 20 + i * 17 % 140, 18, 2);
       }
-      ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
-      [[20, 60, 40], [70, 70, 30], [300, 50, 50], [360, 66, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, 96 - y));
     }
-    function drawUnit(ctx, u, p, { scale = 3, flip = false } = {}) {
+    function drawUnit(ctx, u, p, { scale = 3, flip = false, back = false } = {}) {
       if (!u) return;
       const lit = (flash[u.uid] || 0) > t;
       const sleeping = u.status.sleep > 0;
@@ -3704,18 +3783,20 @@ body.nopad #pad { display: none; }
       ctx.beginPath();
       ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
       ctx.fill();
-      drawArt(ctx, ART[u.art], sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null });
-      const w = 44;
-      bar(ctx, p.x - w / 2, p.y + 6, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
-      text(ctx, `${u.name} Lv${u.lv}`, p.x, p.y + 20, { size: 9.5, align: "center" });
+      const art = back ? backArt(ART[u.art]) : ART[u.art];
+      drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null });
+      const w = 44, head = p.y - art.h * scale;
+      const barY = head - 10, nameY = head - 14;
+      bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
+      text(ctx, `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
       const marks = Object.keys(u.status).map((k) => STATUS_NAMES[k]);
       if (u.ko) marks.push("たおれた");
-      if (marks.length) text(ctx, marks.join(" "), p.x, p.y - ART[u.art].h * scale - 4, { size: 9.5, align: "center", color: "#ff9ad8", bold: true });
+      if (marks.length) text(ctx, marks.join(" "), p.x, head - 26, { size: 9.5, align: "center", color: "#ff9ad8", bold: true });
     }
     function drawTop(ctx) {
       drawBackground(ctx);
       battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
-      battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { flip: true }));
+      battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }));
       for (let i = pops.length - 1; i >= 0; i--) {
         const p = pops[i];
         if (p.until < t) {
@@ -3789,7 +3870,7 @@ body.nopad #pad { display: none; }
         bar(ctx, x - 16, y + 15, 32, 3, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
         if (u.ko) text(ctx, "×", x, y + 6, { size: 22, align: "center", bold: true, color: "#ff6a6a" });
       });
-      text(ctx, "L ◀ なぞって回す ▶ R", WHEEL.x, 232, { size: 10.5, align: "center", color: COLORS.sub });
+      text(ctx, `${btn("l")} ◀ なぞって回す ▶ ${btn("r")}`, WHEEL.x, 232, { size: 10.5, align: "center", color: COLORS.sub });
     }
     function drawSpecialButtons(ctx) {
       battle.front().forEach((u, i) => {
@@ -3810,8 +3891,8 @@ body.nopad #pad { display: none; }
       });
       button(ctx, ITEM_BTN, { size: 11 });
       button(ctx, FOOD_BTN, { size: 11, disabled: battle.kind !== "wild" || Boolean(battle.food) });
-      text(ctx, "Y", ITEM_BTN.x + ITEM_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
-      text(ctx, "X", FOOD_BTN.x + FOOD_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
+      text(ctx, btn("y"), ITEM_BTN.x + ITEM_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
+      text(ctx, btn("x"), FOOD_BTN.x + FOOD_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
       if (battle.itemCooldown > 0) text(ctx, `どうぐ まで ${battle.itemCooldown.toFixed(1)}`, 259, 232, { size: 9.5, align: "center", color: COLORS.dim });
     }
     function drawMenu(ctx) {
@@ -3831,14 +3912,14 @@ body.nopad #pad { display: none; }
         text(ctx, `${ITEMS[id].name}`, r2.x + 10, r2.y + 17, { size: 13 });
         text(ctx, `×${g.items[id]}`, r2.x + r2.w - 10, r2.y + 17, { size: 13, align: "right" });
       });
-      text(ctx, "B で とじる", 160, 220, { size: 10, align: "center", color: COLORS.dim });
+      text(ctx, `${btn("b")} で とじる`, 160, 220, { size: 10, align: "center", color: COLORS.dim });
     }
     function drawBottom(ctx) {
       ctx.fillStyle = "#16203a";
       ctx.fillRect(0, 0, 320, 240);
       if (mg) {
         const left = Math.max(0, MASH_TIME - mg.t);
-        text(ctx, mg.done ? "" : "A か 画面を れんだ！", 160, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
+        text(ctx, mg.done ? "" : `${btn("a")} か 画面を れんだ！`, 160, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
         const pulse = mg.done ? 1 : 1 + 0.06 * Math.sin(t * 30);
         const w = 200 * pulse, h = 110 * pulse;
         panel(ctx, 160 - w / 2, 120 - h / 2, w, h, { fill: "#b03048", edge: "#ffd0d8", r: 20, lineWidth: 3 });
@@ -3931,7 +4012,7 @@ body.nopad #pad { display: none; }
         text(ctx, `${friend.rank}ランク　${friend.element}　${friend.title}`, 20, 52, { size: 11, color: COLORS.sub });
         wrap(ctx, friend.desc, 280, 12).slice(0, 6).forEach((r2, i) => text(ctx, r2, 20, 76 + i * 17, { size: 12 }));
       }
-      if (Math.floor(t * 2) % 2 || t < 0.4) text(ctx, "A か タップで つぎへ", 160, 222, { size: 12, align: "center", color: COLORS.sub });
+      if (Math.floor(t * 2) % 2 || t < 0.4) text(ctx, `${btn("a")} か タップで つぎへ`, 160, 222, { size: 12, align: "center", color: COLORS.sub });
     }
     return { name: "result", update, drawTop, drawBottom };
   }
@@ -4153,7 +4234,7 @@ body.nopad #pad { display: none; }
         text(ctx, "ページを 閉じたときも 自動で セーブします", 160, 186, { size: 11, align: "center", color: COLORS.sub });
         if (saved && t - saved < 1.5) text(ctx, "セーブした！", 160, 104, { size: 14, align: "center", bold: true, color: COLORS.accent });
       }
-      text(ctx, "B / X: もどる", 312, 232, { size: 10.5, align: "right", color: COLORS.dim });
+      text(ctx, `${btn("b")} もどる`, 312, 232, { size: 10.5, align: "right", color: COLORS.dim });
     }
     function drawWatch(ctx) {
       SLOT_BTN.forEach((b, i) => {
@@ -4169,7 +4250,7 @@ body.nopad #pad { display: none; }
       });
       if (!picking) {
         text(ctx, "上の 3 つが はじめに 前に 出る", 8, 140, { size: 9.5, color: COLORS.dim });
-        text(ctx, "A / タップ: メダルを 入れる　Y: はずす", 160, 160, { size: 11, align: "center", color: COLORS.sub });
+        text(ctx, `${btn("a")}・タップ: メダルを 入れる　${btn("y")} はずす`, 160, 160, { size: 11, align: "center", color: COLORS.sub });
         text(ctx, `メダル帳: ${g.medals.length} 枚`, 160, 180, { size: 11, align: "center", color: COLORS.sub });
         return;
       }

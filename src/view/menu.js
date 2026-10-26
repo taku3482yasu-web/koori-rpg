@@ -10,6 +10,7 @@ import { ITEMS } from '../data/items.js';
 import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit, bar, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
+import { btn } from '../core/keys.js';
 import { medalByUid, friendCount } from '../logic/game.js';
 import { statsAt, expFor } from '../logic/units.js';
 
@@ -166,7 +167,7 @@ export function createMenu(app) {
             text(ctx, 'ページを 閉じたときも 自動で セーブします', 160, 186, { size: 11, align: 'center', color: COLORS.sub });
             if (saved && t - saved < 1.5) text(ctx, 'セーブした！', 160, 104, { size: 14, align: 'center', bold: true, color: COLORS.accent });
         }
-        text(ctx, 'B / X: もどる', 312, 232, { size: 10.5, align: 'right', color: COLORS.dim });
+        text(ctx, `${btn('b')} もどる`, 312, 232, { size: 10.5, align: 'right', color: COLORS.dim });
     }
 
     function drawWatch(ctx) {
@@ -180,7 +181,7 @@ export function createMenu(app) {
         });
         if (!picking) {
             text(ctx, '上の 3 つが はじめに 前に 出る', 8, 140, { size: 9.5, color: COLORS.dim });
-            text(ctx, 'A / タップ: メダルを 入れる　Y: はずす', 160, 160, { size: 11, align: 'center', color: COLORS.sub });
+            text(ctx, `${btn('a')}・タップ: メダルを 入れる　${btn('y')} はずす`, 160, 160, { size: 11, align: 'center', color: COLORS.sub });
             text(ctx, `メダル帳: ${g.medals.length} 枚`, 160, 180, { size: 11, align: 'center', color: COLORS.sub });
             return;
         }

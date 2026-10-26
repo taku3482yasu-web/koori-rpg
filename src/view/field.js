@@ -7,6 +7,7 @@ import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
+import { btn, moveName } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine } from '../logic/world.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
@@ -19,8 +20,8 @@ const SPOT_COOLDOWN = 25;   // かくれている キャラと 戦った 場所�
 const TINT = ['rgba(255, 220, 160, 0.10)', null, 'rgba(255, 120, 40, 0.20)', 'rgba(20, 30, 90, 0.48)'];
 
 const BTN = {
-    lens: { x: 164, y: 28, w: 148, h: 40, label: 'レンズ (Y)' },
-    menu: { x: 164, y: 76, w: 148, h: 40, label: 'メニュー (X)' }
+    lens: { x: 164, y: 28, w: 148, h: 40, label: 'レンズ' },
+    menu: { x: 164, y: 76, w: 148, h: 40, label: 'メニュー' }
 };
 
 let fieldCanvas = null, miniCanvas = null;
@@ -56,7 +57,7 @@ export function createField(app) {
             { who: '', text: 'おなかまウォッチ と さがすレンズ を もらった！' },
             { who: 'ダイチョウエンキン', art: 'daichouenkin', text: 'おなか、ぐるぐる～。こおりくん、ひさしぶり！ ぼくも 手伝うよ！' },
             { who: '', text: 'ダイチョウエンキンの おなかまメダルを もらった！' },
-            furu('レンズ (Y) で 町を のぞいて、かくれてる キャラを さがそう。まずは なかまを 3 人 ふやしてみて！')
+            furu(`町を 歩いてる キャラには 話しかけると 勝負できるよ。かくれてる キャラは レンズ (${btn('y')}) で さがしてね。まずは なかまを 3 人 ふやしてみて！`)
         ], { done: () => app.save() });
         receiveWatch(g);
         sfx('watch');
@@ -300,6 +301,7 @@ export function createField(app) {
         for (const p of peopleHere(g)) {
             list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
         }
+        const talkable = !lens && !app.talk.isActive() ? wild.facing(g.pos) : null;
         for (const c of wild.list) {
             const n = NAKAMA[c.id];
             const born = c.pop ? Math.min(1, (t - c.pop) / 0.4) : 1;
@@ -312,6 +314,12 @@ export function createField(app) {
                 const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
                 drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
                 if (c.revealed) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: COLORS.accent });
+                // 話しかけられる キャラの 上に ふきだし
+                if (c === talkable) {
+                    const label = `${btn('a')} はなす`;
+                    panel(ctx, x - 22, y - 36, 44, 13, { fill: 'rgba(255,255,255,0.95)', edge: '#1b3a6b', r: 4, lineWidth: 1 });
+                    text(ctx, label, x, y - 26.5, { size: 9, align: 'center', bold: true, color: '#1b3a6b', shadow: false });
+                }
             } });
         }
         // ふるカワ (ウォッチを もらったあとは ついてくる)
@@ -411,7 +419,7 @@ export function createField(app) {
             text(ctx, 'ここを なぞって レンズを 動かす', 160, 104, { size: 13, align: 'center', color: COLORS.sub });
             text(ctx, '(十字キー・上画面の マウスでも 動く)', 160, 124, { size: 11, align: 'center', color: COLORS.dim });
             text(ctx, lens.spot ? '……なにか いる！ そのまま！' : 'へんな ところに レンズを 合わせよう', 160, 196, { size: 13, align: 'center', bold: Boolean(lens.spot), color: lens.spot ? COLORS.accent : COLORS.ink });
-            text(ctx, 'B で やめる', 160, 226, { size: 11, align: 'center', color: COLORS.dim });
+            text(ctx, `${btn('b')} で やめる`, 160, 226, { size: 11, align: 'center', color: COLORS.dim });
             return;
         }
         text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}`, 10, 18, { size: 12, bold: true });
@@ -432,8 +440,8 @@ export function createField(app) {
         panel(ctx, 6, 146, 308, 52);
         text(ctx, 'もくてき', 14, 162, { size: 10, color: COLORS.accent, bold: true });
         wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * 15, { size: 12 }));
-        text(ctx, 'A: しらべる・はなす   B (おしたまま): はしる', 160, 220, { size: 10.5, align: 'center', color: COLORS.dim });
-        text(ctx, 'PC: WASD で 歩く / J=A K=B I=X U=Y', 160, 234, { size: 10.5, align: 'center', color: COLORS.dim });
+        text(ctx, `${moveName()} 歩く　${btn('a')} はなす・しらべる　${btn('b')} おしたまま はしる`, 160, 220, { size: 10.5, align: 'center', color: COLORS.dim });
+        text(ctx, `${btn('y')} レンズ　${btn('x')} メニュー`, 160, 234, { size: 10.5, align: 'center', color: COLORS.dim });
         app.talk.drawBottom(ctx);
     }
 

@@ -12,6 +12,8 @@ import { blockedTile } from './world.js';
 const RESPAWN = 20;          // いなくなってから また 出るまで (秒)
 const WALK = 22;             // 歩く 速さ (ドット / 秒)
 const REVEALED_LIFE = 90;    // 見つけた キャラが その場に いる 時間 (秒)
+const NOTICE = 34;           // こおりくんが これより 近いと 立ち止まる (ドット)
+const TALK = 26;             // 話しかけられる きょり (ドット)
 
 export function createWild(g, rng) {
     const list = [];
@@ -70,6 +72,13 @@ export function createWild(g, rng) {
                 continue;
             }
             const r = ROAMS.find(z => z.id === c.roam);
+            // こおりくんが 近くに 来たら 立ち止まって こっちを 向く (話しかけやすいように)
+            if (hero && Math.hypot(c.x - hero.x, c.y - hero.y) < NOTICE) {
+                c.target = null;
+                c.pause = Math.max(c.pause, 0.8);
+                c.flip = c.x > hero.x;
+                continue;
+            }
             if (c.pause > 0) {
                 c.pause -= dt;
                 if (c.pause <= 0) c.target = freeTileIn(r, null);
@@ -89,13 +98,14 @@ export function createWild(g, rng) {
         }
     }
 
-    // こおりくんの 前 (向いている 方向) に いる キャラ
+    // 話しかけられる キャラ: 近くて (TALK 以内)、向いている 方の 側に いる。すぐ そば (14 以内) なら 向きは 問わない。いちばん 近い 1 体
     function facing(pos) {
         const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[pos.dir];
-        const fx = pos.x + d[0] * 14, fy = pos.y + d[1] * 14;
-        let best = null, bestD = 16;
+        let best = null, bestD = Infinity;
         for (const c of list) {
-            const dist = Math.hypot(c.x - fx, c.y - fy);
+            const dx = c.x - pos.x, dy = c.y - pos.y, dist = Math.hypot(dx, dy);
+            const ahead = dx * d[0] + dy * d[1];
+            if (dist > TALK || (dist > 14 && ahead < dist * 0.4)) continue;
             if (dist < bestD) { best = c; bestD = dist; }
         }
         return best;

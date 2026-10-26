@@ -7,6 +7,7 @@
 import { ART } from '../art/index.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
+import { btn } from '../core/keys.js';
 
 export function createTalk() {
     let lines = [], index = 0, shown = 0, opts = {}, cursor = 0, active = false;
@@ -77,7 +78,7 @@ export function createTalk() {
         } else {
             ctx.fillStyle = '#16203a';
             ctx.fillRect(0, 206, 320, 34);
-            text(ctx, 'A か タップで つぎへ', 160, 228, { size: 11, align: 'center', color: COLORS.sub });
+            text(ctx, `${btn('a')} か タップで つぎへ`, 160, 228, { size: 11, align: 'center', color: COLORS.sub });
         }
     }
 

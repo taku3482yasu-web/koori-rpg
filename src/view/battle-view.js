@@ -5,17 +5,22 @@
 //       Y → どうぐ (なかまを 回復) / X → おやつ (敵に 投げる。仲間に なりやすくなる)
 // =====================================================================
 import { ART } from '../art/index.js';
+import { backArt } from '../art/back.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
+import { btn } from '../core/keys.js';
 import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
 const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: 'どうぐ' };
 const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: 'おやつ' };
-const ALLY_POS = [{ x: 92, y: 104 }, { x: 54, y: 154 }, { x: 92, y: 204 }];
+// 味方は 手前 (下) に 大きく、うしろ姿で。敵は 奥 (上) に (2026-10-26 ユーザー指定)
+const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
+const ALLY_SCALE = 4;
+const HORIZON = 70;
 const MASH_TIME = 3;
 const RIVER = ['kawara', 'kawaraN', 'kawaraS', 'hashiue', 'hashishita', 'kawakami', 'bridge'];
 
@@ -34,8 +39,8 @@ export function createBattleView(app, battle, place) {
 
     const enemyPos = i => {
         const n = battle.enemies.length;
-        if (n === 1) return { x: 300, y: 190, scale: battle.enemies[0].boss ? 5 : 4 };
-        return [{ x: 290, y: 130, scale: 3 }, { x: 340, y: 205, scale: 3 }][i];
+        if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
+        return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
     };
     function posOf(uid) {
         const fi = battle.front().findIndex(u => u && u.uid === uid);
@@ -177,25 +182,38 @@ export function createBattleView(app, battle, place) {
     function drawBackground(ctx) {
         const river = RIVER.includes(place);
         const sky = g.time === 3 ? ['#141a3a', '#2a2a5a'] : g.time === 2 ? ['#f08a4a', '#f8c070'] : ['#7ac8f8', '#c8ecff'];
-        const grad = ctx.createLinearGradient(0, 0, 0, 120);
+        const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
         grad.addColorStop(0, sky[0]);
         grad.addColorStop(1, sky[1]);
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 400, 120);
-        ctx.fillStyle = river ? '#3a8ad0' : place === 'park' ? '#e8d8a0' : '#6cc04a';
-        ctx.fillRect(0, 96, 400, 144);
-        ctx.fillStyle = river ? '#c8c0b0' : 'rgba(0,0,0,0.08)';
-        ctx.fillRect(0, 96, 400, 10);
-        if (river) {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, 130 + (i * 17) % 90, 18, 2);
-        }
+        ctx.fillRect(0, 0, 400, HORIZON);
         // 遠くの 町
         ctx.fillStyle = 'rgba(40, 60, 90, 0.25)';
-        [[20, 60, 40], [70, 70, 30], [300, 50, 50], [360, 66, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, 96 - y));
+        [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
+        // 地面 (手前ほど 明るく)
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : ['#4a9a3a', '#7ad05a'];
+        const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+        gg.addColorStop(0, ground[0]);
+        gg.addColorStop(1, ground[1]);
+        ctx.fillStyle = gg;
+        ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+        ctx.fillStyle = river ? '#c8c0b0' : 'rgba(0,0,0,0.12)';
+        ctx.fillRect(0, HORIZON, 400, 4);
+        // 奥行きの 線 (まんなかの 奥に 集まる)
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = -6; i <= 6; i++) { ctx.moveTo(200 + i * 12, HORIZON); ctx.lineTo(200 + i * 80, 240); }
+        for (let k = 1; k <= 5; k++) { const y = HORIZON + (240 - HORIZON) * Math.pow(k / 5, 1.8); ctx.moveTo(0, y); ctx.lineTo(400, y); }
+        ctx.stroke();
+        if (river) {
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, HORIZON + 20 + (i * 17) % 140, 18, 2);
+        }
     }
 
-    function drawUnit(ctx, u, p, { scale = 3, flip = false } = {}) {
+    // back: うしろ姿 (味方)
+    function drawUnit(ctx, u, p, { scale = 3, flip = false, back = false } = {}) {
         if (!u) return;
         const lit = (flash[u.uid] || 0) > t;
         const sleeping = u.status.sleep > 0;
@@ -204,19 +222,22 @@ export function createBattleView(app, battle, place) {
         ctx.beginPath();
         ctx.ellipse(p.x, p.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
         ctx.fill();
-        drawArt(ctx, ART[u.art], sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null });
-        const w = 44;
-        bar(ctx, p.x - w / 2, p.y + 6, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
-        text(ctx, `${u.name} Lv${u.lv}`, p.x, p.y + 20, { size: 9.5, align: 'center' });
+        const art = back ? backArt(ART[u.art]) : ART[u.art];
+        drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null });
+        const w = 44, head = p.y - art.h * scale;
+        // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
+        const barY = head - 10, nameY = head - 14;
+        bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
+        text(ctx, `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: 'center' });
         const marks = Object.keys(u.status).map(k => STATUS_NAMES[k]);
         if (u.ko) marks.push('たおれた');
-        if (marks.length) text(ctx, marks.join(' '), p.x, p.y - ART[u.art].h * scale - 4, { size: 9.5, align: 'center', color: '#ff9ad8', bold: true });
+        if (marks.length) text(ctx, marks.join(' '), p.x, head - 26, { size: 9.5, align: 'center', color: '#ff9ad8', bold: true });
     }
 
     function drawTop(ctx) {
         drawBackground(ctx);
         battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
-        battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { flip: true }));
+        battle.front().forEach((u, i) => drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }));
         for (let i = pops.length - 1; i >= 0; i--) {
             const p = pops[i];
             if (p.until < t) { pops.splice(i, 1); continue; }
@@ -293,7 +314,7 @@ export function createBattleView(app, battle, place) {
             bar(ctx, x - 16, y + 15, 32, 3, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
             if (u.ko) text(ctx, '×', x, y + 6, { size: 22, align: 'center', bold: true, color: '#ff6a6a' });
         });
-        text(ctx, 'L ◀ なぞって回す ▶ R', WHEEL.x, 232, { size: 10.5, align: 'center', color: COLORS.sub });
+        text(ctx, `${btn('l')} ◀ なぞって回す ▶ ${btn('r')}`, WHEEL.x, 232, { size: 10.5, align: 'center', color: COLORS.sub });
     }
 
     function drawSpecialButtons(ctx) {
@@ -312,8 +333,8 @@ export function createBattleView(app, battle, place) {
         });
         button(ctx, ITEM_BTN, { size: 11 });
         button(ctx, FOOD_BTN, { size: 11, disabled: battle.kind !== 'wild' || Boolean(battle.food) });
-        text(ctx, 'Y', ITEM_BTN.x + ITEM_BTN.w / 2, 216, { size: 9.5, align: 'center', color: COLORS.dim });
-        text(ctx, 'X', FOOD_BTN.x + FOOD_BTN.w / 2, 216, { size: 9.5, align: 'center', color: COLORS.dim });
+        text(ctx, btn('y'), ITEM_BTN.x + ITEM_BTN.w / 2, 216, { size: 9.5, align: 'center', color: COLORS.dim });
+        text(ctx, btn('x'), FOOD_BTN.x + FOOD_BTN.w / 2, 216, { size: 9.5, align: 'center', color: COLORS.dim });
         if (battle.itemCooldown > 0) text(ctx, `どうぐ まで ${battle.itemCooldown.toFixed(1)}`, 259, 232, { size: 9.5, align: 'center', color: COLORS.dim });
     }
 
@@ -330,7 +351,7 @@ export function createBattleView(app, battle, place) {
             text(ctx, `${ITEMS[id].name}`, r.x + 10, r.y + 17, { size: 13 });
             text(ctx, `×${g.items[id]}`, r.x + r.w - 10, r.y + 17, { size: 13, align: 'right' });
         });
-        text(ctx, 'B で とじる', 160, 220, { size: 10, align: 'center', color: COLORS.dim });
+        text(ctx, `${btn('b')} で とじる`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
     }
 
     function drawBottom(ctx) {
@@ -338,7 +359,7 @@ export function createBattleView(app, battle, place) {
         ctx.fillRect(0, 0, 320, 240);
         if (mg) {
             const left = Math.max(0, MASH_TIME - mg.t);
-            text(ctx, mg.done ? '' : 'A か 画面を れんだ！', 160, 34, { size: 18, align: 'center', bold: true, color: COLORS.accent });
+            text(ctx, mg.done ? '' : `${btn('a')} か 画面を れんだ！`, 160, 34, { size: 18, align: 'center', bold: true, color: COLORS.accent });
             const pulse = mg.done ? 1 : 1 + 0.06 * Math.sin(t * 30);
             const w = 200 * pulse, h = 110 * pulse;
             panel(ctx, 160 - w / 2, 120 - h / 2, w, h, { fill: '#b03048', edge: '#ffd0d8', r: 20, lineWidth: 3 });

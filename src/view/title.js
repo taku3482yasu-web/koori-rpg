@@ -4,6 +4,7 @@
 import { ART } from '../art/index.js';
 import { COLORS, drawArt, text, button, hit, panel } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
+import { btn, moveName } from '../core/keys.js';
 import { hasSave } from '../core/save.js';
 import { VERSIONS } from '../logic/game.js';
 
@@ -76,7 +77,7 @@ export function createTitle(app) {
             const x = 40 + i * 46;
             drawArt(ctx, ART[id], Math.floor(t * 2 + i), x, 200 + Math.sin(t * 3 + i) * 3, { scale: id === 'koori' ? 3 : 2.4 });
         });
-        if (Math.floor(t * 2) % 2) text(ctx, 'PRESS A', 200, 230, { size: 11, align: 'center', color: COLORS.sub });
+        if (Math.floor(t * 2) % 2) text(ctx, `${btn('a')} を おしてね`, 200, 230, { size: 11, align: 'center', color: COLORS.sub });
     }
 
     function drawBottom(ctx) {
@@ -85,7 +86,7 @@ export function createTitle(app) {
         text(ctx, 'バージョンを えらぶ', 160, 20, { size: 11, align: 'center', color: COLORS.sub });
         VBTN.forEach((b, i) => button(ctx, b, { active: i === v }));
         ACT.forEach((b, i) => button(ctx, b, { active: (canContinue() ? row : 1) === i, disabled: b.act === 'continue' && !canContinue() }));
-        text(ctx, '十字キー・タップで えらぶ / A (PC は J か Enter) で 決定', 160, 222, { size: 10.5, align: 'center', color: COLORS.dim });
+        text(ctx, `${moveName()}・タップで えらぶ　${btn('a')} で 決定`, 160, 222, { size: 10.5, align: 'center', color: COLORS.dim });
         if (confirm) {
             ctx.fillStyle = 'rgba(0,0,0,0.75)';
             ctx.fillRect(0, 0, 320, 240);

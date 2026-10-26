@@ -233,6 +233,8 @@ try {
     check(await evaluate('Boolean(window.__app.g)'), 'スマホの A ボタンで 決定できる');
     await skipTalk();
     await shot('phone-field');
+    // 6 体 そろえて ボス戦 (味方の うしろ姿を 見る)
+    await evaluate('(() => { const g = window.__app.g; ["kozarappa", "ishikoron", "haribaby", "kogame", "mizukirin"].forEach((id, i) => { g.medals.push({ uid: "t" + i, id, lv: 5, exp: 0 }); g.watch[i + 1] = "t" + i; }); return true; })()');
     await evaluate('(() => { const a = window.__app; a.startBattle({ enemies: [{ id: "nushi", lv: 8 }], kind: "boss", place: "bridge" }); return true; })()');
     await sleep(1500);
     await shot('phone-battle');
