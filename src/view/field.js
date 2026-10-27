@@ -2,14 +2,14 @@
 // 町の 場面: 上画面で 歩く・調べる・レンズで さがす、下画面に 地図と ボタン (設計書 5 章・7 章)
 // =====================================================================
 import { ART } from '../art/index.js';
-import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS } from '../data/map.js';
+import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
-import { moveHero, lookAt, peopleHere, inShrine } from '../logic/world.js';
-import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount } from '../logic/game.js';
+import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile } from '../logic/world.js';
+import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -72,7 +72,7 @@ export function createField(app) {
                 intro: ['こおりくん、夏休みだからって ゴロゴロしてないで、外で 遊んできなさい！', '神社の ほうで ふるカワちゃんが さがしてたわよ。'],
                 friends: ['あら、おともだちが ふえたのね。おやつは 駄菓子屋で 買えるわよ。'],
                 bridge: ['石の川橋が 通れないんですって。こまったわねえ。'],
-                clear: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`]
+                clear: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, '南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。']
             }[g.story];
             say(lines.map(text => ({ who: 'ともいし', art: 'tomoishi', text })));
         } else if (p.id === 'furukawaShrine') {
@@ -113,7 +113,18 @@ export function createField(app) {
                 school: '夏休みで しまっている。',
                 shrine: 'おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……',
                 toilet: '……だれも 入っていない。なのに、なんだか おなかが ぐるぐる する。',
-                temple: 'ポク……ポク……。中から 木魚の 音が する。'
+                temple: 'ポク……ポク……。中から 木魚の 音が する。',
+                // 商店街 (段階 2)
+                gamecenter: '「じゅんび中」の はり紙が ある。中から ピコピコ 音が する……。',
+                pachinkoAto: 'つぶれた パチンコ店。シャッターの すきまから、ジャラジャラ 聞こえた 気が する。',
+                yaoya: '八百屋の おじさん「へい らっしゃい！ きゅうりは かっぱの 好物だよ！」',
+                omenya: 'お祭り用の お面が ずらりと ならんでいる。ひとつ、こっちを 見ている 気が する……。',
+                kouban: 'おまわりさん「無免許で 飛んでいる ハチを 見かけたら 教えてね」',
+                jansou: '中から「ツモ！」「ロン！」と 声が する。子どもは 入れない。',
+                denkiya: '古い テレビが 山づみ。1 台だけ、電源が 入っていないのに ついている。',
+                honya: '本が ぎっしり。「全部 読んだら ヨシ！」と だれかが 言っていた。',
+                karaoke: '中から 同じ 歌が ずっと 聞こえる。もう 何曲目だろう。',
+                sentou: 'ゆ と 書いた のれん。「こおりの お客さまは とけるので ご注意ください」'
             }[b.id];
             say([{ who: '', text: msg }]);
         }
@@ -151,7 +162,9 @@ export function createField(app) {
             say([
                 { who: 'ハシシタボウズ', art: 'hashishita', text: '数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。' },
                 furu('やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！'),
-                { who: '', text: '１章 クリア！ ―― ２章は つぎの アップデートで。石の川タウンの なかま 20 人を あつめてみよう！' }
+                { who: '', text: '１章 クリア！' },
+                furu('そういえば、南の 商店街の 工事も 終わったんだって！ 町の 南の はしから 行けるよ。新しい なかまが いるかも！'),
+                { who: '', text: '商店街に 行けるように なった！ ―― ２章は つぎの アップデートで。' }
             ], { done: () => app.save() });
         } else if (result.storyChanged === 'bridge') {
             say([furu('なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！')], { done: () => app.save() });
@@ -227,7 +240,7 @@ export function createField(app) {
         if (moving) {
             const speed = (input.held.b ? RUN : WALK) * dt / (dx && dy ? Math.SQRT2 : 1);
             const before = { x: g.pos.x, y: g.pos.y };
-            moveHero(g, dx * speed, dy * speed);
+            moveHero(g, dx * speed, dy * speed, wild.list);
             walkT += dt;
             if (before.x !== g.pos.x || before.y !== g.pos.y) {
                 const lastP = trail[trail.length - 1];
@@ -242,7 +255,7 @@ export function createField(app) {
             const c = wild.facing(g.pos);
             if (c) { sfx('ok'); talkToWild(c); return; }
             const target = lookAt(g);
-            if (target?.type === 'person') { sfx('ok'); talkToPerson(target.person); } else if (target?.type === 'door') { sfx('ok'); openDoor(target.building); }
+            if (target?.type === 'person') { sfx('ok'); talkToPerson(target.person); } else if (target?.type === 'door') { sfx('ok'); openDoor(target.building); } else if (target?.type === 'gate') { sfx('ok'); say([{ who: '', text: '「この先 商店街。工事中に つき 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('石の川橋の ヌシの 件が かたづいたら 通れるって。')] : [])]); }
         }
     }
 
@@ -275,8 +288,26 @@ export function createField(app) {
         if (buddy.moving) buddy.walkT += dt;
     }
 
+    // 話せる キャラ (印なし): 会話と、1 日 1 回 道具 (2026-10-28 ユーザー指定)
+    function talkToFriend(c) {
+        const n = NAKAMA[c.id], f = wild.sourceOf(c);
+        c.flip = c.x > g.pos.x;
+        if (c.target) { c.target = null; c.pause = 3; }
+        const lines = f.lines.map(text => ({ who: n.name, art: n.art, text }));
+        const gift = takeGift(g, f);
+        if (gift) {
+            sfx('friend');
+            lines.push({ who: '', text: `${ITEMS[gift.item].name}を ${gift.n}こ もらった！` });
+        } else if (f.gift) {
+            lines.splice(1);
+            lines.push({ who: n.name, art: n.art, text: 'また あした 来てね！' });
+        }
+        say(lines);
+    }
+
     // 町の キャラに 話しかけると バトル
     function talkToWild(c) {
+        if (c.friendly) { talkToFriend(c); return; }
         const n = NAKAMA[c.id];
         c.flip = c.x > g.pos.x;
         if (c.target) { c.target = null; c.pause = 3; }
@@ -313,7 +344,8 @@ export function createField(app) {
                 ctx.fill();
                 const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
                 drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
-                if (c.revealed) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: COLORS.accent });
+                // 戦える キャラには 赤い「！」(2026-10-28 ユーザー指定)。話せる キャラには なにも つけない
+                if (!c.friendly) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: '#ff3a3a' });
                 // 話しかけられる キャラの 上に ふきだし
                 if (c === talkable) {
                     const label = `${btn('a')} はなす`;
@@ -349,6 +381,7 @@ export function createField(app) {
             }
         }
         for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
+        drawGates(ctx);
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
@@ -367,6 +400,23 @@ export function createField(app) {
         }
         if (lens) drawLens(ctx);
         app.talk.drawTop(ctx, t);
+    }
+
+    // 工事中の さく (黄色と 黒の しましま)
+    function drawGates(ctx) {
+        for (const q of gatesHere(g)) {
+            const x = q.x * TILE - cam.x, y = q.y * TILE - cam.y, w = q.w * TILE;
+            if (x < -40 || x > 440 || y < -40 || y > 280) continue;
+            ctx.fillStyle = '#5a5a5a';
+            ctx.fillRect(x + 1, y + 4, 2, 12);
+            ctx.fillRect(x + w - 3, y + 4, 2, 12);
+            for (let i = 0; i < w; i += 6) {
+                ctx.fillStyle = (i / 6) % 2 ? '#202020' : '#ffd040';
+                ctx.fillRect(x + i, y + 5, 6, 5);
+            }
+            panel(ctx, x + w / 2 - 18, y - 9, 36, 12, { fill: '#ffd040', edge: '#202020', r: 2, lineWidth: 1 });
+            text(ctx, '工事中', x + w / 2, y + 0.5, { size: 9, align: 'center', bold: true, color: '#202020', shadow: false });
+        }
     }
 
     function drawLens(ctx) {
@@ -422,18 +472,21 @@ export function createField(app) {
             text(ctx, `${btn('b')} で やめる`, 160, 226, { size: 11, align: 'center', color: COLORS.dim });
             return;
         }
-        text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}`, 10, 18, { size: 12, bold: true });
+        const ht = heroTile(g);
+        text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}　${areaAt(ht.x, ht.y) === 'shoutengai' ? '商店街' : '石の川タウン'}`, 10, 18, { size: 12, bold: true });
         text(ctx, `${g.money}円`, 310, 18, { size: 12, align: 'right', color: COLORS.accent });
-        // 地図
+        // 地図 (商店街が ふえて 縦に 長いので、こおりくんの まわりを 切りだす)
         panel(ctx, 6, 26, 148, 112, { fill: '#000', r: 3 });
-        ctx.drawImage(miniCanvas, 8, 28, 144, 108);
+        const my = Math.max(0, Math.min(miniCanvas.height - 108, Math.round(g.pos.y / TILE * 3 - 54)));
+        ctx.drawImage(miniCanvas, 0, my, 144, 108, 8, 28, 144, 108);
         if (Math.floor(t * 4) % 2) {
             ctx.fillStyle = '#ff3a5a';
-            ctx.fillRect(8 + g.pos.x / TILE * 3 - 2, 28 + g.pos.y / TILE * 3 - 4, 4, 4);
+            ctx.fillRect(8 + g.pos.x / TILE * 3 - 2, 28 + g.pos.y / TILE * 3 - 4 - my, 4, 4);
         }
         // 目的地の しるし
         const goal = g.story === 'intro' ? { x: 6, y: 5 } : g.story === 'bridge' ? { x: 31, y: 17 } : null;
-        if (goal) text(ctx, '!', 8 + goal.x * 3, 28 + goal.y * 3 + 4, { size: 12, bold: true, align: 'center', color: COLORS.accent });
+        const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
+        if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });
         button(ctx, BTN.menu);
         text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : 'ウォッチを まだ もっていない', 238, 132, { size: 11, align: 'center', color: COLORS.sub });

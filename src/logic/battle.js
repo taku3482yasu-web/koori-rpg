@@ -1,6 +1,8 @@
 // =====================================================================
 // バトル (設計書 3 章): なかまは 自動で 戦い、プレイヤーは 輪を 回す・必殺技を 打つ・道具を 使う
 // ---------------------------------------------------------------------
+// なかまが 自分で えらぶ コマンドは 5 つ (2026-10-27 ユーザー指定): 通常攻撃・わざ・さぼり・まもり・術。
+//   えらびやすさは 役割で 変わる (ACTION_W)。まもりは 次に 動くまで 受ける ダメージが 半分
 // 画面に ふれない。view/battle-view.js が 毎コマ step(dt) を 呼び、events を 読んで 絵と 音を 出す。
 //
 //   wheel: おなかまウォッチに セットした 6 枚 (null は あき)。前の 3 体 = wheel[rot], wheel[rot+1], wheel[rot+2]
@@ -27,9 +29,9 @@ function makeUnit({ uid, id, lv }, side) {
         uid: uid ?? `${side}-${++uidSeq}`,
         id, lv, side,
         name: sp.name, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
-        skill: sp.skill, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove),
+        waza: sp.waza, jutsu: sp.jutsu, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
-        timer: 0, gauge: 0, status: {}, buffs: {}, ko: false
+        timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false
     };
 }
 
@@ -56,20 +58,22 @@ const interval = u => (3.0 * 20 / (u.s.spd * (1 + buffOf(u, 'spd')) + 10)) * (u.
 const effectOf = (element, target) => (CHART[element] && CHART[element][target]) || 1;
 
 // ----- 攻撃・回復・状態異常 -----
-function damage(b, from, to, power, { magic = false, mult = 1 } = {}) {
+// element: わざの 属性 (なければ 術は 自分の 属性・ふつうの 攻撃は ふつう)
+function damage(b, from, to, power, { magic = false, mult = 1, element = null } = {}) {
     if (to.ko) return 0;
     const A = (magic ? from.s.mag : from.s.atk) * (1 + buffOf(from, 'atk'));
     const D = to.s.def * (1 + buffOf(to, 'def'));
-    const element = magic ? from.element : 'ふつう';
-    const eff = effectOf(element, to.element);
-    const stab = magic ? 1.2 : 1;
+    const el = element || (magic ? from.element : 'ふつう');
+    const eff = effectOf(el, to.element);
+    const stab = el === from.element && el !== 'ふつう' ? 1.2 : 1;
     const crit = !magic && b.rng.chance(0.06);
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1);
+    const guard = to.guarding ? 0.5 : 1;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1);
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff });
+    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding });
     if (to.hp <= 0) {
         to.ko = true;
         to.status = {};
@@ -124,7 +128,7 @@ function applyEffects(b, user, effects, mult = 1) {
         for (const to of targets) {
             if (fx.kind === 'attack') {
                 for (let h = 0; h < (fx.hits || 1); h++) {
-                    const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult });
+                    const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element });
                     if (fx.drain) heal(b, user, user, dmg * fx.drain);
                 }
             } else if (fx.kind === 'heal') {
@@ -140,7 +144,31 @@ function applyEffects(b, user, effects, mult = 1) {
 }
 
 // ----- 1 回 動く (自動) -----
+// 役割ごとの コマンドの えらびやすさ (さぼりは べつ: LOAF)。治す 役は 味方が ケガを していると わざ (回復) を 多く えらぶ
+export const ACTION_W = {
+    attacker: { attack: 45, waza: 25, jutsu: 20, guard: 5 },
+    defender: { attack: 30, waza: 20, jutsu: 10, guard: 30 },
+    healer: { attack: 30, waza: 10, jutsu: 30, guard: 10 },
+    jammer: { attack: 25, waza: 35, jutsu: 30, guard: 5 },
+    supporter: { attack: 35, waza: 30, jutsu: 20, guard: 10 }
+};
+const BOSS_W = { attack: 55, waza: 25, jutsu: 15, guard: 5 };
+export const LOAF = 0.07;          // さぼる 確率 (こおりくんは さぼらない)
+export const COMMAND_NAMES = { attack: '通常攻撃', waza: 'わざ', loaf: 'さぼり', guard: 'まもり', jutsu: '術' };
+
+export function chooseCommand(b, u) {
+    if (!u.hero && !u.boss && b.rng.chance(LOAF)) return 'loaf';
+    // ボスは 大技 (bigMove) が あるので、ふだんは 通常攻撃が 多い
+    const w = { ...(u.boss ? BOSS_W : ACTION_W[u.role] || ACTION_W.attacker) };
+    const hurt = friends(b, u.side).some(f => f.hp < f.max * 0.6);
+    if (u.role === 'healer') w.waza = hurt ? 200 : 0;
+    // 回復の術は ケガを した 味方が いるときだけ (いれば 多めに)
+    if (u.jutsu && u.jutsu.type === 'heal') w.jutsu = hurt ? w.jutsu + 20 : 0;
+    return b.rng.weighted(Object.entries(w).map(([id, weight]) => ({ id, w: weight }))).id;
+}
+
 function act(b, u) {
+    u.guarding = false;   // まもりは 次に 動くまで
     if (u.status.confuse > 0 && b.rng.chance(0.5)) {
         emit(b, 'confused', { actor: u.uid });
         return;
@@ -152,11 +180,18 @@ function act(b, u) {
         applyEffects(b, u, u.special.effects, 0.8);
         return;
     }
-    const hurt = friends(b, u.side).some(f => f.hp < f.max * 0.6);
-    const useSkill = u.role === 'healer' ? hurt : b.rng.chance(0.3);
-    if (useSkill) {
-        emit(b, 'skill', { actor: u.uid, name: u.skill.name });
-        applyEffects(b, u, u.skill.effects);
+    const cmd = chooseCommand(b, u);
+    if (cmd === 'loaf') {
+        emit(b, 'loaf', { actor: u.uid });
+        return;
+    }
+    if (cmd === 'guard') {
+        u.guarding = true;
+        emit(b, 'guard', { actor: u.uid });
+    } else if (cmd === 'waza' || cmd === 'jutsu') {
+        const move = u[cmd];
+        emit(b, 'skill', { actor: u.uid, name: move.name, cmd });
+        applyEffects(b, u, move.effects);
     } else {
         const to = pickOne(b, u.side);
         if (!to) return;

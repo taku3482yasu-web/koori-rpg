@@ -1,5 +1,5 @@
 // =====================================================================
-// なかま 20 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる)
+// なかま 40 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
 // ---------------------------------------------------------------------
 // 前向きの 絵 (legacy-art.js・new-art.js) と 同じ 形・同じ 色。1 文字 = 1 ドット・'.' は 透明・16 × 16。
 //   描いた もの: 体の うしろが 前と ちがう キャラ (トゲ・羽・しっぽ・甲羅・はちまきの むすび目 など)
@@ -250,5 +250,27 @@ export const BACK_ART = {
         ''
     ]),
     // ハシシタボウズ: 頭巾の うしろ (橋の 板は そのまま)
-    hashishita: faceless('hashishita', { s: 'p', k: 'p', w: 'p' }, { still: true })
+    hashishita: faceless('hashishita', { s: 'p', k: 'p', w: 'p' }, { still: true }),
+
+    // ----- 商店街の 20 体 (段階 2。2026-10-27): 顔を 消して 左右を 反転 -----
+    spamdama: faceless('spamdama', { d: 'a', c: 'a' }),                    // 人魂の うしろ
+    popupn: faceless('popupn', { f: 'a', d: 'a', e: 'a' }),                // 広告の 窓の うら (✕ボタンだけ 残る)
+    netkozou: faceless('netkozou', { d: 'c', a: 'c' }),                    // 頭の うしろ
+    kinmenkoinu: faceless('kinmenkoinu', { c: 'a' }),
+    burakrasher: faceless('burakrasher', { b: 'a', c: 'a', d: 'a' }),      // テレビの うら
+    hannyamen: faceless('hannyamen', { a: 'b', c: 'b', d: 'b', e: 'b', f: 'b' }),   // お面の うら (木の 色)
+    makibishimushi: faceless('makibishimushi', { d: 'a' }),
+    hoshikuzun: faceless('hoshikuzun', { b: 'a' }),
+    richibou: faceless('richibou', { d: 'a' }),                            // 点棒の うら (点が ない)
+    yopparaigarasu: faceless('yopparaigarasu', { c: 'a', d: 'a' }),
+    chouchinbura: faceless('chouchinbura', { d: 'b', e: 'b' }),            // ちょうちんの うしろ
+    neonkurage: faceless('neonkurage', { b: 'a' }),
+    saikoron: faceless('saikoron', { d: 'a' }),                            // サイコロの うらの 目
+    hakupai: faceless('hakupai', { a: 'd', b: 'd', e: 'd' }),              // 麻雀牌の うらは みどり
+    maikumbo: faceless('maikumbo', { c: 'b' }),
+    pachinkodaman: faceless('pachinkodaman', { c: 'a', b: 'a' }),
+    neontanuki: faceless('neontanuki', { b: 'a', c: 'a', d: 'a' }),        // ネオンの 看板は そのまま
+    gomibakon: faceless('gomibakon', { c: 'b' }),
+    gachapon: faceless('gachapon', { b: 'd' }),
+    yataiman: faceless('yataiman', { d: 'g', e: 'g' })                     // はちまきの うしろ・頭
 };

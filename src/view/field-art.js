@@ -1,7 +1,7 @@
 // =====================================================================
 // 町の 絵: マス・建物・鳥居を 1 枚の 絵に して おく (毎コマ 描かない)
 // ---------------------------------------------------------------------
-// 1 ドット = 1 ピクセルの 絵 (768 × 576) を 作り、上画面に 3 倍で 写す (ぼやけない)
+// 1 ドット = 1 ピクセルの 絵 (768 × 960) を 作り、上画面に 写す (ぼやけない)
 // =====================================================================
 import { TILE, MAP_W, MAP_H, TILES, BUILDINGS, PROPS, tileAt } from '../data/map.js';
 
@@ -152,6 +152,35 @@ function drawLandmarks(c) {
     c.fillStyle = '#bfe0ff'; c.fillRect(cx - 8, cy - 19, 7, 5); c.fillRect(cx + 1, cy - 19, 7, 5);
     c.fillStyle = '#202028'; c.fillRect(cx - 13, cy - 3, 6, 5); c.fillRect(cx + 7, cy - 3, 6, 5);
     c.fillStyle = '#ffe08a'; c.fillRect(cx + 14, cy - 11, 2, 3);
+    // ----- 商店街 (段階 2) -----
+    // 電気屋の 前の 古い テレビ (20, 53)
+    const tx = 20 * TILE + 8, ty = 53 * TILE + 8;
+    c.fillStyle = '#5a4a3a'; c.fillRect(tx - 7, ty - 8, 14, 12);
+    c.fillStyle = '#2a3a3a'; c.fillRect(tx - 5, ty - 6, 9, 8);
+    c.fillStyle = '#8a7a6a'; c.fillRect(tx + 5, ty - 5, 1, 1); c.fillRect(tx + 5, ty - 2, 1, 1);
+    c.fillStyle = '#3a3030'; c.fillRect(tx - 5, ty + 4, 2, 3); c.fillRect(tx + 3, ty + 4, 2, 3);
+    // 八百屋の 横の ガチャの 機械 (27, 45)
+    const gx = 27 * TILE + 8, gy = 45 * TILE + 8;
+    c.fillStyle = '#e83a3a'; c.fillRect(gx - 5, gy - 2, 10, 9);
+    c.fillStyle = '#d8eef8'; c.fillRect(gx - 5, gy - 11, 10, 9);
+    c.fillStyle = '#ffd84a'; c.fillRect(gx - 3, gy - 8, 3, 3);
+    c.fillStyle = '#5ad06a'; c.fillRect(gx + 1, gy - 6, 3, 3);
+    c.fillStyle = '#ffffff'; c.fillRect(gx - 1, gy + 1, 3, 3);
+    // 雀荘の 看板 (7, 53): 牌の 形
+    const jx2 = 7 * TILE + 8, jy2 = 53 * TILE + 8;
+    c.fillStyle = '#4a3a2a'; c.fillRect(jx2 - 1, jy2 - 2, 2, 9);
+    c.fillStyle = '#f8f4e8'; c.fillRect(jx2 - 5, jy2 - 11, 10, 11);
+    c.fillStyle = '#2a8a4a'; c.fillRect(jx2 - 5, jy2 - 11, 10, 2);
+    // 銭湯の 裏の ネオン看板 (46, 49)
+    const nx = 46 * TILE + 8, ny = 49 * TILE + 8;
+    c.fillStyle = '#2a2a3a'; c.fillRect(nx - 6, ny - 10, 12, 14);
+    c.fillStyle = '#ff5ae0'; c.fillRect(nx - 4, ny - 8, 8, 2); c.fillRect(nx - 4, ny - 3, 8, 2);
+    c.fillStyle = '#5ae0ff'; c.fillRect(nx - 4, ny - 6, 2, 3);
+    // 広場の 屋台の のれん (18, 56)
+    const yx = 18 * TILE, yy = 56 * TILE;
+    c.fillStyle = '#8a5a2a'; c.fillRect(yx, yy + 2, 30, 12);
+    c.fillStyle = '#d83a3a'; c.fillRect(yx - 2, yy - 4, 34, 6);
+    c.fillStyle = '#f8f0e0'; for (let i = 0; i < 4; i++) c.fillRect(yx + 2 + i * 8, yy + 2, 6, 5);
 }
 
 export function buildMiniMap(scale = 3) {

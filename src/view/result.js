@@ -2,7 +2,7 @@
 // バトルの あと: もらった けいけんち・お金・レベルアップ、仲間に なる 演出 (設計書 4.2)
 // =====================================================================
 import { ART } from '../art/index.js';
-import { NAKAMA } from '../data/nakama.js';
+import { NAKAMA, unitOf } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, wrap } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
@@ -39,8 +39,8 @@ export function createResult(app, result) {
             text(ctx, `けいけんち ${result.exp}　お金 ${result.money}円`, 200, 78, { size: 14, align: 'center' });
             result.levelUps.slice(0, 6).forEach((u, i) => {
                 const x = 60 + (i % 3) * 140, y = 150 + Math.floor(i / 3) * 70;
-                drawArt(ctx, ART[NAKAMA[u.id].art], Math.floor(t * 3), x, y, { scale: 2.5 });
-                text(ctx, `${NAKAMA[u.id].name}`, x, y + 14, { size: 10.5, align: 'center' });
+                drawArt(ctx, ART[unitOf(u.id).art], Math.floor(t * 3), x, y, { scale: 2.5 });
+                text(ctx, `${unitOf(u.id).name}`, x, y + 14, { size: 10.5, align: 'center' });
                 text(ctx, `Lv${u.lv} に アップ！`, x, y + 28, { size: 11, align: 'center', bold: true, color: COLORS.accent });
             });
             if (!result.levelUps.length) text(ctx, 'なかまが 少し 強くなった。', 200, 150, { size: 13, align: 'center', color: COLORS.sub });

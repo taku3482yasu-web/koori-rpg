@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { TILE, BLOCK, BUILDINGS, PROPS, PEOPLE, tileAt } from '../data/map.js';
+import { TILE, BLOCK, BUILDINGS, PROPS, PEOPLE, GATES, tileAt } from '../data/map.js';
 
 const HALF_W = 5, BOX_H = 6;
 
@@ -14,9 +14,14 @@ export function peopleHere(g) {
         (p.only === 'beforeClear' && g.story !== 'clear'));
 }
 
+// 工事中の さく (1 章 クリアまで 商店街へ 行けない)
+export const gatesHere = g => GATES.filter(q => q.only !== 'beforeClear' || g.story !== 'clear');
+const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
+
 // そのマスに 入れないか
 export function blockedTile(g, tx, ty) {
     if (BLOCK.has(tileAt(tx, ty))) return true;
+    if (gatesHere(g).some(q => inGate(q, tx, ty))) return true;
     if (BUILDINGS.some(b => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some(p => p.x === tx && p.y === ty)) return true;
     return peopleHere(g).some(p => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
@@ -29,11 +34,23 @@ function boxFree(g, x, y) {
     return true;
 }
 
+// 町の キャラ (solids: { x, y } の 足元) とも ぶつかる (2026-10-28 ユーザー指定: すけないように)。
+//   重なって いるときは、はなれる 向きには 動ける (キャラが 足元に 出てきても 動けなくならないように)
+const CHAR_W = 11, CHAR_H = 7;
+function charFree(solids, x0, y0, x, y) {
+    for (const s of solids) {
+        const ox = Math.abs(x - s.x), oy = Math.abs(y - s.y);
+        if (ox >= CHAR_W || oy >= CHAR_H) continue;
+        if (Math.hypot(x - s.x, y - s.y) < Math.hypot(x0 - s.x, y0 - s.y)) return false;
+    }
+    return true;
+}
+
 // 横と 縦を べつべつに 動かす (かべに そって すべれる)
-export function moveHero(g, dx, dy) {
+export function moveHero(g, dx, dy, solids = []) {
     const p = g.pos;
-    if (dx && boxFree(g, p.x + dx, p.y)) p.x += dx;
-    if (dy && boxFree(g, p.x, p.y + dy)) p.y += dy;
+    if (dx && boxFree(g, p.x + dx, p.y) && charFree(solids, p.x, p.y, p.x + dx, p.y)) p.x += dx;
+    if (dy && boxFree(g, p.x, p.y + dy) && charFree(solids, p.x, p.y, p.x, p.y + dy)) p.y += dy;
     if (Math.abs(dx) > Math.abs(dy)) p.dir = dx > 0 ? 'right' : 'left';
     else if (dy) p.dir = dy > 0 ? 'down' : 'up';
 }
@@ -53,6 +70,8 @@ export function lookAt(g) {
     if (person) return { type: 'person', person };
     const door = BUILDINGS.find(b => b.door.x === f.x && b.door.y === f.y);
     if (door) return { type: 'door', building: door };
+    const gate = gatesHere(g).find(q => inGate(q, f.x, f.y));
+    if (gate) return { type: 'gate', gate };
     return null;
 }
 

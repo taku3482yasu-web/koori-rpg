@@ -7,7 +7,7 @@
 //   bridge   石の川橋の ヌシを たおす (たおすと ハシシタボウズが なかまに なり、東へ 渡れる)
 //   clear    1 章 クリア。石の川タウンの 20 体を あつめる
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 
@@ -39,14 +39,18 @@ export function newGame(version, seed = 1) {
         nextUid: 1,
         seed,
         playTime: 0,
-        spotCooldown: {}
+        spotCooldown: {},
+        gifts: {}           // 話せる キャラから 道具を もらった 日 (1 日 1 回)
     };
 }
 
 // 古い セーブを 今の 形に 直す (足りない 項目を 足す)
 export function migrate(save) {
     const base = newGame(save.version);
-    return { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {} };
+    const g = { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {} };
+    // こおりくんの メダルが ない セーブ (2026-10-27 より 前) は、なかまの いちばん 高い Lv で 足す
+    if (g.story !== 'intro' && !heroMedal(g)) addHero(g, Math.max(5, ...g.medals.map(m => m.lv)));
+    return g;
 }
 
 export const hasWatch = g => g.story !== 'intro';
@@ -65,6 +69,17 @@ export function addMedal(g, id, lv) {
     return medal;
 }
 export const medalByUid = (g, uid) => g.medals.find(m => m.uid === uid) || null;
+
+// こおりくんの メダル (2026-10-27 ユーザー指定: バトルに こおりくんも 出られる)。メダル帳の いちばん はじめ・図鑑には のらない
+//   ウォッチに あきが あれば 自動で セット。はずすことも できる
+export const heroMedal = g => g.medals.find(m => m.id === HERO_ID) || null;
+export function addHero(g, lv = 5) {
+    const medal = { uid: 'hero', id: HERO_ID, lv, exp: expFor(lv) };
+    g.medals.unshift(medal);
+    const free = g.watch.indexOf(null);
+    if (free >= 0) g.watch[free] = medal.uid;
+    return medal;
+}
 export const watchMedals = g => g.watch.map(uid => (uid ? medalByUid(g, uid) : null));
 
 // ----- 時間と 天気 -----
@@ -93,7 +108,7 @@ export function spotActive(g, spot, now) {
 // 話しかけた キャラ (first: { id, lv }) と 戦う。ときどき 同じ 場所の キャラが もう 1 体 出る
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
-    const [lo, hi] = g.story === 'clear' ? [4, 9] : [2, 5];
+    const [lo, hi] = source.lv || (g.story === 'clear' ? [4, 9] : [2, 5]);
     const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     if (kinds.length && rng.chance(0.2)) {
@@ -169,6 +184,7 @@ export function updateStory(g) {
 export function receiveWatch(g) {
     if (g.story !== 'intro') return null;
     const medal = addMedal(g, 'daichouenkin', 5);
+    addHero(g, 5);
     g.story = 'friends';
     g.friendsAtWatch = g.medals.length;
     return medal;
@@ -180,8 +196,20 @@ export function objective(g) {
         case 'intro': return '石の川神社に 行ってみよう';
         case 'friends': return `レンズで さがして、なかまを ふやそう (${Math.min(FRIENDS_GOAL, g.medals.length - g.friendsAtWatch)}/${FRIENDS_GOAL})`;
         case 'bridge': return '石の川橋の ヌシを なんとかしよう';
-        default: return `石の川タウンの なかまを あつめよう (${friendCount(g)}/${NAKAMA_IDS.length})`;
+        default: {
+            // 1 章 クリアの あと: 南の 商店街が 開く (段階 2)
+            const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
+            return `なかまを あつめよう　石の川 ${got('ishinokawa')}/${idsInArea('ishinokawa').length}・商店街 ${got('shoutengai')}/${idsInArea('shoutengai').length}`;
+        }
     }
 }
 
 export const spotById = id => SPOTS.find(s => s.id === id);
+
+// 話せる キャラ (map.js の FRIENDS) から 道具を もらう。今日 もう もらっていたら null
+export function takeGift(g, friend) {
+    if (!friend.gift || g.gifts[friend.id] === g.day) return null;
+    g.gifts[friend.id] = g.day;
+    g.items[friend.gift.item] = (g.items[friend.gift.item] || 0) + friend.gift.n;
+    return friend.gift;
+}

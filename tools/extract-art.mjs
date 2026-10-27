@@ -41,7 +41,10 @@ function fromBig(art) {
 }
 
 const SPRITE_KEYS = ['koori', 'tomoishi', 'furukawa', 'onioni', 'haribaby', 'mumenbachi', 'donguriko', 'nemuridake', 'pekorisu', 'tsutankobu', 'yofukashi'];
-const BIG_KEYS = ['kogame', 'tsuribariuo', 'mokugyoro', 'rousokubi', 'daichouenkin', 'kunaisuzume', 'kawarimidanuki', 'shinobigaeru'];
+const BIG_KEYS = ['kogame', 'tsuribariuo', 'mokugyoro', 'rousokubi', 'daichouenkin', 'kunaisuzume', 'kawarimidanuki', 'shinobigaeru',
+    // 商店街の 20 体 (段階 2。2026-10-27)
+    'spamdama', 'popupn', 'netkozou', 'kinmenkoinu', 'burakrasher', 'hannyamen', 'makibishimushi', 'hoshikuzun', 'richibou', 'yopparaigarasu',
+    'chouchinbura', 'neonkurage', 'saikoron', 'hakupai', 'maikumbo', 'pachinkodaman', 'neontanuki', 'gomibakon', 'gachapon', 'yataiman'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

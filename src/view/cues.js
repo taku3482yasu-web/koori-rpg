@@ -73,6 +73,32 @@ const CUES = {
         ctx.arc(x, fy, 9, 0, Math.PI * 2);
         ctx.fill();
     },
+    // 電気屋の 前の 古い テレビが ときどき ザザッと 光る (ブラクラッシャー)
+    tvStatic(ctx, x, y, t) {
+        if ((t % 2.4) > 0.5) return;
+        for (let i = 0; i < 10; i++) r(ctx, x - 5 + ((i * 7 + Math.floor(t * 30)) % 9), y - 6 + ((i * 5) % 8), 2, 1, i % 2 ? '#e0e8f0' : '#8a9aa8');
+    },
+    // 屋根の 上に お面が のぞいていて、目が 光る (ハンニャメン)
+    maskEyes(ctx, x, y, t) {
+        const up = Math.sin(t * 2) * 1.5;
+        r(ctx, x - 5, y - 2 + up, 10, 8, '#f0e8d8');
+        r(ctx, x - 6, y - 4 + up, 2, 3, '#f0e8d8'); r(ctx, x + 4, y - 4 + up, 2, 3, '#f0e8d8');
+        if (!blink(t)) { r(ctx, x - 3, y + up, 2, 2, '#ff3a3a'); r(ctx, x + 1, y + up, 2, 2, '#ff3a3a'); }
+        r(ctx, x - 2, y + 4 + up, 4, 1, '#3a1a1a');
+    },
+    // 雀荘の 看板の 牌が ひとりでに くるっと 裏返る (ハクパイ)
+    tileFlip(ctx, x, y, t) {
+        const k = Math.abs(Math.cos(t * 1.5));
+        r(ctx, x - 5 * k, y - 11, 10 * k, 11, k > 0.5 ? '#f8f4e8' : '#2a8a4a');
+    },
+    // ガチャの 機械が ガタガタ ゆれる (ガチャポン)
+    gachaShake(ctx, x, y, t) {
+        if ((t % 3) > 0.6) return;
+        const dx = Math.sin(t * 50) * 1.5;
+        r(ctx, x - 6 + dx, y - 12, 12, 1, 'rgba(255,255,255,0.8)');
+        r(ctx, x - 7 + dx, y - 10, 1, 8, 'rgba(255,255,255,0.6)');
+        r(ctx, x + 6 + dx, y - 10, 1, 8, 'rgba(255,255,255,0.6)');
+    },
     // 橋の 下の かげから 目が のぞく
     glowEyes(ctx, x, y, t) {
         r(ctx, x - 8, y - 4, 16, 8, 'rgba(20, 16, 40, 0.55)');

@@ -22,6 +22,39 @@ test('最初の なかま 1 体 (Lv5) で、1 章の 野生 (Lv2〜5) に だい
     assert.ok(wins >= 150 && wins < 200, `勝った回数 ${wins}/200`);
 });
 
+test('なかまは 5 つの コマンド (通常攻撃・わざ・さぼり・まもり・術) を 使い、まもると ダメージが 半分', () => {
+    const seen = new Set();
+    for (let seed = 1; seed <= 20; seed++) {
+        const b = createBattle({ allies: [{ id: 'haribaby', lv: 9 }, { id: 'kogame', lv: 9 }, { id: 'kozarappa', lv: 9 }], enemies: [{ id: 'saikoron', lv: 9 }, { id: 'hakupai', lv: 9 }], rng: createRng(seed) });
+        run(b, 60);
+        for (const e of b.events) {
+            if (e.type === 'attack') seen.add('attack');
+            if (e.type === 'skill') seen.add(e.cmd);
+            if (e.type === 'loaf' || e.type === 'guard') seen.add(e.type);
+        }
+    }
+    assert.deepEqual([...seen].sort(), ['attack', 'guard', 'jutsu', 'loaf', 'waza']);
+    // まもり: 同じ 乱数で、まもって いると ダメージが 半分ほど
+    const hit = guarding => {
+        const b = createBattle({ allies: [{ id: 'kogame', lv: 9 }], enemies: [{ id: 'saikoron', lv: 9 }], rng: createRng(7) });
+        b.wheel[0].guarding = guarding;
+        b.enemies[0].timer = 99;
+        step(b, 0.01);
+        return b.events.find(e => e.type === 'damage')?.amount || 0;
+    };
+    let full = 0, half = 0;
+    for (let i = 0; i < 1; i++) { full = hit(false); half = hit(true); }
+    if (full && half) assert.ok(half <= Math.ceil(full * 0.6), `まもり ${half} / ふつう ${full}`);
+});
+
+test('こおりくんも バトルに 出られる (さぼらない)', () => {
+    const b = createBattle({ allies: [{ id: 'koori', lv: 5 }], enemies: [{ id: 'haribaby', lv: 3 }], rng: createRng(2) });
+    assert.equal(b.wheel[0].name, 'こおりくん');
+    run(b, 120);
+    assert.equal(b.outcome, 'win');
+    assert.ok(!b.events.some(e => e.type === 'loaf' && e.actor === b.wheel[0].uid));
+});
+
 test('3 体 そろうと 野生 1 体には 30 秒 以内に 勝つことが 多い', () => {
     let fast = 0;
     for (let seed = 1; seed <= 100; seed++) {

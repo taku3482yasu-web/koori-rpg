@@ -121,7 +121,7 @@ try {
     check(await evaluate('window.__app.talk.isActive()'), '神社に 入ると ふるカワと 会話');
     await shot('shrine-talk');
     await skipTalk();
-    check(await evaluate('window.__app.g.story === "friends" && window.__app.g.medals.length === 1'), 'ウォッチと ダイチョウエンキンの メダルを もらう');
+    check(await evaluate('window.__app.g.story === "friends" && window.__app.g.medals.length === 2 && window.__app.g.watch[1] === "hero"'), 'ウォッチと ダイチョウエンキンの メダルを もらう (こおりくんも ウォッチに 入る)');
 
     // ----- ふるカワが なめらかに ついてくる (1 コマで 大きく 飛ばない・離れすぎない) -----
     await send('Input.dispatchKeyEvent', { type: 'keyDown', code: 'KeyD', key: 'KeyD', windowsVirtualKeyCode: 68 });
@@ -141,6 +141,17 @@ try {
     // ----- 見えている キャラが 町を 歩いている -----
     await sleep(1500);
     check(await evaluate('window.__app.field.debug.wild.list.length >= 3'), '見えている キャラが 町に いる');
+    // 話せる キャラ (印なし。2026-10-28): 話しかけると 会話と 道具。ぶつかると すけない
+    await evaluate('(() => { const g = window.__app.g, c = window.__app.field.debug.wild.list.find(x => x.friend === "f_pekorisu"); g.pos.x = c.x - 14; g.pos.y = c.y; g.pos.dir = "right"; c.pause = 99; c.target = null; return true; })()');
+    const pan = await evaluate('window.__app.g.items.melonpan || 0');
+    await key('KeyJ');
+    await sleep(200);
+    check(await evaluate('window.__app.talk.isActive()'), '印の ない キャラに 話しかけると 会話');
+    await skipTalk();
+    check(await evaluate(`(window.__app.g.items.melonpan || 0) === ${pan} + 1 && window.__app.scene.name === "field"`), '話せる キャラから 道具を もらう (バトルに ならない)');
+    const cx = await evaluate('window.__app.field.debug.wild.list.find(x => x.friend === "f_pekorisu").x');
+    await key('KeyD', 500);
+    check(await evaluate(`window.__app.g.pos.x <= ${cx} - 9`), 'キャラに ぶつかると 止まる (すけない)');
 
     // ----- レンズで さがす (川原の石ころの 上に こおりくんを 立たせて、レンズを まんなかの まま 待つ) -----
     await evaluate('(() => { const g = window.__app.g; g.pos.x = 28 * 16 + 8; g.pos.y = 11 * 16 + 14; return true; })()');
@@ -220,6 +231,29 @@ try {
     await key('Enter');
     await sleep(300);
     check(await evaluate('window.__app.g && window.__app.g.story === "friends" && window.__app.g.medals.length >= 1'), 'つづきから で 前の 続き');
+
+    // ----- 商店街 (段階 2。2026-10-27): 1 章 クリアの あと 南へ 行ける -----
+    await skipTalk();
+    check(await evaluate('(() => { const g = window.__app.g; g.pos.x = 12 * 16 + 8; g.pos.y = 34 * 16 + 12; return true; })()') && true, '商店街の 入り口へ');
+    await key('KeyS', 600);
+    check(await evaluate('window.__app.g.pos.y < 35 * 16'), '1 章 クリア前は 工事中で 商店街へ 行けない');
+    await evaluate('(() => { const g = window.__app.g; g.story = "clear"; g.time = 3; return true; })()');
+    await key('KeyS', 900);
+    check(await evaluate('window.__app.g.pos.y > 35 * 16'), '1 章 クリアの あとは 商店街へ 行ける');
+    await evaluate('(() => { const g = window.__app.g; g.pos.x = 20 * 16 + 8; g.pos.y = 50 * 16 + 12; window.__app.field.debug.wild.update(0.1, g.pos); return true; })()');
+    await sleep(600);
+    await shot('shoutengai');
+    check(await evaluate('window.__app.field.debug.wild.list.some(c => window.__app.g.pos && c.y > 36 * 16)'), '商店街に キャラが いる');
+    // バトル: 5 つの コマンド (わざ・術の 名前が 出る) と こおりくん
+    await evaluate('(() => { window.__app.startBattle({ enemies: [{ id: "yataiman", lv: 8 }, { id: "saikoron", lv: 7 }], kind: "wild", place: "arcadeW" }); return true; })()');
+    await sleep(4000);
+    await shot('shoutengai-battle');
+    check(await evaluate('(() => { const b = window.__app.scene.battle; return b.wheel.some(u => u && u.hero); })()'), 'こおりくんも バトルに 出る');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
+    await sleep(1500);
+    await skipTalk();
+    for (let i = 0; i < 6 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
+    await skipTalk();
 
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });

@@ -5,7 +5,7 @@
 // ウォッチ: 6 つの 場所から 1 つ えらび (A)、メダル帳から 入れる メダルを えらぶ (A)。Y で はずす
 // =====================================================================
 import { ART } from '../art/index.js';
-import { NAKAMA, NAKAMA_IDS, ROLES } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit, bar, roundRect } from '../core/draw.js';
@@ -104,11 +104,11 @@ export function createMenu(app) {
 
     // ----- 上画面: えらんでいる なかまの 絵と 説明 -----
     function drawNakama(ctx, id, medal, { known = true } = {}) {
-        const n = NAKAMA[id];
+        const n = unitOf(id);
         panel(ctx, 10, 10, 150, 220, { fill: 'rgba(255,255,255,0.06)' });
         if (known) drawArt(ctx, ART[n.art], Math.floor(t * 2), 85, 130, { scale: 6 });
         else drawArt(ctx, ART[n.art], 0, 85, 130, { scale: 6, tint: '#0a0f20' });
-        text(ctx, `No.${String(n.no).padStart(3, '0')}`, 20, 30, { size: 11, color: COLORS.sub });
+        text(ctx, n.hero ? 'しゅじんこう' : `No.${String(n.no).padStart(3, '0')}`, 20, 30, { size: 11, color: COLORS.sub });
         text(ctx, known ? n.name : '？？？', 170, 30, { size: 17, bold: true });
         if (!known) {
             text(ctx, 'まだ 会っていない', 170, 56, { size: 12, color: COLORS.sub });
@@ -117,8 +117,10 @@ export function createMenu(app) {
         text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
         text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
         wrap(ctx, n.desc, 215, 11.5).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * 15, { size: 11.5 }));
-        text(ctx, `必殺技: ${n.special.name}`, 170, 160, { size: 11.5 });
-        text(ctx, `好物: ${ITEMS[n.favorite].name}`, 170, 176, { size: 11.5 });
+        // バトルで 使う わざ・術・必殺技 (2026-10-27)
+        text(ctx, `わざ: ${n.waza.name}　術: ${n.jutsu.name} (${JUTSU_RANK_NAMES[n.jutsu.tier]})`, 170, 150, { size: 11, maxWidth: 220 });
+        text(ctx, `必殺技: ${n.special.name}`, 170, 166, { size: 11, maxWidth: 220 });
+        if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}`, 170, 182, { size: 11 });
         if (medal) {
             const s = statsAt(id, medal.lv);
             text(ctx, `Lv${medal.lv}  HP${s.hp} こうげき${s.atk} ぼうぎょ${s.def}`, 170, 196, { size: 11 });
@@ -175,8 +177,8 @@ export function createMenu(app) {
             const m = g.watch[i] ? medalByUid(g, g.watch[i]) : null;
             panel(ctx, b.x, b.y, b.w, b.h, { fill: i === slot ? '#2d5aa8' : 'rgba(26,36,64,0.95)', edge: i === slot ? COLORS.accent : i < 3 ? '#ffd84a66' : COLORS.panelEdge });
             if (!m) { text(ctx, 'あき', b.x + b.w / 2, b.y + 25, { size: 11, align: 'center', color: COLORS.dim }); return; }
-            drawArt(ctx, ART[NAKAMA[m.id].art], 0, b.x + 18, b.y + 34, { scale: 1.6 });
-            text(ctx, NAKAMA[m.id].name.slice(0, 6), b.x + 36, b.y + 17, { size: 10, bold: true });
+            drawArt(ctx, ART[unitOf(m.id).art], 0, b.x + 18, b.y + 34, { scale: 1.6 });
+            text(ctx, unitOf(m.id).name.slice(0, 6), b.x + 36, b.y + 17, { size: 10, bold: true });
             text(ctx, `Lv${m.lv}`, b.x + 36, b.y + 32, { size: 10, color: COLORS.sub });
         });
         if (!picking) {
@@ -191,7 +193,7 @@ export function createMenu(app) {
             const m = list[top + k], y = LIST_TOP + k * ROW_H;
             if (top + k === listIndex) { roundRect(ctx, 8, y, 304, ROW_H - 2, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
             const inWatch = g.watch.indexOf(m.uid);
-            text(ctx, `${NAKAMA[m.id].name}`, 16, y + 14, { size: 12 });
+            text(ctx, `${unitOf(m.id).name}`, 16, y + 14, { size: 12 });
             text(ctx, `Lv${m.lv}${inWatch >= 0 ? `  [${inWatch + 1}]` : ''}`, 304, y + 14, { size: 11, align: 'right', color: COLORS.sub });
         }
     }

@@ -1,28 +1,56 @@
-// データの テスト: なかま 20 体・絵・道具・地図
+// データの テスト: なかま (石の川 20 体・商店街 20 体)・わざと 術・絵・道具・地図
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { NAKAMA, NAKAMA_IDS, BOSSES, ROLES, ELEMENTS } from '../src/data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, ROLES, ELEMENTS, HERO, JUTSU, HEAL_JUTSU, DRAIN_JUTSU, JUTSU_TYPE, idsInArea } from '../src/data/nakama.js';
 import { ITEMS } from '../src/data/items.js';
 import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
 import { BACK_ART } from '../src/art/back-art.js';
-import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS } from '../src/data/map.js';
+import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
 
+const TOWN = idsInArea('ishinokawa'), SHOP = idsInArea('shoutengai');
+
 test('1 章の なかまは 20 体 (ダンジョンから 15 体・新キャラ 5 体)・全員 E ランク', () => {
-    assert.equal(NAKAMA_IDS.length, 20);
-    assert.equal(NAKAMA_IDS.filter(id => NAKAMA[id].from === '新').length, 5);
+    assert.equal(TOWN.length, 20);
+    assert.equal(TOWN.filter(id => NAKAMA[id].from === '新').length, 5);
+    for (const id of TOWN) assert.equal(NAKAMA[id].rank, 'E', id);
     for (const id of NAKAMA_IDS) {
         const n = NAKAMA[id];
-        assert.equal(n.rank, 'E', id);
         assert.ok(ROLES[n.role], `${id} の 役割`);
         assert.ok(ELEMENTS.includes(n.element), `${id} の 属性`);
         assert.ok(ITEMS[n.favorite], `${id} の 好物`);
         assert.ok(n.special && n.special.effects.length, `${id} の 必殺技`);
         assert.ok(n.desc && n.title && n.line, `${id} の 説明`);
     }
-    assert.deepEqual(NAKAMA_IDS.map(id => NAKAMA[id].no), Array.from({ length: 20 }, (_, i) => i + 1));
+    assert.deepEqual(NAKAMA_IDS.map(id => NAKAMA[id].no), Array.from({ length: NAKAMA_IDS.length }, (_, i) => i + 1));
+});
+
+test('商店街の なかまは 20 体 (ダンジョンから)・ランクは E 8・D 10・C 2 (設計書 4.5)', () => {
+    assert.equal(SHOP.length, 20);
+    const count = r => SHOP.filter(id => NAKAMA[id].rank === r).length;
+    assert.deepEqual([count('E'), count('D'), count('C')], [8, 10, 2]);
+    // ランクが 高いほど 能力の 合計も 高い (同じ 役割で くらべる)
+    const sum = id => Object.values(NAKAMA[id].base).reduce((a, b) => a + b, 0);
+    assert.ok(sum('pachinkodaman') > sum('haribaby') && sum('yataiman') > sum('pachinkodaman'));
+});
+
+test('バトルの コマンド: 全員に わざ (キャラごと) と 術 (属性ごと。強いほど 名前が 変わる) が ある', () => {
+    for (const id of [...NAKAMA_IDS, ...Object.keys(BOSSES)]) {
+        const n = NAKAMA[id] || BOSSES[id];
+        assert.ok(n.waza && n.waza.name && n.waza.effects.length, `${id} の わざ`);
+        const names = JUTSU_TYPE[id] === 'heal' ? HEAL_JUTSU : JUTSU_TYPE[id] === 'drain' ? DRAIN_JUTSU : JUTSU[n.element];
+        assert.ok(names.includes(n.jutsu.name), `${id} の 術 ${n.jutsu.name}`);
+    }
+    // わざは キャラごとに ちがう
+    assert.equal(new Set(NAKAMA_IDS.map(id => NAKAMA[id].waza.name)).size, NAKAMA_IDS.length);
+    // 術の だんは ランクで 決まる: E・D は 下級・C は 中級 (みずなら 水流の術・ほのおの 中級は 業火の術)
+    assert.equal(NAKAMA.kogame.jutsu.name, '水流の術');
+    for (const id of NAKAMA_IDS) assert.equal(NAKAMA[id].jutsu.tier, ['E', 'D'].includes(NAKAMA[id].rank) ? 0 : 1, id);
+    assert.equal(NAKAMA.yataiman.jutsu.name, '業火の術');
+    assert.equal(NAKAMA.gachapon.jutsu.name, '大回復の術');
+    assert.ok(HERO.waza && HERO.jutsu && HERO.special);
 });
 
 test('なかま・ボス・人の 絵が そろっていて、行の 長さが 正しい', () => {
@@ -40,6 +68,13 @@ test('なかま・ボス・人の 絵が そろっていて、行の 長さが �
     }
 });
 
+test('地図: 商店街は 石の川タウンの 南。さかいめは 木の 列で、道 (工事中の さく) と 川だけ', () => {
+    const row = TILES[TOWN_H - 1];
+    const open = [...row].map((c, x) => (['T', 'W'].includes(c) ? null : x)).filter(x => x !== null);
+    assert.deepEqual(open, GATES.flatMap(q => Array.from({ length: q.w }, (_, i) => q.x + i)));
+    for (const id of SHOP) assert.ok([...SPOTS, ...ROAMS].some(s => (s.y ?? s.y0) >= TOWN_H && s.kinds.some(k => k.id === id)), `${id} は 商店街に 出る`);
+});
+
 test('地図: 大きさ・レンズの 場所は 通れる マス・建物の 入り口は 建物の 下の 列', () => {
     assert.equal(TILES.length, MAP_H);
     TILES.forEach(row => assert.equal(row.length, MAP_W));
@@ -50,7 +85,7 @@ test('地図: 大きさ・レンズの 場所は 通れる マス・建物の �
     for (const b of BUILDINGS) assert.equal(b.door.y, b.y + b.h - 1, `${b.id} の 入り口`);
 });
 
-test('20 体 全員が どこかに 出る。見えている キャラが 大多数・かくれている キャラは 少し', () => {
+test('全員が どこかに 出る。見えている キャラが 大多数・かくれている キャラは 少し', () => {
     const hidden = new Set(SPOTS.flatMap(s => s.kinds.map(k => k.id)));
     const roam = new Set(ROAMS.flatMap(s => s.kinds.map(k => k.id)));
     for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id), `${id} の 出る場所`);
@@ -67,9 +102,10 @@ test('歩きまわる 場所には 通れる マスが ある', () => {
     }
 });
 
-test('20 体 全員に うしろ姿の 絵が あり、前向きと 同じ 大きさ・色の 文字が 正しい', () => {
+test('全員に うしろ姿の 絵が あり、前向きと 同じ 大きさ・色の 文字が 正しい', () => {
     for (const id of NAKAMA_IDS) {
-        const back = BACK_ART[NAKAMA[id].art], front = ART[NAKAMA[id].art];
+        const front = ART[NAKAMA[id].art];
+        const back = BACK_ART[NAKAMA[id].art];
         assert.ok(back, `${id} の うしろ姿`);
         assert.equal(back.w, front.w, `${id} の 幅`);
         assert.equal(back.frames.length, 2);
@@ -84,9 +120,9 @@ test('20 体 全員に うしろ姿の 絵が あり、前向きと 同じ 大�
     }
 });
 
-test('20 体 全員に 必殺技の 動きが あり、コマンドは 4 種類 (毎回 ランダム)', async () => {
+test('全員 (こおりくんも) に 必殺技の 動きが あり、コマンドは 4 種類 (毎回 ランダム)', async () => {
     const { SPECIALS, MOTION_TIME, COMMANDS, COMMAND_NAMES } = await import('../src/view/special-fx.js');
-    for (const id of NAKAMA_IDS) {
+    for (const id of [...NAKAMA_IDS, 'koori']) {
         assert.ok(SPECIALS[id], `${id} の 必殺技`);
         assert.ok(MOTION_TIME[SPECIALS[id].motion], `${id} の 動き`);
     }
@@ -113,4 +149,26 @@ test('必殺技の コマンド: 目押しは こおりが そろうと 大成�
     for (let i = 0; i < 4; i++) for (const d of ['up', 'right', 'down', 'left']) s.update(0.01, { ...idle, pressed: { [d]: true } });
     s.update(3, idle);
     assert.equal(s.done.mult, 1.5);
+});
+
+test('回復の術・吸収の術: 合いそうな キャラに ついている', () => {
+    for (const [id, type] of Object.entries(JUTSU_TYPE)) {
+        assert.ok(NAKAMA[id], id);
+        const fx = NAKAMA[id].jutsu.effects[0];
+        if (type === 'heal') assert.equal(fx.kind, 'heal', id);
+        else assert.ok(fx.kind === 'attack' && fx.drain > 0, id);
+    }
+    assert.ok(Object.values(JUTSU_TYPE).filter(t => t === 'heal').length >= 4);
+    assert.ok(Object.values(JUTSU_TYPE).filter(t => t === 'drain').length >= 4);
+});
+
+test('話せる キャラ: 歩く はんいに 通れる マスが あり、くれる 道具が ある', () => {
+    for (const f of FRIENDS) {
+        assert.ok(NAKAMA[f.kind], f.id);
+        assert.ok(f.lines.length, f.id);
+        if (f.gift) assert.ok(ITEMS[f.gift.item], f.id);
+        let free = 0;
+        for (let y = f.y0; y <= f.y1; y++) for (let x = f.x0; x <= f.x1; x++) if (!['T', 'W'].includes(TILES[y][x])) free++;
+        assert.ok(free >= 4, `${f.id}: ${free}`);
+    }
 });

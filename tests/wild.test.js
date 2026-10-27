@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
 import { newGame, receiveWatch } from '../src/logic/game.js';
 import { createWild } from '../src/logic/wild.js';
-import { ROAMS, SPOTS, TILE } from '../src/data/map.js';
+import { ROAMS, SPOTS, TILE, FRIENDS } from '../src/data/map.js';
 
 const setup = () => {
     const g = newGame('naitei');
@@ -26,7 +26,7 @@ test('見えている キャラが 町に 出て、自分の 場所の 中を �
     run(g, wild, 20);
     let moved = 0;
     for (const c of wild.list) {
-        const r = ROAMS.find(z => z.id === c.roam);
+        const r = ROAMS.find(z => z.id === c.roam) || FRIENDS.find(z => z.id === c.roam);   // 話せる キャラも 自分の 場所の 中
         const tx = Math.floor(c.x / TILE), ty = Math.floor((c.y - 3) / TILE);
         assert.ok(tx >= r.x0 - 1 && tx <= r.x1 + 1 && ty >= r.y0 - 1 && ty <= r.y1 + 1, `${c.id} は ${r.id} の 中`);
         const s = start.get(c.key);

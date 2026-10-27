@@ -37,7 +37,30 @@ export const SPECIALS = {
     mizukirin: { motion: 'skip', color: '#bff0ff', hits: 8 },
     soumennagare: { motion: 'aura', color: '#f8f4e8', glyph: '〜' },
     kozarappa: { motion: 'aura', color: '#4aa8e0', glyph: '●' },
-    hashishita: { motion: 'cloud', color: '#ffe040', glyph: '1 2 3' }
+    hashishita: { motion: 'cloud', color: '#ffe040', glyph: '1 2 3' },
+    // 商店街の 20 体 (段階 2。仮の 必殺技に 合わせた 動き)
+    spamdama: { motion: 'aura', color: '#ff6a8a', glyph: '当' },
+    popupn: { motion: 'cloud', color: '#ffffff', glyph: '×' },
+    netkozou: { motion: 'cloud', color: '#ff4a4a', glyph: '▶' },
+    kinmenkoinu: { motion: 'aura', color: '#ffd84a', glyph: '◆' },
+    burakrasher: { motion: 'cloud', color: '#c8c8d0', glyph: 'ザ' },
+    hannyamen: { motion: 'dash', color: '#ff5a3a' },
+    makibishimushi: { motion: 'rain', color: '#a0a0a8', glyph: '✦' },
+    hoshikuzun: { motion: 'aura', color: '#ffe85a', glyph: '☆' },
+    richibou: { motion: 'line', color: '#ff4a4a' },
+    yopparaigarasu: { motion: 'multi', color: '#3a3a4a', glyph: 'ヒック', hits: 3 },
+    chouchinbura: { motion: 'rain', color: '#ff8a3a', glyph: '◎' },
+    neonkurage: { motion: 'cloud', color: '#ff5ae0', glyph: 'ϟ' },
+    saikoron: { motion: 'multi', color: '#ffffff', glyph: '⚀', hits: 6 },
+    hakupai: { motion: 'aura', color: '#f0f0f0', glyph: '□' },
+    maikumbo: { motion: 'cloud', color: '#d8a8ff', glyph: '♪' },
+    pachinkodaman: { motion: 'rain', color: '#d0d0d8', glyph: '●' },
+    neontanuki: { motion: 'dash', color: '#5ad06a', drain: true },
+    gomibakon: { motion: 'aura', color: '#7ad07a', glyph: '♻' },
+    gachapon: { motion: 'aura', color: '#ff9ad8', glyph: '★' },
+    yataiman: { motion: 'rain', color: '#ff7a2a', glyph: '♨' },
+    // こおりくん: 大腸炎アタック
+    koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };
 export const specialOf = id => SPECIALS[id] || { motion: 'dash', color: '#ffffff' };
 export const COMMANDS = ['mash', 'reel', 'trace', 'spin'];

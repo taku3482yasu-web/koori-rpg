@@ -1,12 +1,12 @@
 // =====================================================================
 // なかまの 能力・レベル・けいけんち (画面に ふれない)
 // =====================================================================
-import { NAKAMA, BOSSES } from '../data/nakama.js';
+import { unitOf } from '../data/nakama.js';
 
 export const MAX_LV = 99;
 export const STAT_KEYS = ['hp', 'atk', 'def', 'spd', 'mag'];
 
-export const speciesOf = id => NAKAMA[id] || BOSSES[id];
+export const speciesOf = unitOf;   // なかま・こおりくん・ボス
 
 // Lv の 能力: Lv1 の 能力から 1 Lv ごとに 7% ずつ 上がる
 export function statsAt(id, lv) {
@@ -29,5 +29,6 @@ export function gainExp(medal, exp) {
 }
 
 // たおした ときに もらえる けいけんち・お金
-export const expReward = (id, lv) => Math.round((10 + lv * 6) * (BOSSES[id] ? 4 : 1));
-export const moneyReward = (id, lv) => Math.round((8 + lv * 4) * (BOSSES[id] ? 5 : 1));
+const bossK = (id, k) => (unitOf(id)?.bigMove ? k : 1);
+export const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
+export const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));

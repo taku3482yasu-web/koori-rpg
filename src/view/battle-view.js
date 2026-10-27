@@ -134,6 +134,14 @@ export function createBattleView(app, battle, place) {
                 if (e.type === 'special' && e.side === 'ally' && mg) kind = 'perf';
                 else startMotion(e.actor, e.type, e.target);
             }
+            // わざ・術の 名前、まもり・さぼりを キャラの 上に 出す (2026-10-27 ユーザー指定の 5 つの コマンド)
+            if (e.type === 'skill' || e.type === 'guard' || e.type === 'loaf') {
+                const p = posOf(e.actor);
+                const label = e.type === 'skill' ? e.name : e.type === 'guard' ? 'まもり' : 'さぼり…';
+                const color = e.type === 'skill' ? (e.cmd === 'jutsu' ? '#c8a8ff' : '#ffe08a') : e.type === 'guard' ? '#8ad0ff' : '#a0a0b0';
+                if (p) pops.push({ x: p.x, y: p.y - 62, text: label, color, small: true, until: t + 1.1 });
+                if (e.type === 'guard') { const c = centerOf(e.actor); if (c) effects.push({ kind: 'heal', x: c.x, y: c.y, start: t, dur: 0.5 }); }
+            }
             if (e.type === 'damage') {
                 const p = posOf(e.target), from = centerOf(actor), to = centerOf(e.target);
                 const delay = actor ? HIT_DELAY[kind] : 0;
@@ -421,7 +429,7 @@ export function createBattleView(app, battle, place) {
             const p = pops[i];
             if (p.until < t) { pops.splice(i, 1); continue; }
             const k = 1 - (p.until - t) / 0.9;
-            text(ctx, p.text, p.x, p.y - k * 14, { size: p.big ? 16 : 13, align: 'center', bold: true, color: p.color });
+            text(ctx, p.text, p.x, p.y - k * 14, { size: p.big ? 16 : p.small ? 10.5 : 13, align: 'center', bold: true, color: p.color });
         }
         if (warn && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
