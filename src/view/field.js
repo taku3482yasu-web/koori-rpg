@@ -11,6 +11,7 @@ import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile, mysteriesSolved, allMysteriesSolved } from '../logic/world.js';
 import { reached } from '../logic/story.js';
+import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
@@ -380,11 +381,21 @@ export function createField(app) {
         if (buddy.moving) buddy.walkT += dt;
     }
 
-    // 話せる キャラ (印なし): 会話と、1 日 1 回 道具 (2026-10-28 ユーザー指定)
+    // 話せる キャラ (印なし): 会話と、1 日 1 回 道具 (2026-10-28 ユーザー指定)。依頼も ここで たのまれる
+    const rewardText = r => [r.money ? `${r.money}円` : '', r.item ? `${ITEMS[r.item].name} ${r.n}こ` : ''].filter(Boolean).join(' と ');
     function talkToFriend(c) {
         const n = NAKAMA[c.id], f = wild.sourceOf(c);
         c.flip = c.x > g.pos.x;
         if (c.target) { c.target = null; c.pause = 3; }
+        const who = text => ({ who: n.name, art: n.art, text });
+        // 依頼が できていたら お礼
+        const q = questOf(g, f.id);
+        if (q && questState(g, q.id) === 'active' && questReady(g, q)) {
+            const r = completeQuest(g, q);
+            sfx('friend');
+            say([who(q.thanks), { who: '', text: `依頼「${q.title}」を はたした！ ${rewardText(r)}を もらった！` }], { done: () => app.save() });
+            return;
+        }
         const lines = f.lines.map(text => ({ who: n.name, art: n.art, text }));
         const gift = takeGift(g, f);
         if (gift) {
@@ -393,6 +404,20 @@ export function createField(app) {
         } else if (f.gift) {
             lines.splice(1);
             lines.push({ who: n.name, art: n.art, text: 'また あした 来てね！' });
+        }
+        if (q && questState(g, q.id) === 'active') {
+            const p = questProgress(g, q);
+            lines.push(who(`「${q.title}」の こと、たのんだよ！ (${p.now}/${p.need})`));
+        } else if (q) {
+            // まだ たのまれていない 依頼: うける / あとで
+            lines.push(who(q.ask), { who: '', text: `依頼「${q.title}」　お礼: ${rewardText(q.reward)}` });
+            say(lines, { choices: ['うける', 'あとで'], done: i => {
+                if (i !== 0) { say([who('そっか。気が むいたら また 来てね。')]); return; }
+                acceptQuest(g, q.id);
+                sfx('ok');
+                say([who('ありがとう！ よろしくね！'), { who: '', text: `依頼「${q.title}」を うけた！ (メニューの「いらい」で 見られる)` }], { done: () => app.save() });
+            } });
+            return;
         }
         say(lines);
     }
@@ -438,6 +463,15 @@ export function createField(app) {
                 drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
                 // 戦える キャラには 赤い「！」(2026-10-28 ユーザー指定)。話せる キャラには なにも つけない
                 if (!c.friendly) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: '#ff3a3a' });
+                // 依頼が ある (たのみたい・できた) 話せる キャラには 小さな ふきだし
+                else if (c !== talkable) {
+                    const q = questOf(g, c.friend);
+                    const mark = q && (!questState(g, q.id) ? '…' : questReady(g, q) ? '♪' : '');
+                    if (mark) {
+                        panel(ctx, x - 7, y - 30 + Math.sin(t * 4) * 1, 14, 11, { fill: 'rgba(255,255,255,0.95)', edge: '#1b3a6b', r: 4, lineWidth: 1 });
+                        text(ctx, mark, x, y - 21.5 + Math.sin(t * 4) * 1, { size: 9, align: 'center', bold: true, color: mark === '♪' ? '#d0408a' : '#1b3a6b', shadow: false });
+                    }
+                }
                 // もう 仲間に した キャラには 金の メダル (2026-10-28 ユーザー指定)
                 if (!c.friendly && g.zukan.friends[c.id]) drawFriendMark(ctx, x + 8, y - 24, 4);
                 // 話しかけられる キャラの 上に ふきだし

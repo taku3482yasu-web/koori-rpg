@@ -46,7 +46,8 @@ export function newGame(version, seed = 1) {
         playTime: 0,
         spotCooldown: {},
         gifts: {},          // 話せる キャラから 道具を もらった 日 (1 日 1 回)
-        mysteries: {}       // たしかめた 七不思議 (2 章)
+        mysteries: {},      // たしかめた 七不思議 (2 章)
+        quests: {}          // 町の 依頼 (logic/quests.js)
     };
 }
 
