@@ -1650,5 +1650,383 @@ export const LEGACY_ART = {
                 '................'
             ]
         ]
+    },
+    fusaiyougaikotsu: {
+        w: 16, h: 16,
+        palette: {"a":"#f0f0e0","b":"#111111","c":"#888888","d":"#2a2a3a","e":"#ffffff","f":"#c03030"},
+        frames: [
+            [
+                '.....aaaaaa.....',
+                '.....aaaaaa.....',
+                '.....abaaba.....',
+                '.....abaaba.....',
+                '.....acccca.....',
+                '....dddeeddd....',
+                '....dddffdddeee.',
+                '....dddffdddeee.',
+                '....dddffdddeee.',
+                '....ddddddddeee.',
+                '....dddddddd....',
+                '....dddddddd....',
+                '.....dd..dd.....',
+                '.....dd..dd.....',
+                '.....dd..dd.....',
+                '................'
+            ],
+            [
+                '.....aaaaaa.....',
+                '.....aaaaaa.....',
+                '.....abaaba.....',
+                '.....abaaba.....',
+                '.....acccca.....',
+                '....dddeedddeee.',
+                '....dddffdddeee.',
+                '....dddffdddeee.',
+                '....dddffdddeee.',
+                '....dddddddd....',
+                '....dddddddd....',
+                '....dddddddd....',
+                '.....dd..dd.....',
+                '.....dd..dd.....',
+                '.....dd..dd.....',
+                '................'
+            ]
+        ]
+    },
+    mirrormuscle: {
+        w: 16, h: 16,
+        palette: {"a":"#c0a040","b":"#bfe8ff","c":"#f0c8a0","d":"#ffffff","e":"#8a7020"},
+        frames: [
+            [
+                '................',
+                '...aaaaaaaaaa...',
+                '...abbbbbbbba...',
+                '...abdbbbbbba...',
+                '...abdbbbbbba...',
+                '...abbccccbba...',
+                '...abccccccba...',
+                '...abccccccba...',
+                '...abbbccbbba...',
+                '...abbbccbbba...',
+                '...abbbccbbba...',
+                '...abbbbbbbba...',
+                '...abbbbbbbba...',
+                '...aaaaaaaaaa...',
+                '......eeee......',
+                '......eeee......'
+            ],
+            [
+                '................',
+                '...aaaaaaaaaa...',
+                '...abbbbbbbba...',
+                '...abdbbbbbba...',
+                '...abdbbbbbba...',
+                '...abccccccba...',
+                '...abccccccba...',
+                '...abbccccbba...',
+                '...abbbccbbba...',
+                '...abbbccbbba...',
+                '...abbbccbbba...',
+                '...abbbbbbbba...',
+                '...abbbbbbbba...',
+                '...aaaaaaaaaa...',
+                '......eeee......',
+                '......eeee......'
+            ]
+        ]
+    },
+    proteingolem: {
+        w: 16, h: 16,
+        palette: {"a":"#d0d0d8","b":"#e04040","c":"#ff4040","d":"#c0c0c8","e":"#4a6ad0","f":"#a0a0a8"},
+        frames: [
+            [
+                '................',
+                '.....aaaaaa.....',
+                '.....bbbbbb.....',
+                '.....acaaca.....',
+                '.....aaaaaa.....',
+                '.ffddddddddddff.',
+                '.ffddddddddddff.',
+                '.ffeeeeeeeeeeff.',
+                '.ffeeeeeeeeeeff.',
+                '.ffddddddddddff.',
+                '.ffddddddddddff.',
+                '....fff..fff....',
+                '....fff..fff....',
+                '....fff..fff....',
+                '....fff..fff....',
+                '................'
+            ],
+            [
+                '................',
+                '.....aaaaaa.....',
+                '.....bbbbbb.....',
+                '.....acaaca.....',
+                '.....aaaaaa.....',
+                '...dddddddddd...',
+                '.ffddddddddddff.',
+                '.ffeeeeeeeeeeff.',
+                '.ffeeeeeeeeeeff.',
+                '.ffddddddddddff.',
+                '.ffddddddddddff.',
+                '.ff.fff..fff.ff.',
+                '....fff..fff....',
+                '....fff..fff....',
+                '....fff..fff....',
+                '................'
+            ]
+        ]
+    },
+    takaramimic: {
+        w: 16, h: 16,
+        palette: {"a":"#a0602a","b":"#c0802a","c":"#ffd84a","d":"#ffffff","e":"#ff4040"},
+        frames: [
+            [
+                '................',
+                '................',
+                '................',
+                '..bbbbbbbbbbbb..',
+                '..bbeebbbbeebb..',
+                '..bbbbbbbbbbbb..',
+                '..adadaccadada..',
+                '..aaaaaccaaaaa..',
+                '..cccccccccccc..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '................',
+                '................'
+            ],
+            [
+                '................',
+                '................',
+                '..bbbbbbbbbbbb..',
+                '..bbeebbbbeebb..',
+                '..bbbbbbbbbbbb..',
+                '................',
+                '..adadaccadada..',
+                '..aaaaaccaaaaa..',
+                '..cccccccccccc..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '..aaaaaccaaaaa..',
+                '................',
+                '................'
+            ]
+        ]
+    },
+    umibozun: {
+        w: 16, h: 16,
+        palette: {"a":"#1a1a2a","b":"#ffffff","c":"#111111"},
+        frames: [
+            [
+                '................',
+                '................',
+                '................',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '..aaaaaaaaaaaa..',
+                '..aaabbaabbaaa..',
+                '..aaabcaabcaaa..',
+                '..aaaaaaaaaaaa..',
+                '..aaaaaaaaaaaa..',
+                '..aaaaaaaaaaaa..',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aa..aa..aa...',
+                '...aa..aa..aa...',
+                '................'
+            ],
+            [
+                '................',
+                '................',
+                '................',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '..aaaaaaaaaaaa..',
+                '..aaabbaabbaaa..',
+                '..aaabcaabcaaa..',
+                '..aaaaaaaaaaaa..',
+                '..aaaaaaaaaaaa..',
+                '..aaaaaaaaaaaa..',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '....aa..aa..aa..',
+                '....aa..aa..aa..',
+                '................'
+            ]
+        ]
+    },
+    wasurekurage: {
+        w: 16, h: 16,
+        palette: {"a":"#d8a8ff","b":"#ffffff","c":"#333333","d":"#c088f0","e":"#ffe040"},
+        frames: [
+            [
+                '.......ee.......',
+                '........e.......',
+                '....aaaaaaaa....',
+                '...aaaaaaaaaa...',
+                '...aabbaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aacaaaacaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '....d.d..d.d....',
+                '....d.d..d.d....',
+                '....d.d..d.d....',
+                '....d.d..d.d....',
+                '......d....d....',
+                '......d....d....',
+                '................'
+            ],
+            [
+                '........e.......',
+                '....aaaaaaaa....',
+                '...aaaaaaaaaa...',
+                '...aabbaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aacaaaacaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '....d.d..d.d....',
+                '....d.d..d.d....',
+                '....d.d..d.d....',
+                '....d.d..d.d....',
+                '....d....d......',
+                '....d....d......',
+                '................',
+                '................'
+            ]
+        ]
+    },
+    mikazukibat: {
+        w: 16, h: 16,
+        palette: {"a":"#3a2a5a","b":"#ffe040","c":"#5a4a8a","d":"#ffe080"},
+        frames: [
+            [
+                '................',
+                '................',
+                '................',
+                '................',
+                '......a..a......',
+                'dd....a..a....dd',
+                'ddccccaaaaccccdd',
+                '.cccccababccccc.',
+                '.cccccaaaaccccc.',
+                '......aaaa......',
+                '......aaaa......',
+                '................',
+                '................',
+                '................',
+                '................',
+                '................'
+            ],
+            [
+                '................',
+                '................',
+                '................',
+                'dd............dd',
+                'ddcccca..accccdd',
+                '.ccccca..accccc.',
+                '.cccccaaaaccccc.',
+                '......abab......',
+                '......aaaa......',
+                '......aaaa......',
+                '......aaaa......',
+                '................',
+                '................',
+                '................',
+                '................',
+                '................'
+            ]
+        ]
+    },
+    lunashadow: {
+        w: 16, h: 16,
+        palette: {"a":"#1a1430","b":"#ffe080"},
+        frames: [
+            [
+                '................',
+                '................',
+                '....aaaaaaaa....',
+                '....aaaaaaaa....',
+                '....aaaaaaaa....',
+                '...aabaaaabaa...',
+                '...aabbaabbaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '....aaaaaaaa....',
+                '...aaaaaaaaaa...',
+                '...aa..aa..aa...',
+                '................'
+            ],
+            [
+                '................',
+                '................',
+                '....aaaaaaaa....',
+                '....aaaaaaaa....',
+                '....aaaaaaaa....',
+                '...aabaaaabaa...',
+                '...aabbaabbaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '...aaaaaaaaaa...',
+                '....aaaaaaaa....',
+                '....aaaaaaaaaa..',
+                '....aa..aa..aa..',
+                '................'
+            ]
+        ]
+    },
+    yoroinukegara: {
+        w: 16, h: 16,
+        palette: {"a":"#c0a040","b":"#5a5a6a","c":"#111111","d":"#6a6a7a","e":"#8a8a9a"},
+        frames: [
+            [
+                '.......aa.......',
+                '....bbbbbbbb....',
+                '....bbbbbbbb....',
+                '....bccccccb....',
+                '....bbbbbbbb....',
+                '....bbbbbbbb....',
+                '...dddddddddd...',
+                '...ddeeeeeedd...',
+                '...ddeeeeeedd...',
+                '...ddeeeeeedd...',
+                '...dddddddddd...',
+                '...dddddddddd...',
+                '....bbb..bbb....',
+                '....bbb..bbb....',
+                '....bbb..bbb....',
+                '................'
+            ],
+            [
+                '.......aa.......',
+                '....bbbbbbbb....',
+                '....bbbbbbbb....',
+                '....bccccccb....',
+                '....bbbbbbbb....',
+                '....bbbbbbbb....',
+                '...dddddddddd...',
+                '...ddeeeeeedd...',
+                '...ddeeeeeedd...',
+                '...ddeeeeeedd...',
+                '...dddddddddd...',
+                '...dddddddddd...',
+                '...bbb....bbb...',
+                '...bbb....bbb...',
+                '...bbb....bbb...',
+                '................'
+            ]
+        ]
     }
 };

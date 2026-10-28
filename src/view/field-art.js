@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // 1 ドット = 1 ピクセルの 絵 (768 × 960) を 作り、上画面に 写す (ぼやけない)
 // =====================================================================
-import { TILE, MAP_W, MAP_H, TILES, BUILDINGS, PROPS, tileAt } from '../data/map.js';
+import { TILE, MAP_W, MAP_H, TILES, BUILDINGS, PROPS, MYSTERIES, tileAt } from '../data/map.js';
 
 // マスの 場所で 決まる 乱数 (毎回 同じ 絵に なる)
 const hash = (x, y, k = 0) => {
@@ -12,7 +12,8 @@ const hash = (x, y, k = 0) => {
     return (h ^ (h >>> 16)) / 4294967296;
 };
 
-export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72' };
+export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72',
+    L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a' };
 
 function drawTile(c, ch, x, y) {
     const px = x * TILE, py = y * TILE;
@@ -71,6 +72,27 @@ function drawTile(c, ch, x, y) {
         case 'A':
             r(0, 0, 16, 16, '#6a6a72');
             if (x % 2 === 0) r(0, 2, 1, 12, '#f0f0f0');
+            break;
+        // ----- 学校の 中 (2 章) -----
+        case 'L':
+            r(0, 0, 16, 16, '#c89a62');
+            r(0, (x % 2) * 8 + 7, 16, 1, '#a87a48');
+            r(((y * 5) % 16), 0, 1, 16, '#b88a52');
+            break;
+        case 'X': {
+            // かべ: 上は こい 色、ゆかに 面した ところは 明るい かべ
+            const face = tileAt(x, y + 1) !== 'X';
+            r(0, 0, 16, 16, '#3a3040');
+            if (face) { r(0, 4, 16, 12, '#e8e0cc'); r(0, 13, 16, 3, '#8a7a5a'); }
+            break;
+        }
+        case 'Y':
+            r(0, 0, 16, 16, '#d8eef0');
+            r(0, 0, 16, 1, '#b0d0d8'); r(0, 0, 1, 16, '#b0d0d8'); r(8, 0, 1, 16, '#c0dce4'); r(0, 8, 16, 1, '#c0dce4');
+            break;
+        case 'M':
+            r(0, 0, 16, 16, '#c89a62');
+            r(1, 2, 14, 12, '#c03a3a'); r(2, 4, 12, 1, '#e86a5a'); r(2, 9, 12, 1, '#e86a5a');
             break;
         default:
             r(0, 0, 16, 16, '#ff00ff');
@@ -133,7 +155,45 @@ export function buildFieldCanvas() {
         c.fillRect(l.x * TILE, l.y * TILE - 11, (rr.x - l.x) * TILE + 16, 3);
     }
     drawLandmarks(c);
+    MYSTERIES.forEach(m => drawMysteryProp(c, m));
     return cv;
+}
+
+// 七不思議の 物 (2 章)。いつも ある 物。まだ たしかめて いない ものには field.js が「？」を 足す
+function drawMysteryProp(c, m) {
+    const x = m.x * TILE, y = m.y * TILE;
+    const r = (dx, dy, w, h, color) => { c.fillStyle = color; c.fillRect(x + dx, y + dy, w, h); };
+    switch (m.prop) {
+        case 'skeleton':   // ガイコツの 標本 (台と 骨)
+            r(7, 12, 2, 4, '#5a4a3a'); r(4, 15, 8, 1, '#5a4a3a');
+            r(5, -2, 6, 5, '#f0f0e0'); r(6, 0, 1, 1, '#222'); r(9, 0, 1, 1, '#222');
+            r(7, 3, 2, 8, '#f0f0e0'); r(4, 5, 8, 1, '#e0e0d0'); r(4, 7, 8, 1, '#e0e0d0'); r(5, 10, 6, 1, '#e0e0d0');
+            break;
+        case 'piano':      // ピアノ
+            r(0, 2, 16, 12, '#1a1a22'); r(1, 9, 14, 3, '#f8f8f8');
+            for (let i = 2; i < 15; i += 2) r(i, 9, 1, 2, '#1a1a22');
+            r(2, 14, 2, 2, '#1a1a22'); r(12, 14, 2, 2, '#1a1a22');
+            break;
+        case 'books':      // 本だな
+            r(0, -4, 16, 20, '#7a4a2a');
+            [['#c84a4a', '#4a7ac8', '#5ab05a', '#d8b84a'], ['#8a5ac8', '#d87a3a', '#4a9aa8', '#c8c8c8']].forEach((cols, row) => {
+                cols.forEach((col, i) => r(1 + i * 3.5, -2 + row * 9, 3, 7, col));
+            });
+            break;
+        case 'mirror':     // 大鏡
+            r(2, -6, 12, 20, '#8a6a3a'); r(3, -5, 10, 18, '#bfe8ff'); r(4, -4, 3, 6, '#ffffff');
+            break;
+        case 'crates':     // とびばこ
+            r(1, 4, 14, 4, '#d8b070'); r(1, 8, 14, 4, '#c8a060'); r(1, 12, 14, 4, '#b89050'); r(3, 1, 10, 3, '#f0f0f0');
+            break;
+        case 'locker':     // そうじ用具入れ
+            r(2, -6, 12, 22, '#7a8a9a'); r(3, -5, 10, 20, '#8a9aaa');
+            r(5, -3, 6, 1, '#4a5a6a'); r(5, -1, 6, 1, '#4a5a6a'); r(11, 4, 1, 3, '#ffd84a');
+            break;
+        case 'ladder':     // プールの はしご
+            r(3, 0, 2, 16, '#c8c8d0'); r(11, 0, 2, 16, '#c8c8d0'); r(3, 4, 10, 1, '#c8c8d0'); r(3, 9, 10, 1, '#c8c8d0');
+            break;
+    }
 }
 
 // かくれ場所の 目じるし (いつも ある 物。キャラが いるときだけ cues.js が 違和感を 足す)

@@ -44,7 +44,9 @@ const SPRITE_KEYS = ['koori', 'tomoishi', 'furukawa', 'onioni', 'haribaby', 'mum
 const BIG_KEYS = ['kogame', 'tsuribariuo', 'mokugyoro', 'rousokubi', 'daichouenkin', 'kunaisuzume', 'kawarimidanuki', 'shinobigaeru',
     // 商店街の 20 体 (段階 2。2026-10-27)
     'spamdama', 'popupn', 'netkozou', 'kinmenkoinu', 'burakrasher', 'hannyamen', 'makibishimushi', 'hoshikuzun', 'richibou', 'yopparaigarasu',
-    'chouchinbura', 'neonkurage', 'saikoron', 'hakupai', 'maikumbo', 'pachinkodaman', 'neontanuki', 'gomibakon', 'gachapon', 'yataiman'];
+    'chouchinbura', 'neonkurage', 'saikoron', 'hakupai', 'maikumbo', 'pachinkodaman', 'neontanuki', 'gomibakon', 'gachapon', 'yataiman',
+    // 2 章 石の川小学校の 9 体 (2026-10-28)
+    'fusaiyougaikotsu', 'mirrormuscle', 'proteingolem', 'takaramimic', 'umibozun', 'wasurekurage', 'mikazukibat', 'lunashadow', 'yoroinukegara'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

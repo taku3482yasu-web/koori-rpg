@@ -9,14 +9,16 @@
 //   なかまは spd で 決まる 間かくで 動く。ゲージ (100) が たまると 必殺技が 打てる (ミニゲームの 結果で 威力が 変わる)
 //   後ろの なかまは 少しずつ HP が 戻る。前の 3 体が 全員 たおれたら 2 秒後に 自動で 半分 回す
 //   ボスは 大技の 前に 予告 (telegraph) を 出す。そのあいだに 輪を 回して 守りの 強い なかまを 前に 出せる
+//   とりつき (2 章。設計書 3.4): なまけたり 味方を 攻めたり する。輪で 後ろに 回して「おたすけ」(ミニゲーム) で 治す
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { speciesOf, statsAt } from './units.js';
 
 export const GAUGE_MAX = 100;
-const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8 };
-export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく' };
+const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
+export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'とりつき' };
+const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
 const BACK_REGEN = 0.004;      // 後ろに いる あいだ、1 秒に 最大HP の 0.4% 戻る (5 秒で 2%)
 const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
@@ -41,7 +43,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild' }) {
         wheel: Array.from({ length: 6 }, (_, i) => (allies[i] ? makeUnit(allies[i], 'ally') : null)),
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
-        rotateCooldown: 0, itemCooldown: 0, frontDownTime: 0,
+        rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
         bossTimer: 0, warned: false, food: null
     };
     // 敵は 少しずつ ずらして 動き出す
@@ -173,6 +175,19 @@ function act(b, u) {
         emit(b, 'confused', { actor: u.uid });
         return;
     }
+    // とりつかれている: 4 わり なまける・3 わり 味方を 攻める
+    if (u.status.possess > 0) {
+        const r = b.rng.next();
+        if (r < 0.4) { emit(b, 'possessed', { actor: u.uid, mode: 'lazy' }); return; }
+        const mates = friends(b, u.side).filter(f => f !== u);
+        if (r < 0.7 && mates.length) {
+            const to = b.rng.pick(mates);
+            emit(b, 'possessed', { actor: u.uid, mode: 'betray' });
+            emit(b, 'attack', { actor: u.uid, target: to.uid });
+            damage(b, u, to, 0.8);
+            return;
+        }
+    }
     // 敵は ゲージが たまったら 必殺技
     if (u.side === 'enemy' && u.special && u.gauge >= GAUGE_MAX) {
         u.gauge = 0;
@@ -237,6 +252,7 @@ export function step(b, dt) {
     b.t += dt;
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
     b.itemCooldown = Math.max(0, b.itemCooldown - dt);
+    b.rescueCooldown = Math.max(0, b.rescueCooldown - dt);
     const front = b.front();
     for (const u of b.wheel) {
         if (!u || u.ko) continue;
@@ -310,6 +326,27 @@ export function resolveSpecial(b, unit, mult) {
     emit(b, 'special', { actor: unit.uid, name: unit.special.name, side: 'ally', mult });
     applyEffects(b, unit, unit.special.effects, mult);
     checkOutcome(b);
+}
+
+// おたすけ: 後ろに いる とりつかれた なかまを ミニゲームで 治す (ミニゲームの あいだは 止める)
+const unitByUid = (b, uid) => b.wheel.find(u => u && u.uid === uid) || null;
+export function canRescue(b, uid) {
+    const u = unitByUid(b, uid);
+    return Boolean(u && !u.ko && u.status.possess > 0 && !b.front().includes(u) && !b.outcome && !b.paused && b.rescueCooldown <= 0);
+}
+export const rescueTargets = b => b.wheel.filter(u => u && canRescue(b, u.uid));
+export function startRescue(b, uid) {
+    if (!canRescue(b, uid)) return null;
+    b.paused = true;
+    return unitByUid(b, uid);
+}
+// ok: ミニゲームが 成功 (しっぱいなら 治らず、少し 待つ)
+export function resolveRescue(b, unit, ok) {
+    b.paused = false;
+    if (!unit) return;
+    if (ok) delete unit.status.possess;
+    else b.rescueCooldown = RESCUE_COOLDOWN;
+    emit(b, 'rescue', { target: unit.uid, ok });
 }
 
 // 道具を なかまに 使う。uid で 輪の だれにでも (後ろも) 使える (2026-10-28 ユーザー指定: 使う キャラを えらぶ)

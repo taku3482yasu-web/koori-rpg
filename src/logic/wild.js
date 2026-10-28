@@ -9,6 +9,7 @@
 import { TILE, ROAMS, SPOTS, FRIENDS } from '../data/map.js';
 import { spotKinds, hasWatch } from './game.js';
 import { blockedTile } from './world.js';
+import { reached } from './story.js';
 
 const RESPAWN = 20;          // いなくなってから また 出るまで (秒)
 const WALK = 22;             // 歩く 速さ (ドット / 秒)
@@ -22,7 +23,7 @@ export function createWild(g, rng) {
     let seq = 0;
 
     // source.lv: その 場所の Lv の はば (商店街)。なければ ストーリーで 決まる
-    const lvRange = source => (source && source.lv) || (g.story === 'clear' ? [4, 9] : [2, 5]);
+    const lvRange = source => (source && source.lv) || (reached(g, 'clear') ? [4, 9] : [2, 5]);
     const rollLv = source => { const [lo, hi] = lvRange(source); return lo + rng.int(hi - lo + 1); };
 
     function freeTileIn(r, hero) {
@@ -39,7 +40,7 @@ export function createWild(g, rng) {
     // 話せる キャラ: いなければ 出す (いなくならない)
     function spawnFriends(hero) {
         for (const f of FRIENDS) {
-            if (f.after && g.story !== f.after) continue;
+            if (f.after && !reached(g, f.after)) continue;
             if (list.some(c => c.friend === f.id)) continue;
             const p = freeTileIn(f, hero);
             if (p) list.push({ key: `f${++seq}`, id: f.kind, friend: f.id, friendly: true, x: p.x, y: p.y, roam: f.id, flip: rng.chance(0.5), target: null, pause: rng.next() * 2, walkT: 0 });

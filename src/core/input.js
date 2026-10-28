@@ -8,17 +8,17 @@
 // =====================================================================
 import { setKeyMode } from './keys.js';
 
-const BUTTONS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'l', 'r', 'start', 'sp1', 'sp2', 'sp3', 'tab', 'fast'];
+const BUTTONS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'l', 'r', 'start', 'sp1', 'sp2', 'sp3', 'tab', 'fast', 'help'];
 // PC: 左手の WASD (か 矢印) で 動き、右手で ボタン。J=A (決定)・K=B (戻る)・I=X・U=Y・Q=L・E=R (2026-10-26 ユーザー指定)
 const KEYS = {
     ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
     KeyJ: 'a', Enter: 'a', Space: 'a', KeyK: 'b', Escape: 'b', Backspace: 'b', KeyI: 'x', Tab: 'x', KeyU: 'y',
-    KeyQ: 'l', KeyE: 'r', ShiftLeft: 'start', ShiftRight: 'start', KeyP: 'start', Digit1: 'sp1', Digit2: 'sp2', Digit3: 'sp3', KeyF: 'fast'
+    KeyQ: 'l', KeyE: 'r', ShiftLeft: 'start', ShiftRight: 'start', KeyP: 'start', Digit1: 'sp1', Digit2: 'sp2', Digit3: 'sp3', KeyF: 'fast', KeyH: 'help', Digit4: 'help'
 };
 // いっしょに 押される ボタン: Tab は メニューを 開く (X) と、メニューの 中では タブの 切りかえ (tab) (2026-10-28 ユーザー指定)
 const ALSO = { Tab: 'tab' };
 // 標準のゲームパッド (下 0・右 1・左 2・上 3)。携帯機と同じく 右が A・下が B・左が Y・上が X
-const PAD = { 1: 'a', 0: 'b', 2: 'y', 3: 'x', 4: 'l', 5: 'r', 6: 'l', 7: 'r', 9: 'start', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
+const PAD = { 1: 'a', 0: 'b', 2: 'y', 3: 'x', 4: 'l', 5: 'r', 6: 'l', 7: 'r', 8: 'help', 9: 'start', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
 
 export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = null, onPadChange = () => {} } = {}) {
     // 上画面の マウス (PC でレンズを動かす)。x, y は上画面の ドット。moved はそのコマで動いたとき

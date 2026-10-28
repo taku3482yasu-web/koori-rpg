@@ -206,8 +206,8 @@ body.nopad #pad { display: none; }
     layout();
     return { top, bottom, layout };
   }
-  const KEY_NAMES = { a: "J", b: "K", x: "I", y: "U", l: "Q", r: "E", start: "Shift", fast: "F" };
-  const BUTTON_NAMES = { fast: "START" };
+  const KEY_NAMES = { a: "J", b: "K", x: "I", y: "U", l: "Q", r: "E", start: "Shift", fast: "F", help: "H" };
+  const BUTTON_NAMES = { fast: "START", help: "SELECT" };
   let mode = typeof matchMedia !== "undefined" && matchMedia("(pointer: coarse)").matches ? "button" : "key";
   function setKeyMode(kind) {
     mode = kind === "key" ? "key" : "button";
@@ -215,7 +215,7 @@ body.nopad #pad { display: none; }
   const isKeyboard = () => mode === "key";
   const btn = (b) => `[${mode === "key" ? KEY_NAMES[b] : BUTTON_NAMES[b] || b.toUpperCase()}]`;
   const moveName = () => mode === "key" ? "[WASD]" : "[十字キー]";
-  const BUTTONS = ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "start", "sp1", "sp2", "sp3", "tab", "fast"];
+  const BUTTONS = ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "start", "sp1", "sp2", "sp3", "tab", "fast", "help"];
   const KEYS = {
     ArrowUp: "up",
     KeyW: "up",
@@ -242,10 +242,12 @@ body.nopad #pad { display: none; }
     Digit1: "sp1",
     Digit2: "sp2",
     Digit3: "sp3",
-    KeyF: "fast"
+    KeyF: "fast",
+    KeyH: "help",
+    Digit4: "help"
   };
   const ALSO = { Tab: "tab" };
-  const PAD = { 1: "a", 0: "b", 2: "y", 3: "x", 4: "l", 5: "r", 6: "l", 7: "r", 9: "start", 12: "up", 13: "down", 14: "left", 15: "right" };
+  const PAD = { 1: "a", 0: "b", 2: "y", 3: "x", 4: "l", 5: "r", 6: "l", 7: "r", 8: "help", 9: "start", 12: "up", 13: "down", 14: "left", 15: "right" };
   function createInput({ bottomCanvas: bottomCanvas2 = null, topCanvas: topCanvas2 = null, padRoot = null, onPadChange = () => {
   } } = {}) {
     const mouse = { x: 200, y: 120, moved: false, inside: false };
@@ -648,12 +650,24 @@ body.nopad #pad { display: none; }
     gomibakon: W$1("ゴミなげ", "ふつう", "line", 1, "poison", 0.4),
     gachapon: W$1("ガチャころり", "ふしぎ", "line", 1.1, "confuse", 0.3),
     yataiman: W$1("あつあつラーメン", "ほのお", "front", 1.5, "poison", 0.3),
+    // 石の川小学校 (2 章)。とりつき を 使う キャラが いる
+    fusaiyougaikotsu: W$1("不採用通知", "ふしぎ", "line", 0.7, "possess", 0.35),
+    mirrormuscle: { name: "ミラーポーズ", buff: "def" },
+    proteingolem: W$1("ゴーレムプレス", "ふつう", "front", 1.5),
+    takaramimic: W$1("かみつき", "ふつう", "front", 1.5),
+    umibozun: W$1("おおなみ", "みず", "around", 0.9),
+    wasurekurage: W$1("わすれ針", "ふしぎ", "front", 0.8, "possess", 0.4),
+    mikazukibat: W$1("ちょうおんぱ", "かぜ", "line", 0.5, "confuse", 0.6),
+    lunashadow: W$1("かげうち", "ふしぎ", "line", 1.3),
+    yoroinukegara: { name: "よろいがため", buff: "def" },
     // こおりくん・ボス
     koori: W$1("コオリソード", "こおり", "front", 1.4),
-    nushi: W$1("百のかぞえうた", "ふしぎ", "around", 0.6, "confuse", 0.3)
+    nushi: W$1("百のかぞえうた", "ふしぎ", "around", 0.6, "confuse", 0.3),
+    kage: W$1("影の とりつき", "ふしぎ", "around", 0.6, "possess", 0.3)
   };
   function wazaEffects(w) {
     if (w.heal) return [{ kind: "heal", target: "lowest", power: w.heal }];
+    if (w.buff) return [{ kind: "buff", target: "self", stat: w.buff, amount: 0.5, time: 8 }];
     const target = w.range === "around" ? "all" : "one";
     const fx = [];
     if (w.power > 0) fx.push({ kind: "attack", target, power: w.power * 1.4 * (target === "all" ? 0.7 : 1), element: w.element });
@@ -1233,6 +1247,144 @@ body.nopad #pad { display: none; }
       title: "屋台の大将",
       desc: "横丁で屋台を営む大将。ラーメンもおでんも焼き鳥も出すが、一番の自慢はつけ麺らしい。",
       special: sp("へい おまち！", [atk("all", 1.8)])
+    },
+    // ----- 石の川小学校の 9 体 (2 章「学校の七不思議」。2026-10-28。ダンジョンから。D 8・C 1) -----
+    //   7 体は 七不思議の 正体 (map.js の MYSTERIES)。ヨロイヌケガラは ろうかを 歩く。ルナシャドウは 8 つ目の ふしぎ (ボス) を たおすと なかまに なる
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮 (設計書 4.7)
+    {
+      id: "fusaiyougaikotsu",
+      name: "フサイヨウガイコツ",
+      from: "ダンジョン 047",
+      area: "school",
+      rank: "D",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { mag: 1.1 },
+      line: "今回はご縁がなかったということで",
+      favorite: "onigiri",
+      title: "不採用がいこつ",
+      desc: "採用されなかったものの恨みが具現化したもの。",
+      special: sp("お祈りメール", [atk("all", 0.6), { kind: "status", target: "all", status: "possess", chance: 0.5 }])
+    },
+    {
+      id: "mirrormuscle",
+      name: "ミラーマッスル",
+      from: "ダンジョン 038",
+      area: "school",
+      rank: "D",
+      element: "ふしぎ",
+      role: "defender",
+      mul: { def: 1.1 },
+      line: "キレてるよ！",
+      favorite: "cider",
+      title: "鏡型のマッスル",
+      desc: "超マッスル。今日もキレている。",
+      special: sp("キレてるポーズ", [{ kind: "buff", target: "party", stat: "def", amount: 0.5, time: 10 }])
+    },
+    {
+      id: "proteingolem",
+      name: "プロテインゴーレム",
+      from: "ダンジョン 036",
+      area: "school",
+      rank: "D",
+      element: "ふつう",
+      role: "defender",
+      mul: { hp: 1.15, atk: 1.2, spd: 0.8 },
+      line: "タンパク…シツ…",
+      favorite: "niboshi",
+      title: "プロテイン好きのゴーレム",
+      desc: "プロテインのみで鍛えているゴーレム。プロテインではなく、ステロイドを直で吸っているうわさがある。",
+      special: sp("プロテインパワー", [atk("one", 2.8)])
+    },
+    {
+      id: "takaramimic",
+      name: "タカラミミック",
+      from: "ダンジョン 045",
+      area: "school",
+      rank: "D",
+      element: "ふつう",
+      role: "defender",
+      mul: { atk: 1.15 },
+      line: "あけたな？",
+      favorite: "choco",
+      title: "宝のミミック",
+      desc: "宝箱の形をしたモンスター。見かけはかわいいが、実は危険。",
+      special: sp("ひらけごま", [atk("one", 2.2), { kind: "buff", target: "self", stat: "def", amount: 0.5, time: 8 }])
+    },
+    {
+      id: "umibozun",
+      name: "ウミボウズン",
+      from: "ダンジョン 014",
+      area: "school",
+      rank: "D",
+      element: "ふしぎ",
+      role: "attacker",
+      mul: { hp: 1.05 },
+      line: "ぼうず～ん",
+      favorite: "niboshi",
+      title: "海の怪異",
+      desc: "漁師に恐れられている古典妖怪。新月の夜に見てしまったが最後、その人はもう闇の中。暗く深い闇の中。",
+      special: sp("大うずしお", [atk("all", 1.5, { element: "みず" })])
+    },
+    {
+      id: "wasurekurage",
+      name: "ワスレクラゲ",
+      from: "ダンジョン 011",
+      area: "school",
+      rank: "D",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { hp: 0.9, mag: 1.15 },
+      line: "なんだっけ…",
+      favorite: "cider",
+      title: "忘れられたクラゲ",
+      desc: "昔は有名だったが、最近は忘れられてしまったクラゲ。",
+      special: sp("ぜんぶ わすれた", [{ kind: "status", target: "all", status: "possess", chance: 0.5 }, { kind: "status", target: "all", status: "confuse", chance: 0.4 }])
+    },
+    {
+      id: "mikazukibat",
+      name: "ミカヅキバット",
+      from: "ダンジョン 030",
+      area: "school",
+      rank: "D",
+      element: "かぜ",
+      role: "jammer",
+      mul: { spd: 1.15 },
+      line: "キキッ",
+      favorite: "melonpan",
+      title: "三日月の蝙蝠。",
+      desc: "月が三日月の時にだけ現れる蝙蝠。",
+      special: sp("三日月の 超音波", [atk("all", 0.8), { kind: "status", target: "all", status: "confuse", chance: 0.6 }])
+    },
+    {
+      id: "yoroinukegara",
+      name: "ヨロイヌケガラ",
+      from: "ダンジョン 039",
+      area: "school",
+      rank: "D",
+      element: "ふつう",
+      role: "defender",
+      mul: { def: 1.2, spd: 0.9 },
+      line: "ガシャン、ガシャン",
+      favorite: "onigiri",
+      title: "鎧の抜け殻",
+      desc: "今や着るものがいなくなった抜け殻。持ち主を永遠に探している。",
+      special: sp("てっぺき", [{ kind: "buff", target: "party", stat: "def", amount: 0.6, time: 10 }])
+    },
+    {
+      id: "lunashadow",
+      name: "ルナシャドウ",
+      from: "ダンジョン 034",
+      area: "school",
+      rank: "C",
+      element: "ふしぎ",
+      role: "attacker",
+      mul: { atk: 1.05, spd: 1.1 },
+      line: "…………",
+      favorite: "melonpan",
+      title: "正体不明",
+      desc: "正体不明の存在。いったい何者なのか、何が目的なのか、その一切が不明である。",
+      special: sp("正体不明", [atk("all", 1.6, { magic: true })])
     }
   ];
   function moves(id, element, rank, upper = false) {
@@ -1240,6 +1392,7 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
@@ -1260,7 +1413,24 @@ body.nopad #pad { display: none; }
       base: { hp: 340, atk: 14, def: 12, spd: 9, mag: 15 },
       // 大技: 2.5 秒 前に 予告が 出る。そのあいだに 輪を 回して よけられる (設計書 3.5)
       bigMove: { name: "足音 百かぞえ", every: 12, warn: 2.5, effects: [atk("all", 1.6, { magic: true })] },
-      befriends: "hashishita"
+      befriends: "hashishita",
+      lv: 8,
+      place: "bridge"
+    },
+    // 2 章の ボス: 七不思議の 8 つ目「夜の ろうかを 走る 影」(ルナシャドウの 大きな すがた)。大技で なかまに とりつく
+    kage: {
+      id: "kage",
+      name: "ろうかの カゲ・ルナシャドウ",
+      element: "ふしぎ",
+      role: "attacker",
+      art: "lunashadow",
+      scale: 2,
+      rank: "C",
+      base: { hp: 420, atk: 17, def: 13, spd: 11, mag: 17 },
+      bigMove: { name: "8 つ目の ふしぎ", every: 12, warn: 2.5, effects: [atk("all", 1.3, { magic: true }), { kind: "status", target: "all", status: "possess", chance: 0.4 }] },
+      befriends: "lunashadow",
+      lv: 13,
+      place: "school"
     }
   };
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
@@ -1282,28 +1452,29 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 60;
+  const MAP_W = 48, MAP_H = 84;
   const TOWN_H = 36;
-  const BLOCK = /* @__PURE__ */ new Set(["T", "W"]);
+  const SCHOOL_Y0 = 60;
+  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X"]);
   function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("G"));
     const fill = (x0, y0, x1, y1, c) => {
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) t[y][x] = c;
     };
     fill(0, 0, MAP_W - 1, 0, "T");
-    fill(0, MAP_H - 1, MAP_W - 1, MAP_H - 1, "T");
-    fill(0, 0, 0, MAP_H - 1, "T");
-    fill(MAP_W - 1, 0, MAP_W - 1, MAP_H - 1, "T");
+    fill(0, SCHOOL_Y0 - 1, MAP_W - 1, SCHOOL_Y0 - 1, "T");
+    fill(0, 0, 0, SCHOOL_Y0 - 1, "T");
+    fill(MAP_W - 1, 0, MAP_W - 1, SCHOOL_Y0 - 1, "T");
     fill(2, 2, 10, 9, "K");
     fill(1, 10, 9, 10, "T");
     fill(36, 2, 46, 10, "K");
-    fill(30, 1, 33, MAP_H - 2, "W");
-    fill(28, 1, 29, MAP_H - 2, "P");
-    fill(34, 1, 35, MAP_H - 2, "P");
+    fill(30, 1, 33, SCHOOL_Y0 - 2, "W");
+    fill(28, 1, 29, SCHOOL_Y0 - 2, "P");
+    fill(34, 1, 35, SCHOOL_Y0 - 2, "P");
     fill(1, 17, 27, 18, "R");
     fill(36, 17, 46, 18, "R");
-    fill(12, 2, 13, MAP_H - 2, "R");
-    fill(40, 2, 41, MAP_H - 2, "R");
+    fill(12, 2, 13, SCHOOL_Y0 - 2, "R");
+    fill(40, 2, 41, SCHOOL_Y0 - 2, "R");
     fill(14, 8, 27, 9, "R");
     fill(28, 17, 35, 18, "B");
     fill(16, 26, 26, 33, "S");
@@ -1327,6 +1498,19 @@ body.nopad #pad { display: none; }
     [[3, 40], [8, 40], [24, 37], [37, 38], [46, 41], [2, 57], [9, 57], [37, 57]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
+    fill(0, SCHOOL_Y0, MAP_W - 1, MAP_H - 1, "X");
+    fill(1, 61, 10, 67, "L");
+    fill(12, 61, 21, 67, "L");
+    fill(23, 61, 32, 67, "L");
+    fill(34, 61, 46, 67, "L");
+    fill(1, 69, 46, 71, "L");
+    fill(1, 73, 10, 82, "L");
+    fill(12, 73, 30, 82, "L");
+    fill(32, 73, 46, 82, "Y");
+    fill(35, 76, 44, 81, "W");
+    [5, 16, 27, 40].forEach((x) => fill(x, 68, x + 1, 68, "L"));
+    [5, 20, 38].forEach((x) => fill(x, 72, x + 1, 72, "L"));
+    fill(23, 72, 24, 72, "M");
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -1358,6 +1542,7 @@ body.nopad #pad { display: none; }
     { id: "torii-r", kind: "torii", x: 8, y: 9 }
   ];
   const SHOUTENGAI_LV = [6, 10];
+  const SCHOOL_LV = [9, 13];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -1391,7 +1576,12 @@ body.nopad #pad { display: none; }
     { id: "backW", label: "うら通り", x0: 1, y0: 54, x1: 27, y1: 55, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: "gomibakon", w: 2 }, { id: "yopparaigarasu", w: 2, time: ["evening", "night"] }, { id: "maikumbo", w: 1 }] },
     { id: "hiroba", label: "商店街の広場", x0: 14, y0: 56, x1: 26, y1: 58, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: "popupn", w: 2 }, { id: "hoshikuzun", w: 2, time: ["night"] }, { id: "chouchinbura", w: 2, time: ["evening", "night"] }, { id: "yataiman", w: 1, time: ["night"] }] },
     { id: "backE", label: "うら通り (東)", x0: 36, y0: 54, x1: 46, y1: 55, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "neonkurage", w: 2, time: ["evening", "night"] }, { id: "maikumbo", w: 1 }] },
-    { id: "parkingS", label: "商店街の駐車場", x0: 42, y0: 56, x1: 46, y1: 58, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "gomibakon", w: 1 }, { id: "makibishimushi", w: 1 }] }
+    { id: "parkingS", label: "商店街の駐車場", x0: 42, y0: 56, x1: 46, y1: 58, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "gomibakon", w: 1 }, { id: "makibishimushi", w: 1 }] },
+    // 石の川小学校の 中 (2 章)。七不思議の キャラは 2 章 クリアの あと (clear2) から 歩きまわる (なかまに しそこねても また 会える)
+    { id: "kouchou", label: "校長室", x0: 35, y0: 62, x1: 45, y1: 66, max: 1, lv: SCHOOL_LV, kinds: [{ id: "yoroinukegara", w: 1 }] },
+    { id: "rouka", label: "学校の ろうか", x0: 2, y0: 69, x1: 44, y1: 71, max: 1, lv: SCHOOL_LV, kinds: [{ id: "fusaiyougaikotsu", w: 1, after: "clear2" }, { id: "wasurekurage", w: 1, after: "clear2" }, { id: "mikazukibat", w: 1, after: "clear2" }, { id: "lunashadow", w: 1, after: "clear2", time: ["night"] }] },
+    { id: "taiikukan", label: "体育館", x0: 13, y0: 74, x1: 29, y1: 81, max: 1, lv: SCHOOL_LV, kinds: [{ id: "proteingolem", w: 1, after: "clear2" }, { id: "takaramimic", w: 1, after: "clear2" }, { id: "mirrormuscle", w: 1, after: "clear2" }] },
+    { id: "poolside", label: "プールサイド", x0: 32, y0: 73, x1: 46, y1: 74, max: 1, lv: SCHOOL_LV, kinds: [{ id: "umibozun", w: 1, after: "clear2" }] }
   ];
   const FRIENDS = [
     {
@@ -1505,11 +1695,105 @@ body.nopad #pad { display: none; }
   const PEOPLE = [
     { id: "mama", name: "ともいし", art: "tomoishi", x: 8, y: 24 },
     { id: "furukawaShrine", name: "ふるカワ", art: "furukawa", x: 7, y: 6, only: "beforeWatch" },
-    { id: "nushi", name: "ヌシ", art: "hashishita", x: 31, y: 17, h: 2, only: "beforeClear", scale: 2 }
+    { id: "nushi", name: "ヌシ", art: "hashishita", x: 31, y: 17, h: 2, only: "beforeClear", scale: 2 },
+    // 2 章: 七不思議を 7 つ たしかめると、ろうかの おくに 8 つ目の ふしぎ (ボス) が 出る
+    { id: "kage", name: "ろうかの カゲ", art: "lunashadow", x: 9, y: 70, only: "kage", scale: 2 }
   ];
   const START = { x: 6, y: 24 };
+  const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
+  const SCHOOL_OUT = { x: 19, y: 7, dir: "down" };
+  const SCHOOL_OPEN = [2, 3];
+  const SCHOOL_ROOMS = [
+    { id: "rika", label: "理科室", x: 5.5, y: 61 },
+    { id: "ongaku", label: "音楽室", x: 16.5, y: 61 },
+    { id: "tosho", label: "図書室", x: 27.5, y: 61 },
+    { id: "kouchou", label: "校長室", x: 40, y: 61 },
+    { id: "odoriba", label: "おどり場", x: 5.5, y: 73 },
+    { id: "taiiku", label: "体育館", x: 21, y: 73 },
+    { id: "pool", label: "プール", x: 39.5, y: 73 },
+    { id: "getabako", label: "げた箱", x: 24, y: 71.2 }
+  ];
+  const MYSTERIES = [
+    {
+      id: "rika",
+      label: "理科室の 動く ガイコツ",
+      x: 3,
+      y: 62,
+      prop: "skeleton",
+      nakama: "fusaiyougaikotsu",
+      lv: 10,
+      lines: ["ガイコツの 標本が ある。……いま、こっちを 見た？", "カタカタカタ……！ 標本が 動きだした！"],
+      done: "ふつうの 標本だ。もう 動かない。"
+    },
+    {
+      id: "ongaku",
+      label: "音楽室で 夜中に 鳴る 音",
+      x: 18,
+      y: 62,
+      prop: "piano",
+      nakama: "mikazukibat",
+      lv: 10,
+      lines: ["だれも いないのに、ピアノの 中から キーキー 音が する……。", "ふたを あけたら、なにかが 飛びだしてきた！"],
+      done: "ピアノは しずかだ。"
+    },
+    {
+      id: "tosho",
+      label: "図書室の わすれられた 本",
+      x: 30,
+      y: 62,
+      prop: "books",
+      nakama: "wasurekurage",
+      lv: 10,
+      lines: ["読んだ 人が 中身を ぜんぶ わすれる、という 本が ある。", "……あれ？ なにを しに 来たんだっけ？ 本の すきまから なにかが ふわふわ 出てきた！"],
+      done: "ふつうの 本だ。ちゃんと おぼえて いられる。"
+    },
+    {
+      id: "kagami",
+      label: "おどり場の 大鏡",
+      x: 5,
+      y: 74,
+      prop: "mirror",
+      nakama: "mirrormuscle",
+      lv: 11,
+      lines: ["夜中に のぞくと、ちがう 自分が うつる という 大鏡。", "鏡の 中の こおりくんが、ムキムキの ポーズを とっている！"],
+      done: "こおりくんが うつっている。ふつうの 鏡だ。"
+    },
+    {
+      id: "souko",
+      label: "体育倉庫の かけ声",
+      x: 28,
+      y: 80,
+      prop: "crates",
+      nakama: "proteingolem",
+      lv: 11,
+      lines: ["体育倉庫から「ふんっ！ ふんっ！」と かけ声が 聞こえる。", "とびばこの うしろで、だれかが 筋トレを している！"],
+      done: "とびばこが きちんと ならんでいる。"
+    },
+    {
+      id: "locker",
+      label: "開かずの ロッカー",
+      x: 46,
+      y: 70,
+      prop: "locker",
+      nakama: "takaramimic",
+      lv: 11,
+      lines: ["ずっと 開かない という そうじ用具入れ。", "カギは かかって いない……。あけた しゅんかん、ロッカーが かみついてきた！"],
+      done: "ほうきと ちりとりが 入っている。"
+    },
+    {
+      id: "pool",
+      label: "プールの 手",
+      x: 39,
+      y: 75,
+      prop: "ladder",
+      nakama: "umibozun",
+      lv: 12,
+      lines: ["夜の プールから 手が 出てきて、足を つかむ という うわさ。", "ザバァ！ 水の 中から 大きな 黒い 頭が 出てきた！"],
+      done: "しずかな 水面に 月が うつっている。"
+    }
+  ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const areaAt = (x, y) => y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
     melonpan: { name: "メロンパン", heal: 50, price: 50, desc: "なかま 1 体の HP を 50 回復。パンが好きな なかまの 好物" },
@@ -1542,6 +1826,8 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2"];
+  const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
   const TIMES = ["朝", "昼", "夕方", "夜"];
@@ -1570,8 +1856,10 @@ body.nopad #pad { display: none; }
       seed,
       playTime: 0,
       spotCooldown: {},
-      gifts: {}
+      gifts: {},
       // 話せる キャラから 道具を もらった 日 (1 日 1 回)
+      mysteries: {}
+      // たしかめた 七不思議 (2 章)
     };
   }
   function migrate(save) {
@@ -1610,14 +1898,14 @@ body.nopad #pad { display: none; }
     }
   }
   function spotKinds(g, spot) {
-    return spot.kinds.filter((k) => (!k.time || k.time.includes(timeId(g))) && (!k.weather || k.weather === g.weather) && (!k.after || g.story === k.after));
+    return spot.kinds.filter((k) => (!k.time || k.time.includes(timeId(g))) && (!k.weather || k.weather === g.weather) && (!k.after || reached(g, k.after)));
   }
   function spotActive(g, spot, now) {
     return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
   }
   function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
-    const [lo, hi] = source.lv || (g.story === "clear" ? [4, 9] : [2, 5]);
+    const [lo, hi] = source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
     const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     if (kinds.length && rng.chance(0.2)) {
@@ -1629,7 +1917,7 @@ body.nopad #pad { display: none; }
     });
     return enemies;
   }
-  const bossEnemies = () => [{ id: "nushi", lv: 8 }];
+  const bossEnemies = (id = "nushi") => [{ id, lv: BOSSES[id].lv }];
   function befriendRate(g, id, food) {
     const sp2 = NAKAMA[id];
     if (!sp2) return 0;
@@ -1639,7 +1927,8 @@ body.nopad #pad { display: none; }
     return Math.min(0.9, rate);
   }
   function applyBattleResult(g, battle, rng) {
-    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === "boss" };
+    var _a;
+    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === "boss", mystery: battle.mystery || null };
     if (battle.outcome !== "win") {
       out.money = -Math.floor(g.money * 0.1);
       g.money += out.money;
@@ -1656,10 +1945,20 @@ body.nopad #pad { display: none; }
       const up = gainExp(m, out.exp);
       if (up) out.levelUps.push({ uid: m.uid, id: m.id, lv: m.lv });
     }
+    if (out.mystery) g.mysteries[out.mystery] = true;
     if (out.boss) {
-      const id = BOSSES.nushi.befriends;
-      out.befriend = { id, medal: addMedal(g, id, 6), forced: true };
-      g.story = "clear";
+      const bossId = ((_a = battle.enemies.find((e) => BOSSES[e.id])) == null ? void 0 : _a.id) || "nushi";
+      const id = BOSSES[bossId].befriends;
+      out.bossId = bossId;
+      out.befriend = { id, medal: addMedal(g, id, bossId === "nushi" ? 6 : BOSSES[bossId].lv - 2), forced: true };
+      if (bossId === "nushi") {
+        g.story = "clear";
+        g.chapter = 2;
+      }
+      if (bossId === "kage") {
+        g.story = "clear2";
+        g.chapter = 3;
+      }
       return out;
     }
     const ids = [...new Set(battle.enemies.map((e) => e.id))];
@@ -1704,9 +2003,16 @@ body.nopad #pad { display: none; }
         return `レンズで さがして、なかまを ふやそう (${Math.min(FRIENDS_GOAL, g.medals.length - g.friendsAtWatch)}/${FRIENDS_GOAL})`;
       case "bridge":
         return "石の川橋の ヌシを なんとかしよう";
+      case "clear":
+        return "石の川小学校の 七不思議の うわさを たしかめよう (学校は 夕方・夜だけ 開く)";
+      case "school": {
+        const n = MYSTERIES.filter((m) => g.mysteries[m.id]).length;
+        return n < MYSTERIES.length ? `学校の 七不思議を たしかめよう (${n}/${MYSTERIES.length})` : "ろうかの おくの 黒い 影を おいかけよう";
+      }
       default: {
         const got = (area) => idsInArea(area).filter((id) => g.zukan.friends[id]).length;
-        return `なかまを あつめよう　石の川 ${got("ishinokawa")}/${idsInArea("ishinokawa").length}・商店街 ${got("shoutengai")}/${idsInArea("shoutengai").length}`;
+        const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
+        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}`;
       }
     }
   }
@@ -1725,8 +2031,9 @@ body.nopad #pad { display: none; }
     return friend.gift;
   }
   const GAUGE_MAX = 100;
-  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8 };
-  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく" };
+  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
+  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "とりつき" };
+  const RESCUE_COOLDOWN = 3;
   const BACK_REGEN = 4e-3;
   const ROTATE_COOLDOWN = 0.35;
   const ITEM_COOLDOWN = 4;
@@ -1774,6 +2081,7 @@ body.nopad #pad { display: none; }
       paused: false,
       rotateCooldown: 0,
       itemCooldown: 0,
+      rescueCooldown: 0,
       frontDownTime: 0,
       bossTimer: 0,
       warned: false,
@@ -1891,6 +2199,21 @@ body.nopad #pad { display: none; }
       emit(b, "confused", { actor: u.uid });
       return;
     }
+    if (u.status.possess > 0) {
+      const r2 = b.rng.next();
+      if (r2 < 0.4) {
+        emit(b, "possessed", { actor: u.uid, mode: "lazy" });
+        return;
+      }
+      const mates = friends(b, u.side).filter((f) => f !== u);
+      if (r2 < 0.7 && mates.length) {
+        const to = b.rng.pick(mates);
+        emit(b, "possessed", { actor: u.uid, mode: "betray" });
+        emit(b, "attack", { actor: u.uid, target: to.uid });
+        damage(b, u, to, 0.8);
+        return;
+      }
+    }
     if (u.side === "enemy" && u.special && u.gauge >= GAUGE_MAX) {
       u.gauge = 0;
       emit(b, "special", { actor: u.uid, name: u.special.name, side: "enemy" });
@@ -1951,6 +2274,7 @@ body.nopad #pad { display: none; }
     b.t += dt;
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
     b.itemCooldown = Math.max(0, b.itemCooldown - dt);
+    b.rescueCooldown = Math.max(0, b.rescueCooldown - dt);
     const front = b.front();
     for (const u of b.wheel) {
       if (!u || u.ko) continue;
@@ -2014,6 +2338,24 @@ body.nopad #pad { display: none; }
     emit(b, "special", { actor: unit.uid, name: unit.special.name, side: "ally", mult });
     applyEffects(b, unit, unit.special.effects, mult);
     checkOutcome(b);
+  }
+  const unitByUid = (b, uid) => b.wheel.find((u) => u && u.uid === uid) || null;
+  function canRescue(b, uid) {
+    const u = unitByUid(b, uid);
+    return Boolean(u && !u.ko && u.status.possess > 0 && !b.front().includes(u) && !b.outcome && !b.paused && b.rescueCooldown <= 0);
+  }
+  const rescueTargets = (b) => b.wheel.filter((u) => u && canRescue(b, u.uid));
+  function startRescue(b, uid) {
+    if (!canRescue(b, uid)) return null;
+    b.paused = true;
+    return unitByUid(b, uid);
+  }
+  function resolveRescue(b, unit, ok) {
+    b.paused = false;
+    if (!unit) return;
+    if (ok) delete unit.status.possess;
+    else b.rescueCooldown = RESCUE_COOLDOWN;
+    emit(b, "rescue", { target: unit.uid, ok });
   }
   function useItem(b, itemId, uid = null) {
     const item = ITEMS[itemId];
@@ -3724,6 +4066,393 @@ body.nopad #pad { display: none; }
           "................"
         ]
       ]
+    },
+    fusaiyougaikotsu: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#f0f0e0", "b": "#111111", "c": "#888888", "d": "#2a2a3a", "e": "#ffffff", "f": "#c03030" },
+      frames: [
+        [
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          ".....abaaba.....",
+          ".....abaaba.....",
+          ".....acccca.....",
+          "....dddeeddd....",
+          "....dddffdddeee.",
+          "....dddffdddeee.",
+          "....dddffdddeee.",
+          "....ddddddddeee.",
+          "....dddddddd....",
+          "....dddddddd....",
+          ".....dd..dd.....",
+          ".....dd..dd.....",
+          ".....dd..dd.....",
+          "................"
+        ],
+        [
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          ".....abaaba.....",
+          ".....abaaba.....",
+          ".....acccca.....",
+          "....dddeedddeee.",
+          "....dddffdddeee.",
+          "....dddffdddeee.",
+          "....dddffdddeee.",
+          "....dddddddd....",
+          "....dddddddd....",
+          "....dddddddd....",
+          ".....dd..dd.....",
+          ".....dd..dd.....",
+          ".....dd..dd.....",
+          "................"
+        ]
+      ]
+    },
+    mirrormuscle: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#c0a040", "b": "#bfe8ff", "c": "#f0c8a0", "d": "#ffffff", "e": "#8a7020" },
+      frames: [
+        [
+          "................",
+          "...aaaaaaaaaa...",
+          "...abbbbbbbba...",
+          "...abdbbbbbba...",
+          "...abdbbbbbba...",
+          "...abbccccbba...",
+          "...abccccccba...",
+          "...abccccccba...",
+          "...abbbccbbba...",
+          "...abbbccbbba...",
+          "...abbbccbbba...",
+          "...abbbbbbbba...",
+          "...abbbbbbbba...",
+          "...aaaaaaaaaa...",
+          "......eeee......",
+          "......eeee......"
+        ],
+        [
+          "................",
+          "...aaaaaaaaaa...",
+          "...abbbbbbbba...",
+          "...abdbbbbbba...",
+          "...abdbbbbbba...",
+          "...abccccccba...",
+          "...abccccccba...",
+          "...abbccccbba...",
+          "...abbbccbbba...",
+          "...abbbccbbba...",
+          "...abbbccbbba...",
+          "...abbbbbbbba...",
+          "...abbbbbbbba...",
+          "...aaaaaaaaaa...",
+          "......eeee......",
+          "......eeee......"
+        ]
+      ]
+    },
+    proteingolem: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#d0d0d8", "b": "#e04040", "c": "#ff4040", "d": "#c0c0c8", "e": "#4a6ad0", "f": "#a0a0a8" },
+      frames: [
+        [
+          "................",
+          ".....aaaaaa.....",
+          ".....bbbbbb.....",
+          ".....acaaca.....",
+          ".....aaaaaa.....",
+          ".ffddddddddddff.",
+          ".ffddddddddddff.",
+          ".ffeeeeeeeeeeff.",
+          ".ffeeeeeeeeeeff.",
+          ".ffddddddddddff.",
+          ".ffddddddddddff.",
+          "....fff..fff....",
+          "....fff..fff....",
+          "....fff..fff....",
+          "....fff..fff....",
+          "................"
+        ],
+        [
+          "................",
+          ".....aaaaaa.....",
+          ".....bbbbbb.....",
+          ".....acaaca.....",
+          ".....aaaaaa.....",
+          "...dddddddddd...",
+          ".ffddddddddddff.",
+          ".ffeeeeeeeeeeff.",
+          ".ffeeeeeeeeeeff.",
+          ".ffddddddddddff.",
+          ".ffddddddddddff.",
+          ".ff.fff..fff.ff.",
+          "....fff..fff....",
+          "....fff..fff....",
+          "....fff..fff....",
+          "................"
+        ]
+      ]
+    },
+    takaramimic: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#a0602a", "b": "#c0802a", "c": "#ffd84a", "d": "#ffffff", "e": "#ff4040" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "..bbbbbbbbbbbb..",
+          "..bbeebbbbeebb..",
+          "..bbbbbbbbbbbb..",
+          "..adadaccadada..",
+          "..aaaaaccaaaaa..",
+          "..cccccccccccc..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "..bbbbbbbbbbbb..",
+          "..bbeebbbbeebb..",
+          "..bbbbbbbbbbbb..",
+          "................",
+          "..adadaccadada..",
+          "..aaaaaccaaaaa..",
+          "..cccccccccccc..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    umibozun: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#1a1a2a", "b": "#ffffff", "c": "#111111" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaaaaaaaaaaa..",
+          "..aaabbaabbaaa..",
+          "..aaabcaabcaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aa..aa..aa...",
+          "...aa..aa..aa...",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaaaaaaaaaaa..",
+          "..aaabbaabbaaa..",
+          "..aaabcaabcaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "....aa..aa..aa..",
+          "....aa..aa..aa..",
+          "................"
+        ]
+      ]
+    },
+    wasurekurage: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#d8a8ff", "b": "#ffffff", "c": "#333333", "d": "#c088f0", "e": "#ffe040" },
+      frames: [
+        [
+          ".......ee.......",
+          "........e.......",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aabbaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aacaaaacaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "....d.d..d.d....",
+          "....d.d..d.d....",
+          "....d.d..d.d....",
+          "....d.d..d.d....",
+          "......d....d....",
+          "......d....d....",
+          "................"
+        ],
+        [
+          "........e.......",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aabbaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aacaaaacaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "....d.d..d.d....",
+          "....d.d..d.d....",
+          "....d.d..d.d....",
+          "....d.d..d.d....",
+          "....d....d......",
+          "....d....d......",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    mikazukibat: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#3a2a5a", "b": "#ffe040", "c": "#5a4a8a", "d": "#ffe080" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "......a..a......",
+          "dd....a..a....dd",
+          "ddccccaaaaccccdd",
+          ".cccccababccccc.",
+          ".cccccaaaaccccc.",
+          "......aaaa......",
+          "......aaaa......",
+          "................",
+          "................",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "dd............dd",
+          "ddcccca..accccdd",
+          ".ccccca..accccc.",
+          ".cccccaaaaccccc.",
+          "......abab......",
+          "......aaaa......",
+          "......aaaa......",
+          "......aaaa......",
+          "................",
+          "................",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    lunashadow: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#1a1430", "b": "#ffe080" },
+      frames: [
+        [
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "...aabaaaabaa...",
+          "...aabbaabbaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "....aaaaaaaa....",
+          "...aaaaaaaaaa...",
+          "...aa..aa..aa...",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "...aabaaaabaa...",
+          "...aabbaabbaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "....aaaaaaaa....",
+          "....aaaaaaaaaa..",
+          "....aa..aa..aa..",
+          "................"
+        ]
+      ]
+    },
+    yoroinukegara: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#c0a040", "b": "#5a5a6a", "c": "#111111", "d": "#6a6a7a", "e": "#8a8a9a" },
+      frames: [
+        [
+          ".......aa.......",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bccccccb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "...dddddddddd...",
+          "...ddeeeeeedd...",
+          "...ddeeeeeedd...",
+          "...ddeeeeeedd...",
+          "...dddddddddd...",
+          "...dddddddddd...",
+          "....bbb..bbb....",
+          "....bbb..bbb....",
+          "....bbb..bbb....",
+          "................"
+        ],
+        [
+          ".......aa.......",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bccccccb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "...dddddddddd...",
+          "...ddeeeeeedd...",
+          "...ddeeeeeedd...",
+          "...ddeeeeeedd...",
+          "...dddddddddd...",
+          "...dddddddddd...",
+          "...bbb....bbb...",
+          "...bbb....bbb...",
+          "...bbb....bbb...",
+          "................"
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -4282,16 +5011,19 @@ body.nopad #pad { display: none; }
     return { name: "title", update, drawTop, drawBottom };
   }
   const HALF_W = 5, BOX_H = 6;
+  const mysteriesSolved = (g) => MYSTERIES.filter((m) => g.mysteries && g.mysteries[m.id]).length;
+  const allMysteriesSolved = (g) => mysteriesSolved(g) >= MYSTERIES.length;
   function peopleHere(g) {
-    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && g.story !== "clear");
+    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g));
   }
-  const gatesHere = (g) => GATES.filter((q) => q.only !== "beforeClear" || g.story !== "clear");
+  const gatesHere = (g) => GATES.filter((q) => q.only !== "beforeClear" || !reached(g, "clear"));
   const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
   function blockedTile(g, tx, ty) {
     if (BLOCK.has(tileAt(tx, ty))) return true;
     if (gatesHere(g).some((q) => inGate(q, tx, ty))) return true;
     if (BUILDINGS.some((b) => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some((p) => p.x === tx && p.y === ty)) return true;
+    if (MYSTERIES.some((m) => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some((p) => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
   }
   function boxFree(g, x, y) {
@@ -4330,6 +5062,8 @@ body.nopad #pad { display: none; }
     if (door) return { type: "door", building: door };
     const gate = gatesHere(g).find((q) => inGate(q, f.x, f.y));
     if (gate) return { type: "gate", gate };
+    const mystery = MYSTERIES.find((m) => m.x === f.x && m.y === f.y);
+    if (mystery) return { type: "mystery", mystery };
     return null;
   }
   const inShrine = (g) => {
@@ -4345,7 +5079,7 @@ body.nopad #pad { display: none; }
     const list = [];
     const wait = {};
     let seq = 0;
-    const lvRange = (source) => source && source.lv || (g.story === "clear" ? [4, 9] : [2, 5]);
+    const lvRange = (source) => source && source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
     const rollLv = (source) => {
       const [lo, hi] = lvRange(source);
       return lo + rng.int(hi - lo + 1);
@@ -4362,7 +5096,7 @@ body.nopad #pad { display: none; }
     }
     function spawnFriends(hero) {
       for (const f of FRIENDS) {
-        if (f.after && g.story !== f.after) continue;
+        if (f.after && !reached(g, f.after)) continue;
         if (list.some((c) => c.friend === f.id)) continue;
         const p = freeTileIn(f, hero);
         if (p) list.push({ key: `f${++seq}`, id: f.kind, friend: f.id, friendly: true, x: p.x, y: p.y, roam: f.id, flip: rng.chance(0.5), target: null, pause: rng.next() * 2, walkT: 0 });
@@ -4572,7 +5306,22 @@ body.nopad #pad { display: none; }
     h = Math.imul(h ^ h >>> 13, 1274126177) >>> 0;
     return (h ^ h >>> 16) / 4294967296;
   };
-  const MINI_COLORS = { G: "#6cc04a", F: "#8ad070", T: "#2e6e2e", R: "#b8b0a0", W: "#3a8ad0", B: "#b07a48", P: "#c8c0b0", S: "#e8d8a0", K: "#c8c8c0", A: "#6a6a72" };
+  const MINI_COLORS = {
+    G: "#6cc04a",
+    F: "#8ad070",
+    T: "#2e6e2e",
+    R: "#b8b0a0",
+    W: "#3a8ad0",
+    B: "#b07a48",
+    P: "#c8c0b0",
+    S: "#e8d8a0",
+    K: "#c8c8c0",
+    A: "#6a6a72",
+    L: "#c89a62",
+    X: "#3a3040",
+    Y: "#d8eef0",
+    M: "#c03a3a"
+  };
   function drawTile(c, ch, x, y) {
     const px = x * TILE, py = y * TILE;
     const r2 = (dx, dy, w, h, color) => {
@@ -4642,6 +5391,33 @@ body.nopad #pad { display: none; }
         r2(0, 0, 16, 16, "#6a6a72");
         if (x % 2 === 0) r2(0, 2, 1, 12, "#f0f0f0");
         break;
+      case "L":
+        r2(0, 0, 16, 16, "#c89a62");
+        r2(0, x % 2 * 8 + 7, 16, 1, "#a87a48");
+        r2(y * 5 % 16, 0, 1, 16, "#b88a52");
+        break;
+      case "X": {
+        const face = tileAt(x, y + 1) !== "X";
+        r2(0, 0, 16, 16, "#3a3040");
+        if (face) {
+          r2(0, 4, 16, 12, "#e8e0cc");
+          r2(0, 13, 16, 3, "#8a7a5a");
+        }
+        break;
+      }
+      case "Y":
+        r2(0, 0, 16, 16, "#d8eef0");
+        r2(0, 0, 16, 1, "#b0d0d8");
+        r2(0, 0, 1, 16, "#b0d0d8");
+        r2(8, 0, 1, 16, "#c0dce4");
+        r2(0, 8, 16, 1, "#c0dce4");
+        break;
+      case "M":
+        r2(0, 0, 16, 16, "#c89a62");
+        r2(1, 2, 14, 12, "#c03a3a");
+        r2(2, 4, 12, 1, "#e86a5a");
+        r2(2, 9, 12, 1, "#e86a5a");
+        break;
       default:
         r2(0, 0, 16, 16, "#ff00ff");
     }
@@ -4695,7 +5471,65 @@ body.nopad #pad { display: none; }
       c.fillRect(l.x * TILE, l.y * TILE - 11, (rr.x - l.x) * TILE + 16, 3);
     }
     drawLandmarks(c);
+    MYSTERIES.forEach((m) => drawMysteryProp(c, m));
     return cv;
+  }
+  function drawMysteryProp(c, m) {
+    const x = m.x * TILE, y = m.y * TILE;
+    const r2 = (dx, dy, w, h, color) => {
+      c.fillStyle = color;
+      c.fillRect(x + dx, y + dy, w, h);
+    };
+    switch (m.prop) {
+      case "skeleton":
+        r2(7, 12, 2, 4, "#5a4a3a");
+        r2(4, 15, 8, 1, "#5a4a3a");
+        r2(5, -2, 6, 5, "#f0f0e0");
+        r2(6, 0, 1, 1, "#222");
+        r2(9, 0, 1, 1, "#222");
+        r2(7, 3, 2, 8, "#f0f0e0");
+        r2(4, 5, 8, 1, "#e0e0d0");
+        r2(4, 7, 8, 1, "#e0e0d0");
+        r2(5, 10, 6, 1, "#e0e0d0");
+        break;
+      case "piano":
+        r2(0, 2, 16, 12, "#1a1a22");
+        r2(1, 9, 14, 3, "#f8f8f8");
+        for (let i = 2; i < 15; i += 2) r2(i, 9, 1, 2, "#1a1a22");
+        r2(2, 14, 2, 2, "#1a1a22");
+        r2(12, 14, 2, 2, "#1a1a22");
+        break;
+      case "books":
+        r2(0, -4, 16, 20, "#7a4a2a");
+        [["#c84a4a", "#4a7ac8", "#5ab05a", "#d8b84a"], ["#8a5ac8", "#d87a3a", "#4a9aa8", "#c8c8c8"]].forEach((cols, row2) => {
+          cols.forEach((col, i) => r2(1 + i * 3.5, -2 + row2 * 9, 3, 7, col));
+        });
+        break;
+      case "mirror":
+        r2(2, -6, 12, 20, "#8a6a3a");
+        r2(3, -5, 10, 18, "#bfe8ff");
+        r2(4, -4, 3, 6, "#ffffff");
+        break;
+      case "crates":
+        r2(1, 4, 14, 4, "#d8b070");
+        r2(1, 8, 14, 4, "#c8a060");
+        r2(1, 12, 14, 4, "#b89050");
+        r2(3, 1, 10, 3, "#f0f0f0");
+        break;
+      case "locker":
+        r2(2, -6, 12, 22, "#7a8a9a");
+        r2(3, -5, 10, 20, "#8a9aaa");
+        r2(5, -3, 6, 1, "#4a5a6a");
+        r2(5, -1, 6, 1, "#4a5a6a");
+        r2(11, 4, 1, 3, "#ffd84a");
+        break;
+      case "ladder":
+        r2(3, 0, 2, 16, "#c8c8d0");
+        r2(11, 0, 2, 16, "#c8c8d0");
+        r2(3, 4, 10, 1, "#c8c8d0");
+        r2(3, 9, 10, 1, "#c8c8d0");
+        break;
+    }
   }
   function drawLandmarks(c) {
     const jx = 25 * TILE + 8, jy = 3 * TILE + 8;
@@ -4824,9 +5658,19 @@ body.nopad #pad { display: none; }
     const wild = createWild(g, app2.rng);
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
+    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE;
     function camera() {
+      const [top, bottom] = inSchool() ? [SCHOOL_Y0 * TILE, MAP_H * TILE] : [0, SCHOOL_Y0 * TILE];
       cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
-      cam.y = Math.max(0, Math.min(MAP_H * TILE - 240, Math.round(g.pos.y - 128)));
+      cam.y = Math.max(top, Math.min(bottom - 240, Math.round(g.pos.y - 128)));
+    }
+    function warp(p) {
+      g.pos = { x: p.x * TILE + 8, y: p.y * TILE + 12, dir: p.dir };
+      trail.length = 0;
+      buddy.x = g.pos.x - 14;
+      buddy.y = g.pos.y;
+      camera();
+      sfx("cursor");
     }
     camera();
     const say = (lines, opts) => app2.talk.open(lines, opts);
@@ -4853,11 +5697,19 @@ body.nopad #pad { display: none; }
           intro: ["こおりくん、夏休みだからって ゴロゴロしてないで、外で 遊んできなさい！", "神社の ほうで ふるカワちゃんが さがしてたわよ。"],
           friends: ["あら、おともだちが ふえたのね。おやつは 駄菓子屋で 買えるわよ。"],
           bridge: ["石の川橋が 通れないんですって。こまったわねえ。"],
-          clear: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, "南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。"]
+          clear: ["南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。", "そういえば、夜の 小学校に あかりが ついてるって うわさよ。七不思議が どうとか……こわいわねえ。"],
+          school: ["夜の 学校に 行ってるの？ 暗いから 気を つけるのよ。", "おなかが すいたら、駄菓子屋で おやつを 買っていきなさい。"],
+          clear2: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, "学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！"]
         }[g.story];
         say(lines.map((text2) => ({ who: "ともいし", art: "tomoishi", text: text2 })));
       } else if (p.id === "furukawaShrine") {
         meetFurukawa();
+      } else if (p.id === "kage") {
+        say([
+          { who: "", text: "ろうかの おくに、まっくろな 影が 立っている……。" },
+          { who: "ろうかの カゲ", art: "lunashadow", text: "…………。" },
+          furu("これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("kage"), kind: "boss", place: "school" }) });
       } else if (p.id === "nushi") {
         if (g.story === "bridge") {
           say([
@@ -4890,9 +5742,10 @@ body.nopad #pad { display: none; }
         });
       } else if (b.id === "dagashi") {
         shop();
+      } else if (b.id === "school") {
+        enterSchool();
       } else {
         const msg = {
-          school: "夏休みで しまっている。",
           shrine: "おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……",
           toilet: "……だれも 入っていない。なのに、なんだか おなかが ぐるぐる する。",
           temple: "ポク……ポク……。中から 木魚の 音が する。",
@@ -4910,6 +5763,42 @@ body.nopad #pad { display: none; }
         }[b.id];
         say([{ who: "", text: msg }]);
       }
+    }
+    function enterSchool() {
+      if (!reached(g, "clear")) {
+        say([{ who: "", text: "夏休みで しまっている。" }]);
+        return;
+      }
+      if (!SCHOOL_OPEN.includes(g.time)) {
+        say([
+          { who: "", text: "夏休みで しまっている。……でも 夜に なると、中から あかりが もれて いるらしい。" },
+          furu(`夕方か 夜に また 来てみよう。家で ねると 時間が すすむよ。`)
+        ]);
+        return;
+      }
+      warp(SCHOOL_IN);
+      if (g.story !== "clear") return;
+      g.story = "school";
+      say([
+        { who: "", text: "入り口の カギが あいていた……。" },
+        furu("夜の 学校って、なんだか ドキドキするね。この 学校には「七不思議」が あるって うわさなんだ。"),
+        furu("理科室の 動く ガイコツ、音楽室で 夜中に 鳴る 音、図書室の わすれられた 本、おどり場の 大鏡、体育倉庫の かけ声、開かずの ロッカー、プールの 手……。"),
+        furu("あやしい ところを 調べて、ぜんぶ たしかめよう！ 七つ ぜんぶ 知ると、なにかが おこるんだって……。"),
+        furu("それと、学校の キャラは なかまに「とりつく」ことが あるよ。とりつかれた なかまは なまけたり、味方を 攻めたり しちゃうの。"),
+        furu(`そのときは 輪を 回して 後ろに さげて、まんなかの「おたすけ」(${btn("help")}) で 助けてあげて！`),
+        { who: "", text: "「おたすけ」が つかえるように なった！ げた箱の マットに のると 外に 出られる。" }
+      ], { done: () => app2.save() });
+    }
+    function examineMystery(m) {
+      if (g.mysteries[m.id]) {
+        say([{ who: "", text: m.done }]);
+        return;
+      }
+      const n = NAKAMA[m.nakama];
+      g.zukan.seen[m.nakama] = true;
+      say([...m.lines.map((text2) => ({ who: "", text: text2 })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: "", text: `七不思議の 正体、${n.name}が おそいかかってきた！` }], {
+        done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: "wild", place: "school", mystery: m.id })
+      });
     }
     function shop(greet = "いらっしゃい。なにに するかね？") {
       const OBA = "駄菓子屋の おばあちゃん";
@@ -4948,7 +5837,23 @@ body.nopad #pad { display: none; }
         wild.remove(fighting);
         fighting = null;
       }
-      if (result2.boss && result2.outcome === "win") {
+      if (result2.boss && result2.outcome === "win" && result2.bossId === "kage") {
+        say([
+          { who: "ルナシャドウ", art: "lunashadow", text: "…………（ぺこり）。" },
+          furu("影が おとなしく なった……！ あれ？ 窓の 外に だれか いる！"),
+          { who: "おにおに", art: "onioni", text: "ちぇっ、七不思議で 町の こどもを こわがらせる 作戦は しっぱいか。おぼえてろよ、こおりくん！" },
+          furu("いまの、おにおに……？ 学校の さわぎも、鬼鬼団の しわざだったんだ！"),
+          { who: "", text: "２章 クリア！ 七不思議の キャラが 学校を 歩きまわるように なった。" },
+          furu("そういえば、山の ほうの ダムの 水が へってるって うわさだよ。……また おにおにかな？"),
+          { who: "", text: "―― ３章は つぎの アップデートで。" }
+        ], { done: () => app2.save() });
+      } else if (result2.mystery && result2.outcome === "win") {
+        const m = MYSTERIES.find((x) => x.id === result2.mystery), n = mysteriesSolved(g);
+        say([
+          { who: "", text: `七不思議「${m.label}」の 正体は ${NAKAMA[m.nakama].name}だった！ (${n}/${MYSTERIES.length})` },
+          ...allMysteriesSolved(g) ? [furu("これで 七つ ぜんぶ たしかめた！ ……あれ？ ろうかの おくに、黒い 影が 走っていった！"), { who: "", text: "ろうかの 西の はしに 行ってみよう。" }] : []
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win") {
         say([
           { who: "ハシシタボウズ", art: "hashishita", text: "数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。" },
           furu("やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！"),
@@ -5065,6 +5970,11 @@ body.nopad #pad { display: none; }
         meetFurukawa();
         return;
       }
+      const ht = heroTile(g);
+      if (tileAt(ht.x, ht.y) === "M") {
+        warp(SCHOOL_OUT);
+        return;
+      }
       if (input2.pressed.a) {
         const c = wild.facing(g.pos);
         if (c) {
@@ -5073,6 +5983,11 @@ body.nopad #pad { display: none; }
           return;
         }
         const target = lookAt(g);
+        if ((target == null ? void 0 : target.type) === "mystery") {
+          sfx("ok");
+          examineMystery(target.mystery);
+          return;
+        }
         if ((target == null ? void 0 : target.type) === "person") {
           sfx("ok");
           talkToPerson(target.person);
@@ -5197,9 +6112,23 @@ body.nopad #pad { display: none; }
     function drawTop(ctx) {
       ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; i < 6; i++) {
-        const wy = (i * 97 + t * 30) % (MAP_H * TILE);
+      for (let i = 0; !inSchool() && i < 6; i++) {
+        const wy = (i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE);
         ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
+      }
+      if (inSchool()) {
+        for (const r2 of SCHOOL_ROOMS) {
+          const sx = r2.x * TILE + 8 - cam.x, sy = r2.y * TILE + 2 - cam.y, w = r2.label.length * 10 + 8;
+          if (sx < -60 || sx > 460 || sy < -20 || sy > 260) continue;
+          panel(ctx, sx - w / 2, sy - 9, w, 13, { fill: "rgba(240,240,250,0.92)", edge: "#3a3040", r: 2, lineWidth: 1 });
+          text(ctx, r2.label, sx, sy + 1, { size: 9.5, align: "center", color: "#2a2030", shadow: false, bold: true });
+        }
+        if (reached(g, "school")) {
+          for (const m of MYSTERIES) {
+            if (g.mysteries[m.id]) continue;
+            text(ctx, "？", m.x * TILE + 8 - cam.x, m.y * TILE - 10 - cam.y + Math.sin(t * 4 + m.x) * 2, { size: 13, align: "center", bold: true, color: "#c88aff" });
+          }
+        }
       }
       for (const b of BUILDINGS) {
         const sx = b.door.x * TILE + 8 - cam.x, sy = b.y * TILE + 10 - cam.y;
@@ -5215,7 +6144,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = TINT[g.time];
         ctx.fillRect(0, 0, 400, 240);
       }
-      if (g.weather === "rain") {
+      if (g.weather === "rain" && !inSchool()) {
         ctx.fillStyle = "rgba(40, 60, 100, 0.15)";
         ctx.fillRect(0, 0, 400, 240);
         ctx.strokeStyle = "rgba(200, 220, 255, 0.55)";
@@ -5297,10 +6226,11 @@ body.nopad #pad { display: none; }
         return;
       }
       const ht = heroTile(g);
-      text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}　${areaAt(ht.x, ht.y) === "shoutengai" ? "商店街" : "石の川タウン"}`, 10, 18, { size: 12, bold: true });
+      text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}　${AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
       text(ctx, `${g.money}円`, 310, 18, { size: 12, align: "right", color: COLORS.accent });
       panel(ctx, 6, 26, 148, 112, { fill: "#000", r: 3 });
-      const my = Math.max(0, Math.min(miniCanvas.height - 108, Math.round(g.pos.y / TILE * 3 - 54)));
+      const [mTop, mBottom] = inSchool() ? [SCHOOL_Y0 * 3, miniCanvas.height] : [0, (SCHOOL_Y0 - 1) * 3];
+      const my = Math.max(mTop, Math.min(mBottom - 108, Math.round(g.pos.y / TILE * 3 - 54)));
       ctx.drawImage(miniCanvas, 0, my, 144, 108, 8, 28, 144, 108);
       if (Math.floor(t * 4) % 2) {
         ctx.fillStyle = "#ff3a5a";
@@ -5311,10 +6241,11 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      for (const b of BUILDINGS) {
-        const name = MINI_NAMES[b.id] || b.label;
-        const bx = 8 + (b.x + b.w / 2) * 3;
-        let by = 28 + (b.y + b.h / 2) * 3 - my;
+      const labels = inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      for (const b of labels) {
+        const name = b.name;
+        const bx = 8 + b.cx * 3;
+        let by = 28 + b.cy * 3 - my;
         const w = textWidth(ctx, name, 8, true) + 4;
         const x = Math.max(8 + w / 2, Math.min(152 - w / 2, bx));
         while (placed.some((q) => Math.abs(q.x - x) < (q.w + w) / 2 && Math.abs(q.y - by) < 10)) by += 10;
@@ -5325,7 +6256,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -5675,8 +6606,22 @@ body.nopad #pad { display: none; }
     // ネオンの 看板は そのまま
     gomibakon: faceless("gomibakon", { c: "b" }),
     gachapon: faceless("gachapon", { b: "d" }),
-    yataiman: faceless("yataiman", { d: "g", e: "g" })
+    yataiman: faceless("yataiman", { d: "g", e: "g" }),
     // はちまきの うしろ・頭
+    // ----- 石の川小学校の 9 体 (2 章。2026-10-28): 顔を 消して 左右を 反転 -----
+    fusaiyougaikotsu: faceless("fusaiyougaikotsu", { b: "a", c: "a", f: "d" }),
+    // ずがいこつの うしろ・スーツの 背中
+    mirrormuscle: faceless("mirrormuscle", { b: "e", c: "e", d: "e" }),
+    // 鏡の うら (木の 板)
+    proteingolem: faceless("proteingolem", { c: "a" }),
+    takaramimic: faceless("takaramimic", { e: "b", d: "a" }),
+    // 宝箱の うしろ
+    umibozun: faceless("umibozun", { b: "a", c: "a" }),
+    wasurekurage: faceless("wasurekurage", { b: "a", c: "a" }),
+    mikazukibat: faceless("mikazukibat", { b: "a" }),
+    lunashadow: faceless("lunashadow", { b: "a" }),
+    yoroinukegara: faceless("yoroinukegara", { c: "b" })
+    // かぶとの うしろ
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -5721,6 +6666,16 @@ body.nopad #pad { display: none; }
     gomibakon: { motion: "aura", color: "#7ad07a", glyph: "♻" },
     gachapon: { motion: "aura", color: "#ff9ad8", glyph: "★" },
     yataiman: { motion: "rain", color: "#ff7a2a", glyph: "♨" },
+    // 石の川小学校の 9 体 (2 章。仮の 必殺技に 合わせた 動き)
+    fusaiyougaikotsu: { motion: "rain", color: "#f0f0e0", glyph: "✉" },
+    mirrormuscle: { motion: "aura", color: "#bfe8ff", glyph: "✦" },
+    proteingolem: { motion: "dash", color: "#e04040" },
+    takaramimic: { motion: "dash", color: "#ffd84a" },
+    umibozun: { motion: "rain", color: "#4aa8e0", glyph: "〜" },
+    wasurekurage: { motion: "cloud", color: "#d8a8ff", glyph: "?" },
+    mikazukibat: { motion: "cloud", color: "#ffe040", glyph: ")))" },
+    yoroinukegara: { motion: "aura", color: "#8a8a9a", glyph: "◆" },
+    lunashadow: { motion: "beam", color: "#8a6ad0" },
     // こおりくん: 大腸炎アタック
     koori: { motion: "cloud", color: "#c8a060", glyph: "@" }
   };
@@ -6496,6 +7451,7 @@ body.nopad #pad { display: none; }
   const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: "どうぐ" };
   const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: "おやつ" };
   const FAST_BTN = { x: 4, y: 4, w: 56, h: 24, label: "倍速" };
+  const RESCUE_BTN = { x: WHEEL.x - 34, y: WHEEL.y - 22, w: 68, h: 44 };
   const BATTLE_SPEED = { normal: 0.6, fast: 1.2 };
   const BUFF_NAMES = { atk: "こうげき↑", def: "まもり↑", spd: "すばやさ↑", mag: "ようじゅつ↑" };
   const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
@@ -6610,7 +7566,7 @@ body.nopad #pad { display: none; }
       return { ox, oy, sx, sy };
     }
     const at = (delay, fn) => later.push({ at: t + delay, fn });
-    const ACTS = ["attack", "skill", "special", "guard", "loaf", "confused"];
+    const ACTS = ["attack", "skill", "special", "guard", "loaf", "confused", "possessed"];
     function targetsAfter(list, i) {
       const out = [];
       for (let j = i + 1; j < list.length && !ACTS.includes(list[j].type); j++) {
@@ -6676,6 +7632,12 @@ body.nopad #pad { display: none; }
             return effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[(_a2 = unitOf2(e.actor)) == null ? void 0 : _a2.element] || "#ffffff" });
           });
           if (e.big) warn = null;
+        } else if (e.type === "possessed") {
+          const p = posOf(e.actor);
+          if (p) pops.push({ x: p.x, y: p.y - 62, text: e.mode === "lazy" ? "とりつかれて なまけている…" : "とりつかれて 味方を こうげき！", color: "#c88aff", small: true, until: t + 1.2 });
+        } else if (e.type === "rescue") {
+          banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
+          sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
           warn = { name: e.name, until: t + e.warn };
           sfx("cancel");
@@ -6725,8 +7687,34 @@ body.nopad #pad { display: none; }
       mg = { unit, pos, sp: sp2, command, phase: "cmd", t: 0, cmd: createCommand(command, app2.rng), mult: 1, resolved: false };
       sfx("ok");
     }
+    function tryRescue() {
+      const u = rescueTargets(battle)[0];
+      if (!u) {
+        sfx("cancel");
+        return;
+      }
+      const unit = startRescue(battle, u.uid);
+      const command = app2.rng.pick(COMMANDS);
+      mg = { rescue: true, unit, command, phase: "cmd", t: 0, cmd: createCommand(command, app2.rng), mult: 1 };
+      sfx("ok");
+    }
     function updateMinigame(dt, input2) {
       mg.t += dt;
+      if (mg.rescue) {
+        if (mg.phase === "cmd") {
+          mg.cmd.update(dt, input2);
+          if (mg.cmd.done) {
+            mg.mult = mg.cmd.done.mult;
+            mg.phase = "result";
+            mg.t = 0;
+            sfx(mg.mult >= 1 ? "special" : "cancel");
+          }
+        } else if (mg.t > PHASE_TIME.result) {
+          resolveRescue(battle, mg.unit, mg.mult >= 1);
+          mg = null;
+        }
+        return;
+      }
       if (mg.phase === "cmd") {
         mg.cmd.update(dt, input2);
         if (mg.cmd.done) {
@@ -6963,10 +7951,12 @@ body.nopad #pad { display: none; }
         menu = { kind: "food", index: 0 };
         sfx("ok");
       }
+      if (input2.pressed.help) tryRescue();
       const tc = input2.touch;
       if (tc.justDown) {
         const sp2 = SP_BTN.findIndex((bn) => hit(bn, tc.x, tc.y));
-        if (sp2 >= 0) {
+        if (rescueTargets(battle).length && hit(RESCUE_BTN, tc.x, tc.y)) tryRescue();
+        else if (sp2 >= 0) {
           cursor = sp2;
           trySpecial(sp2);
         } else if (hit(ITEM_BTN, tc.x, tc.y)) {
@@ -6995,7 +7985,42 @@ body.nopad #pad { display: none; }
       }
       if (!tc.down) drag = null;
     }
+    function drawSchoolBackground(ctx) {
+      ctx.fillStyle = "#2a2438";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      for (let i = 0; i < 4; i++) {
+        const x = 30 + i * 96;
+        ctx.fillStyle = "#141a3a";
+        ctx.fillRect(x, 14, 56, 40);
+        ctx.fillStyle = "#6a5a7a";
+        ctx.fillRect(x + 27, 14, 2, 40);
+        ctx.fillRect(x, 33, 56, 2);
+      }
+      ctx.fillStyle = "#fff6c8";
+      ctx.beginPath();
+      ctx.arc(76, 26, 6, 0, Math.PI * 2);
+      ctx.fill();
+      const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+      gg.addColorStop(0, "#6a4a2a");
+      gg.addColorStop(1, "#b08a5a");
+      ctx.fillStyle = gg;
+      ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(0, HORIZON, 400, 4);
+      ctx.strokeStyle = "rgba(60, 30, 10, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = -6; i <= 6; i++) {
+        ctx.moveTo(200 + i * 14, HORIZON);
+        ctx.lineTo(200 + i * 90, 240);
+      }
+      ctx.stroke();
+    }
     function drawBackground(ctx) {
+      if (place === "school") {
+        drawSchoolBackground(ctx);
+        return;
+      }
       const river = RIVER.includes(place);
       const sky = g.time === 3 ? ["#141a3a", "#2a2a5a"] : g.time === 2 ? ["#f08a4a", "#f8c070"] : ["#7ac8f8", "#c8ecff"];
       const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
@@ -7136,7 +8161,7 @@ body.nopad #pad { display: none; }
       }
       ctx.stroke();
       drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
-      text(ctx, `必殺技「${u.special.name}」`, 200, 30, { size: 18, align: "center", bold: true, color: COLORS.accent });
+      text(ctx, mg.rescue ? `おたすけ: ${u.name}を もとに もどせ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: "center", bold: true, color: mg.rescue ? "#e0b0ff" : COLORS.accent });
       text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: "center", bold: true });
       if (mg.phase === "result") text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: "center", bold: true, color: mg.mult > 1 ? COLORS.accent : "#ffffff" });
     }
@@ -7162,9 +8187,15 @@ body.nopad #pad { display: none; }
       ctx.arc(WHEEL.x, WHEEL.y, WHEEL.r, -Math.PI * 5 / 6 - 0.4, -Math.PI / 6 + 0.4);
       ctx.stroke();
       text(ctx, "まえ", WHEEL.x, WHEEL.y - WHEEL.r - 12, { size: 10, align: "center", color: COLORS.accent, bold: true });
-      panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: "#1b3a6b", edge: "#bff0ff", r: 20 });
-      text(ctx, "おなかま", WHEEL.x, WHEEL.y - 2, { size: 10, align: "center", bold: true });
-      text(ctx, "ウォッチ", WHEEL.x, WHEEL.y + 12, { size: 10, align: "center", bold: true });
+      if (rescueTargets(battle).length) {
+        panel(ctx, RESCUE_BTN.x, RESCUE_BTN.y, RESCUE_BTN.w, RESCUE_BTN.h, { fill: Math.floor(t * 4) % 2 ? "#7a3aa8" : "#5a2a88", edge: "#e0b0ff", r: 20 });
+        text(ctx, "おたすけ！", WHEEL.x, WHEEL.y + 2, { size: 11, align: "center", bold: true });
+        text(ctx, btn("help"), WHEEL.x, WHEEL.y + 15, { size: 9, align: "center", color: "#e0d0ff" });
+      } else {
+        panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: "#1b3a6b", edge: "#bff0ff", r: 20 });
+        text(ctx, "おなかま", WHEEL.x, WHEEL.y - 2, { size: 10, align: "center", bold: true });
+        text(ctx, "ウォッチ", WHEEL.x, WHEEL.y + 12, { size: 10, align: "center", bold: true });
+      }
       battle.wheel.forEach((u, i) => {
         const pos = ((i - shownRot) % 6 + 6) % 6;
         const ang = (-150 + pos * 60) * Math.PI / 180;
@@ -7181,6 +8212,14 @@ body.nopad #pad { display: none; }
         drawArt(ctx, ART[u.art], 0, x, y + 13, { scale: 1.6, alpha: u.ko ? 0.3 : front ? 1 : 0.7 });
         bar(ctx, x - 16, y + 15, 32, 3, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
         if (u.ko) text(ctx, "×", x, y + 6, { size: 22, align: "center", bold: true, color: "#ff6a6a" });
+        if (!u.ko && u.status.possess > 0) {
+          ctx.strokeStyle = "#c88aff";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(x, y, 24 + Math.sin(t * 6) * 1.5, 0, Math.PI * 2);
+          ctx.stroke();
+          text(ctx, "とりつき", x, y - 24, { size: 8.5, align: "center", bold: true, color: "#e0b0ff" });
+        }
       });
       text(ctx, `${btn("l")} ◀ なぞって回す ▶ ${btn("r")}`, WHEEL.x, 232, { size: 10.5, align: "center", color: COLORS.sub });
     }
@@ -7782,9 +8821,11 @@ body.nopad #pad { display: none; }
       else if (name === "menu") this.scene = createMenu(this);
       else if (name === "title") this.scene = createTitle(this);
     },
-    startBattle({ enemies, kind, place }) {
+    // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
+    startBattle({ enemies, kind, place, mystery = null }) {
       const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv } : null);
       const battle = createBattle({ allies, enemies, rng: this.rng, kind });
+      battle.mystery = mystery;
       this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {

@@ -2,10 +2,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM } from '../src/logic/game.js';
+import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM, bossEnemies } from '../src/logic/game.js';
 import { createBattle } from '../src/logic/battle.js';
-import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS } from '../src/data/map.js';
-import { blockedTile, moveHero, lookAt } from '../src/logic/world.js';
+import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS, MYSTERIES } from '../src/data/map.js';
+import { blockedTile, moveHero, lookAt, peopleHere, mysteriesSolved } from '../src/logic/world.js';
 
 const spot = id => SPOTS.find(s => s.id === id) || ROAMS.find(s => s.id === id);
 const winBattle = (g, enemies, kind = 'wild') => {
@@ -32,7 +32,40 @@ test('神社で ウォッチを もらい、なかまを 3 体 ふやすと 橋�
     const out = applyBattleResult(g, winBattle(g, [{ id: 'nushi', lv: 8 }], 'boss'), rng);
     assert.equal(out.befriend.id, 'hashishita');
     assert.equal(g.story, 'clear');
-    assert.match(objective(g), /石の川 5\/20・商店街 0\/20/);
+    assert.match(objective(g), /七不思議/);
+});
+
+test('2 章: 七不思議を 7 つ たしかめると 8 つ目の 影が 出て、たおすと 2 章 クリア (2026-10-28)', () => {
+    const g = newGame('naitei');
+    receiveWatch(g);
+    g.story = 'school';
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    assert.ok(!peopleHere(g).some(p => p.id === 'kage'), 'はじめは 影が いない');
+    for (const m of MYSTERIES) {
+        const b = winBattle(g, [{ id: m.nakama, lv: m.lv }]);
+        b.mystery = m.id;
+        applyBattleResult(g, b, rng);
+    }
+    assert.equal(mysteriesSolved(g), 7);
+    assert.match(objective(g), /黒い 影/);
+    assert.ok(peopleHere(g).some(p => p.id === 'kage'), '7 つ たしかめると ろうかに 影');
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('kage'), 'boss'), rng);
+    assert.equal(out.bossId, 'kage');
+    assert.equal(out.befriend.id, 'lunashadow');
+    assert.equal(g.story, 'clear2');
+    assert.ok(!peopleHere(g).some(p => p.id === 'kage'), 'たおすと いなくなる');
+    assert.match(objective(g), /学校 1\/9/);
+});
+
+test('2 章: 負けた 七不思議は たしかめた ことに ならない', () => {
+    const g = newGame('naitei');
+    receiveWatch(g);
+    g.story = 'school';
+    const b = winBattle(g, [{ id: 'umibozun', lv: 12 }]);
+    b.outcome = 'lose';
+    b.mystery = 'pool';
+    applyBattleResult(g, b, { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] });
+    assert.equal(mysteriesSolved(g), 0);
 });
 
 test('商店街へは 1 章 クリアまで 工事中の さくで 行けない', () => {

@@ -5,12 +5,16 @@
 //   intro    家の前から。神社へ 行くと ふるカワに 会い、おなかまウォッチ・レンズ・ダイチョウエンキンの メダルを もらう
 //   friends  なかまを 3 体 ふやす
 //   bridge   石の川橋の ヌシを たおす (たおすと ハシシタボウズが なかまに なり、東へ 渡れる)
-//   clear    1 章 クリア。石の川タウンの 20 体を あつめる
+//   clear    1 章 クリア。ここから 2 章「学校の七不思議」: 夕方・夜に 小学校へ 行く
+//   school   夜の 学校に 入った。七不思議を 7 つ たしかめる → 8 つ目の ふしぎ (ボス) を たおす
+//   clear2   2 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
+import { reached } from './story.js';
+import { MYSTERIES } from '../data/map.js';
 
 export const SAVE_VERSION = 1;
 export const VERSIONS = { naitei: '内定', menkyo: '免許' };
@@ -41,7 +45,8 @@ export function newGame(version, seed = 1) {
         seed,
         playTime: 0,
         spotCooldown: {},
-        gifts: {}           // 話せる キャラから 道具を もらった 日 (1 日 1 回)
+        gifts: {},          // 話せる キャラから 道具を もらった 日 (1 日 1 回)
+        mysteries: {}       // たしかめた 七不思議 (2 章)
     };
 }
 
@@ -98,7 +103,7 @@ export function spotKinds(g, spot) {
     return spot.kinds.filter(k =>
         (!k.time || k.time.includes(timeId(g))) &&
         (!k.weather || k.weather === g.weather) &&
-        (!k.after || g.story === k.after));
+        (!k.after || reached(g, k.after)));
 }
 
 // かくれている 場所に 今 だれかが いるか (違和感が 見えて、レンズに 反応するか)
@@ -109,7 +114,7 @@ export function spotActive(g, spot, now) {
 // 話しかけた キャラ (first: { id, lv }) と 戦う。ときどき 同じ 場所の キャラが もう 1 体 出る
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
-    const [lo, hi] = source.lv || (g.story === 'clear' ? [4, 9] : [2, 5]);
+    const [lo, hi] = source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
     const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     if (kinds.length && rng.chance(0.2)) {
@@ -120,7 +125,8 @@ export function encounter(g, source, rng, first = null) {
     return enemies;
 }
 
-export const bossEnemies = () => [{ id: 'nushi', lv: 8 }];
+// ボス: nushi (1 章・石の川橋) / kage (2 章・学校の ろうか)
+export const bossEnemies = (id = 'nushi') => [{ id, lv: BOSSES[id].lv }];
 
 // 仲間に なる 確率 (設計書 4.2)
 export function befriendRate(g, id, food) {
@@ -134,7 +140,7 @@ export function befriendRate(g, id, food) {
 
 // バトルの 結果を ゲームに 入れる。返り値は 結果画面に 出す 中身
 export function applyBattleResult(g, battle, rng) {
-    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === 'boss' };
+    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === 'boss', mystery: battle.mystery || null };
     if (battle.outcome !== 'win') {
         out.money = -Math.floor(g.money * 0.1);
         g.money += out.money;
@@ -152,10 +158,15 @@ export function applyBattleResult(g, battle, rng) {
         const up = gainExp(m, out.exp);
         if (up) out.levelUps.push({ uid: m.uid, id: m.id, lv: m.lv });
     }
+    // 七不思議の 正体に 勝った (2 章)
+    if (out.mystery) g.mysteries[out.mystery] = true;
     if (out.boss) {
-        const id = BOSSES.nushi.befriends;
-        out.befriend = { id, medal: addMedal(g, id, 6), forced: true };
-        g.story = 'clear';
+        const bossId = battle.enemies.find(e => BOSSES[e.id])?.id || 'nushi';
+        const id = BOSSES[bossId].befriends;
+        out.bossId = bossId;
+        out.befriend = { id, medal: addMedal(g, id, bossId === 'nushi' ? 6 : BOSSES[bossId].lv - 2), forced: true };
+        if (bossId === 'nushi') { g.story = 'clear'; g.chapter = 2; }
+        if (bossId === 'kage') { g.story = 'clear2'; g.chapter = 3; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -207,10 +218,17 @@ export function objective(g) {
         case 'intro': return '石の川神社に 行ってみよう';
         case 'friends': return `レンズで さがして、なかまを ふやそう (${Math.min(FRIENDS_GOAL, g.medals.length - g.friendsAtWatch)}/${FRIENDS_GOAL})`;
         case 'bridge': return '石の川橋の ヌシを なんとかしよう';
+        // 2 章「学校の七不思議」
+        case 'clear': return '石の川小学校の 七不思議の うわさを たしかめよう (学校は 夕方・夜だけ 開く)';
+        case 'school': {
+            const n = MYSTERIES.filter(m => g.mysteries[m.id]).length;
+            return n < MYSTERIES.length ? `学校の 七不思議を たしかめよう (${n}/${MYSTERIES.length})` : 'ろうかの おくの 黒い 影を おいかけよう';
+        }
         default: {
-            // 1 章 クリアの あと: 南の 商店街が 開く (段階 2)
+            // 2 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
-            return `なかまを あつめよう　石の川 ${got('ishinokawa')}/${idsInArea('ishinokawa').length}・商店街 ${got('shoutengai')}/${idsInArea('shoutengai').length}`;
+            const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}`;
         }
     }
 }

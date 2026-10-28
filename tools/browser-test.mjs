@@ -309,6 +309,30 @@ try {
     for (let i = 0; i < 6 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
     await skipTalk();
 
+    // ----- 2 章: 夜の 小学校に 入る → 七不思議を 調べると バトル → マットで 外へ (2026-10-28) -----
+    await evaluate('(() => { const g = window.__app.g; g.story = "clear"; g.time = 1; g.pos.x = 19 * 16 + 8; g.pos.y = 7 * 16 + 12; g.pos.dir = "up"; window.__app.field.debug.wild.list.length = 0; return true; })()');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.pos.y < 60 * 16'), '昼の 小学校は しまっている');
+    await evaluate('window.__app.g.time = 3');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "school" && window.__app.g.pos.y > 60 * 16'), '夜は 小学校の 中に 入れる (2 章が 始まる)');
+    await shot('school');
+    await evaluate('(() => { const g = window.__app.g; g.pos.x = 3 * 16 + 8; g.pos.y = 63 * 16 + 12; g.pos.dir = "up"; window.__app.field.debug.wild.list.length = 0; return true; })()');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.mystery === "rika"'), '理科室の ガイコツを 調べると バトル');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
+    for (let i = 0; i < 8 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
+    await skipTalk();
+    check(await evaluate('window.__app.g.mysteries.rika === true'), '勝つと 七不思議を ひとつ たしかめた');
+    await evaluate('(() => { const g = window.__app.g; g.pos.x = 23 * 16 + 8; g.pos.y = 71 * 16 + 12; return true; })()');
+    await key('KeyS', 400);
+    check(await evaluate('window.__app.g.pos.y < 60 * 16'), 'げた箱の マットで 学校の 外へ');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

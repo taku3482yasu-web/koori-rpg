@@ -1,5 +1,5 @@
 // =====================================================================
-// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体)
+// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体)
 // ---------------------------------------------------------------------
 // 前作 (koori-dungeon) から来た 15 体は、名前・属性・役割・説明・口ぐせを ダンジョンの データから写した。
 // 新キャラ 5 体 (イシコロン〜ハシシタボウズ) は 設計書 4.6 の案。
@@ -75,7 +75,8 @@ export function jutsuOf(element, tier, type = 'element') {
 // わざ: キャラごとの わざ。前作 (ダンジョン) の キャラは その キャラの 得意わざ (allies.js の いちばん はじめに 覚える わざ) を 写した。
 //   range: front・line → 1 体 / around → 敵 全員。power は 前作の 威力 (ふつうの 攻撃 = 1)。0 は 状態異常だけ
 //   状態異常は この ゲームの 4 つに 置きかえ (しびれ・しばり → のろい / やけど・大腸炎 → どく / めくらまし・ひるみ → こんらん)
-//   heal: 治す わざ (治す 役の キャラ)
+//   2 章から「とりつき」(possess) も ある (学校の キャラ。設計書 3.4)
+//   heal: 治す わざ (治す 役の キャラ) / buff: 自分を 強くする わざ (ミラーポーズ など)
 const W = (name, element, range, power, status = null, chance = 0) => ({ name, element, range, power, status, chance });
 export const WAZA = {
     haribaby: W('はりとげ', 'ふつう', 'line', 0.9),
@@ -120,13 +121,25 @@ export const WAZA = {
     gomibakon: W('ゴミなげ', 'ふつう', 'line', 1.0, 'poison', 0.4),
     gachapon: W('ガチャころり', 'ふしぎ', 'line', 1.1, 'confuse', 0.3),
     yataiman: W('あつあつラーメン', 'ほのお', 'front', 1.5, 'poison', 0.3),
+    // 石の川小学校 (2 章)。とりつき を 使う キャラが いる
+    fusaiyougaikotsu: W('不採用通知', 'ふしぎ', 'line', 0.7, 'possess', 0.35),
+    mirrormuscle: { name: 'ミラーポーズ', buff: 'def' },
+    proteingolem: W('ゴーレムプレス', 'ふつう', 'front', 1.5),
+    takaramimic: W('かみつき', 'ふつう', 'front', 1.5),
+    umibozun: W('おおなみ', 'みず', 'around', 0.9),
+    wasurekurage: W('わすれ針', 'ふしぎ', 'front', 0.8, 'possess', 0.4),
+    mikazukibat: W('ちょうおんぱ', 'かぜ', 'line', 0.5, 'confuse', 0.6),
+    lunashadow: W('かげうち', 'ふしぎ', 'line', 1.3),
+    yoroinukegara: { name: 'よろいがため', buff: 'def' },
     // こおりくん・ボス
     koori: W('コオリソード', 'こおり', 'front', 1.4),
-    nushi: W('百のかぞえうた', 'ふしぎ', 'around', 0.6, 'confuse', 0.3)
+    nushi: W('百のかぞえうた', 'ふしぎ', 'around', 0.6, 'confuse', 0.3),
+    kage: W('影の とりつき', 'ふしぎ', 'around', 0.6, 'possess', 0.3)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
     if (w.heal) return [{ kind: 'heal', target: 'lowest', power: w.heal }];
+    if (w.buff) return [{ kind: 'buff', target: 'self', stat: w.buff, amount: 0.5, time: 8 }];
     const target = w.range === 'around' ? 'all' : 'one';
     const fx = [];
     if (w.power > 0) fx.push({ kind: 'attack', target, power: w.power * 1.4 * (target === 'all' ? 0.7 : 1), element: w.element });
@@ -391,6 +404,63 @@ const LIST = [
         line: 'へい らっしゃい！', favorite: 'onigiri',
         title: '屋台の大将', desc: '横丁で屋台を営む大将。ラーメンもおでんも焼き鳥も出すが、一番の自慢はつけ麺らしい。',
         special: sp('へい おまち！', [atk('all', 1.8)])
+    },
+    // ----- 石の川小学校の 9 体 (2 章「学校の七不思議」。2026-10-28。ダンジョンから。D 8・C 1) -----
+    //   7 体は 七不思議の 正体 (map.js の MYSTERIES)。ヨロイヌケガラは ろうかを 歩く。ルナシャドウは 8 つ目の ふしぎ (ボス) を たおすと なかまに なる
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮 (設計書 4.7)
+    {
+        id: 'fusaiyougaikotsu', name: 'フサイヨウガイコツ', from: 'ダンジョン 047', area: 'school', rank: 'D', element: 'ふしぎ', role: 'jammer', mul: { mag: 1.1 },
+        line: '今回はご縁がなかったということで', favorite: 'onigiri',
+        title: '不採用がいこつ', desc: '採用されなかったものの恨みが具現化したもの。',
+        special: sp('お祈りメール', [atk('all', 0.6), { kind: 'status', target: 'all', status: 'possess', chance: 0.5 }])
+    },
+    {
+        id: 'mirrormuscle', name: 'ミラーマッスル', from: 'ダンジョン 038', area: 'school', rank: 'D', element: 'ふしぎ', role: 'defender', mul: { def: 1.1 },
+        line: 'キレてるよ！', favorite: 'cider',
+        title: '鏡型のマッスル', desc: '超マッスル。今日もキレている。',
+        special: sp('キレてるポーズ', [{ kind: 'buff', target: 'party', stat: 'def', amount: 0.5, time: 10 }])
+    },
+    {
+        id: 'proteingolem', name: 'プロテインゴーレム', from: 'ダンジョン 036', area: 'school', rank: 'D', element: 'ふつう', role: 'defender', mul: { hp: 1.15, atk: 1.2, spd: 0.8 },
+        line: 'タンパク…シツ…', favorite: 'niboshi',
+        title: 'プロテイン好きのゴーレム', desc: 'プロテインのみで鍛えているゴーレム。プロテインではなく、ステロイドを直で吸っているうわさがある。',
+        special: sp('プロテインパワー', [atk('one', 2.8)])
+    },
+    {
+        id: 'takaramimic', name: 'タカラミミック', from: 'ダンジョン 045', area: 'school', rank: 'D', element: 'ふつう', role: 'defender', mul: { atk: 1.15 },
+        line: 'あけたな？', favorite: 'choco',
+        title: '宝のミミック', desc: '宝箱の形をしたモンスター。見かけはかわいいが、実は危険。',
+        special: sp('ひらけごま', [atk('one', 2.2), { kind: 'buff', target: 'self', stat: 'def', amount: 0.5, time: 8 }])
+    },
+    {
+        id: 'umibozun', name: 'ウミボウズン', from: 'ダンジョン 014', area: 'school', rank: 'D', element: 'ふしぎ', role: 'attacker', mul: { hp: 1.05 },
+        line: 'ぼうず～ん', favorite: 'niboshi',
+        title: '海の怪異', desc: '漁師に恐れられている古典妖怪。新月の夜に見てしまったが最後、その人はもう闇の中。暗く深い闇の中。',
+        special: sp('大うずしお', [atk('all', 1.5, { element: 'みず' })])
+    },
+    {
+        id: 'wasurekurage', name: 'ワスレクラゲ', from: 'ダンジョン 011', area: 'school', rank: 'D', element: 'ふしぎ', role: 'jammer', mul: { hp: 0.9, mag: 1.15 },
+        line: 'なんだっけ…', favorite: 'cider',
+        title: '忘れられたクラゲ', desc: '昔は有名だったが、最近は忘れられてしまったクラゲ。',
+        special: sp('ぜんぶ わすれた', [{ kind: 'status', target: 'all', status: 'possess', chance: 0.5 }, { kind: 'status', target: 'all', status: 'confuse', chance: 0.4 }])
+    },
+    {
+        id: 'mikazukibat', name: 'ミカヅキバット', from: 'ダンジョン 030', area: 'school', rank: 'D', element: 'かぜ', role: 'jammer', mul: { spd: 1.15 },
+        line: 'キキッ', favorite: 'melonpan',
+        title: '三日月の蝙蝠。', desc: '月が三日月の時にだけ現れる蝙蝠。',
+        special: sp('三日月の 超音波', [atk('all', 0.8), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'yoroinukegara', name: 'ヨロイヌケガラ', from: 'ダンジョン 039', area: 'school', rank: 'D', element: 'ふつう', role: 'defender', mul: { def: 1.2, spd: 0.9 },
+        line: 'ガシャン、ガシャン', favorite: 'onigiri',
+        title: '鎧の抜け殻', desc: '今や着るものがいなくなった抜け殻。持ち主を永遠に探している。',
+        special: sp('てっぺき', [{ kind: 'buff', target: 'party', stat: 'def', amount: 0.6, time: 10 }])
+    },
+    {
+        id: 'lunashadow', name: 'ルナシャドウ', from: 'ダンジョン 034', area: 'school', rank: 'C', element: 'ふしぎ', role: 'attacker', mul: { atk: 1.05, spd: 1.1 },
+        line: '…………', favorite: 'melonpan',
+        title: '正体不明', desc: '正体不明の存在。いったい何者なのか、何が目的なのか、その一切が不明である。',
+        special: sp('正体不明', [atk('all', 1.6, { magic: true })])
     }
 ];
 
@@ -403,7 +473,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -423,7 +493,14 @@ export const BOSSES = {
         base: { hp: 340, atk: 14, def: 12, spd: 9, mag: 15 },
         // 大技: 2.5 秒 前に 予告が 出る。そのあいだに 輪を 回して よけられる (設計書 3.5)
         bigMove: { name: '足音 百かぞえ', every: 12, warn: 2.5, effects: [atk('all', 1.6, { magic: true })] },
-        befriends: 'hashishita'
+        befriends: 'hashishita', lv: 8, place: 'bridge'
+    },
+    // 2 章の ボス: 七不思議の 8 つ目「夜の ろうかを 走る 影」(ルナシャドウの 大きな すがた)。大技で なかまに とりつく
+    kage: {
+        id: 'kage', name: 'ろうかの カゲ・ルナシャドウ', element: 'ふしぎ', role: 'attacker', art: 'lunashadow', scale: 2, rank: 'C',
+        base: { hp: 420, atk: 17, def: 13, spd: 11, mag: 17 },
+        bigMove: { name: '8 つ目の ふしぎ', every: 12, warn: 2.5, effects: [atk('all', 1.3, { magic: true }), { kind: 'status', target: 'all', status: 'possess', chance: 0.4 }] },
+        befriends: 'lunashadow', lv: 13, place: 'school'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

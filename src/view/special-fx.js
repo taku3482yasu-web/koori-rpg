@@ -59,6 +59,16 @@ export const SPECIALS = {
     gomibakon: { motion: 'aura', color: '#7ad07a', glyph: '♻' },
     gachapon: { motion: 'aura', color: '#ff9ad8', glyph: '★' },
     yataiman: { motion: 'rain', color: '#ff7a2a', glyph: '♨' },
+    // 石の川小学校の 9 体 (2 章。仮の 必殺技に 合わせた 動き)
+    fusaiyougaikotsu: { motion: 'rain', color: '#f0f0e0', glyph: '✉' },
+    mirrormuscle: { motion: 'aura', color: '#bfe8ff', glyph: '✦' },
+    proteingolem: { motion: 'dash', color: '#e04040' },
+    takaramimic: { motion: 'dash', color: '#ffd84a' },
+    umibozun: { motion: 'rain', color: '#4aa8e0', glyph: '〜' },
+    wasurekurage: { motion: 'cloud', color: '#d8a8ff', glyph: '?' },
+    mikazukibat: { motion: 'cloud', color: '#ffe040', glyph: ')))' },
+    yoroinukegara: { motion: 'aura', color: '#8a8a9a', glyph: '◆' },
+    lunashadow: { motion: 'beam', color: '#8a6ad0' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };

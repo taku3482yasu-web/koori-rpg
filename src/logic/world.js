@@ -3,19 +3,25 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { TILE, BLOCK, BUILDINGS, PROPS, PEOPLE, GATES, tileAt } from '../data/map.js';
+import { TILE, BLOCK, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, tileAt } from '../data/map.js';
+import { reached } from './story.js';
 
 const HALF_W = 5, BOX_H = 6;
+
+// 七不思議を いくつ たしかめたか (2 章)
+export const mysteriesSolved = g => MYSTERIES.filter(m => g.mysteries && g.mysteries[m.id]).length;
+export const allMysteriesSolved = g => mysteriesSolved(g) >= MYSTERIES.length;
 
 export function peopleHere(g) {
     return PEOPLE.filter(p =>
         !p.only ||
         (p.only === 'beforeWatch' && g.story === 'intro') ||
-        (p.only === 'beforeClear' && g.story !== 'clear'));
+        (p.only === 'beforeClear' && !reached(g, 'clear')) ||
+        (p.only === 'kage' && g.story === 'school' && allMysteriesSolved(g)));
 }
 
 // 工事中の さく (1 章 クリアまで 商店街へ 行けない)
-export const gatesHere = g => GATES.filter(q => q.only !== 'beforeClear' || g.story !== 'clear');
+export const gatesHere = g => GATES.filter(q => q.only !== 'beforeClear' || !reached(g, 'clear'));
 const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
 
 // そのマスに 入れないか
@@ -24,6 +30,7 @@ export function blockedTile(g, tx, ty) {
     if (gatesHere(g).some(q => inGate(q, tx, ty))) return true;
     if (BUILDINGS.some(b => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some(p => p.x === tx && p.y === ty)) return true;
+    if (MYSTERIES.some(m => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some(p => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
 }
 
@@ -63,7 +70,7 @@ export function facingTile(g) {
     return { x: t.x + d[0], y: t.y + d[1] };
 }
 
-// 前の マスを 調べる: 人 か 建物の 入り口
+// 前の マスを 調べる: 人 か 建物の 入り口 か 七不思議の 物
 export function lookAt(g) {
     const f = facingTile(g);
     const person = peopleHere(g).find(p => p.x === f.x && f.y >= p.y && f.y < p.y + (p.h || 1));
@@ -72,6 +79,8 @@ export function lookAt(g) {
     if (door) return { type: 'door', building: door };
     const gate = gatesHere(g).find(q => inGate(q, f.x, f.y));
     if (gate) return { type: 'gate', gate };
+    const mystery = MYSTERIES.find(m => m.x === f.x && m.y === f.y);
+    if (mystery) return { type: 'mystery', mystery };
     return null;
 }
 

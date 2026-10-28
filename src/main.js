@@ -62,9 +62,11 @@ const app = {
         else if (name === 'menu') this.scene = createMenu(this);
         else if (name === 'title') this.scene = createTitle(this);
     },
-    startBattle({ enemies, kind, place }) {
+    // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
+    startBattle({ enemies, kind, place, mystery = null }) {
         const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv } : null));
         const battle = createBattle({ allies, enemies, rng: this.rng, kind });
+        battle.mystery = mystery;
         this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {

@@ -16,13 +16,15 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
 const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: 'どうぐ' };
 const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: 'おやつ' };
 const FAST_BTN = { x: 4, y: 4, w: 56, h: 24, label: '倍速' };
+// おたすけ: 後ろに とりつかれた なかまが いるとき、輪の まんなかが ボタンに なる (2 章)
+const RESCUE_BTN = { x: WHEEL.x - 34, y: WHEEL.y - 22, w: 68, h: 44 };
 // バトルの 進む 速さ (2026-10-28 ユーザー指定: 1 回 1 回の 行動が 速いので ゆっくり。倍速で その 2 倍)
 export const BATTLE_SPEED = { normal: 0.6, fast: 1.2 };
 // 強化の 名前 (必殺技などで ついた ものは 切れるまで 出す)
@@ -151,7 +153,7 @@ export function createBattleView(app, battle, place) {
     const at = (delay, fn) => later.push({ at: t + delay, fn });
 
     // わざ・術の 当たる 相手: つづく できごと (次の キャラが 動くまで) の target
-    const ACTS = ['attack', 'skill', 'special', 'guard', 'loaf', 'confused'];
+    const ACTS = ['attack', 'skill', 'special', 'guard', 'loaf', 'confused', 'possessed'];
     function targetsAfter(list, i) {
         const out = [];
         for (let j = i + 1; j < list.length && !ACTS.includes(list[j].type); j++) {
@@ -210,6 +212,13 @@ export function createBattleView(app, battle, place) {
                 const c = centerOf(e.actor), p = posOf(e.actor);
                 if (c && p && kind !== 'perf') at(0.62, () => effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[unitOf(e.actor)?.element] || '#ffffff' }));
                 if (e.big) warn = null;
+            } else if (e.type === 'possessed') {
+                // とりつき: なまける / 味方を 攻める
+                const p = posOf(e.actor);
+                if (p) pops.push({ x: p.x, y: p.y - 62, text: e.mode === 'lazy' ? 'とりつかれて なまけている…' : 'とりつかれて 味方を こうげき！', color: '#c88aff', small: true, until: t + 1.2 });
+            } else if (e.type === 'rescue') {
+                banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
+                sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
                 warn = { name: e.name, until: t + e.warn };
                 sfx('cancel');
@@ -254,8 +263,27 @@ export function createBattleView(app, battle, place) {
         mg = { unit, pos, sp, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1, resolved: false };
         sfx('ok');
     }
+    // おたすけ (2 章): 後ろの とりつかれた なかまを コマンドで 治す。成功 (大成功を ふくむ) で 治る
+    function tryRescue() {
+        const u = rescueTargets(battle)[0];
+        if (!u) { sfx('cancel'); return; }
+        const unit = startRescue(battle, u.uid);
+        const command = app.rng.pick(COMMANDS);
+        mg = { rescue: true, unit, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1 };
+        sfx('ok');
+    }
     function updateMinigame(dt, input) {
         mg.t += dt;
+        if (mg.rescue) {
+            if (mg.phase === 'cmd') {
+                mg.cmd.update(dt, input);
+                if (mg.cmd.done) { mg.mult = mg.cmd.done.mult; mg.phase = 'result'; mg.t = 0; sfx(mg.mult >= 1 ? 'special' : 'cancel'); }
+            } else if (mg.t > PHASE_TIME.result) {
+                resolveRescue(battle, mg.unit, mg.mult >= 1);
+                mg = null;
+            }
+            return;
+        }
         if (mg.phase === 'cmd') {
             mg.cmd.update(dt, input);
             if (mg.cmd.done) { mg.mult = mg.cmd.done.mult; mg.phase = 'result'; mg.t = 0; sfx(mg.mult > 1 ? 'special' : 'ok'); }
@@ -435,12 +463,14 @@ export function createBattleView(app, battle, place) {
         if (input.pressed.sp3) trySpecial(2);
         if (input.pressed.y) { menu = { kind: 'item', index: 0 }; sfx('ok'); }
         if (input.pressed.x && battle.kind === 'wild') { menu = { kind: 'food', index: 0 }; sfx('ok'); }
+        if (input.pressed.help) tryRescue();
 
         // タッチ: 輪を なぞる・必殺技・どうぐ
         const tc = input.touch;
         if (tc.justDown) {
             const sp = SP_BTN.findIndex(bn => hit(bn, tc.x, tc.y));
-            if (sp >= 0) { cursor = sp; trySpecial(sp); } else if (hit(ITEM_BTN, tc.x, tc.y)) { menu = { kind: 'item', index: 0 }; sfx('ok'); } else if (hit(FOOD_BTN, tc.x, tc.y) && battle.kind === 'wild') { menu = { kind: 'food', index: 0 }; sfx('ok'); } else if (Math.hypot(tc.x - WHEEL.x, tc.y - WHEEL.y) < WHEEL.r + 30) {
+            if (rescueTargets(battle).length && hit(RESCUE_BTN, tc.x, tc.y)) tryRescue();
+            else if (sp >= 0) { cursor = sp; trySpecial(sp); } else if (hit(ITEM_BTN, tc.x, tc.y)) { menu = { kind: 'item', index: 0 }; sfx('ok'); } else if (hit(FOOD_BTN, tc.x, tc.y) && battle.kind === 'wild') { menu = { kind: 'food', index: 0 }; sfx('ok'); } else if (Math.hypot(tc.x - WHEEL.x, tc.y - WHEEL.y) < WHEEL.r + 30) {
                 drag = { a: Math.atan2(tc.y - WHEEL.y, tc.x - WHEEL.x), acc: 0 };
             }
         }
@@ -459,7 +489,38 @@ export function createBattleView(app, battle, place) {
     }
 
     // ----- 描く: 上画面 -----
+    // 夜の 学校 (2 章): くらい かべと 窓、木の ゆか
+    function drawSchoolBackground(ctx) {
+        ctx.fillStyle = '#2a2438';
+        ctx.fillRect(0, 0, 400, HORIZON);
+        for (let i = 0; i < 4; i++) {
+            const x = 30 + i * 96;
+            ctx.fillStyle = '#141a3a';
+            ctx.fillRect(x, 14, 56, 40);
+            ctx.fillStyle = '#6a5a7a';
+            ctx.fillRect(x + 27, 14, 2, 40);
+            ctx.fillRect(x, 33, 56, 2);
+        }
+        ctx.fillStyle = '#fff6c8';
+        ctx.beginPath();
+        ctx.arc(76, 26, 6, 0, Math.PI * 2);
+        ctx.fill();
+        const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+        gg.addColorStop(0, '#6a4a2a');
+        gg.addColorStop(1, '#b08a5a');
+        ctx.fillStyle = gg;
+        ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillRect(0, HORIZON, 400, 4);
+        ctx.strokeStyle = 'rgba(60, 30, 10, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = -6; i <= 6; i++) { ctx.moveTo(200 + i * 14, HORIZON); ctx.lineTo(200 + i * 90, 240); }
+        ctx.stroke();
+    }
+
     function drawBackground(ctx) {
+        if (place === 'school') { drawSchoolBackground(ctx); return; }
         const river = RIVER.includes(place);
         const sky = g.time === 3 ? ['#141a3a', '#2a2a5a'] : g.time === 2 ? ['#f08a4a', '#f8c070'] : ['#7ac8f8', '#c8ecff'];
         const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
@@ -603,7 +664,7 @@ export function createBattleView(app, battle, place) {
         }
         ctx.stroke();
         drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
-        text(ctx, `必殺技「${u.special.name}」`, 200, 30, { size: 18, align: 'center', bold: true, color: COLORS.accent });
+        text(ctx, mg.rescue ? `おたすけ: ${u.name}を もとに もどせ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: 'center', bold: true, color: mg.rescue ? '#e0b0ff' : COLORS.accent });
         text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: 'center', bold: true });
         if (mg.phase === 'result') text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
     }
@@ -634,10 +695,16 @@ export function createBattleView(app, battle, place) {
         ctx.arc(WHEEL.x, WHEEL.y, WHEEL.r, -Math.PI * 5 / 6 - 0.4, -Math.PI / 6 + 0.4);
         ctx.stroke();
         text(ctx, 'まえ', WHEEL.x, WHEEL.y - WHEEL.r - 12, { size: 10, align: 'center', color: COLORS.accent, bold: true });
-        // 時計
-        panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: '#1b3a6b', edge: '#bff0ff', r: 20 });
-        text(ctx, 'おなかま', WHEEL.x, WHEEL.y - 2, { size: 10, align: 'center', bold: true });
-        text(ctx, 'ウォッチ', WHEEL.x, WHEEL.y + 12, { size: 10, align: 'center', bold: true });
+        // 時計 (とりつかれた なかまが 後ろに いると「おたすけ」ボタン)
+        if (rescueTargets(battle).length) {
+            panel(ctx, RESCUE_BTN.x, RESCUE_BTN.y, RESCUE_BTN.w, RESCUE_BTN.h, { fill: Math.floor(t * 4) % 2 ? '#7a3aa8' : '#5a2a88', edge: '#e0b0ff', r: 20 });
+            text(ctx, 'おたすけ！', WHEEL.x, WHEEL.y + 2, { size: 11, align: 'center', bold: true });
+            text(ctx, btn('help'), WHEEL.x, WHEEL.y + 15, { size: 9, align: 'center', color: '#e0d0ff' });
+        } else {
+            panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: '#1b3a6b', edge: '#bff0ff', r: 20 });
+            text(ctx, 'おなかま', WHEEL.x, WHEEL.y - 2, { size: 10, align: 'center', bold: true });
+            text(ctx, 'ウォッチ', WHEEL.x, WHEEL.y + 12, { size: 10, align: 'center', bold: true });
+        }
         battle.wheel.forEach((u, i) => {
             const pos = ((i - shownRot) % 6 + 6) % 6;
             const ang = (-150 + pos * 60) * Math.PI / 180;
@@ -654,6 +721,15 @@ export function createBattleView(app, battle, place) {
             drawArt(ctx, ART[u.art], 0, x, y + 13, { scale: 1.6, alpha: u.ko ? 0.3 : front ? 1 : 0.7 });
             bar(ctx, x - 16, y + 15, 32, 3, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
             if (u.ko) text(ctx, '×', x, y + 6, { size: 22, align: 'center', bold: true, color: '#ff6a6a' });
+            // とりつかれている なかまには むらさきの 印
+            if (!u.ko && u.status.possess > 0) {
+                ctx.strokeStyle = '#c88aff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x, y, 24 + Math.sin(t * 6) * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+                text(ctx, 'とりつき', x, y - 24, { size: 8.5, align: 'center', bold: true, color: '#e0b0ff' });
+            }
         });
         text(ctx, `${btn('l')} ◀ なぞって回す ▶ ${btn('r')}`, WHEEL.x, 232, { size: 10.5, align: 'center', color: COLORS.sub });
     }

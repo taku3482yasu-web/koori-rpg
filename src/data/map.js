@@ -1,19 +1,23 @@
 // =====================================================================
-// 石の川タウン と 商店街 の 地図 (設計書 5.1。1 章の 舞台 + 段階 2 の 商店街)
+// 石の川タウン と 商店街 と 石の川小学校の 中 の 地図 (設計書 5.1。1 章の 舞台 + 段階 2 の 商店街 + 2 章の 学校)
 // ---------------------------------------------------------------------
-// 1 マス 16 ドット・48 × 60 マス。まんなかを 石の川が 南北に 流れ、石の川橋 だけで 東西が つながる。
+// 1 マス 16 ドット・48 × 84 マス。まんなかを 石の川が 南北に 流れ、石の川橋 だけで 東西が つながる。
 // 1 章の あいだは 橋に ヌシ が いて 東へ 渡れない (ボスを たおすと 通れる)。
 // 上の 36 マス (y 0〜35) が 石の川タウン、下 (y 36〜59) が 商店街 (2026-10-27)。
 //   商店街へ 行く 道 (x 12・13 と 40・41 の 南の はし) は、1 章 クリアまで 工事中の さく (GATES) で 通れない
+// いちばん 下 (y 60〜83) は 石の川小学校の 中 (2 章。2026-10-28)。町とは つながって いなくて、小学校の 入り口から 入る
+//   (夕方・夜だけ 開く)。げた箱の マット (M) に のると 外に 出る
 //
 //   tiles[y][x]: G 草 / F 花 / T 木 / R 道 / W 川 / B 橋 / P 川原の 石ころ / S 公園の 砂 / K 石だたみ / A 駐車場
+//                学校: L 木の ゆか / X かべ / Y プールサイド / M げた箱の マット (W は プールの 水)
 //   BUILDINGS: 家などの 建物 (通れない)。door は 調べる マス (建物の 下の まんなか)
 //   SPOTS: レンズで さがす 場所 (設計書 5.2)。kinds の time は 出る 時間帯、weather: 'rain' は 雨の日だけ
 // =====================================================================
 export const TILE = 16;
-export const MAP_W = 48, MAP_H = 60;
-export const TOWN_H = 36;   // ここから 下が 商店街
-export const BLOCK = new Set(['T', 'W']);
+export const MAP_W = 48, MAP_H = 84;
+export const TOWN_H = 36;       // ここから 下が 商店街
+export const SCHOOL_Y0 = 60;    // ここから 下が 小学校の 中
+export const BLOCK = new Set(['T', 'W', 'X']);
 
 function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill('G'));
@@ -21,19 +25,19 @@ function build() {
         for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) t[y][x] = c;
     };
     // まわりは 木
-    fill(0, 0, MAP_W - 1, 0, 'T'); fill(0, MAP_H - 1, MAP_W - 1, MAP_H - 1, 'T');
-    fill(0, 0, 0, MAP_H - 1, 'T'); fill(MAP_W - 1, 0, MAP_W - 1, MAP_H - 1, 'T');
+    fill(0, 0, MAP_W - 1, 0, 'T'); fill(0, SCHOOL_Y0 - 1, MAP_W - 1, SCHOOL_Y0 - 1, 'T');
+    fill(0, 0, 0, SCHOOL_Y0 - 1, 'T'); fill(MAP_W - 1, 0, MAP_W - 1, SCHOOL_Y0 - 1, 'T');
     // 神社 (北西) の 石だたみと、南の 木の 列
     fill(2, 2, 10, 9, 'K');
     fill(1, 10, 9, 10, 'T');
     // お寺 (北東) の 石だたみ
     fill(36, 2, 46, 10, 'K');
     // 石の川 と 川原
-    fill(30, 1, 33, MAP_H - 2, 'W');
-    fill(28, 1, 29, MAP_H - 2, 'P'); fill(34, 1, 35, MAP_H - 2, 'P');
+    fill(30, 1, 33, SCHOOL_Y0 - 2, 'W');
+    fill(28, 1, 29, SCHOOL_Y0 - 2, 'P'); fill(34, 1, 35, SCHOOL_Y0 - 2, 'P');
     // 道 (たての 2 本は 商店街まで のびる)
     fill(1, 17, 27, 18, 'R'); fill(36, 17, 46, 18, 'R');
-    fill(12, 2, 13, MAP_H - 2, 'R'); fill(40, 2, 41, MAP_H - 2, 'R');
+    fill(12, 2, 13, SCHOOL_Y0 - 2, 'R'); fill(40, 2, 41, SCHOOL_Y0 - 2, 'R');
     fill(14, 8, 27, 9, 'R');
     // 石の川橋
     fill(28, 17, 35, 18, 'B');
@@ -59,6 +63,19 @@ function build() {
     fill(42, 56, 46, 58, 'A');
     fill(2, 37, 9, 38, 'F'); fill(43, 37, 46, 38, 'F');
     [[3, 40], [8, 40], [24, 37], [37, 38], [46, 41], [2, 57], [9, 57], [37, 57]].forEach(([x, y]) => { t[y][x] = 'T'; });
+
+    // ----- 石の川小学校の 中 (y 60〜83。2 章) -----
+    //   北: 理科室・音楽室・図書室・校長室 (y 61〜67) / ろうか (y 69〜71) / 南: おどり場・体育館・プール (y 73〜82)
+    fill(0, SCHOOL_Y0, MAP_W - 1, MAP_H - 1, 'X');
+    fill(1, 61, 10, 67, 'L'); fill(12, 61, 21, 67, 'L'); fill(23, 61, 32, 67, 'L'); fill(34, 61, 46, 67, 'L');
+    fill(1, 69, 46, 71, 'L');
+    fill(1, 73, 10, 82, 'L'); fill(12, 73, 30, 82, 'L'); fill(32, 73, 46, 82, 'Y');
+    fill(35, 76, 44, 81, 'W');
+    // 教室の 入り口 (かべの すきま)
+    [5, 16, 27, 40].forEach(x => fill(x, 68, x + 1, 68, 'L'));
+    [5, 20, 38].forEach(x => fill(x, 72, x + 1, 72, 'L'));
+    // げた箱の マット (のると 外へ)
+    fill(23, 72, 24, 72, 'M');
     return t.map(row => row.join(''));
 }
 export const TILES = build();
@@ -98,6 +115,8 @@ export const PROPS = [
 
 // 商店街の キャラの Lv (1 章 クリアの ころの なかまは Lv7〜9 くらい)
 export const SHOUTENGAI_LV = [6, 10];
+// 小学校の 中の キャラの Lv (2 章)
+export const SCHOOL_LV = [9, 13];
 
 // かくれている キャラ (レンズで さがす。2026-10-26 ユーザー指定: ふだんの 画面でも「なにか へん」と わかるように 化けている)
 //   x, y はマス。cue: ふだんの 画面に 出す 違和感の 絵 (view/field.js の drawCue)
@@ -138,7 +157,12 @@ export const ROAMS = [
     { id: 'backW', label: 'うら通り', x0: 1, y0: 54, x1: 27, y1: 55, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: 'gomibakon', w: 2 }, { id: 'yopparaigarasu', w: 2, time: ['evening', 'night'] }, { id: 'maikumbo', w: 1 }] },
     { id: 'hiroba', label: '商店街の広場', x0: 14, y0: 56, x1: 26, y1: 58, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: 'popupn', w: 2 }, { id: 'hoshikuzun', w: 2, time: ['night'] }, { id: 'chouchinbura', w: 2, time: ['evening', 'night'] }, { id: 'yataiman', w: 1, time: ['night'] }] },
     { id: 'backE', label: 'うら通り (東)', x0: 36, y0: 54, x1: 46, y1: 55, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'neonkurage', w: 2, time: ['evening', 'night'] }, { id: 'maikumbo', w: 1 }] },
-    { id: 'parkingS', label: '商店街の駐車場', x0: 42, y0: 56, x1: 46, y1: 58, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'gomibakon', w: 1 }, { id: 'makibishimushi', w: 1 }] }
+    { id: 'parkingS', label: '商店街の駐車場', x0: 42, y0: 56, x1: 46, y1: 58, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'gomibakon', w: 1 }, { id: 'makibishimushi', w: 1 }] },
+    // 石の川小学校の 中 (2 章)。七不思議の キャラは 2 章 クリアの あと (clear2) から 歩きまわる (なかまに しそこねても また 会える)
+    { id: 'kouchou', label: '校長室', x0: 35, y0: 62, x1: 45, y1: 66, max: 1, lv: SCHOOL_LV, kinds: [{ id: 'yoroinukegara', w: 1 }] },
+    { id: 'rouka', label: '学校の ろうか', x0: 2, y0: 69, x1: 44, y1: 71, max: 1, lv: SCHOOL_LV, kinds: [{ id: 'fusaiyougaikotsu', w: 1, after: 'clear2' }, { id: 'wasurekurage', w: 1, after: 'clear2' }, { id: 'mikazukibat', w: 1, after: 'clear2' }, { id: 'lunashadow', w: 1, after: 'clear2', time: ['night'] }] },
+    { id: 'taiikukan', label: '体育館', x0: 13, y0: 74, x1: 29, y1: 81, max: 1, lv: SCHOOL_LV, kinds: [{ id: 'proteingolem', w: 1, after: 'clear2' }, { id: 'takaramimic', w: 1, after: 'clear2' }, { id: 'mirrormuscle', w: 1, after: 'clear2' }] },
+    { id: 'poolside', label: 'プールサイド', x0: 32, y0: 73, x1: 46, y1: 74, max: 1, lv: SCHOOL_LV, kinds: [{ id: 'umibozun', w: 1, after: 'clear2' }] }
 ];
 
 // 話せる キャラ (2026-10-28 ユーザー指定: 町の キャラは、戦える キャラに 赤い「！」が つき、
@@ -173,12 +197,50 @@ export const FRIENDS = [
 export const PEOPLE = [
     { id: 'mama', name: 'ともいし', art: 'tomoishi', x: 8, y: 24 },
     { id: 'furukawaShrine', name: 'ふるカワ', art: 'furukawa', x: 7, y: 6, only: 'beforeWatch' },
-    { id: 'nushi', name: 'ヌシ', art: 'hashishita', x: 31, y: 17, h: 2, only: 'beforeClear', scale: 2 }
+    { id: 'nushi', name: 'ヌシ', art: 'hashishita', x: 31, y: 17, h: 2, only: 'beforeClear', scale: 2 },
+    // 2 章: 七不思議を 7 つ たしかめると、ろうかの おくに 8 つ目の ふしぎ (ボス) が 出る
+    { id: 'kage', name: 'ろうかの カゲ', art: 'lunashadow', x: 9, y: 70, only: 'kage', scale: 2 }
 ];
 
 // こおりくんが 始める 場所 (家の 前)
 export const START = { x: 6, y: 24 };
 
+// ----- 石の川小学校の 中 (2 章「学校の七不思議」。2026-10-28) -----
+// 入ると ろうかの げた箱の 前 (SCHOOL_IN)。マットに のると 小学校の 入り口の 前 (SCHOOL_OUT) に 出る
+export const SCHOOL_IN = { x: 23.5, y: 70, dir: 'up' };
+export const SCHOOL_OUT = { x: 19, y: 7, dir: 'down' };
+export const SCHOOL_OPEN = [2, 3];     // 開いている 時間帯 (夕方・夜)
+// 教室の 名札 (x, y はマス。かべの 上に 出す)
+export const SCHOOL_ROOMS = [
+    { id: 'rika', label: '理科室', x: 5.5, y: 61 },
+    { id: 'ongaku', label: '音楽室', x: 16.5, y: 61 },
+    { id: 'tosho', label: '図書室', x: 27.5, y: 61 },
+    { id: 'kouchou', label: '校長室', x: 40, y: 61 },
+    { id: 'odoriba', label: 'おどり場', x: 5.5, y: 73 },
+    { id: 'taiiku', label: '体育館', x: 21, y: 73 },
+    { id: 'pool', label: 'プール', x: 39.5, y: 73 },
+    { id: 'getabako', label: 'げた箱', x: 24, y: 71.2 }
+];
+// 七不思議: 調べると 正体の キャラと バトル。勝つと たしかめた ことに なる (g.mysteries)。7 つ たしかめると 8 つ目 (ボス) が 出る
+//   x, y: 調べる 物の マス (通れない)。lines: 調べた ときの 文。done: たしかめた あとに 調べた ときの 文
+export const MYSTERIES = [
+    { id: 'rika', label: '理科室の 動く ガイコツ', x: 3, y: 62, prop: 'skeleton', nakama: 'fusaiyougaikotsu', lv: 10,
+        lines: ['ガイコツの 標本が ある。……いま、こっちを 見た？', 'カタカタカタ……！ 標本が 動きだした！'], done: 'ふつうの 標本だ。もう 動かない。' },
+    { id: 'ongaku', label: '音楽室で 夜中に 鳴る 音', x: 18, y: 62, prop: 'piano', nakama: 'mikazukibat', lv: 10,
+        lines: ['だれも いないのに、ピアノの 中から キーキー 音が する……。', 'ふたを あけたら、なにかが 飛びだしてきた！'], done: 'ピアノは しずかだ。' },
+    { id: 'tosho', label: '図書室の わすれられた 本', x: 30, y: 62, prop: 'books', nakama: 'wasurekurage', lv: 10,
+        lines: ['読んだ 人が 中身を ぜんぶ わすれる、という 本が ある。', '……あれ？ なにを しに 来たんだっけ？ 本の すきまから なにかが ふわふわ 出てきた！'], done: 'ふつうの 本だ。ちゃんと おぼえて いられる。' },
+    { id: 'kagami', label: 'おどり場の 大鏡', x: 5, y: 74, prop: 'mirror', nakama: 'mirrormuscle', lv: 11,
+        lines: ['夜中に のぞくと、ちがう 自分が うつる という 大鏡。', '鏡の 中の こおりくんが、ムキムキの ポーズを とっている！'], done: 'こおりくんが うつっている。ふつうの 鏡だ。' },
+    { id: 'souko', label: '体育倉庫の かけ声', x: 28, y: 80, prop: 'crates', nakama: 'proteingolem', lv: 11,
+        lines: ['体育倉庫から「ふんっ！ ふんっ！」と かけ声が 聞こえる。', 'とびばこの うしろで、だれかが 筋トレを している！'], done: 'とびばこが きちんと ならんでいる。' },
+    { id: 'locker', label: '開かずの ロッカー', x: 46, y: 70, prop: 'locker', nakama: 'takaramimic', lv: 11,
+        lines: ['ずっと 開かない という そうじ用具入れ。', 'カギは かかって いない……。あけた しゅんかん、ロッカーが かみついてきた！'], done: 'ほうきと ちりとりが 入っている。' },
+    { id: 'pool', label: 'プールの 手', x: 39, y: 75, prop: 'ladder', nakama: 'umibozun', lv: 12,
+        lines: ['夜の プールから 手が 出てきて、足を つかむ という うわさ。', 'ザバァ！ 水の 中から 大きな 黒い 頭が 出てきた！'], done: 'しずかな 水面に 月が うつっている。' }
+];
+
 export const tileAt = (x, y) => (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? 'T' : TILES[y][x]);
 // その マスの 地区 (設計書 5.1)
-export const areaAt = (x, y) => (y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
+export const areaAt = (x, y) => (y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
+export const inSchoolTile = y => y >= SCHOOL_Y0;

@@ -1,14 +1,16 @@
 // =====================================================================
 // 町の 場面: 上画面で 歩く・調べる・レンズで さがす、下画面に 地図と ボタン (設計書 5 章・7 章)
+// 2 章: 小学校の 入り口 (夕方・夜) から 校舎の 中へ。七不思議を 調べると バトル。げた箱の マットで 外へ
 // =====================================================================
 import { ART } from '../art/index.js';
-import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt } from '../data/map.js';
+import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt, tileAt, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
-import { NAKAMA } from '../data/nakama.js';
+import { NAKAMA, AREAS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
-import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile } from '../logic/world.js';
+import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile, mysteriesSolved, allMysteriesSolved } from '../logic/world.js';
+import { reached } from '../logic/story.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
@@ -46,9 +48,21 @@ export function createField(app) {
     // かくれている 場所に いて、まだ 見つけていない (違和感を 出す・レンズに 反応する)
     const hiding = s => spotActive(g, s, g.playTime) && !wild.list.some(c => c.spot === s.id);
 
+    // 学校の 中に いるか (町と 学校は つながって いないので、カメラも 地図も べつに する)
+    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE;
     function camera() {
+        const [top, bottom] = inSchool() ? [SCHOOL_Y0 * TILE, MAP_H * TILE] : [0, SCHOOL_Y0 * TILE];
         cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
-        cam.y = Math.max(0, Math.min(MAP_H * TILE - 240, Math.round(g.pos.y - 128)));
+        cam.y = Math.max(top, Math.min(bottom - 240, Math.round(g.pos.y - 128)));
+    }
+    // 場所を 飛ぶ (学校に 入る・出る)。p は マス
+    function warp(p) {
+        g.pos = { x: p.x * TILE + 8, y: p.y * TILE + 12, dir: p.dir };
+        trail.length = 0;
+        buddy.x = g.pos.x - 14;
+        buddy.y = g.pos.y;
+        camera();
+        sfx('cursor');
     }
     camera();
 
@@ -79,11 +93,20 @@ export function createField(app) {
                 intro: ['こおりくん、夏休みだからって ゴロゴロしてないで、外で 遊んできなさい！', '神社の ほうで ふるカワちゃんが さがしてたわよ。'],
                 friends: ['あら、おともだちが ふえたのね。おやつは 駄菓子屋で 買えるわよ。'],
                 bridge: ['石の川橋が 通れないんですって。こまったわねえ。'],
-                clear: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, '南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。']
+                clear: ['南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。', 'そういえば、夜の 小学校に あかりが ついてるって うわさよ。七不思議が どうとか……こわいわねえ。'],
+                school: ['夜の 学校に 行ってるの？ 暗いから 気を つけるのよ。', 'おなかが すいたら、駄菓子屋で おやつを 買っていきなさい。'],
+                clear2: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, '学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！']
             }[g.story];
             say(lines.map(text => ({ who: 'ともいし', art: 'tomoishi', text })));
         } else if (p.id === 'furukawaShrine') {
             meetFurukawa();
+        } else if (p.id === 'kage') {
+            // 2 章の ボス: 七不思議の 8 つ目
+            say([
+                { who: '', text: 'ろうかの おくに、まっくろな 影が 立っている……。' },
+                { who: 'ろうかの カゲ', art: 'lunashadow', text: '…………。' },
+                furu('これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('kage'), kind: 'boss', place: 'school' }) });
         } else if (p.id === 'nushi') {
             if (g.story === 'bridge') {
                 say([
@@ -115,9 +138,10 @@ export function createField(app) {
             });
         } else if (b.id === 'dagashi') {
             shop();
+        } else if (b.id === 'school') {
+            enterSchool();
         } else {
             const msg = {
-                school: '夏休みで しまっている。',
                 shrine: 'おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……',
                 toilet: '……だれも 入っていない。なのに、なんだか おなかが ぐるぐる する。',
                 temple: 'ポク……ポク……。中から 木魚の 音が する。',
@@ -135,6 +159,38 @@ export function createField(app) {
             }[b.id];
             say([{ who: '', text: msg }]);
         }
+    }
+
+    // 小学校 (2 章): 1 章 クリアの あと、夕方・夜だけ 入れる
+    function enterSchool() {
+        if (!reached(g, 'clear')) { say([{ who: '', text: '夏休みで しまっている。' }]); return; }
+        if (!SCHOOL_OPEN.includes(g.time)) {
+            say([{ who: '', text: '夏休みで しまっている。……でも 夜に なると、中から あかりが もれて いるらしい。' },
+                furu(`夕方か 夜に また 来てみよう。家で ねると 時間が すすむよ。`)]);
+            return;
+        }
+        warp(SCHOOL_IN);
+        if (g.story !== 'clear') return;
+        g.story = 'school';
+        say([
+            { who: '', text: '入り口の カギが あいていた……。' },
+            furu('夜の 学校って、なんだか ドキドキするね。この 学校には「七不思議」が あるって うわさなんだ。'),
+            furu('理科室の 動く ガイコツ、音楽室で 夜中に 鳴る 音、図書室の わすれられた 本、おどり場の 大鏡、体育倉庫の かけ声、開かずの ロッカー、プールの 手……。'),
+            furu('あやしい ところを 調べて、ぜんぶ たしかめよう！ 七つ ぜんぶ 知ると、なにかが おこるんだって……。'),
+            furu('それと、学校の キャラは なかまに「とりつく」ことが あるよ。とりつかれた なかまは なまけたり、味方を 攻めたり しちゃうの。'),
+            furu(`そのときは 輪を 回して 後ろに さげて、まんなかの「おたすけ」(${btn('help')}) で 助けてあげて！`),
+            { who: '', text: '「おたすけ」が つかえるように なった！ げた箱の マットに のると 外に 出られる。' }
+        ], { done: () => app.save() });
+    }
+
+    // 七不思議を 調べる → 正体と バトル (勝つと たしかめた ことに なる)
+    function examineMystery(m) {
+        if (g.mysteries[m.id]) { say([{ who: '', text: m.done }]); return; }
+        const n = NAKAMA[m.nakama];
+        g.zukan.seen[m.nakama] = true;
+        say([...m.lines.map(text => ({ who: '', text })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `七不思議の 正体、${n.name}が おそいかかってきた！` }], {
+            done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: 'wild', place: 'school', mystery: m.id })
+        });
     }
 
     // 品物を えらんで、何こ 買うか えらぶ (2026-10-28 ユーザー指定)
@@ -174,7 +230,23 @@ export function createField(app) {
             wild.remove(fighting);
             fighting = null;
         }
-        if (result.boss && result.outcome === 'win') {
+        if (result.boss && result.outcome === 'win' && result.bossId === 'kage') {
+            say([
+                { who: 'ルナシャドウ', art: 'lunashadow', text: '…………（ぺこり）。' },
+                furu('影が おとなしく なった……！ あれ？ 窓の 外に だれか いる！'),
+                { who: 'おにおに', art: 'onioni', text: 'ちぇっ、七不思議で 町の こどもを こわがらせる 作戦は しっぱいか。おぼえてろよ、こおりくん！' },
+                furu('いまの、おにおに……？ 学校の さわぎも、鬼鬼団の しわざだったんだ！'),
+                { who: '', text: '２章 クリア！ 七不思議の キャラが 学校を 歩きまわるように なった。' },
+                furu('そういえば、山の ほうの ダムの 水が へってるって うわさだよ。……また おにおにかな？'),
+                { who: '', text: '―― ３章は つぎの アップデートで。' }
+            ], { done: () => app.save() });
+        } else if (result.mystery && result.outcome === 'win') {
+            const m = MYSTERIES.find(x => x.id === result.mystery), n = mysteriesSolved(g);
+            say([
+                { who: '', text: `七不思議「${m.label}」の 正体は ${NAKAMA[m.nakama].name}だった！ (${n}/${MYSTERIES.length})` },
+                ...(allMysteriesSolved(g) ? [furu('これで 七つ ぜんぶ たしかめた！ ……あれ？ ろうかの おくに、黒い 影が 走っていった！'), { who: '', text: 'ろうかの 西の はしに 行ってみよう。' }] : [])
+            ], { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win') {
             say([
                 { who: 'ハシシタボウズ', art: 'hashishita', text: '数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。' },
                 furu('やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！'),
@@ -267,10 +339,14 @@ export function createField(app) {
         camera();
         followBuddy(dt);
         if (g.story === 'intro' && inShrine(g)) { meetFurukawa(); return; }
+        // げた箱の マットに のったら 学校の 外へ
+        const ht = heroTile(g);
+        if (tileAt(ht.x, ht.y) === 'M') { warp(SCHOOL_OUT); return; }
         if (input.pressed.a) {
             const c = wild.facing(g.pos);
             if (c) { sfx('ok'); talkToWild(c); return; }
             const target = lookAt(g);
+            if (target?.type === 'mystery') { sfx('ok'); examineMystery(target.mystery); return; }
             if (target?.type === 'person') { sfx('ok'); talkToPerson(target.person); } else if (target?.type === 'door') { sfx('ok'); openDoor(target.building); } else if (target?.type === 'gate') { sfx('ok'); say([{ who: '', text: '「この先 商店街。工事中に つき 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('石の川橋の ヌシの 件が かたづいたら 通れるって。')] : [])]); }
         }
     }
@@ -384,11 +460,26 @@ export function createField(app) {
 
     function drawTop(ctx) {
         ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
-        // 川の きらきら
+        // 川の きらきら (学校の 中は なし)
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        for (let i = 0; i < 6; i++) {
-            const wy = ((i * 97 + t * 30) % (MAP_H * TILE));
+        for (let i = 0; !inSchool() && i < 6; i++) {
+            const wy = ((i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE));
             ctx.fillRect(30 * TILE + ((i * 23) % 60) - cam.x, wy - cam.y, 4, 1);
+        }
+        // 学校の 教室の 名札と、まだ たしかめて いない 七不思議の「？」
+        if (inSchool()) {
+            for (const r of SCHOOL_ROOMS) {
+                const sx = r.x * TILE + 8 - cam.x, sy = r.y * TILE + 2 - cam.y, w = r.label.length * 10 + 8;
+                if (sx < -60 || sx > 460 || sy < -20 || sy > 260) continue;
+                panel(ctx, sx - w / 2, sy - 9, w, 13, { fill: 'rgba(240,240,250,0.92)', edge: '#3a3040', r: 2, lineWidth: 1 });
+                text(ctx, r.label, sx, sy + 1, { size: 9.5, align: 'center', color: '#2a2030', shadow: false, bold: true });
+            }
+            if (reached(g, 'school')) {
+                for (const m of MYSTERIES) {
+                    if (g.mysteries[m.id]) continue;
+                    text(ctx, '？', m.x * TILE + 8 - cam.x, m.y * TILE - 10 - cam.y + Math.sin(t * 4 + m.x) * 2, { size: 13, align: 'center', bold: true, color: '#c88aff' });
+                }
+            }
         }
         // 看板
         for (const b of BUILDINGS) {
@@ -403,7 +494,7 @@ export function createField(app) {
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
-        if (g.weather === 'rain') {
+        if (g.weather === 'rain' && !inSchool()) {
             ctx.fillStyle = 'rgba(40, 60, 100, 0.15)';
             ctx.fillRect(0, 0, 400, 240);
             ctx.strokeStyle = 'rgba(200, 220, 255, 0.55)';
@@ -491,11 +582,12 @@ export function createField(app) {
             return;
         }
         const ht = heroTile(g);
-        text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}　${areaAt(ht.x, ht.y) === 'shoutengai' ? '商店街' : '石の川タウン'}`, 10, 18, { size: 12, bold: true });
+        text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}　${AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
         text(ctx, `${g.money}円`, 310, 18, { size: 12, align: 'right', color: COLORS.accent });
         // 地図 (商店街が ふえて 縦に 長いので、こおりくんの まわりを 切りだす)
         panel(ctx, 6, 26, 148, 112, { fill: '#000', r: 3 });
-        const my = Math.max(0, Math.min(miniCanvas.height - 108, Math.round(g.pos.y / TILE * 3 - 54)));
+        const [mTop, mBottom] = inSchool() ? [SCHOOL_Y0 * 3, miniCanvas.height] : [0, (SCHOOL_Y0 - 1) * 3];
+        const my = Math.max(mTop, Math.min(mBottom - 108, Math.round(g.pos.y / TILE * 3 - 54)));
         ctx.drawImage(miniCanvas, 0, my, 144, 108, 8, 28, 144, 108);
         if (Math.floor(t * 4) % 2) {
             ctx.fillStyle = '#ff3a5a';
@@ -507,10 +599,13 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        for (const b of BUILDINGS) {
-            const name = MINI_NAMES[b.id] || b.label;
-            const bx = 8 + (b.x + b.w / 2) * 3;
-            let by = 28 + (b.y + b.h / 2) * 3 - my;
+        const labels = inSchool()
+            ? SCHOOL_ROOMS.filter(r => r.id !== 'getabako').map(r => ({ id: r.id, name: r.label, cx: r.x + 0.5, cy: r.y + 3 }))
+            : BUILDINGS.map(b => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+        for (const b of labels) {
+            const name = b.name;
+            const bx = 8 + b.cx * 3;
+            let by = 28 + b.cy * 3 - my;
             const w = textWidth(ctx, name, 8, true) + 4;
             const x = Math.max(8 + w / 2, Math.min(152 - w / 2, bx));
             while (placed.some(q => Math.abs(q.x - x) < (q.w + w) / 2 && Math.abs(q.y - by) < 10)) by += 10;
@@ -522,7 +617,8 @@ export function createField(app) {
         }
         ctx.restore();
         // 目的地の しるし
-        const goal = g.story === 'intro' ? { x: 6, y: 5 } : g.story === 'bridge' ? { x: 31, y: 17 } : null;
+        const goal = g.story === 'intro' ? { x: 6, y: 5 } : g.story === 'bridge' ? { x: 31, y: 17 }
+            : g.story === 'clear' ? { x: 19, y: 6 } : g.story === 'school' && allMysteriesSolved(g) ? { x: 9, y: 70 } : null;
         const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
         if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });

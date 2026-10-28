@@ -1,5 +1,5 @@
 // =====================================================================
-// なかま 40 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
+// なかま 49 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
 // ---------------------------------------------------------------------
 // 前向きの 絵 (legacy-art.js・new-art.js) と 同じ 形・同じ 色。1 文字 = 1 ドット・'.' は 透明・16 × 16。
 //   描いた もの: 体の うしろが 前と ちがう キャラ (トゲ・羽・しっぽ・甲羅・はちまきの むすび目 など)
@@ -272,5 +272,16 @@ export const BACK_ART = {
     neontanuki: faceless('neontanuki', { b: 'a', c: 'a', d: 'a' }),        // ネオンの 看板は そのまま
     gomibakon: faceless('gomibakon', { c: 'b' }),
     gachapon: faceless('gachapon', { b: 'd' }),
-    yataiman: faceless('yataiman', { d: 'g', e: 'g' })                     // はちまきの うしろ・頭
+    yataiman: faceless('yataiman', { d: 'g', e: 'g' }),                    // はちまきの うしろ・頭
+
+    // ----- 石の川小学校の 9 体 (2 章。2026-10-28): 顔を 消して 左右を 反転 -----
+    fusaiyougaikotsu: faceless('fusaiyougaikotsu', { b: 'a', c: 'a', f: 'd' }),   // ずがいこつの うしろ・スーツの 背中
+    mirrormuscle: faceless('mirrormuscle', { b: 'e', c: 'e', d: 'e' }),           // 鏡の うら (木の 板)
+    proteingolem: faceless('proteingolem', { c: 'a' }),
+    takaramimic: faceless('takaramimic', { e: 'b', d: 'a' }),                     // 宝箱の うしろ
+    umibozun: faceless('umibozun', { b: 'a', c: 'a' }),
+    wasurekurage: faceless('wasurekurage', { b: 'a', c: 'a' }),
+    mikazukibat: faceless('mikazukibat', { b: 'a' }),
+    lunashadow: faceless('lunashadow', { b: 'a' }),
+    yoroinukegara: faceless('yoroinukegara', { c: 'b' })                          // かぶとの うしろ
 };

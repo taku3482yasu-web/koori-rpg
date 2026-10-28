@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX } from '../src/logic/battle.js';
+import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, canRescue, rescueTargets, startRescue, resolveRescue } from '../src/logic/battle.js';
 import { NAKAMA_IDS } from '../src/data/nakama.js';
 
 const run = (b, seconds, dt = 1 / 30) => {
@@ -152,4 +152,30 @@ test('ボス (Lv8) は 6 体 (Lv7〜8) なら 勝てるが、1 体では 勝て�
     }
     assert.ok(wins6 >= 30, `6 体で 勝った ${wins6}/40`);
     assert.ok(wins1 <= 5, `1 体で 勝った ${wins1}/40`);
+});
+
+test('とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おたすけ できて、成功で 治る (2 章)', () => {
+    const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 8 }));
+    const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(2) });
+    b.enemies[0].timer = -999;
+    b.enemies[0].hp = b.enemies[0].max = 99999;
+    const u = b.front()[0];
+    u.status.possess = 25;
+    assert.equal(canRescue(b, u.uid), false, '前に いると おたすけ できない');
+    // しばらく 動かすと、なまけるか 味方を 攻める
+    for (let i = 0; i < 300; i++) step(b, 0.05);
+    assert.ok(b.events.some(e => e.type === 'possessed' && e.actor === u.uid), 'とりつかれて 動く');
+    u.status.possess = 25;
+    rotate(b, 1); b.rotateCooldown = 0; rotate(b, 1); b.rotateCooldown = 0; rotate(b, 1);
+    assert.ok(!b.front().includes(u));
+    assert.deepEqual(rescueTargets(b).map(x => x.uid), [u.uid]);
+    const r = startRescue(b, u.uid);
+    assert.ok(b.paused, 'ミニゲームの あいだは 止まる');
+    resolveRescue(b, r, false);
+    assert.ok(u.status.possess > 0, 'しっぱいでは 治らない');
+    assert.equal(canRescue(b, u.uid), false, 'しっぱいの あとは 少し 待つ');
+    for (let i = 0; i < 70; i++) step(b, 0.05);
+    assert.ok(canRescue(b, u.uid));
+    resolveRescue(b, startRescue(b, u.uid), true);
+    assert.ok(!u.status.possess, '成功で 治る');
 });

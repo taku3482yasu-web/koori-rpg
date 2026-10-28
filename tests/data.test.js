@@ -6,7 +6,7 @@ import { ITEMS } from '../src/data/items.js';
 import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
 import { BACK_ART } from '../src/art/back-art.js';
-import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS } from '../src/data/map.js';
+import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS, MYSTERIES, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
 
@@ -75,6 +75,18 @@ test('地図: 商店街は 石の川タウンの 南。さかいめは 木の �
     for (const id of SHOP) assert.ok([...SPOTS, ...ROAMS].some(s => (s.y ?? s.y0) >= TOWN_H && s.kinds.some(k => k.id === id)), `${id} は 商店街に 出る`);
 });
 
+test('地図: 小学校の 中は 町と つながって いない。七不思議の 物は ゆかの 上、入り口と マットは 通れる (2 章)', () => {
+    assert.ok([...TILES[SCHOOL_Y0 - 1]].every(c => c === 'T'), '町の いちばん 下は 木');
+    assert.ok([...TILES[SCHOOL_Y0]].every(c => c === 'X'), '学校の いちばん 上は かべ');
+    for (const m of MYSTERIES) {
+        assert.ok(['L', 'Y'].includes(TILES[m.y][m.x]), `${m.id} は ゆかの 上`);
+        assert.ok(NAKAMA[m.nakama] && NAKAMA[m.nakama].area === 'school', `${m.id} の 正体`);
+    }
+    assert.equal(TILES[SCHOOL_IN.y][Math.floor(SCHOOL_IN.x)], 'L');
+    assert.ok(TILES.join('').includes('M'), 'げた箱の マット');
+    assert.ok(SCHOOL_OUT.y < SCHOOL_Y0);
+});
+
 test('地図: 大きさ・レンズの 場所は 通れる マス・建物の 入り口は 建物の 下の 列', () => {
     assert.equal(TILES.length, MAP_H);
     TILES.forEach(row => assert.equal(row.length, MAP_W));
@@ -86,7 +98,7 @@ test('地図: 大きさ・レンズの 場所は 通れる マス・建物の �
 });
 
 test('全員が どこかに 出る。見えている キャラが 大多数・かくれている キャラは 少し', () => {
-    const hidden = new Set(SPOTS.flatMap(s => s.kinds.map(k => k.id)));
+    const hidden = new Set([...SPOTS.flatMap(s => s.kinds.map(k => k.id)), ...MYSTERIES.map(m => m.nakama)]);
     const roam = new Set(ROAMS.flatMap(s => s.kinds.map(k => k.id)));
     for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
