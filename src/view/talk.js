@@ -9,7 +9,7 @@
 //   上下で 1 こ、左右・L R で 10 こ。下画面の −10 −1 ＋1 ＋10 も タップ できる
 // =====================================================================
 import { ART } from '../art/index.js';
-import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
 
@@ -131,12 +131,16 @@ export function createTalk() {
             drawArt(ctx, ART[line.art], Math.floor(t * 2) % 2, 50, 160, { scale: 4 });
         }
         panel(ctx, 8, 166, 384, 68);
+        // 名前の 札は 名前に 合わせて のばす (駄菓子屋の おばあちゃん など)
         if (line.who) {
-            panel(ctx, 14, 154, 100, 20, { fill: '#1b3a6b' });
-            text(ctx, line.who, 64, 168, { size: 12, align: 'center', bold: true });
+            const w = Math.max(100, textWidth(ctx, line.who, 12, true) + 20);
+            panel(ctx, 14, 154, w, 20, { fill: '#1b3a6b' });
+            text(ctx, line.who, 14 + w / 2, 168, { size: 12, align: 'center', bold: true });
         }
-        const rows = wrap(ctx, line.text.slice(0, Math.floor(shown)), 360, 13);
-        rows.slice(0, 3).forEach((r, i) => text(ctx, r, 20, 190 + i * 18, { size: 13 }));
+        // 長い 文は 3 行に 入るように 小さく (大きさは 全文で 決めて、出している 途中で 変えない)
+        const size = fitSize(ctx, line.text, 360, 13, 3, 10);
+        const rows = wrap(ctx, line.text.slice(0, Math.floor(shown)), 360, size);
+        rows.slice(0, 3).forEach((r, i) => text(ctx, r, 20, 190 + i * (size + 5), { size }));
         if (full() && !(atLast() && (opts.choices || opts.count)) && Math.floor(t * 3) % 2) text(ctx, '▼', 380, 228, { size: 10, align: 'right', color: COLORS.accent });
     }
 

@@ -33,6 +33,12 @@ export function textWidth(ctx, str, size = 12, bold = false) {
     return ctx.measureText(str).width;
 }
 
+// lines 行に 入る 文字の 大きさ (入らなければ min まで 小さく する。2026-10-28 ユーザー指定: 文字が 入りきらない)
+export function fitSize(ctx, str, width, size, lines, min = 9) {
+    while (size > min && wrap(ctx, str, width, size).length > lines) size -= 0.5;
+    return size;
+}
+
 // 文字を幅で折り返す (日本語は 1 文字ずつ。\n でも改行)
 export function wrap(ctx, str, width, size = 12) {
     const lines = [];

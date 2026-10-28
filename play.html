@@ -2015,10 +2015,10 @@ body.nopad #pad { display: none; }
     applyEffects(b, unit, unit.special.effects, mult);
     checkOutcome(b);
   }
-  function useItem(b, itemId, pos = null) {
+  function useItem(b, itemId, uid = null) {
     const item = ITEMS[itemId];
     if (!item || b.outcome || b.paused || b.itemCooldown > 0) return false;
-    const target = pos === null ? b.frontAlive().reduce((a, c) => !a || c.hp / c.max < a.hp / a.max ? c : a, null) : b.front()[pos];
+    const target = uid === null ? b.frontAlive().reduce((a, c) => !a || c.hp / c.max < a.hp / a.max ? c : a, null) : b.wheel.find((u) => u && u.uid === uid);
     if (!target || target.ko) return false;
     heal(b, target, target, item.heal);
     if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
@@ -2026,9 +2026,9 @@ body.nopad #pad { display: none; }
     emit(b, "item", { target: target.uid, itemId });
     return true;
   }
-  function throwFood(b, itemId) {
+  function throwFood(b, itemId, uid = null) {
     if (b.food || b.kind !== "wild" || b.outcome || b.paused || !ITEMS[itemId]) return false;
-    const to = b.enemiesAlive()[0];
+    const to = uid === null ? b.enemiesAlive()[0] : b.enemiesAlive().find((e) => e.uid === uid);
     if (!to) return false;
     const fav = speciesOf(to.id).favorite === itemId;
     b.food = { itemId, target: to.id, favorite: fav };
@@ -3879,6 +3879,10 @@ body.nopad #pad { display: none; }
     ctx.font = `${bold ? "bold " : ""}${size}px ${FONT}`;
     return ctx.measureText(str).width;
   }
+  function fitSize(ctx, str, width, size, lines, min = 9) {
+    while (size > min && wrap(ctx, str, width, size).length > lines) size -= 0.5;
+    return size;
+  }
   function wrap(ctx, str, width, size = 12) {
     const lines = [];
     for (const para of String(str).split("\n")) {
@@ -4131,11 +4135,13 @@ body.nopad #pad { display: none; }
       }
       panel(ctx, 8, 166, 384, 68);
       if (line2.who) {
-        panel(ctx, 14, 154, 100, 20, { fill: "#1b3a6b" });
-        text(ctx, line2.who, 64, 168, { size: 12, align: "center", bold: true });
+        const w = Math.max(100, textWidth(ctx, line2.who, 12, true) + 20);
+        panel(ctx, 14, 154, w, 20, { fill: "#1b3a6b" });
+        text(ctx, line2.who, 14 + w / 2, 168, { size: 12, align: "center", bold: true });
       }
-      const rows = wrap(ctx, line2.text.slice(0, Math.floor(shown)), 360, 13);
-      rows.slice(0, 3).forEach((r2, i) => text(ctx, r2, 20, 190 + i * 18, { size: 13 }));
+      const size = fitSize(ctx, line2.text, 360, 13, 3, 10);
+      const rows = wrap(ctx, line2.text.slice(0, Math.floor(shown)), 360, size);
+      rows.slice(0, 3).forEach((r2, i) => text(ctx, r2, 20, 190 + i * (size + 5), { size }));
       if (full() && !(atLast() && (opts.choices || opts.count)) && Math.floor(t * 3) % 2) text(ctx, "▼", 380, 228, { size: 10, align: "right", color: COLORS.accent });
     }
     function drawBottom(ctx) {
@@ -5327,7 +5333,8 @@ body.nopad #pad { display: none; }
       text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : "ウォッチを まだ もっていない", 238, 132, { size: 11, align: "center", color: COLORS.sub });
       panel(ctx, 6, 146, 308, 52);
       text(ctx, "もくてき", 14, 162, { size: 10, color: COLORS.accent, bold: true });
-      wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r2, i) => text(ctx, r2, 14, 178 + i * 15, { size: 12 }));
+      const os = fitSize(ctx, objective(g), 290, 12, 2, 9);
+      wrap(ctx, objective(g), 290, os).slice(0, 2).forEach((r2, i) => text(ctx, r2, 14, 178 + i * (os + 3), { size: os }));
       text(ctx, `${moveName()} 歩く　${btn("a")} はなす・しらべる　${btn("b")} おしたまま はしる`, 160, 220, { size: 10.5, align: "center", color: COLORS.dim });
       text(ctx, `${btn("y")} レンズ　${btn("x")} メニュー`, 160, 234, { size: 10.5, align: "center", color: COLORS.dim });
       app2.talk.drawBottom(ctx);
@@ -6755,14 +6762,64 @@ body.nopad #pad { display: none; }
       sfx("cursor");
     }
     const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0);
-    function useMenu(id) {
-      const ok = menu.kind === "item" ? useItem(battle, id) : throwFood(battle, id);
+    const menuTargets = () => menu.kind === "item" ? [0, 1, 2, 3, 4, 5].map((i) => battle.wheel[(battle.rot + i) % 6]).filter((u) => u && !u.ko) : battle.enemiesAlive();
+    function useMenu(id, uid) {
+      const ok = menu.kind === "item" ? useItem(battle, id, uid) : throwFood(battle, id, uid);
       if (ok) {
         g.items[id]--;
         menu = null;
+        sfx("ok");
       } else sfx("cancel");
     }
+    function pickItem(id) {
+      const list = menuTargets();
+      if (list.length === 1) {
+        useMenu(id, list[0].uid);
+        return;
+      }
+      const start = menu.kind === "item" ? list.reduce((a, u, i) => u.hp / u.max < list[a].hp / list[a].max ? i : a, 0) : 0;
+      menu.pick = { id, index: start };
+      sfx("ok");
+    }
+    function updatePick(input2) {
+      const list = menuTargets();
+      if (input2.pressed.b) {
+        menu.pick = null;
+        sfx("cancel");
+        return;
+      }
+      if (!list.length) {
+        menu = null;
+        return;
+      }
+      const p = menu.pick;
+      p.index = Math.min(p.index, list.length - 1);
+      if (input2.pressed.up || input2.pressed.left) {
+        p.index = (p.index + list.length - 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.pressed.down || input2.pressed.right) {
+        p.index = (p.index + 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.pressed.a) {
+        useMenu(p.id, list[p.index].uid);
+        return;
+      }
+      if (input2.touch.justDown) {
+        const i = list.findIndex((_, k) => hit(menuRow(k), input2.touch.x, input2.touch.y));
+        if (i >= 0) useMenu(p.id, list[i].uid);
+        else if (!hit({ x: 20, y: 14, w: 280, h: 212 }, input2.touch.x, input2.touch.y)) {
+          menu.pick = null;
+          sfx("cancel");
+        }
+      }
+    }
     function updateMenu(input2) {
+      if (menu.pick) {
+        updatePick(input2);
+        return;
+      }
       const list = owned();
       if (input2.pressed.b || menu.kind === "item" && input2.pressed.y || menu.kind === "food" && input2.pressed.x) {
         menu = null;
@@ -6779,10 +6836,10 @@ body.nopad #pad { display: none; }
         sfx("cursor");
       }
       menu.index = Math.min(menu.index, list.length - 1);
-      if (input2.pressed.a) useMenu(list[menu.index]);
+      if (input2.pressed.a) pickItem(list[menu.index]);
       if (input2.touch.justDown) {
         const i = list.findIndex((_, k) => hit(menuRow(k), input2.touch.x, input2.touch.y));
-        if (i >= 0) useMenu(list[i]);
+        if (i >= 0) pickItem(list[i]);
         else if (!hit({ x: 20, y: 20, w: 280, h: 200 }, input2.touch.x, input2.touch.y)) menu = null;
       }
     }
@@ -7035,6 +7092,7 @@ body.nopad #pad { display: none; }
       });
       if (mg && mg.phase === "act") drawAct(ctx);
       drawEffects(ctx);
+      drawPickArrow(ctx);
       for (let i = pops.length - 1; i >= 0; i--) {
         const p = pops[i];
         if (p.until < t) {
@@ -7139,7 +7197,7 @@ body.nopad #pad { display: none; }
           return;
         }
         drawArt(ctx, ART[u.art], 0, b.x + 18, b.y + 34, { scale: 1.5, alpha: u.ko ? 0.3 : 1 });
-        text(ctx, u.name.length > 6 ? `${u.name.slice(0, 6)}…` : u.name, b.x + 34, b.y + 16, { size: 10, bold: true });
+        text(ctx, u.name, b.x + 34, b.y + 16, { size: 10, bold: true, maxWidth: b.w - 38 });
         bar(ctx, b.x + 34, b.y + 22, 70, 6, u.gauge / GAUGE_MAX, COLORS.gauge);
         text(ctx, ready ? `必殺技！ (${i + 1})` : u.ko ? "たおれている" : "ゲージ", b.x + 34, b.y + 40, { size: 9.5, color: ready ? "#ffffff" : COLORS.dim, bold: ready });
       });
@@ -7153,7 +7211,11 @@ body.nopad #pad { display: none; }
       ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fillRect(0, 0, 320, 240);
       panel(ctx, 20, 14, 280, 212);
-      text(ctx, menu.kind === "item" ? "どうぐ: HP の 少ない なかまに 使う" : "おやつ: 敵に 投げる (好物なら 大よろこび)", 160, 34, { size: 11.5, align: "center", bold: true, color: COLORS.accent });
+      if (menu.pick) {
+        drawPick(ctx);
+        return;
+      }
+      text(ctx, menu.kind === "item" ? "どうぐ: なかまに 使う" : "おやつ: 敵に 投げる (好物なら 大よろこび)", 160, 34, { size: 11.5, align: "center", bold: true, color: COLORS.accent });
       const list = owned();
       if (!list.length) text(ctx, "なにも もっていない", 160, 110, { size: 13, align: "center", color: COLORS.sub });
       list.forEach((id, k) => {
@@ -7167,6 +7229,36 @@ body.nopad #pad { display: none; }
         text(ctx, `×${g.items[id]}`, r2.x + r2.w - 10, r2.y + 17, { size: 13, align: "right" });
       });
       text(ctx, `${btn("b")} で とじる　(えらんでいる あいだ バトルは 止まる)`, 160, 220, { size: 10, align: "center", color: COLORS.dim });
+    }
+    function drawPick(ctx) {
+      const item = ITEMS[menu.pick.id], list = menuTargets();
+      text(ctx, menu.kind === "item" ? `${item.name}を だれに 使う？` : `${item.name}を どの 敵に 投げる？`, 160, 34, { size: 11.5, align: "center", bold: true, color: COLORS.accent });
+      const front = battle.front();
+      list.forEach((u, k) => {
+        const r2 = menuRow(k);
+        if (k === menu.pick.index) {
+          roundRect(ctx, r2.x, r2.y, r2.w, r2.h, 4);
+          ctx.fillStyle = "#2d5aa8";
+          ctx.fill();
+        }
+        if (menu.kind === "item") text(ctx, front.includes(u) ? "まえ" : "うしろ", r2.x + 8, r2.y + 16, { size: 9.5, color: front.includes(u) ? COLORS.accent : COLORS.sub, bold: true });
+        text(ctx, `${u.name} Lv${u.lv}`, r2.x + 44, r2.y + 17, { size: 12, maxWidth: 120 });
+        if (u.side === "enemy" && g.zukan.friends[u.id]) drawFriendMark(ctx, r2.x + 36, r2.y + 12, 4);
+        bar(ctx, r2.x + 170, r2.y + 9, 60, 6, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
+        text(ctx, `${Math.ceil(u.hp)}`, r2.x + r2.w - 6, r2.y + 17, { size: 10, align: "right", color: COLORS.sub });
+      });
+      text(ctx, `${btn("a")} で 使う・${btn("b")} で もどる`, 160, 220, { size: 10, align: "center", color: COLORS.dim });
+    }
+    function drawPickArrow(ctx) {
+      if (!menu || !menu.pick) return;
+      const u = menuTargets()[menu.pick.index];
+      if (!u) return;
+      const ei = battle.enemies.indexOf(u), fi = battle.front().indexOf(u);
+      const p = ei >= 0 ? enemyPos(ei) : fi >= 0 ? ALLY_POS[fi] : null;
+      if (!p) return;
+      const scale = ei >= 0 ? p.scale : ALLY_SCALE;
+      const y = p.y - ART[u.art].h * scale - 30 + Math.sin(t * 8) * 2;
+      text(ctx, "▼", p.x, y, { size: 16, align: "center", bold: true, color: COLORS.accent });
     }
     function drawBottom(ctx) {
       ctx.fillStyle = "#16203a";
@@ -7186,7 +7278,7 @@ body.nopad #pad { display: none; }
       text(ctx, btn("fast"), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: "center", color: COLORS.dim });
       if (menu) drawMenu(ctx);
     }
-    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg } };
+    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu } };
   }
   const CHOICE_BTN = [{ x: 30, y: 196, w: 124, h: 34, label: "なかまに する" }, { x: 166, y: 196, w: 124, h: 34, label: "しない" }];
   function createResult(app2, result2) {
@@ -7269,11 +7361,12 @@ body.nopad #pad { display: none; }
         rings(ctx);
         drawArt(ctx, ART[friend.art], Math.floor(t * 4), 200, 170 + Math.abs(Math.sin(t * 5)) * -8, { scale: 5 });
         panel(ctx, 20, 186, 360, 46);
-        wrap(ctx, `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, 340, 13).slice(0, 2).forEach((r2, i) => text(ctx, r2, 30, 204 + i * 18, { size: 13 }));
+        const msg = `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, ms = fitSize(ctx, msg, 340, 13, 2, 9.5);
+        wrap(ctx, msg, 340, ms).slice(0, 2).forEach((r2, i) => text(ctx, r2, 30, 202 + i * (ms + 5), { size: ms }));
       } else if (kind === "bye") {
         drawArt(ctx, ART[friend.art], Math.floor(t * 2), 200 + t * 40, 170, { scale: 5, alpha: Math.max(0, 1 - t / 1.5) });
         panel(ctx, 20, 186, 360, 46);
-        text(ctx, `${friend.name}は さみしそうに さっていった……`, 200, 214, { size: 13, align: "center" });
+        text(ctx, `${friend.name}は さみしそうに さっていった……`, 200, 214, { size: 13, align: "center", maxWidth: 340 });
       } else if (kind === "medal") {
         rings(ctx);
         ctx.beginPath();
@@ -7507,7 +7600,8 @@ body.nopad #pad { display: none; }
       }
       text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
       text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
-      wrap(ctx, n.desc, 215, 11.5).slice(0, 4).forEach((r2, i) => text(ctx, r2, 170, 90 + i * 15, { size: 11.5 }));
+      const ds = fitSize(ctx, n.desc, 215, 11.5, 4, 9);
+      wrap(ctx, n.desc, 215, ds).slice(0, 4).forEach((r2, i) => text(ctx, r2, 170, 90 + i * (ds + 3.5), { size: ds }));
       text(ctx, `わざ: ${n.waza.name}　術: ${n.jutsu.name} (${JUTSU_RANK_NAMES[n.jutsu.tier]})`, 170, 150, { size: 11, maxWidth: 220 });
       text(ctx, `必殺技: ${n.special.name}`, 170, 166, { size: 11, maxWidth: 220 });
       if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}`, 170, 182, { size: 11 });
@@ -7591,7 +7685,7 @@ body.nopad #pad { display: none; }
           return;
         }
         drawArt(ctx, ART[unitOf(m.id).art], 0, b.x + 18, b.y + 34, { scale: 1.6 });
-        text(ctx, unitOf(m.id).name.slice(0, 6), b.x + 36, b.y + 17, { size: 10, bold: true });
+        text(ctx, unitOf(m.id).name, b.x + 36, b.y + 17, { size: 10, bold: true, maxWidth: b.w - 40 });
         text(ctx, `Lv${m.lv}`, b.x + 36, b.y + 32, { size: 10, color: COLORS.sub });
       });
       if (!picking) {

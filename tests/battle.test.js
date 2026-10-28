@@ -104,6 +104,23 @@ test('道具で 回復・続けて 使うには 待つ。食べ物を 投げる�
     assert.equal(throwFood(b, 'choco'), false);
 });
 
+test('道具・おやつは 使う 相手を えらべる。後ろの なかまにも 使える (2026-10-28)', () => {
+    const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 5 }));
+    const b = createBattle({ allies, enemies: [{ id: 'kogame', lv: 3 }, { id: 'donguriko', lv: 3 }], rng: createRng(4) });
+    const back = b.wheel[3];
+    back.hp = 5;
+    b.front()[0].hp = 1;
+    assert.ok(useItem(b, 'onigiri', back.uid));
+    assert.equal(back.hp, Math.min(back.max, 65), '後ろの なかまが 回復');
+    assert.equal(b.front()[0].hp, 1);
+    b.itemCooldown = 0;
+    back.hp = 0; back.ko = true;
+    assert.equal(useItem(b, 'onigiri', back.uid), false, 'たおれた なかまには 使えない');
+    const second = b.enemies[1];
+    assert.ok(throwFood(b, 'kyuuri', second.uid));
+    assert.equal(b.food.target, 'donguriko', '2 体目に 投げた');
+});
+
 test('前の 3 体が 全員 たおれたら、後ろと 自動で 入れかわる', () => {
     const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron', 'mizukirin', 'pekorisu'].map(id => ({ id, lv: 3 }));
     const b = createBattle({ allies, enemies: [{ id: 'donguriko', lv: 3 }], rng: createRng(1) });

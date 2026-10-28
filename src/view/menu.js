@@ -11,7 +11,7 @@ import { ART } from '../art/index.js';
 import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { SPOTS, ROAMS } from '../data/map.js';
-import { COLORS, drawArt, panel, text, wrap, button, hit, bar, roundRect } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, isKeyboard } from '../core/keys.js';
 import { medalByUid, friendCount } from '../logic/game.js';
@@ -130,7 +130,8 @@ export function createMenu(app) {
         }
         text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
         text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
-        wrap(ctx, n.desc, 215, 11.5).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * 15, { size: 11.5 }));
+        const ds = fitSize(ctx, n.desc, 215, 11.5, 4, 9);
+        wrap(ctx, n.desc, 215, ds).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * (ds + 3.5), { size: ds }));
         // バトルで 使う わざ・術・必殺技 (2026-10-27)
         text(ctx, `わざ: ${n.waza.name}　術: ${n.jutsu.name} (${JUTSU_RANK_NAMES[n.jutsu.tier]})`, 170, 150, { size: 11, maxWidth: 220 });
         text(ctx, `必殺技: ${n.special.name}`, 170, 166, { size: 11, maxWidth: 220 });
@@ -212,7 +213,7 @@ export function createMenu(app) {
             panel(ctx, b.x, b.y, b.w, b.h, { fill: i === slot ? '#2d5aa8' : 'rgba(26,36,64,0.95)', edge: i === slot ? COLORS.accent : i < 3 ? '#ffd84a66' : COLORS.panelEdge });
             if (!m) { text(ctx, 'あき', b.x + b.w / 2, b.y + 25, { size: 11, align: 'center', color: COLORS.dim }); return; }
             drawArt(ctx, ART[unitOf(m.id).art], 0, b.x + 18, b.y + 34, { scale: 1.6 });
-            text(ctx, unitOf(m.id).name.slice(0, 6), b.x + 36, b.y + 17, { size: 10, bold: true });
+            text(ctx, unitOf(m.id).name, b.x + 36, b.y + 17, { size: 10, bold: true, maxWidth: b.w - 40 });
             text(ctx, `Lv${m.lv}`, b.x + 36, b.y + 32, { size: 10, color: COLORS.sub });
         });
         if (!picking) {

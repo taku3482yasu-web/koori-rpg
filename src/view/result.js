@@ -6,7 +6,7 @@
 // =====================================================================
 import { ART } from '../art/index.js';
 import { NAKAMA, unitOf } from '../data/nakama.js';
-import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
 import { acceptBefriend } from '../logic/game.js';
@@ -90,11 +90,12 @@ export function createResult(app, result) {
             rings(ctx);
             drawArt(ctx, ART[friend.art], Math.floor(t * 4), 200, 170 + Math.abs(Math.sin(t * 5)) * -8, { scale: 5 });
             panel(ctx, 20, 186, 360, 46);
-            wrap(ctx, `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, 340, 13).slice(0, 2).forEach((r, i) => text(ctx, r, 30, 204 + i * 18, { size: 13 }));
+            const msg = `${friend.name}が なかまに なりたそうに こちらを 見ている！ 「${friend.line}」`, ms = fitSize(ctx, msg, 340, 13, 2, 9.5);
+            wrap(ctx, msg, 340, ms).slice(0, 2).forEach((r, i) => text(ctx, r, 30, 202 + i * (ms + 5), { size: ms }));
         } else if (kind === 'bye') {
             drawArt(ctx, ART[friend.art], Math.floor(t * 2), 200 + t * 40, 170, { scale: 5, alpha: Math.max(0, 1 - t / 1.5) });
             panel(ctx, 20, 186, 360, 46);
-            text(ctx, `${friend.name}は さみしそうに さっていった……`, 200, 214, { size: 13, align: 'center' });
+            text(ctx, `${friend.name}は さみしそうに さっていった……`, 200, 214, { size: 13, align: 'center', maxWidth: 340 });
         } else if (kind === 'medal') {
             rings(ctx);
             ctx.beginPath();

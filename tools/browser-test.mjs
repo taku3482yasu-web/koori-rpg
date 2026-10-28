@@ -197,6 +197,18 @@ try {
     await sleep(300);
     check(await evaluate(`window.__app.scene.battle.t > ${t0}`), 'とじると バトルが 動きだす');
 
+    // ----- バトル: どうぐを 使う なかまを えらぶ (2026-10-28) -----
+    // 前の 1 体目を 少し、2 体目を たくさん へらす → カーソルは HP の 少ない 2 体目。上で 1 体目に して 使う
+    await evaluate('(() => { const b = window.__app.scene.battle; window.__app.g.items.onigiri = 3; b.itemCooldown = 0; const f = b.frontAlive(); f[0].hp = Math.ceil(f[0].max * 0.5); f[1].hp = 1; window.__pickUid = f[0].uid; window.__pickHp = f[0].hp; return true; })()');
+    await key('KeyU');
+    await key('KeyJ');
+    check(await evaluate('(() => { const m = window.__app.scene.debug.menu(); return Boolean(m && m.pick && m.pick.id === "onigiri"); })()'), 'どうぐ → おにぎり → だれに 使うか えらぶ');
+    await key('ArrowUp');
+    await shot('item-pick');
+    await key('KeyJ');
+    await sleep(100);
+    check(await evaluate('(() => { const b = window.__app.scene.battle, u = b.wheel.find(x => x && x.uid === window.__pickUid); return u.hp > window.__pickHp && !window.__app.scene.debug.menu(); })()'), 'えらんだ なかまに おにぎりを 使う');
+
     // ----- バトル: 輪を 回す・必殺技・道具 -----
     await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.s.atk = 1; e.s.mag = 1; }); return true; })()');
     await evaluate('window.__app.g.items.onigiri = 3');
@@ -242,7 +254,7 @@ try {
     check(await sceneIs('field'), 'メニューを 閉じる');
 
     // ----- 駄菓子屋: 何こ 買うか えらぶ (2026-10-28) -----
-    await evaluate('(() => { const g = window.__app.g; g.money = 1000; g.items.onigiri = 0; g.pos.x = 17 * 16 + 8; g.pos.y = 24 * 16 + 12; g.pos.dir = "up"; return true; })()');
+    await evaluate('(() => { const g = window.__app.g; g.money = 1000; g.items.onigiri = 0; g.pos.x = 17 * 16 + 8; g.pos.y = 24 * 16 + 12; g.pos.dir = "up"; window.__app.field.debug.wild.list.forEach(c => { if (Math.hypot(c.x - g.pos.x, c.y - g.pos.y) < 48) { c.x += 160; c.target = null; c.pause = 99; } }); return true; })()');
     await key('KeyJ');
     await sleep(200);
     await key('KeyJ');           // あいさつを 全部 出す

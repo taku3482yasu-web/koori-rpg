@@ -5,7 +5,7 @@ import { ART } from '../art/index.js';
 import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA } from '../data/nakama.js';
-import { COLORS, drawArt, panel, text, textWidth, wrap, button, hit, drawFriendMark } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile } from '../logic/world.js';
@@ -530,7 +530,8 @@ export function createField(app) {
         text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : 'ウォッチを まだ もっていない', 238, 132, { size: 11, align: 'center', color: COLORS.sub });
         panel(ctx, 6, 146, 308, 52);
         text(ctx, 'もくてき', 14, 162, { size: 10, color: COLORS.accent, bold: true });
-        wrap(ctx, objective(g), 290, 12).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * 15, { size: 12 }));
+        const os = fitSize(ctx, objective(g), 290, 12, 2, 9);
+        wrap(ctx, objective(g), 290, os).slice(0, 2).forEach((r, i) => text(ctx, r, 14, 178 + i * (os + 3), { size: os }));
         text(ctx, `${moveName()} 歩く　${btn('a')} はなす・しらべる　${btn('b')} おしたまま はしる`, 160, 220, { size: 10.5, align: 'center', color: COLORS.dim });
         text(ctx, `${btn('y')} レンズ　${btn('x')} メニュー`, 160, 234, { size: 10.5, align: 'center', color: COLORS.dim });
         app.talk.drawBottom(ctx);

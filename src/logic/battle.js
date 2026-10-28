@@ -312,13 +312,14 @@ export function resolveSpecial(b, unit, mult) {
     checkOutcome(b);
 }
 
-// 道具を なかまに 使う (pos を 決めなければ、前で いちばん HP の 少ない なかま)
-export function useItem(b, itemId, pos = null) {
+// 道具を なかまに 使う。uid で 輪の だれにでも (後ろも) 使える (2026-10-28 ユーザー指定: 使う キャラを えらぶ)
+// uid を 決めなければ、前で いちばん HP の 少ない なかま
+export function useItem(b, itemId, uid = null) {
     const item = ITEMS[itemId];
     if (!item || b.outcome || b.paused || b.itemCooldown > 0) return false;
-    const target = pos === null
+    const target = uid === null
         ? b.frontAlive().reduce((a, c) => (!a || c.hp / c.max < a.hp / a.max ? c : a), null)
-        : b.front()[pos];
+        : b.wheel.find(u => u && u.uid === uid);
     if (!target || target.ko) return false;
     heal(b, target, target, item.heal);
     if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
@@ -327,10 +328,10 @@ export function useItem(b, itemId, pos = null) {
     return true;
 }
 
-// 食べ物を 敵に 投げる (1 回の バトルで 1 回。仲間に なりやすくなる)
-export function throwFood(b, itemId) {
+// 食べ物を 敵に 投げる (1 回の バトルで 1 回。投げた 敵が 仲間に なりやすくなる)。uid で どの 敵か えらぶ
+export function throwFood(b, itemId, uid = null) {
     if (b.food || b.kind !== 'wild' || b.outcome || b.paused || !ITEMS[itemId]) return false;
-    const to = b.enemiesAlive()[0];
+    const to = uid === null ? b.enemiesAlive()[0] : b.enemiesAlive().find(e => e.uid === uid);
     if (!to) return false;
     const fav = speciesOf(to.id).favorite === itemId;
     b.food = { itemId, target: to.id, favorite: fav };

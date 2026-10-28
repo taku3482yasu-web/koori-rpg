@@ -38,7 +38,7 @@ export function createBattleView(app, battle, place) {
     let t = 0, endT = 0;
     let shownRot = battle.rot;     // 輪の 回る アニメーション
     let cursor = 0;                // 必殺技を えらぶ カーソル (前の 3 体)
-    let menu = null;               // { kind: 'item' | 'food', index }
+    let menu = null;               // { kind: 'item' | 'food', index, pick: null | { id, index } (だれに 使うか えらぶ) }
     let mg = null;                 // 必殺技 (コマンド → カットイン → 動き)
     let drag = null;
     let banner = null;             // { text, color, until }
@@ -288,22 +288,50 @@ export function createBattleView(app, battle, place) {
     }
 
     // ----- どうぐ・おやつ -----
+    // 品物を えらんで から、使う 相手を えらぶ (2026-10-28 ユーザー指定)。どうぐは 輪の なかま (前 → 後ろ)、おやつは 敵
     const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0);
-    function useMenu(id) {
-        const ok = menu.kind === 'item' ? useItem(battle, id) : throwFood(battle, id);
-        if (ok) { g.items[id]--; menu = null; } else sfx('cancel');
+    const menuTargets = () => menu.kind === 'item'
+        ? [0, 1, 2, 3, 4, 5].map(i => battle.wheel[(battle.rot + i) % 6]).filter(u => u && !u.ko)
+        : battle.enemiesAlive();
+    function useMenu(id, uid) {
+        const ok = menu.kind === 'item' ? useItem(battle, id, uid) : throwFood(battle, id, uid);
+        if (ok) { g.items[id]--; menu = null; sfx('ok'); } else sfx('cancel');
+    }
+    function pickItem(id) {
+        const list = menuTargets();
+        if (list.length === 1) { useMenu(id, list[0].uid); return; }
+        // どうぐは HP の 少ない なかまに カーソルを 合わせて おく
+        const start = menu.kind === 'item' ? list.reduce((a, u, i) => (u.hp / u.max < list[a].hp / list[a].max ? i : a), 0) : 0;
+        menu.pick = { id, index: start };
+        sfx('ok');
+    }
+    function updatePick(input) {
+        const list = menuTargets();
+        if (input.pressed.b) { menu.pick = null; sfx('cancel'); return; }
+        if (!list.length) { menu = null; return; }
+        const p = menu.pick;
+        p.index = Math.min(p.index, list.length - 1);
+        if (input.pressed.up || input.pressed.left) { p.index = (p.index + list.length - 1) % list.length; sfx('cursor'); }
+        if (input.pressed.down || input.pressed.right) { p.index = (p.index + 1) % list.length; sfx('cursor'); }
+        if (input.pressed.a) { useMenu(p.id, list[p.index].uid); return; }
+        if (input.touch.justDown) {
+            const i = list.findIndex((_, k) => hit(menuRow(k), input.touch.x, input.touch.y));
+            if (i >= 0) useMenu(p.id, list[i].uid);
+            else if (!hit({ x: 20, y: 14, w: 280, h: 212 }, input.touch.x, input.touch.y)) { menu.pick = null; sfx('cancel'); }
+        }
     }
     function updateMenu(input) {
+        if (menu.pick) { updatePick(input); return; }
         const list = owned();
         if (input.pressed.b || (menu.kind === 'item' && input.pressed.y) || (menu.kind === 'food' && input.pressed.x)) { menu = null; sfx('cancel'); return; }
         if (!list.length) return;
         if (input.pressed.up) { menu.index = (menu.index + list.length - 1) % list.length; sfx('cursor'); }
         if (input.pressed.down) { menu.index = (menu.index + 1) % list.length; sfx('cursor'); }
         menu.index = Math.min(menu.index, list.length - 1);
-        if (input.pressed.a) useMenu(list[menu.index]);
+        if (input.pressed.a) pickItem(list[menu.index]);
         if (input.touch.justDown) {
             const i = list.findIndex((_, k) => hit(menuRow(k), input.touch.x, input.touch.y));
-            if (i >= 0) useMenu(list[i]);
+            if (i >= 0) pickItem(list[i]);
             else if (!hit({ x: 20, y: 20, w: 280, h: 200 }, input.touch.x, input.touch.y)) menu = null;
         }
     }
@@ -534,6 +562,7 @@ export function createBattleView(app, battle, place) {
         battle.front().forEach((u, i) => { if (!(mg && mg.phase === 'act' && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }); });
         if (mg && mg.phase === 'act') drawAct(ctx);
         drawEffects(ctx);
+        drawPickArrow(ctx);
         for (let i = pops.length - 1; i >= 0; i--) {
             const p = pops[i];
             if (p.until < t) { pops.splice(i, 1); continue; }
@@ -639,7 +668,7 @@ export function createBattleView(app, battle, place) {
             });
             if (!u) { text(ctx, '(あき)', b.x + b.w / 2, b.y + 28, { size: 11, align: 'center', color: COLORS.dim }); return; }
             drawArt(ctx, ART[u.art], 0, b.x + 18, b.y + 34, { scale: 1.5, alpha: u.ko ? 0.3 : 1 });
-            text(ctx, u.name.length > 6 ? `${u.name.slice(0, 6)}…` : u.name, b.x + 34, b.y + 16, { size: 10, bold: true });
+            text(ctx, u.name, b.x + 34, b.y + 16, { size: 10, bold: true, maxWidth: b.w - 38 });
             bar(ctx, b.x + 34, b.y + 22, 70, 6, u.gauge / GAUGE_MAX, COLORS.gauge);
             text(ctx, ready ? `必殺技！ (${i + 1})` : u.ko ? 'たおれている' : 'ゲージ', b.x + 34, b.y + 40, { size: 9.5, color: ready ? '#ffffff' : COLORS.dim, bold: ready });
         });
@@ -654,7 +683,8 @@ export function createBattleView(app, battle, place) {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, 320, 240);
         panel(ctx, 20, 14, 280, 212);
-        text(ctx, menu.kind === 'item' ? 'どうぐ: HP の 少ない なかまに 使う' : 'おやつ: 敵に 投げる (好物なら 大よろこび)', 160, 34, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
+        if (menu.pick) { drawPick(ctx); return; }
+        text(ctx, menu.kind === 'item' ? 'どうぐ: なかまに 使う' : 'おやつ: 敵に 投げる (好物なら 大よろこび)', 160, 34, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
         const list = owned();
         if (!list.length) text(ctx, 'なにも もっていない', 160, 110, { size: 13, align: 'center', color: COLORS.sub });
         list.forEach((id, k) => {
@@ -664,6 +694,36 @@ export function createBattleView(app, battle, place) {
             text(ctx, `×${g.items[id]}`, r.x + r.w - 10, r.y + 17, { size: 13, align: 'right' });
         });
         text(ctx, `${btn('b')} で とじる　(えらんでいる あいだ バトルは 止まる)`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
+    }
+
+    // だれに 使うか (名前・Lv・HP。どうぐは 前 / 後ろ も)
+    function drawPick(ctx) {
+        const item = ITEMS[menu.pick.id], list = menuTargets();
+        text(ctx, menu.kind === 'item' ? `${item.name}を だれに 使う？` : `${item.name}を どの 敵に 投げる？`, 160, 34, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
+        const front = battle.front();
+        list.forEach((u, k) => {
+            const r = menuRow(k);
+            if (k === menu.pick.index) { roundRect(ctx, r.x, r.y, r.w, r.h, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
+            if (menu.kind === 'item') text(ctx, front.includes(u) ? 'まえ' : 'うしろ', r.x + 8, r.y + 16, { size: 9.5, color: front.includes(u) ? COLORS.accent : COLORS.sub, bold: true });
+            text(ctx, `${u.name} Lv${u.lv}`, r.x + 44, r.y + 17, { size: 12, maxWidth: 120 });
+            if (u.side === 'enemy' && g.zukan.friends[u.id]) drawFriendMark(ctx, r.x + 36, r.y + 12, 4);
+            bar(ctx, r.x + 170, r.y + 9, 60, 6, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
+            text(ctx, `${Math.ceil(u.hp)}`, r.x + r.w - 6, r.y + 17, { size: 10, align: 'right', color: COLORS.sub });
+        });
+        text(ctx, `${btn('a')} で 使う・${btn('b')} で もどる`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
+    }
+
+    // 上画面: えらんでいる 相手の 頭の 上に ▼
+    function drawPickArrow(ctx) {
+        if (!menu || !menu.pick) return;
+        const u = menuTargets()[menu.pick.index];
+        if (!u) return;
+        const ei = battle.enemies.indexOf(u), fi = battle.front().indexOf(u);
+        const p = ei >= 0 ? enemyPos(ei) : fi >= 0 ? ALLY_POS[fi] : null;
+        if (!p) return;
+        const scale = ei >= 0 ? p.scale : ALLY_SCALE;
+        const y = p.y - ART[u.art].h * scale - 30 + Math.sin(t * 8) * 2;
+        text(ctx, '▼', p.x, y, { size: 16, align: 'center', bold: true, color: COLORS.accent });
     }
 
     function drawBottom(ctx) {
@@ -685,5 +745,5 @@ export function createBattleView(app, battle, place) {
         if (menu) drawMenu(ctx);
     }
 
-    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg } };
+    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu } };
 }
