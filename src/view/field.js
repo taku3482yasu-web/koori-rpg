@@ -5,11 +5,11 @@ import { ART } from '../art/index.js';
 import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA } from '../data/nakama.js';
-import { COLORS, drawArt, panel, text, textWidth, wrap, button, hit } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, textWidth, wrap, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile } from '../logic/world.js';
-import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift } from '../logic/game.js';
+import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -137,22 +137,31 @@ export function createField(app) {
         }
     }
 
-    function shop() {
+    // 品物を えらんで、何こ 買うか えらぶ (2026-10-28 ユーザー指定)
+    function shop(greet = 'いらっしゃい。なにに するかね？') {
+        const OBA = '駄菓子屋の おばあちゃん';
         const labels = SHOP.map(id => `${ITEMS[id].name}  ${ITEMS[id].price}円 (${g.items[id] || 0}こ)`);
-        say([{ who: '駄菓子屋の おばあちゃん', text: `いらっしゃい。なにに するかね？ (おこづかい ${g.money}円)` }], {
+        say([{ who: OBA, text: `${greet} (おこづかい ${g.money}円)` }], {
             choices: [...labels, 'やめる'],
             done: i => {
                 const id = SHOP[i];
                 if (!id) return;
-                if (g.money < ITEMS[id].price) {
+                const it = ITEMS[id], max = maxBuy(g, id);
+                if (max === 0) {
                     sfx('cancel');
-                    say([{ who: '駄菓子屋の おばあちゃん', text: 'おこづかいが たりないねえ。' }], { done: shop });
+                    const full = (g.items[id] || 0) >= MAX_ITEM;
+                    say([{ who: OBA, text: full ? `${it.name}は もう もちきれないよ。` : 'おこづかいが たりないねえ。' }], { done: () => shop() });
                     return;
                 }
-                g.money -= ITEMS[id].price;
-                g.items[id] = (g.items[id] || 0) + 1;
-                sfx('ok');
-                shop();
+                say([{ who: OBA, text: `${it.name}を いくつ ほしいかね？ (おこづかい ${g.money}円)` }], {
+                    count: { max, label: n => `${it.name} × ${n} = ${it.price * n}円` },
+                    done: n => {
+                        if (!n) { shop(); return; }
+                        buyItem(g, id, n);
+                        sfx('ok');
+                        shop(`まいど。${it.name}を ${n}こ だね。ほかには？`);
+                    }
+                });
             }
         });
     }
@@ -353,6 +362,8 @@ export function createField(app) {
                 drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
                 // 戦える キャラには 赤い「！」(2026-10-28 ユーザー指定)。話せる キャラには なにも つけない
                 if (!c.friendly) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: '#ff3a3a' });
+                // もう 仲間に した キャラには 金の メダル (2026-10-28 ユーザー指定)
+                if (!c.friendly && g.zukan.friends[c.id]) drawFriendMark(ctx, x + 8, y - 24, 4);
                 // 話しかけられる キャラの 上に ふきだし
                 if (c === talkable) {
                     const label = `${btn('a')} はなす`;

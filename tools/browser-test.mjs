@@ -241,6 +241,29 @@ try {
     await key('KeyI');
     check(await sceneIs('field'), 'メニューを 閉じる');
 
+    // ----- 駄菓子屋: 何こ 買うか えらぶ (2026-10-28) -----
+    await evaluate('(() => { const g = window.__app.g; g.money = 1000; g.items.onigiri = 0; g.pos.x = 17 * 16 + 8; g.pos.y = 24 * 16 + 12; g.pos.dir = "up"; return true; })()');
+    await key('KeyJ');
+    await sleep(200);
+    await key('KeyJ');           // あいさつを 全部 出す
+    await sleep(200);
+    await key('KeyJ');           // おにぎり
+    await sleep(200);
+    await key('KeyJ');           // 「いくつ」を 全部 出す
+    await sleep(200);
+    await key('ArrowUp');
+    await key('ArrowUp');
+    await key('ArrowRight');     // 1 + 2 + 10 = 13 こ
+    await shot('shop-count');
+    await key('KeyJ');
+    await sleep(200);
+    check(await evaluate('window.__app.g.items.onigiri === 13 && window.__app.g.money === 1000 - 60 * 13'), '駄菓子屋で 13 こ えらんで 買える');
+    await key('KeyK');           // あいさつを 全部 出す
+    await sleep(200);
+    await key('KeyK');           // やめる
+    await sleep(200);
+    check(!(await evaluate('window.__app.talk.isActive()')), '駄菓子屋を 出る');
+
     // ----- セーブして 開きなおす → つづきから -----
     await evaluate('window.__app.save(), true');
     await send('Page.reload');

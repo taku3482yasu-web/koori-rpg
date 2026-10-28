@@ -13,7 +13,7 @@ import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMM
 import { skillMotion, skillPose, drawSkillFx, SKILL_KIND } from './skill-fx.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
-import { COLORS, drawArt, panel, text, bar, button, hit, roundRect } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
 import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES } from '../logic/battle.js';
@@ -487,6 +487,8 @@ export function createBattleView(app, battle, place) {
         const barY = head - 10, nameY = head - 14;
         bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
         text(ctx, `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: 'center' });
+        // もう 仲間に した 敵は HP の 右に 金の メダル (2026-10-28 ユーザー指定)
+        if (u.side === 'enemy' && g.zukan.friends[u.id]) drawFriendMark(ctx, p.x + w / 2 + 8, barY + 3, 5);
         const marks = Object.keys(u.status).map(k => STATUS_NAMES[k]);
         if (u.ko) marks.push('たおれた');
         if (marks.length) text(ctx, marks.join(' '), p.x, head - 26, { size: 9.5, align: 'center', color: '#ff9ad8', bold: true });

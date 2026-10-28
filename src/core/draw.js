@@ -82,6 +82,25 @@ export function button(ctx, b, { active = false, disabled = false, size = 13 } =
 
 export const hit = (b, x, y) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
 
+// もう 仲間に した キャラの 印 (金の メダルに ★)。(x, y) は まんなか、r は 半径 (2026-10-28 ユーザー指定)
+export function drawFriendMark(ctx, x, y, r = 5) {
+    ctx.fillStyle = '#ffd34a';
+    ctx.strokeStyle = '#7a4a00';
+    ctx.lineWidth = Math.max(1, r / 4);
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.3 : r * 0.7;
+        ctx[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
 // ドット絵 ({ w, h, palette, frames }) を描く。(x, y) は足元のまんなか。scale: 1 ドットの大きさ
 // sx, sy: 横・たての のびちぢみ (攻撃を 食らった ときに つぶれる など。足元は 動かない)
 export function drawArt(ctx, art, frame, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {

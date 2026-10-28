@@ -5,6 +5,8 @@
 // 文字は 1 文字ずつ 出る。A か 下画面の タップで 進む (出ている 途中なら 全部 出す)
 // 選択肢が 多いとき (駄菓子屋 など) は 下画面に 入る ぶんだけ 出して スクロールする (2026-10-28 ユーザー指定:
 //   一番下が 見えなかった)。カーソル・マウスホイール・▲▼ の タップ・なぞる で 動く
+// 個数を えらぶ: { count: { max, label: n => '…' }, done: n => {} } (やめると null。2026-10-28 ユーザー指定)
+//   上下で 1 こ、左右・L R で 10 こ。下画面の −10 −1 ＋1 ＋10 も タップ できる
 // =====================================================================
 import { ART } from '../art/index.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
@@ -26,6 +28,16 @@ export function createTalk() {
             .map(({ i, label }, k) => ({ i, x: 40, y: L.y0 + k * L.step, w: 240, h: L.h, label }));
     };
     const ARROW_UP = { x: 120, y: 0, w: 80, h: 16 }, ARROW_DOWN = { x: 120, y: 224, w: 80, h: 16 };
+    let count = 1;
+    const STEPS = [-10, -1, 1, 10].map((d, i) => ({ d, x: 16 + i * 76, y: 108, w: 60, h: 36, label: d > 0 ? `＋${d}` : `−${-d}` }));
+    const OK_BTN = { x: 40, y: 162, w: 116, h: 36, label: 'これに する' }, NO_BTN = { x: 164, y: 162, w: 116, h: 36, label: 'やめる' };
+    // 1 こ ずつは 先頭と 最後で 一周、10 こ ずつは はしで 止まる
+    const addCount = d => {
+        const max = opts.count.max;
+        if (Math.abs(d) === 1) count = ((count - 1 + d + max) % max) + 1;
+        else count = Math.max(1, Math.min(max, count + d));
+        sfx('cursor');
+    };
     const scrollTo = i => {
         const L = layout(), n = (opts.choices || []).length;
         top = Math.max(0, Math.min(n - L.rows, top));
@@ -45,6 +57,7 @@ export function createTalk() {
         cursor = 0;
         top = 0;
         drag = null;
+        count = 1;
         opts = options;
         active = true;
     }
@@ -59,6 +72,23 @@ export function createTalk() {
     function update(dt, input) {
         if (!active) return;
         shown = Math.min(lines[index].text.length, shown + dt * 40);
+        if (atLast() && full() && opts.count) {
+            if (input.pressed.up) addCount(1);
+            if (input.pressed.down) addCount(-1);
+            if (input.pressed.right || input.pressed.r) addCount(10);
+            if (input.pressed.left || input.pressed.l) addCount(-10);
+            if (input.wheel) addCount(input.wheel < 0 ? 1 : -1);
+            const tc = input.touch;
+            if (tc.justDown) {
+                const s = STEPS.find(b => hit(b, tc.x, tc.y));
+                if (s) addCount(s.d);
+                else if (hit(OK_BTN, tc.x, tc.y)) { sfx('ok'); finish(count); return; }
+                else if (hit(NO_BTN, tc.x, tc.y)) { sfx('cancel'); finish(null); return; }
+            }
+            if (input.pressed.a) { sfx('ok'); finish(count); return; }
+            if (input.pressed.b) { sfx('cancel'); finish(null); }
+            return;
+        }
         const choosing = atLast() && full() && opts.choices;
         if (choosing) {
             const n = opts.choices.length;
@@ -107,11 +137,27 @@ export function createTalk() {
         }
         const rows = wrap(ctx, line.text.slice(0, Math.floor(shown)), 360, 13);
         rows.slice(0, 3).forEach((r, i) => text(ctx, r, 20, 190 + i * 18, { size: 13 }));
-        if (full() && !(atLast() && opts.choices) && Math.floor(t * 3) % 2) text(ctx, '▼', 380, 228, { size: 10, align: 'right', color: COLORS.accent });
+        if (full() && !(atLast() && (opts.choices || opts.count)) && Math.floor(t * 3) % 2) text(ctx, '▼', 380, 228, { size: 10, align: 'right', color: COLORS.accent });
     }
 
     function drawBottom(ctx) {
         if (!active) return;
+        if (atLast() && full() && opts.count) {
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillRect(0, 0, 320, 240);
+            panel(ctx, 16, 14, 288, 84);
+            text(ctx, opts.count.label(count), 160, 40, { size: 13, align: 'center', bold: true });
+            text(ctx, `${count} こ`, 160, 82, { size: 30, align: 'center', bold: true, color: COLORS.accent });
+            text(ctx, `▲`, 236, 64, { size: 11, align: 'center', color: COLORS.sub });
+            text(ctx, `▼`, 236, 86, { size: 11, align: 'center', color: COLORS.sub });
+            STEPS.forEach(b => button(ctx, b, { disabled: (b.d === -10 && count === 1) || (b.d === 10 && count === opts.count.max), size: 14 }));
+            button(ctx, OK_BTN, { active: true });
+            button(ctx, NO_BTN);
+            ctx.fillStyle = '#16203a';
+            ctx.fillRect(0, 208, 320, 32);
+            text(ctx, `↑↓ 1こ ・ ←→ ${btn('l')}${btn('r')} 10こ ・ ${btn('a')} けってい`, 160, 222, { size: 10.5, align: 'center', color: COLORS.sub });
+            return;
+        }
         if (atLast() && full() && opts.choices) {
             ctx.fillStyle = 'rgba(0,0,0,0.55)';
             ctx.fillRect(0, 0, 320, 240);

@@ -9,6 +9,7 @@
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
+import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 
 export const SAVE_VERSION = 1;
@@ -215,6 +216,16 @@ export function objective(g) {
 }
 
 export const spotById = id => SPOTS.find(s => s.id === id);
+
+// 駄菓子屋で 買う。1 種類 99 こ まで (2026-10-28 ユーザー指定: 何こ 買うか えらべる)
+export const MAX_ITEM = 99;
+export const maxBuy = (g, id) => Math.max(0, Math.min(Math.floor(g.money / ITEMS[id].price), MAX_ITEM - (g.items[id] || 0)));
+export function buyItem(g, id, n) {
+    if (!(n >= 1) || n > maxBuy(g, id)) return false;
+    g.money -= ITEMS[id].price * n;
+    g.items[id] = (g.items[id] || 0) + n;
+    return true;
+}
 
 // 話せる キャラ (map.js の FRIENDS) から 道具を もらう。今日 もう もらっていたら null
 export function takeGift(g, friend) {

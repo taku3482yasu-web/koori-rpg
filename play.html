@@ -1510,6 +1510,15 @@ body.nopad #pad { display: none; }
   const START = { x: 6, y: 24 };
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
   const areaAt = (x, y) => y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const ITEMS = {
+    onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
+    melonpan: { name: "メロンパン", heal: 50, price: 50, desc: "なかま 1 体の HP を 50 回復。パンが好きな なかまの 好物" },
+    choco: { name: "チョコ", heal: 30, gauge: 30, price: 40, desc: "HP を 30 回復し、必殺技ゲージが 30 たまる。あまいもの好きの 好物" },
+    cider: { name: "サイダー", heal: 40, price: 40, desc: "なかま 1 体の HP を 40 回復。シュワシュワ好きの 好物" },
+    kyuuri: { name: "きゅうり", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。やさい好きの 好物" },
+    niboshi: { name: "にぼし", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。さかな好きの 好物" }
+  };
+  const SHOP = ["onigiri", "melonpan", "choco", "cider", "kyuuri", "niboshi"];
   const MAX_LV = 99;
   const STAT_KEYS = ["hp", "atk", "def", "spd", "mag"];
   const speciesOf = unitOf;
@@ -1701,21 +1710,20 @@ body.nopad #pad { display: none; }
       }
     }
   }
+  const MAX_ITEM = 99;
+  const maxBuy = (g, id) => Math.max(0, Math.min(Math.floor(g.money / ITEMS[id].price), MAX_ITEM - (g.items[id] || 0)));
+  function buyItem(g, id, n) {
+    if (!(n >= 1) || n > maxBuy(g, id)) return false;
+    g.money -= ITEMS[id].price * n;
+    g.items[id] = (g.items[id] || 0) + n;
+    return true;
+  }
   function takeGift(g, friend) {
     if (!friend.gift || g.gifts[friend.id] === g.day) return null;
     g.gifts[friend.id] = g.day;
     g.items[friend.gift.item] = (g.items[friend.gift.item] || 0) + friend.gift.n;
     return friend.gift;
   }
-  const ITEMS = {
-    onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
-    melonpan: { name: "メロンパン", heal: 50, price: 50, desc: "なかま 1 体の HP を 50 回復。パンが好きな なかまの 好物" },
-    choco: { name: "チョコ", heal: 30, gauge: 30, price: 40, desc: "HP を 30 回復し、必殺技ゲージが 30 たまる。あまいもの好きの 好物" },
-    cider: { name: "サイダー", heal: 40, price: 40, desc: "なかま 1 体の HP を 40 回復。シュワシュワ好きの 好物" },
-    kyuuri: { name: "きゅうり", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。やさい好きの 好物" },
-    niboshi: { name: "にぼし", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。さかな好きの 好物" }
-  };
-  const SHOP = ["onigiri", "melonpan", "choco", "cider", "kyuuri", "niboshi"];
   const GAUGE_MAX = 100;
   const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8 };
   const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく" };
@@ -3913,6 +3921,23 @@ body.nopad #pad { display: none; }
     text(ctx, b.label, b.x + b.w / 2, b.y + b.h / 2 + size / 3 + 1, { size, align: "center", bold: true, color: disabled ? COLORS.dim : COLORS.ink });
   }
   const hit = (b, x, y) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  function drawFriendMark(ctx, x, y, r2 = 5) {
+    ctx.fillStyle = "#ffd34a";
+    ctx.strokeStyle = "#7a4a00";
+    ctx.lineWidth = Math.max(1, r2 / 4);
+    ctx.beginPath();
+    ctx.arc(x, y, r2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r2 * 0.3 : r2 * 0.7;
+      ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
   function drawArt(ctx, art, frame2, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {
     if (!art) return;
     const n = art.frames.length;
@@ -3953,6 +3978,15 @@ body.nopad #pad { display: none; }
       return (opts.choices || []).map((label, i) => ({ i, label })).slice(top, top + L.rows).map(({ i, label }, k) => ({ i, x: 40, y: L.y0 + k * L.step, w: 240, h: L.h, label }));
     };
     const ARROW_UP = { x: 120, y: 0, w: 80, h: 16 }, ARROW_DOWN = { x: 120, y: 224, w: 80, h: 16 };
+    let count = 1;
+    const STEPS = [-10, -1, 1, 10].map((d, i) => ({ d, x: 16 + i * 76, y: 108, w: 60, h: 36, label: d > 0 ? `＋${d}` : `−${-d}` }));
+    const OK_BTN = { x: 40, y: 162, w: 116, h: 36, label: "これに する" }, NO_BTN = { x: 164, y: 162, w: 116, h: 36, label: "やめる" };
+    const addCount = (d) => {
+      const max = opts.count.max;
+      if (Math.abs(d) === 1) count = (count - 1 + d + max) % max + 1;
+      else count = Math.max(1, Math.min(max, count + d));
+      sfx("cursor");
+    };
     const scrollTo = (i) => {
       const L = layout(), n = (opts.choices || []).length;
       top = Math.max(0, Math.min(n - L.rows, top));
@@ -3971,6 +4005,7 @@ body.nopad #pad { display: none; }
       cursor = 0;
       top = 0;
       drag = null;
+      count = 1;
       opts = options;
       active = true;
     }
@@ -3984,6 +4019,37 @@ body.nopad #pad { display: none; }
     function update(dt, input2) {
       if (!active) return;
       shown = Math.min(lines[index].text.length, shown + dt * 40);
+      if (atLast() && full() && opts.count) {
+        if (input2.pressed.up) addCount(1);
+        if (input2.pressed.down) addCount(-1);
+        if (input2.pressed.right || input2.pressed.r) addCount(10);
+        if (input2.pressed.left || input2.pressed.l) addCount(-10);
+        if (input2.wheel) addCount(input2.wheel < 0 ? 1 : -1);
+        const tc = input2.touch;
+        if (tc.justDown) {
+          const s = STEPS.find((b) => hit(b, tc.x, tc.y));
+          if (s) addCount(s.d);
+          else if (hit(OK_BTN, tc.x, tc.y)) {
+            sfx("ok");
+            finish(count);
+            return;
+          } else if (hit(NO_BTN, tc.x, tc.y)) {
+            sfx("cancel");
+            finish(null);
+            return;
+          }
+        }
+        if (input2.pressed.a) {
+          sfx("ok");
+          finish(count);
+          return;
+        }
+        if (input2.pressed.b) {
+          sfx("cancel");
+          finish(null);
+        }
+        return;
+      }
       const choosing = atLast() && full() && opts.choices;
       if (choosing) {
         const n = opts.choices.length;
@@ -4070,10 +4136,26 @@ body.nopad #pad { display: none; }
       }
       const rows = wrap(ctx, line2.text.slice(0, Math.floor(shown)), 360, 13);
       rows.slice(0, 3).forEach((r2, i) => text(ctx, r2, 20, 190 + i * 18, { size: 13 }));
-      if (full() && !(atLast() && opts.choices) && Math.floor(t * 3) % 2) text(ctx, "▼", 380, 228, { size: 10, align: "right", color: COLORS.accent });
+      if (full() && !(atLast() && (opts.choices || opts.count)) && Math.floor(t * 3) % 2) text(ctx, "▼", 380, 228, { size: 10, align: "right", color: COLORS.accent });
     }
     function drawBottom(ctx) {
       if (!active) return;
+      if (atLast() && full() && opts.count) {
+        ctx.fillStyle = "rgba(0,0,0,0.55)";
+        ctx.fillRect(0, 0, 320, 240);
+        panel(ctx, 16, 14, 288, 84);
+        text(ctx, opts.count.label(count), 160, 40, { size: 13, align: "center", bold: true });
+        text(ctx, `${count} こ`, 160, 82, { size: 30, align: "center", bold: true, color: COLORS.accent });
+        text(ctx, `▲`, 236, 64, { size: 11, align: "center", color: COLORS.sub });
+        text(ctx, `▼`, 236, 86, { size: 11, align: "center", color: COLORS.sub });
+        STEPS.forEach((b) => button(ctx, b, { disabled: b.d === -10 && count === 1 || b.d === 10 && count === opts.count.max, size: 14 }));
+        button(ctx, OK_BTN, { active: true });
+        button(ctx, NO_BTN);
+        ctx.fillStyle = "#16203a";
+        ctx.fillRect(0, 208, 320, 32);
+        text(ctx, `↑↓ 1こ ・ ←→ ${btn("l")}${btn("r")} 10こ ・ ${btn("a")} けってい`, 160, 222, { size: 10.5, align: "center", color: COLORS.sub });
+        return;
+      }
       if (atLast() && full() && opts.choices) {
         ctx.fillStyle = "rgba(0,0,0,0.55)";
         ctx.fillRect(0, 0, 320, 240);
@@ -4823,22 +4905,33 @@ body.nopad #pad { display: none; }
         say([{ who: "", text: msg }]);
       }
     }
-    function shop() {
+    function shop(greet = "いらっしゃい。なにに するかね？") {
+      const OBA = "駄菓子屋の おばあちゃん";
       const labels = SHOP.map((id) => `${ITEMS[id].name}  ${ITEMS[id].price}円 (${g.items[id] || 0}こ)`);
-      say([{ who: "駄菓子屋の おばあちゃん", text: `いらっしゃい。なにに するかね？ (おこづかい ${g.money}円)` }], {
+      say([{ who: OBA, text: `${greet} (おこづかい ${g.money}円)` }], {
         choices: [...labels, "やめる"],
         done: (i) => {
           const id = SHOP[i];
           if (!id) return;
-          if (g.money < ITEMS[id].price) {
+          const it = ITEMS[id], max = maxBuy(g, id);
+          if (max === 0) {
             sfx("cancel");
-            say([{ who: "駄菓子屋の おばあちゃん", text: "おこづかいが たりないねえ。" }], { done: shop });
+            const full = (g.items[id] || 0) >= MAX_ITEM;
+            say([{ who: OBA, text: full ? `${it.name}は もう もちきれないよ。` : "おこづかいが たりないねえ。" }], { done: () => shop() });
             return;
           }
-          g.money -= ITEMS[id].price;
-          g.items[id] = (g.items[id] || 0) + 1;
-          sfx("ok");
-          shop();
+          say([{ who: OBA, text: `${it.name}を いくつ ほしいかね？ (おこづかい ${g.money}円)` }], {
+            count: { max, label: (n) => `${it.name} × ${n} = ${it.price * n}円` },
+            done: (n) => {
+              if (!n) {
+                shop();
+                return;
+              }
+              buyItem(g, id, n);
+              sfx("ok");
+              shop(`まいど。${it.name}を ${n}こ だね。ほかには？`);
+            }
+          });
         }
       });
     }
@@ -5079,6 +5172,7 @@ body.nopad #pad { display: none; }
           const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
           drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
           if (!c.friendly) text(ctx, "!", x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: "center", bold: true, color: "#ff3a3a" });
+          if (!c.friendly && g.zukan.friends[c.id]) drawFriendMark(ctx, x + 8, y - 24, 4);
           if (c === talkable) {
             const label = `${btn("a")} はなす`;
             panel(ctx, x - 22, y - 36, 44, 13, { fill: "rgba(255,255,255,0.95)", edge: "#1b3a6b", r: 4, lineWidth: 1 });
@@ -6899,6 +6993,7 @@ body.nopad #pad { display: none; }
       const barY = head - 10, nameY = head - 14;
       bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
       text(ctx, `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
+      if (u.side === "enemy" && g.zukan.friends[u.id]) drawFriendMark(ctx, p.x + w / 2 + 8, barY + 3, 5);
       const marks = Object.keys(u.status).map((k) => STATUS_NAMES[k]);
       if (u.ko) marks.push("たおれた");
       if (marks.length) text(ctx, marks.join(" "), p.x, head - 26, { size: 9.5, align: "center", color: "#ff9ad8", bold: true });

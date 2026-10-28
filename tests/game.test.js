@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift } from '../src/logic/game.js';
+import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM } from '../src/logic/game.js';
 import { createBattle } from '../src/logic/battle.js';
 import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS } from '../src/data/map.js';
 import { blockedTile, moveHero, lookAt } from '../src/logic/world.js';
@@ -167,6 +167,22 @@ test('話せる キャラ (印なし) は 1 日 1 回 道具を くれる', () =
     advanceTime(g, createRng(1)); advanceTime(g, createRng(1)); advanceTime(g, createRng(1)); advanceTime(g, createRng(1));
     assert.ok(takeGift(g, f), '次の 日は また くれる');
     assert.equal(takeGift(g, FRIENDS.find(x => !x.gift)), null);
+});
+
+test('駄菓子屋で 何こ 買うか えらべる。お金と 99 こ までが 上限 (2026-10-28)', () => {
+    const g = newGame('naitei');
+    g.money = 200;
+    g.items.choco = 0;
+    assert.equal(maxBuy(g, 'choco'), 5, '40円 × 5 = 200円');
+    assert.ok(buyItem(g, 'choco', 3));
+    assert.equal(g.money, 80);
+    assert.equal(g.items.choco, 3);
+    assert.equal(buyItem(g, 'choco', 3), false, 'お金が たりないと 買えない');
+    assert.equal(buyItem(g, 'choco', 0), false);
+    assert.equal(g.money, 80);
+    g.money = 99999;
+    g.items.choco = MAX_ITEM - 2;
+    assert.equal(maxBuy(g, 'choco'), 2, '99 こ まで');
 });
 
 test('町の キャラとは ぶつかる (すけない)。重なっていても はなれる 向きには 動ける', () => {
