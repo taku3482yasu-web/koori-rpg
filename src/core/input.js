@@ -1,19 +1,22 @@
 // =====================================================================
 // 入力: キーボード・ゲームパッド・画面のボタン (スマホ)・下画面のタッチを 1 つにまとめる
 // ---------------------------------------------------------------------
-// ボタン: up down left right a b x y l r start (+ sp1 sp2 sp3 はキーボードの 1・2・3)
+// ボタン: up down left right a b x y l r start (+ sp1 sp2 sp3 はキーボードの 1・2・3、tab は Tab キー (X と 同時に 押される)、fast は F キー)
+// input.wheel: そのコマの マウスホイール (下へ +1 / 上へ -1。画面の 上で 回したとき)
 // input.held.a は押している間 true、input.pressed.a はそのコマで押されたときだけ true
 // 下画面のタッチは input.touch (x, y は下画面のドット。down / justDown / justUp)
 // =====================================================================
 import { setKeyMode } from './keys.js';
 
-const BUTTONS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'l', 'r', 'start', 'sp1', 'sp2', 'sp3'];
+const BUTTONS = ['up', 'down', 'left', 'right', 'a', 'b', 'x', 'y', 'l', 'r', 'start', 'sp1', 'sp2', 'sp3', 'tab', 'fast'];
 // PC: 左手の WASD (か 矢印) で 動き、右手で ボタン。J=A (決定)・K=B (戻る)・I=X・U=Y・Q=L・E=R (2026-10-26 ユーザー指定)
 const KEYS = {
     ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
     KeyJ: 'a', Enter: 'a', Space: 'a', KeyK: 'b', Escape: 'b', Backspace: 'b', KeyI: 'x', Tab: 'x', KeyU: 'y',
-    KeyQ: 'l', KeyE: 'r', ShiftLeft: 'start', ShiftRight: 'start', KeyP: 'start', Digit1: 'sp1', Digit2: 'sp2', Digit3: 'sp3'
+    KeyQ: 'l', KeyE: 'r', ShiftLeft: 'start', ShiftRight: 'start', KeyP: 'start', Digit1: 'sp1', Digit2: 'sp2', Digit3: 'sp3', KeyF: 'fast'
 };
+// いっしょに 押される ボタン: Tab は メニューを 開く (X) と、メニューの 中では タブの 切りかえ (tab) (2026-10-28 ユーザー指定)
+const ALSO = { Tab: 'tab' };
 // 標準のゲームパッド (下 0・右 1・左 2・上 3)。携帯機と同じく 右が A・下が B・左が Y・上が X
 const PAD = { 1: 'a', 0: 'b', 2: 'y', 3: 'x', 4: 'l', 5: 'r', 6: 'l', 7: 'r', 9: 'start', 12: 'up', 13: 'down', 14: 'left', 15: 'right' };
 
@@ -37,6 +40,7 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
     const touch = { down: false, justDown: false, justUp: false, x: 0, y: 0, startX: 0, startY: 0 };
     let touchDown = false, touchUpQueued = false, touchDownQueued = false;
     let lastKind = null;
+    let wheelAcc = 0, wheel = 0;
     const usePad = (kind, show) => {
         if (lastKind === kind) return;
         lastKind = kind;
@@ -51,13 +55,21 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
             if (!b) return;
             e.preventDefault();
             sources.key[b] = true;
+            if (ALSO[e.code]) sources.key[ALSO[e.code]] = true;
             usePad('key', false);
         });
         window.addEventListener('keyup', e => {
             const b = KEYS[e.code];
             if (b) sources.key[b] = false;
+            if (ALSO[e.code]) sources.key[ALSO[e.code]] = false;
         });
         window.addEventListener('blur', () => { sources.key = {}; sources.touchBtn = {}; });
+        // マウスホイール (2026-10-28 ユーザー指定: 一覧を スクロール)。ゲームの 画面の 上だけ
+        window.addEventListener('wheel', e => {
+            if (!e.target || e.target.tagName !== 'CANVAS') return;
+            e.preventDefault();
+            wheelAcc += e.deltaY;
+        }, { passive: false });
         window.addEventListener('touchstart', () => usePad('touch', true), { passive: true });
     }
 
@@ -153,6 +165,11 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
         touchUpQueued = false;
         mouse.moved = mouseMoved;
         mouseMoved = false;
+        // ホイールは 1 コマに 1 行ぶん まで (たくさん 回しても 少しずつ)
+        wheel = Math.abs(wheelAcc) >= 40 ? Math.sign(wheelAcc) : 0;
+        if (wheel) wheelAcc -= wheel * Math.min(Math.abs(wheelAcc), 100);
+        else if (Math.abs(wheelAcc) < 40) wheelAcc *= 0.9;
+        api.wheel = wheel;
     }
 
     // 自動テスト用: ボタンを押す・はなす、下画面をさわる
@@ -164,5 +181,7 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
         if (phase === 'up') { touchDown = false; touchUpQueued = true; }
     };
 
-    return { held, pressed, touch, mouse, update, press, fakeTouch, usesTouch: () => lastKind === 'touch' };
+    const fakeWheel = dy => { wheelAcc += dy; };
+    const api = { held, pressed, touch, mouse, wheel: 0, update, press, fakeTouch, fakeWheel, usesTouch: () => lastKind === 'touch' };
+    return api;
 }

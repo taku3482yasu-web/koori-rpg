@@ -157,18 +157,28 @@ export function applyBattleResult(g, battle, rng) {
         g.story = 'clear';
         return out;
     }
-    // 1 回の バトルで 仲間に なるのは 1 体まで
+    // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
     const ids = [...new Set(battle.enemies.map(e => e.id))];
     for (const id of ids) {
         if (rng.chance(befriendRate(g, id, battle.food))) {
-            const lv = battle.enemies.find(e => e.id === id).lv;
-            out.befriend = { id, medal: addMedal(g, id, lv) };
-            g.wins[id] = 0;
+            out.befriend = { id, lv: battle.enemies.find(e => e.id === id).lv, medal: null };
             break;
         }
     }
     out.storyChanged = updateStory(g);
     return out;
+}
+
+// 仲間に なりたそうな キャラを 仲間に する (結果画面で「なかまに する」を えらんだ とき)。メダルを 返す
+//   えらばなかったら 何も しない (勝った 回数も そのまま)
+export function acceptBefriend(g, out) {
+    const b = out.befriend;
+    if (!b) return null;
+    if (b.medal) return b.medal;
+    b.medal = addMedal(g, b.id, b.lv);
+    g.wins[b.id] = 0;
+    out.storyChanged = updateStory(g) || out.storyChanged;
+    return b.medal;
 }
 
 // ストーリーの 進み (仲間の 数で 進む ところ)

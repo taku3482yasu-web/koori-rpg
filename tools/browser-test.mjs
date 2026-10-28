@@ -181,8 +181,21 @@ try {
     await shot('battle');
 
     // ----- バトル: 攻撃した キャラが 動く (飛びこみ・はねる)・当たると 火花 -----
-    const moved = await evaluate('new Promise(r => { let m = false, f = false, n = 0; const tick = () => { const d = window.__app.scene.debug; if (d) { if (Object.keys(d.motions).length) m = true; if (d.effects.some(e => e.kind === "spark")) f = true; } if ((m && f) || ++n > 360) r({ m, f }); else requestAnimationFrame(tick); }; tick(); })');
+    const moved = await evaluate('new Promise(r => { let m = false, f = false, n = 0; const tick = () => { const d = window.__app.scene.debug; if (d) { if (Object.keys(d.motions).length) m = true; if (d.effects.some(e => e.kind === "spark")) f = true; } if ((m && f) || ++n > 900) r({ m, f }); else requestAnimationFrame(tick); }; tick(); })');
     check(moved.m && moved.f, `攻撃した キャラが 動き、当たると 火花が 出る (${JSON.stringify(moved)})`);
+
+    // ----- バトル: 倍速 (F キー)・どうぐを えらぶ あいだは 止まる (2026-10-28) -----
+    await key('KeyF');
+    check(await evaluate('window.__app.g.fastBattle === true'), 'F キーで 倍速');
+    await key('KeyF');
+    check(await evaluate('!window.__app.g.fastBattle'), 'もう一度 F キーで もとの 速さ');
+    await key('KeyU');
+    const t0 = await evaluate('window.__app.scene.battle.t');
+    await sleep(600);
+    check(await evaluate(`window.__app.scene.battle.t === ${t0}`), 'どうぐを えらんでいる あいだは バトルが 止まる');
+    await key('KeyK');
+    await sleep(300);
+    check(await evaluate(`window.__app.scene.battle.t > ${t0}`), 'とじると バトルが 動きだす');
 
     // ----- バトル: 輪を 回す・必殺技・道具 -----
     await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.s.atk = 1; e.s.mag = 1; }); return true; })()');
@@ -217,11 +230,15 @@ try {
     await shot('menu-watch');
     await key('KeyE');
     await shot('menu-zukan');
-    await clickBottom(42, 17);   // ウォッチの タブ
+    await clickBottom(34, 17);   // へんせいの タブ
     await clickBottom(57, 58);   // 1 つ目の 場所
     await shot('menu-pick');
     await key('KeyK');
+    // Tab キーは メニューの 中では タブの 切りかえ (2026-10-28 ユーザー指定)
     await key('Tab');
+    check(await sceneIs('menu'), 'メニューの 中で Tab キー → メニューは 閉じない');
+    await shot('menu-all');
+    await key('KeyI');
     check(await sceneIs('field'), 'メニューを 閉じる');
 
     // ----- セーブして 開きなおす → つづきから -----

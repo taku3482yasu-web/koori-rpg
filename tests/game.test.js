@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { newGame, receiveWatch, encounter, applyBattleResult, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift } from '../src/logic/game.js';
+import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift } from '../src/logic/game.js';
 import { createBattle } from '../src/logic/battle.js';
 import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS } from '../src/data/map.js';
 import { blockedTile, moveHero, lookAt } from '../src/logic/world.js';
@@ -26,7 +26,7 @@ test('神社で ウォッチを もらい、なかまを 3 体 ふやすと 橋�
     assert.ok(!g.zukan.friends.koori);
     assert.equal(g.story, 'friends');
     const rng = { chance: () => true, int: () => 0, next: () => 0, weighted: l => l[0] };
-    for (const id of ['ishikoron', 'kogame', 'haribaby']) applyBattleResult(g, winBattle(g, [{ id, lv: 3 }]), rng);
+    for (const id of ['ishikoron', 'kogame', 'haribaby']) acceptBefriend(g, applyBattleResult(g, winBattle(g, [{ id, lv: 3 }]), rng));
     assert.equal(g.story, 'bridge');
     assert.equal(g.watch.filter(Boolean).length, 5);
     const out = applyBattleResult(g, winBattle(g, [{ id: 'nushi', lv: 8 }], 'boss'), rng);
@@ -55,6 +55,22 @@ test('仲間に なる 確率: E は 25%・好物で 2 倍・10 回 勝つと �
     assert.ok(Math.abs(befriendRate(g, 'kogame', { target: 'kogame', favorite: false }) - 0.325) < 1e-9);
     g.wins.kogame = PITY_WINS;
     assert.equal(befriendRate(g, 'kogame', null), 1);
+});
+
+test('仲間に なりたそうでも、えらばなければ 仲間に ならない (2026-10-28)', () => {
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = { chance: () => true, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const before = g.medals.length;
+    const out = applyBattleResult(g, winBattle(g, [{ id: 'kogame', lv: 3 }]), rng);
+    assert.equal(out.befriend.id, 'kogame');
+    assert.equal(g.medals.length, before, 'まだ 仲間に なっていない');
+    assert.ok(!g.zukan.friends.kogame);
+    const m = acceptBefriend(g, out);
+    assert.equal(m.id, 'kogame');
+    assert.equal(g.medals.length, before + 1);
+    assert.ok(g.zukan.friends.kogame);
+    assert.equal(acceptBefriend(g, out), m, '2 回 えらんでも 1 枚');
 });
 
 test('仲間に なる 割合を 2000 回 ためすと だいたい 25%', () => {

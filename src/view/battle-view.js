@@ -3,11 +3,14 @@
 // ---------------------------------------------------------------------
 // 操作: L・R か 輪を なぞる → 回す / 十字キー左右 + A か 絵の タップ → 必殺技 (れんだの ミニゲーム)
 //       Y → どうぐ (なかまを 回復) / X → おやつ (敵に 投げる。仲間に なりやすくなる)
+//       F キー・START・下画面の「倍速」 → 倍速 (2026-10-28 ユーザー指定: ふだんは ゆっくり。g.fastBattle に 残る)
+// どうぐ・おやつを えらんでいる あいだは バトルを 止める (2026-10-28 ユーザー指定)
 // =====================================================================
 import { ART } from '../art/index.js';
 import { backArt } from '../art/back.js';
 import { BACK_ART } from '../art/back-art.js';
 import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMMANDS, COMMAND_NAMES } from './special-fx.js';
+import { skillMotion, skillPose, drawSkillFx, SKILL_KIND } from './skill-fx.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect } from '../core/draw.js';
@@ -19,6 +22,11 @@ const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
 const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: 'どうぐ' };
 const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: 'おやつ' };
+const FAST_BTN = { x: 4, y: 4, w: 56, h: 24, label: '倍速' };
+// バトルの 進む 速さ (2026-10-28 ユーザー指定: 1 回 1 回の 行動が 速いので ゆっくり。倍速で その 2 倍)
+export const BATTLE_SPEED = { normal: 0.6, fast: 1.2 };
+// 強化の 名前 (必殺技などで ついた ものは 切れるまで 出す)
+const BUFF_NAMES = { atk: 'こうげき↑', def: 'まもり↑', spd: 'すばやさ↑', mag: 'ようじゅつ↑' };
 // 味方は 手前 (下) に 大きく、うしろ姿で。敵は 奥 (上) に (2026-10-26 ユーザー指定)
 const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
 const ALLY_SCALE = 4;
@@ -67,16 +75,28 @@ export function createBattleView(app, battle, place) {
         const scale = u.side === 'ally' ? ALLY_SCALE : p.scale || 3;
         return { x: p.x, y: p.y - ART[u.art].h * scale / 2 };
     }
-    function startMotion(uid, kind, targetUid) {
-        const dur = { attack: 0.34, skill: 0.42, special: 0.7 }[kind];
+    // skill: わざ・術の 動き (skill-fx.js の skillMotion)。相手の そばまで 近づく わざは 相手との きょりの near ぶん 動く
+    function startMotion(uid, kind, targetUid, skill = null) {
+        const spec = skill ? SKILL_KIND[skill.kind] : null;
+        const dur = spec ? spec.dur : { attack: 0.34, skill: 0.42, special: 0.7 }[kind];
         let dx = 0, dy = 0;
         const a = posOf(uid), b = targetUid ? posOf(targetUid) : null;
         if (kind === 'attack' && a && b) {
             const d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
             dx = (b.x - a.x) / d * 26;
             dy = (b.y - a.y) / d * 26;
+        } else if (spec && spec.near && a && b) {
+            dx = (b.x - a.x) * spec.near;
+            dy = (b.y - a.y) * spec.near;
         }
-        motions[uid] = { kind, start: t, dur, dx, dy };
+        motions[uid] = { kind, start: t, dur, dx, dy, skill };
+    }
+    // いま 描いている 体の まんなか (動きの ずれも 入れる)。わざの 武器を 手に 持たせる
+    function actorPoint(uid) {
+        const c = centerOf(uid), u = unitOf(uid);
+        if (!c || !u) return null;
+        const o = offsetOf(u);
+        return { x: c.x + o.ox, y: c.y + o.oy };
     }
     // 食らった とき (2026-10-27 ユーザー指定): 攻撃した 相手と 反対へ はじかれ、ぺしゃっと つぶれて もどる
     //   たおれた ときは 大きく はじかれて つぶれたまま
@@ -99,7 +119,13 @@ export function createBattleView(app, battle, place) {
         if (m) {
             const k = (t - m.start) / m.dur;
             if (k >= 1 && m.kind !== 'ko') delete motions[u.uid];
-            else if (m.kind === 'attack') {
+            else if (m.kind === 'skill' && m.skill) {
+                const p = skillPose(m.skill.kind, k, m.dx, m.dy);
+                ox += p.ox;
+                oy += p.oy;
+                sx = p.sx;
+                sy = p.sy;
+            } else if (m.kind === 'attack') {
                 const f = k < 0.35 ? k / 0.35 : 1 - (k - 0.35) / 0.65;
                 ox += m.dx * f;
                 oy += m.dy * f;
@@ -124,15 +150,28 @@ export function createBattleView(app, battle, place) {
     }
     const at = (delay, fn) => later.push({ at: t + delay, fn });
 
+    // わざ・術の 当たる 相手: つづく できごと (次の キャラが 動くまで) の target
+    const ACTS = ['attack', 'skill', 'special', 'guard', 'loaf', 'confused'];
+    function targetsAfter(list, i) {
+        const out = [];
+        for (let j = i + 1; j < list.length && !ACTS.includes(list[j].type); j++) {
+            if (list[j].target && !out.includes(list[j].target)) out.push(list[j].target);
+        }
+        return out;
+    }
     function readEvents() {
         let actor = null, kind = 'attack';      // いま 動いている キャラ (つづく ダメージは その キャラの 攻撃)
-        for (const e of battle.events.splice(0)) {
+        let skillHit = HIT_DELAY.skill;         // わざ・術の 当たる 時間 (わざごとの 動きで 変わる)
+        const list = battle.events.splice(0);
+        list.forEach((e, idx) => {
             if (e.type === 'attack' || e.type === 'skill' || e.type === 'special') {
                 actor = e.actor;
                 kind = e.type;
                 // 味方の 必殺技は 必殺技の 動き (special-fx.js) が もう 当たったところ。ふつうの 動きは つけない
                 if (e.type === 'special' && e.side === 'ally' && mg) kind = 'perf';
+                else if (e.type === 'skill') startSkill(e, targetsAfter(list, idx));
                 else startMotion(e.actor, e.type, e.target);
+                if (e.type === 'skill') skillHit = SKILL_KIND[motions[e.actor]?.skill?.kind]?.hit ?? HIT_DELAY.skill;
             }
             // わざ・術の 名前、まもり・さぼりを キャラの 上に 出す (2026-10-27 ユーザー指定の 5 つの コマンド)
             if (e.type === 'skill' || e.type === 'guard' || e.type === 'loaf') {
@@ -140,13 +179,14 @@ export function createBattleView(app, battle, place) {
                 const label = e.type === 'skill' ? e.name : e.type === 'guard' ? 'まもり' : 'さぼり…';
                 const color = e.type === 'skill' ? (e.cmd === 'jutsu' ? '#c8a8ff' : '#ffe08a') : e.type === 'guard' ? '#8ad0ff' : '#a0a0b0';
                 if (p) pops.push({ x: p.x, y: p.y - 62, text: label, color, small: true, until: t + 1.1 });
-                if (e.type === 'guard') { const c = centerOf(e.actor); if (c) effects.push({ kind: 'heal', x: c.x, y: c.y, start: t, dur: 0.5 }); }
+                if (e.type === 'guard') { const c = centerOf(e.actor); if (c) effects.push({ kind: 'shield', x: c.x, y: c.y, start: t, dur: 0.5 }); }
             }
             if (e.type === 'damage') {
                 const p = posOf(e.target), from = centerOf(actor), to = centerOf(e.target);
-                const delay = actor ? HIT_DELAY[kind] : 0;
+                const delay = actor ? (kind === 'skill' ? skillHit : HIT_DELAY[kind]) : 0;
                 const color = actor ? ELEMENT_COLORS[unitOf(actor)?.element] || '#ffffff' : '#ffffff';
-                if (actor && (kind === 'skill' || kind === 'special') && from && to) effects.push({ kind: 'orb', from, to, start: t + (kind === 'special' ? 0.3 : 0.05), dur: delay - (kind === 'special' ? 0.3 : 0.05), color });
+                // わざは わざごとの 絵 (skill-fx.js) が 飛ぶ。玉は 敵の 必殺技だけ
+                if (actor && kind === 'special' && from && to) effects.push({ kind: 'orb', from, to, start: t + (kind === 'special' ? 0.3 : 0.05), dur: delay - (kind === 'special' ? 0.3 : 0.05), color });
                 const by = actor;
                 at(delay, () => {
                     if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
@@ -157,13 +197,13 @@ export function createBattleView(app, battle, place) {
                 });
             } else if (e.type === 'heal' && e.amount > 0) {
                 const p = posOf(e.target), c = centerOf(e.target);
-                at(actor && kind !== 'perf' ? 0.2 : 0, () => {
+                at(actor && kind !== 'perf' ? (kind === 'skill' ? skillHit : 0.2) : 0, () => {
                     if (p) pops.push({ x: p.x, y: p.y - 40, text: `+${e.amount}`, color: '#7aff8a', until: t + 0.9 });
                     if (c) effects.push({ kind: 'heal', x: c.x, y: c.y, start: t, dur: 0.7 });
                 });
             } else if (e.type === 'status') {
                 const p = posOf(e.target);
-                at(actor ? HIT_DELAY[kind] : 0, () => { if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: '#ff9ad8', until: t + 1 }); });
+                at(actor ? (kind === 'skill' ? skillHit : HIT_DELAY[kind]) : 0, () => { if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: '#ff9ad8', until: t + 1 }); });
             } else if (e.type === 'special') {
                 banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === 'ally' ? COLORS.accent : '#ff6a6a', until: t + 1.4 };
                 sfx('special');
@@ -180,7 +220,27 @@ export function createBattleView(app, battle, place) {
             else if (e.type === 'rotate') sfx('rotate');
             else if (e.type === 'win') sfx('win');
             else if (e.type === 'lose') sfx('lose');
-        }
+        });
+    }
+
+    // わざ・術を 使った: わざごとの 動きと 絵 (2026-10-28 ユーザー指定。コオリソードは 剣で 切りつける など)
+    function startSkill(e, targets) {
+        const u = unitOf(e.actor);
+        if (!u) return;
+        const move = u[e.cmd] || { name: e.name };
+        const m = skillMotion(move, e.cmd);
+        // 近づく わざは 前に いる 相手へ (回復は 自分の まわり)
+        const foe = targets.map(unitOf).find(x => x && x.side !== u.side);
+        startMotion(e.actor, 'skill', foe ? foe.uid : null, m);
+        const p = posOf(e.actor);
+        const scale = u.side === 'ally' ? ALLY_SCALE : (p && p.scale) || 3;
+        const spec = SKILL_KIND[m.kind];
+        const color = ELEMENT_COLORS[(move.effects || []).find(f => f.element)?.element || u.element] || '#ffffff';
+        effects.push({ kind: 'skill', skill: m.kind, start: t, dur: spec.dur, fx: {
+            kind: m.kind, weapon: m.weapon || null, color, start: t, dur: spec.dur, hit: spec.hit, s: scale / 1.8, seed: Math.random() * 6,
+            from: () => actorPoint(e.actor),
+            to: targets.map(centerOf).filter(Boolean)
+        } });
     }
 
     // ----- 必殺技 -----
@@ -219,6 +279,12 @@ export function createBattleView(app, battle, place) {
                 mg = null;
             }
         }
+    }
+
+    function toggleFast() {
+        g.fastBattle = !g.fastBattle;
+        banner = { text: g.fastBattle ? '倍速: オン' : '倍速: オフ', color: COLORS.accent, until: t + 0.8 };
+        sfx('cursor');
     }
 
     // ----- どうぐ・おやつ -----
@@ -288,6 +354,13 @@ export function createBattleView(app, battle, place) {
                 ctx.ellipse(fx.x, fx.y, 14 + k * 70, 4 + k * 18, 0, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.globalAlpha = 1;
+            } else if (fx.kind === 'skill') {
+                drawSkillFx(ctx, fx.fx, t);
+            } else if (fx.kind === 'shield') {
+                // まもり: 青い 盾が 前に 出る
+                ctx.globalAlpha = 1 - k;
+                drawShield(ctx, fx.x, fx.y, 1 + k * 0.6);
+                ctx.globalAlpha = 1;
             } else if (fx.kind === 'heal') {
                 // 回復: みどりの きらきらが のぼる
                 ctx.fillStyle = '#7aff8a';
@@ -307,7 +380,10 @@ export function createBattleView(app, battle, place) {
         g.playTime += dt;
         runLater();
         if (mg) { updateMinigame(dt, input); readEvents(); return; }
-        step(battle, dt);
+        if (input.pressed.fast || input.pressed.start || (input.touch.justDown && hit(FAST_BTN, input.touch.x, input.touch.y) && !menu)) toggleFast();
+        // どうぐ・おやつを えらんでいる あいだは バトルを 止める
+        if (menu) { updateMenu(input); return; }
+        step(battle, dt * (g.fastBattle ? BATTLE_SPEED.fast : BATTLE_SPEED.normal));
         readEvents();
         // 輪の アニメーション (近い ほうへ 回る)
         let diff = battle.rot - shownRot;
@@ -321,8 +397,6 @@ export function createBattleView(app, battle, place) {
             if (endT > 1.6) app.endBattle(battle);
             return;
         }
-        if (menu) { updateMenu(input); return; }
-
         if (input.pressed.l) rotate(battle, -1);
         if (input.pressed.r) rotate(battle, 1);
         if (input.pressed.left) { cursor = (cursor + 2) % 3; sfx('cursor'); }
@@ -416,6 +490,39 @@ export function createBattleView(app, battle, place) {
         const marks = Object.keys(u.status).map(k => STATUS_NAMES[k]);
         if (u.ko) marks.push('たおれた');
         if (marks.length) text(ctx, marks.join(' '), p.x, head - 26, { size: 9.5, align: 'center', color: '#ff9ad8', bold: true });
+        // まもり (次に 動くまで) と、必殺技などの 強化 (切れるまで) を 出しつづける (2026-10-28 ユーザー指定)
+        if (u.ko) return;
+        const guards = [];
+        if (u.guarding) guards.push('まもり');
+        for (const [k, b] of Object.entries(u.buffs)) if (b.t > 0 && BUFF_NAMES[k]) guards.push(BUFF_NAMES[k]);
+        if (u.guarding) {
+            // 体を つつむ 青い 光と、名前の 左に 盾の マーク
+            ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 5);
+            ctx.strokeStyle = '#8ad0ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(p.x, p.y - art.h * scale / 2, art.w * scale / 2 + 4, art.h * scale / 2 + 4, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            drawShield(ctx, p.x - w / 2 - 8, barY + 1, 0.55);
+        }
+        if (guards.length) text(ctx, guards.join(' '), p.x, head - (marks.length ? 38 : 26), { size: 9.5, align: 'center', color: '#8ad0ff', bold: true });
+    }
+
+    // 盾 (まもり)。(x, y) は まんなか
+    function drawShield(ctx, x, y, s = 1) {
+        ctx.fillStyle = 'rgba(138, 208, 255, 0.55)';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x - 10 * s, y - 11 * s);
+        ctx.lineTo(x + 10 * s, y - 11 * s);
+        ctx.lineTo(x + 10 * s, y + 2 * s);
+        ctx.lineTo(x, y + 12 * s);
+        ctx.lineTo(x - 10 * s, y + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
     }
 
     function drawTop(ctx) {
@@ -554,7 +661,7 @@ export function createBattleView(app, battle, place) {
             text(ctx, `${ITEMS[id].name}`, r.x + 10, r.y + 17, { size: 13 });
             text(ctx, `×${g.items[id]}`, r.x + r.w - 10, r.y + 17, { size: 13, align: 'right' });
         });
-        text(ctx, `${btn('b')} で とじる`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
+        text(ctx, `${btn('b')} で とじる　(えらんでいる あいだ バトルは 止まる)`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
     }
 
     function drawBottom(ctx) {
@@ -571,6 +678,8 @@ export function createBattleView(app, battle, place) {
         }
         drawWheel(ctx);
         drawSpecialButtons(ctx);
+        button(ctx, { ...FAST_BTN, label: g.fastBattle ? '倍速 ON' : '倍速' }, { active: Boolean(g.fastBattle), size: 10.5 });
+        text(ctx, btn('fast'), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: 'center', color: COLORS.dim });
         if (menu) drawMenu(ctx);
     }
 

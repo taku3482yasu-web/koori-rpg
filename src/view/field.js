@@ -5,7 +5,7 @@ import { ART } from '../art/index.js';
 import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA } from '../data/nakama.js';
-import { COLORS, drawArt, panel, text, wrap, button, hit } from '../core/draw.js';
+import { COLORS, drawArt, panel, text, textWidth, wrap, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile } from '../logic/world.js';
@@ -18,6 +18,13 @@ const WALK = 72, RUN = 124;
 const LENS_R = 26, LENS_FIND = 14, LENS_TIME = 1.2;
 const SPOT_COOLDOWN = 25;   // かくれている キャラと 戦った 場所は 25 秒 休む
 const TINT = ['rgba(255, 220, 160, 0.10)', null, 'rgba(255, 120, 40, 0.20)', 'rgba(20, 30, 90, 0.48)'];
+
+// 地図に 書く 建物の 名前 (2026-10-28 ユーザー指定: どこに 何屋さんが あるか)。地図が 小さいので みじかく
+const MINI_NAMES = {
+    home: 'いえ', dagashi: '駄菓子屋', school: '学校', shrine: '神社', toilet: 'トイレ', temple: 'お寺',
+    gamecenter: 'ゲーセン', pachinkoAto: 'パチ跡', yaoya: '八百屋', omenya: 'お面屋', kouban: '交番',
+    jansou: '雀荘', denkiya: '電気屋', honya: '本屋', karaoke: 'カラオケ', sentou: '銭湯'
+};
 
 const BTN = {
     lens: { x: 164, y: 28, w: 148, h: 40, label: 'レンズ' },
@@ -483,6 +490,26 @@ export function createField(app) {
             ctx.fillStyle = '#ff3a5a';
             ctx.fillRect(8 + g.pos.x / TILE * 3 - 2, 28 + g.pos.y / TILE * 3 - 4 - my, 4, 4);
         }
+        // 建物の 名前 (地図の 中に 見えている ぶん)
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(8, 28, 144, 108);
+        ctx.clip();
+        const placed = [];   // 名前どうしが 重なったら 下へ ずらす
+        for (const b of BUILDINGS) {
+            const name = MINI_NAMES[b.id] || b.label;
+            const bx = 8 + (b.x + b.w / 2) * 3;
+            let by = 28 + (b.y + b.h / 2) * 3 - my;
+            const w = textWidth(ctx, name, 8, true) + 4;
+            const x = Math.max(8 + w / 2, Math.min(152 - w / 2, bx));
+            while (placed.some(q => Math.abs(q.x - x) < (q.w + w) / 2 && Math.abs(q.y - by) < 10)) by += 10;
+            placed.push({ x, y: by, w });
+            if (by < 34 || by > 132) continue;   // 地図の はしで 切れる ものは 出さない
+            ctx.fillStyle = 'rgba(10, 16, 36, 0.72)';
+            ctx.fillRect(Math.round(x - w / 2), Math.round(by - 6), Math.round(w), 10);
+            text(ctx, name, x, by + 2, { size: 8, align: 'center', bold: true, color: b.id === 'dagashi' ? COLORS.accent : '#ffffff', shadow: false });
+        }
+        ctx.restore();
         // 目的地の しるし
         const goal = g.story === 'intro' ? { x: 6, y: 5 } : g.story === 'bridge' ? { x: 31, y: 17 } : null;
         const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;

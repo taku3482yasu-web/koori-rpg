@@ -1,8 +1,11 @@
 // =====================================================================
 // メニュー (設計書 7 章): 上画面に えらんだ ものの 絵と 説明、下画面に 一覧
 // ---------------------------------------------------------------------
-// タブ: ウォッチ (メダルの セット) / 図鑑 / もちもの / セーブ。L・R か タブの タップで 切りかえ
-// ウォッチ: 6 つの 場所から 1 つ えらび (A)、メダル帳から 入れる メダルを えらぶ (A)。Y で はずす
+// タブ: へんせい (ウォッチに メダルを セット) / なかま (すべての なかまを 見る) / 図鑑 / もちもの / セーブ
+//   (2026-10-28 ユーザー指定: 編成と なかまの 確認を 分ける)
+// タブの 切りかえ: L・R (Q・E)・Tab キー・タブの タップ。十字キー 左右でも (へんせいは 場所の えらびに 使うので のぞく)
+// へんせい: 6 つの 場所から 1 つ えらび (A)、メダル帳から 入れる メダルを えらぶ (A)。Y で はずす
+// 一覧は 十字キー・マウスホイール で スクロール
 // =====================================================================
 import { ART } from '../art/index.js';
 import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf } from '../data/nakama.js';
@@ -10,12 +13,13 @@ import { ITEMS } from '../data/items.js';
 import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, button, hit, bar, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
-import { btn } from '../core/keys.js';
+import { btn, isKeyboard } from '../core/keys.js';
 import { medalByUid, friendCount } from '../logic/game.js';
 import { statsAt, expFor } from '../logic/units.js';
 
-const TABS = ['ウォッチ', '図鑑', 'もちもの', 'セーブ'];
-const TAB_BTN = TABS.map((label, i) => ({ x: 4 + i * 79, y: 4, w: 75, h: 26, label }));
+const TABS = ['へんせい', 'なかま', '図鑑', 'もちもの', 'セーブ'];
+const TAB_BTN = TABS.map((label, i) => ({ x: 4 + i * 63, y: 4, w: 60, h: 26, label }));
+const NT = TABS.length;
 const SLOT_BTN = Array.from({ length: 6 }, (_, i) => ({ x: 8 + (i % 3) * 102, y: 38 + Math.floor(i / 3) * 44, w: 98, h: 40 }));
 const LIST_TOP = 132, ROW_H = 20, ROWS = 5;
 const ZUKAN_ROWS = 9;
@@ -25,6 +29,7 @@ export function createMenu(app) {
     let tab = 0, t = 0;
     let slot = 0, picking = false, listIndex = 0;    // ウォッチ
     let zIndex = 0;                                 // 図鑑
+    let nIndex = 0;                                 // なかま
     let iIndex = 0;                                 // もちもの
     let saved = 0;
 
@@ -42,8 +47,13 @@ export function createMenu(app) {
         t += dt;
         g.playTime += dt;
         const tc = input.touch;
-        if (input.pressed.l) { tab = (tab + 3) % 4; picking = false; sfx('cursor'); }
-        if (input.pressed.r) { tab = (tab + 1) % 4; picking = false; sfx('cursor'); }
+        const switchTab = d => { tab = (tab + d + NT) % NT; picking = false; sfx('cursor'); };
+        // Tab キー (X と いっしょに 押される) は タブの 切りかえ。メニューは 閉じない
+        if (input.pressed.tab) { switchTab(1); return; }
+        if (input.pressed.l) { switchTab(-1); return; }
+        if (input.pressed.r) { switchTab(1); return; }
+        if (tab !== 0 && input.pressed.left) { switchTab(-1); return; }
+        if (tab !== 0 && input.pressed.right) { switchTab(1); return; }
         if (tc.justDown) {
             const i = TAB_BTN.findIndex(b => hit(b, tc.x, tc.y));
             if (i >= 0) { tab = i; picking = false; sfx('cursor'); return; }
@@ -51,17 +61,20 @@ export function createMenu(app) {
         }
         if ((input.pressed.b && !picking) || input.pressed.x || input.pressed.start) { sfx('cancel'); app.go('field'); return; }
         if (tab === 0) updateWatch(input);
-        else if (tab === 1) zIndex = moveList(input, zIndex, NAKAMA_IDS.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
-        else if (tab === 2) iIndex = moveList(input, iIndex, Object.keys(ITEMS).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), 0, 9);
-        else if (tab === 3) {
+        else if (tab === 1) nIndex = moveList(input, nIndex, box().length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
+        else if (tab === 2) zIndex = moveList(input, zIndex, NAKAMA_IDS.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
+        else if (tab === 3) iIndex = moveList(input, iIndex, Object.keys(ITEMS).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), 0, 9);
+        else if (tab === 4) {
             if (input.pressed.a || (tc.justDown && hit(SAVE_BTN, tc.x, tc.y))) { app.save(); saved = t; sfx('ok'); }
         }
     }
     const SAVE_BTN = { x: 80, y: 120, w: 160, h: 44, label: 'セーブする' };
 
     function moveList(input, index, len, rowRect, top, rows) {
+        if (!len) return 0;
         if (input.pressed.up) { index = (index + len - 1) % len; sfx('cursor'); }
         if (input.pressed.down) { index = (index + 1) % len; sfx('cursor'); }
+        if (input.wheel) { index = Math.max(0, Math.min(len - 1, index + input.wheel)); sfx('cursor'); }
         if (input.touch.justDown) {
             for (let k = 0; k < rows && top + k < len; k++) if (hit(rowRect(k), input.touch.x, input.touch.y)) { index = top + k; sfx('cursor'); }
         }
@@ -86,6 +99,7 @@ export function createMenu(app) {
         if (input.pressed.b) { picking = false; sfx('cancel'); return; }
         if (input.pressed.up) { listIndex = (listIndex + list.length - 1) % list.length; sfx('cursor'); }
         if (input.pressed.down) { listIndex = (listIndex + 1) % list.length; sfx('cursor'); }
+        if (input.wheel) { listIndex = Math.max(0, Math.min(list.length - 1, listIndex + input.wheel)); sfx('cursor'); }
         if (input.pressed.a) { setMedal(list[listIndex].uid); picking = false; }
         if (tc.justDown) {
             const top = scroll(listIndex, ROWS, list.length);
@@ -142,9 +156,12 @@ export function createMenu(app) {
             if (m) drawNakama(ctx, m.id, m);
             else text(ctx, 'この 場所は あいている', 200, 120, { size: 14, align: 'center', color: COLORS.sub });
         } else if (tab === 1) {
+            const m = box()[nIndex];
+            if (m) drawNakama(ctx, m.id, m);
+        } else if (tab === 2) {
             const id = NAKAMA_IDS[zIndex];
             drawNakama(ctx, id, null, { known: Boolean(g.zukan.seen[id] || g.zukan.friends[id]) });
-        } else if (tab === 2) {
+        } else if (tab === 3) {
             const id = Object.keys(ITEMS)[iIndex];
             text(ctx, ITEMS[id].name, 200, 80, { size: 20, align: 'center', bold: true });
             wrap(ctx, ITEMS[id].desc, 340, 13).forEach((r, i) => text(ctx, r, 30, 120 + i * 20, { size: 13 }));
@@ -160,16 +177,33 @@ export function createMenu(app) {
     function drawBottom(ctx) {
         ctx.fillStyle = '#16203a';
         ctx.fillRect(0, 0, 320, 240);
-        TAB_BTN.forEach((b, i) => button(ctx, b, { active: i === tab, size: 11.5 }));
+        TAB_BTN.forEach((b, i) => button(ctx, b, { active: i === tab, size: 11 }));
         if (tab === 0) drawWatch(ctx);
-        else if (tab === 1) drawZukan(ctx);
-        else if (tab === 2) drawItems(ctx);
+        else if (tab === 1) drawAll(ctx);
+        else if (tab === 2) drawZukan(ctx);
+        else if (tab === 3) drawItems(ctx);
         else {
             button(ctx, SAVE_BTN);
             text(ctx, 'ページを 閉じたときも 自動で セーブします', 160, 186, { size: 11, align: 'center', color: COLORS.sub });
             if (saved && t - saved < 1.5) text(ctx, 'セーブした！', 160, 104, { size: 14, align: 'center', bold: true, color: COLORS.accent });
         }
+        text(ctx, `${btn('l')}${btn('r')}${isKeyboard() ? '・[Tab]' : ''} タブ`, 8, 232, { size: 10.5, color: COLORS.dim });
         text(ctx, `${btn('b')} もどる`, 312, 232, { size: 10.5, align: 'right', color: COLORS.dim });
+    }
+
+    // なかま: もっている メダル すべて (ウォッチに 入っている なかまは 場所の 番号)
+    function drawAll(ctx) {
+        const list = box();
+        const top = scroll(nIndex, ZUKAN_ROWS, list.length);
+        for (let k = 0; k < ZUKAN_ROWS && top + k < list.length; k++) {
+            const m = list[top + k], y = 36 + k * ROW_H;
+            if (top + k === nIndex) { roundRect(ctx, 8, y, 304, ROW_H - 2, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
+            const inWatch = g.watch.indexOf(m.uid);
+            text(ctx, unitOf(m.id).name, 16, y + 14, { size: 12 });
+            text(ctx, ROLES[unitOf(m.id).role] || '', 170, y + 14, { size: 10.5, color: COLORS.sub });
+            text(ctx, `Lv${m.lv}${inWatch >= 0 ? `  [${inWatch + 1}]` : ''}`, 304, y + 14, { size: 11, align: 'right', color: inWatch >= 0 ? COLORS.accent : COLORS.sub });
+        }
+        text(ctx, `なかま ${list.length} 体　[ ] は ウォッチの 場所${list.length > ZUKAN_ROWS ? `　${nIndex + 1}/${list.length}` : ''}`, 8, 220, { size: 10, color: COLORS.sub });
     }
 
     function drawWatch(ctx) {
@@ -207,7 +241,7 @@ export function createMenu(app) {
             text(ctx, `${String(NAKAMA[id].no).padStart(3, '0')}  ${seen ? NAKAMA[id].name : '？？？'}`, 16, y + 14, { size: 12, color: seen ? COLORS.ink : COLORS.dim });
             if (g.zukan.friends[id]) text(ctx, 'なかま', 304, y + 14, { size: 10.5, align: 'right', color: COLORS.accent, bold: true });
         }
-        text(ctx, `なかまに した: ${friendCount(g)} / ${NAKAMA_IDS.length}`, 8, 232, { size: 10.5, color: COLORS.sub });
+        text(ctx, `なかまに した: ${friendCount(g)} / ${NAKAMA_IDS.length}`, 8, 221, { size: 10.5, color: COLORS.sub });
     }
 
     function drawItems(ctx) {
