@@ -179,3 +179,21 @@ test('とりつき: なまけたり 味方を 攻めたり する。後ろに �
     resolveRescue(b, startRescue(b, u.uid), true);
     assert.ok(!u.status.possess, '成功で 治る');
 });
+
+test('ロックオン: 味方の 1 体ねらいは ねらった 敵へ。弱点の 光の あいだは ダメージ +20% (設計書 3.2)', async () => {
+    const { lockOn, weakActive, WEAK_EVERY, WEAK_TIME } = await import('../src/logic/battle.js');
+    const allies = ['haribaby', 'kogame', 'ishikoron'].map(id => ({ id, lv: 8 }));
+    const b = createBattle({ allies, enemies: [{ id: 'kogame', lv: 5 }, { id: 'donguriko', lv: 5 }], rng: createRng(3) });
+    b.enemies.forEach(e => { e.timer = -999; e.hp = e.max = 99999; });
+    const target = b.enemies[1];
+    assert.ok(lockOn(b, target.uid));
+    assert.equal(b.lock, target.uid);
+    for (let i = 0; i < 200; i++) step(b, 0.05);
+    const hits = b.events.filter(e => e.type === 'damage' && !e.weak);
+    assert.ok(hits.length > 0);
+    assert.ok(b.events.filter(e => e.type === 'attack' && e.actor.startsWith('ally')).every(e => e.target === target.uid), '通常攻撃は ねらった 敵へ');
+    b.weakT = WEAK_EVERY - WEAK_TIME + 0.1;
+    assert.ok(weakActive(b));
+    assert.ok(lockOn(b, target.uid) && b.lock === null, 'もう いちどで はずす');
+    assert.equal(weakActive(b), false);
+});

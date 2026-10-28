@@ -16,7 +16,7 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -192,6 +192,7 @@ export function createBattleView(app, battle, place) {
                 const by = actor;
                 at(delay, () => {
                     if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
+                    if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: 'じゃくてん！', color: '#ffe85a', small: true, until: t + 0.9 });
                     flash[e.target] = t + 0.15;
                     if (!motions[e.target] || motions[e.target].kind !== 'ko') startHurt(e.target, by, unitOf(e.target)?.ko);
                     if (to) effects.push({ kind: 'spark', x: to.x, y: to.y, start: t, dur: 0.3, color: kind === 'attack' ? '#ffffff' : color });
@@ -263,6 +264,45 @@ export function createBattleView(app, battle, place) {
         mg = { unit, pos, sp, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1, resolved: false };
         sfx('ok');
     }
+    // ロックオン: 生きている 敵 + 「ねらわない」を 順に
+    function cycleLock(dir) {
+        const list = [null, ...battle.enemiesAlive().map(e => e.uid)];
+        const i = list.indexOf(battle.lock);
+        const next = list[(i + dir + list.length) % list.length];
+        if (next) lockOn(battle, next);
+        else if (battle.lock) lockOn(battle, battle.lock);
+        sfx('cursor');
+    }
+    function hitEnemy(k, x, y) {
+        const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
+        const w = art.w * p.scale / 2 + 8, h = art.h * p.scale;
+        return x >= p.x - w && x <= p.x + w && y >= p.y - h - 10 && y <= p.y + 6;
+    }
+    // ねらいの 印 (回る 四すみ)。弱点の 光が 出ている ときは 黄色く 光る
+    function drawLock(ctx) {
+        const k = battle.enemies.findIndex(e => e.uid === battle.lock);
+        if (k < 0) return;
+        const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
+        const cy = p.y - art.h * p.scale / 2, r = Math.max(art.w, art.h) * p.scale / 2 + 6;
+        const weak = weakActive(battle);
+        if (weak) {
+            ctx.fillStyle = `rgba(255, 232, 90, ${0.25 + 0.2 * Math.sin(t * 14)})`;
+            ctx.beginPath();
+            ctx.arc(p.x, cy, r * 0.55, 0, Math.PI * 2);
+            ctx.fill();
+            text(ctx, '弱点！', p.x + r + 3, cy + 4, { size: 11, bold: true, color: '#ffe85a' });
+        }
+        ctx.strokeStyle = weak ? '#ffe85a' : '#ff5a5a';
+        ctx.lineWidth = 2;
+        const a0 = t * 1.5;
+        for (let i = 0; i < 4; i++) {
+            const a = a0 + i * Math.PI / 2;
+            ctx.beginPath();
+            ctx.arc(p.x, cy, r, a, a + 0.6);
+            ctx.stroke();
+        }
+    }
+
     // おたすけ (2 章): 後ろの とりつかれた なかまを コマンドで 治す。成功 (大成功を ふくむ) で 治る
     function tryRescue() {
         const u = rescueTargets(battle)[0];
@@ -464,6 +504,12 @@ export function createBattleView(app, battle, place) {
         if (input.pressed.y) { menu = { kind: 'item', index: 0 }; sfx('ok'); }
         if (input.pressed.x && battle.kind === 'wild') { menu = { kind: 'food', index: 0 }; sfx('ok'); }
         if (input.pressed.help) tryRescue();
+        // ロックオン: 上下で ねらう 敵を かえる (はしまで 行くと はずす)・上画面の 敵を タップ
+        if (input.pressed.up || input.pressed.down) cycleLock(input.pressed.down ? 1 : -1);
+        if (input.topTap) {
+            const i = battle.enemies.findIndex((e, k) => !e.ko && hitEnemy(k, input.topTap.x, input.topTap.y));
+            if (i >= 0 && lockOn(battle, battle.enemies[i].uid)) sfx('cursor');
+        }
 
         // タッチ: 輪を なぞる・必殺技・どうぐ
         const tc = input.touch;
@@ -623,6 +669,7 @@ export function createBattleView(app, battle, place) {
         battle.front().forEach((u, i) => { if (!(mg && mg.phase === 'act' && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }); });
         if (mg && mg.phase === 'act') drawAct(ctx);
         drawEffects(ctx);
+        if (!battle.outcome) drawLock(ctx);
         drawPickArrow(ctx);
         for (let i = pops.length - 1; i >= 0; i--) {
             const p = pops[i];
@@ -817,6 +864,7 @@ export function createBattleView(app, battle, place) {
         drawWheel(ctx);
         drawSpecialButtons(ctx);
         button(ctx, { ...FAST_BTN, label: g.fastBattle ? '倍速 ON' : '倍速' }, { active: Boolean(g.fastBattle), size: 10.5 });
+        text(ctx, battle.lock ? 'ねらい中 (もう いちどで はずす)' : 'ねらう: ↑↓・上の 敵を タップ', 66, 17, { size: 9, color: battle.lock ? '#ff9a9a' : COLORS.dim, maxWidth: 134 });
         text(ctx, btn('fast'), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: 'center', color: COLORS.dim });
         if (menu) drawMenu(ctx);
     }

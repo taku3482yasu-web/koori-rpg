@@ -252,6 +252,7 @@ body.nopad #pad { display: none; }
   } } = {}) {
     const mouse = { x: 200, y: 120, moved: false, inside: false };
     let mouseMoved = false;
+    let topTapQueued = null;
     if (topCanvas2) {
       topCanvas2.addEventListener("pointermove", (e) => {
         if (e.pointerType !== "mouse") return;
@@ -263,6 +264,10 @@ body.nopad #pad { display: none; }
       });
       topCanvas2.addEventListener("pointerleave", () => {
         mouse.inside = false;
+      });
+      topCanvas2.addEventListener("pointerdown", (e) => {
+        const r2 = topCanvas2.getBoundingClientRect();
+        topTapQueued = { x: (e.clientX - r2.left) / r2.width * 400, y: (e.clientY - r2.top) / r2.height * 240 };
       });
     }
     const sources = { key: {}, pad: {}, touchBtn: {}, fake: {} };
@@ -401,6 +406,8 @@ body.nopad #pad { display: none; }
       touchUpQueued = false;
       mouse.moved = mouseMoved;
       mouseMoved = false;
+      api.topTap = topTapQueued;
+      topTapQueued = null;
       wheel = Math.abs(wheelAcc) >= 40 ? Math.sign(wheelAcc) : 0;
       if (wheel) wheelAcc -= wheel * Math.min(Math.abs(wheelAcc), 100);
       else if (Math.abs(wheelAcc) < 40) wheelAcc *= 0.9;
@@ -426,7 +433,10 @@ body.nopad #pad { display: none; }
     const fakeWheel = (dy) => {
       wheelAcc += dy;
     };
-    const api = { held, pressed, touch, mouse, wheel: 0, update, press, fakeTouch, fakeWheel, usesTouch: () => lastKind === "touch" };
+    const fakeTopTap = (x, y) => {
+      topTapQueued = { x, y };
+    };
+    const api = { held, pressed, touch, mouse, wheel: 0, topTap: null, update, press, fakeTouch, fakeWheel, fakeTopTap, usesTouch: () => lastKind === "touch" };
     return api;
   }
   function createRng(seed = Date.now()) {
@@ -2034,6 +2044,7 @@ body.nopad #pad { display: none; }
   const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
   const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "とりつき" };
   const RESCUE_COOLDOWN = 3;
+  const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
   const BACK_REGEN = 4e-3;
   const ROTATE_COOLDOWN = 0.35;
   const ITEM_COOLDOWN = 4;
@@ -2085,7 +2096,9 @@ body.nopad #pad { display: none; }
       frontDownTime: 0,
       bossTimer: 0,
       warned: false,
-      food: null
+      food: null,
+      lock: null,
+      weakT: 0
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -2108,12 +2121,13 @@ body.nopad #pad { display: none; }
     const stab = el === from.element && el !== "ふつう" ? 1.2 : 1;
     const crit = !magic && b.rng.chance(0.06);
     const guard = to.guarding ? 0.5 : 1;
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1);
+    const weak = from.side === "ally" && to.uid === b.lock && weakActive(b);
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1);
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;
     if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding });
+    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding, weak });
     if (to.hp <= 0) {
       to.ko = true;
       to.status = {};
@@ -2143,6 +2157,10 @@ body.nopad #pad { display: none; }
   function pickOne(b, side) {
     const list = opponents(b, side);
     if (!list.length) return null;
+    if (side === "ally" && b.lock) {
+      const locked = list.find((u) => u.uid === b.lock);
+      if (locked) return locked;
+    }
     return b.rng.weighted(list.map((u) => ({ u, w: side === "enemy" && u.role === "defender" ? 2 : 1 }))).u;
   }
   function applyEffects(b, user, effects, mult = 1) {
@@ -2275,6 +2293,13 @@ body.nopad #pad { display: none; }
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
     b.itemCooldown = Math.max(0, b.itemCooldown - dt);
     b.rescueCooldown = Math.max(0, b.rescueCooldown - dt);
+    if (b.lock) {
+      if (b.enemiesAlive().some((e) => e.uid === b.lock)) b.weakT += dt;
+      else {
+        b.lock = null;
+        b.weakT = 0;
+      }
+    }
     const front = b.front();
     for (const u of b.wheel) {
       if (!u || u.ko) continue;
@@ -2339,6 +2364,14 @@ body.nopad #pad { display: none; }
     applyEffects(b, unit, unit.special.effects, mult);
     checkOutcome(b);
   }
+  function lockOn(b, uid) {
+    if (b.outcome || !b.enemiesAlive().some((e) => e.uid === uid)) return false;
+    b.lock = b.lock === uid ? null : uid;
+    b.weakT = 0;
+    emit(b, "lock", { target: b.lock });
+    return true;
+  }
+  const weakActive = (b) => Boolean(b.lock) && b.weakT % WEAK_EVERY >= WEAK_EVERY - WEAK_TIME;
   const unitByUid = (b, uid) => b.wheel.find((u) => u && u.uid === uid) || null;
   function canRescue(b, uid) {
     const u = unitByUid(b, uid);
@@ -7607,6 +7640,7 @@ body.nopad #pad { display: none; }
           at(delay, () => {
             var _a2;
             if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? "#ffd84a" : e.eff < 1 ? "#a0a0b0" : "#ffffff", big: e.crit || e.eff > 1, until: t + 0.9 });
+            if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: "じゃくてん！", color: "#ffe85a", small: true, until: t + 0.9 });
             flash[e.target] = t + 0.15;
             if (!motions[e.target] || motions[e.target].kind !== "ko") startHurt(e.target, by, (_a2 = unitOf2(e.target)) == null ? void 0 : _a2.ko);
             if (to) effects.push({ kind: "spark", x: to.x, y: to.y, start: t, dur: 0.3, color: kind === "attack" ? "#ffffff" : color });
@@ -7686,6 +7720,42 @@ body.nopad #pad { display: none; }
       const command = app2.rng.pick(COMMANDS);
       mg = { unit, pos, sp: sp2, command, phase: "cmd", t: 0, cmd: createCommand(command, app2.rng), mult: 1, resolved: false };
       sfx("ok");
+    }
+    function cycleLock(dir) {
+      const list = [null, ...battle.enemiesAlive().map((e) => e.uid)];
+      const i = list.indexOf(battle.lock);
+      const next = list[(i + dir + list.length) % list.length];
+      if (next) lockOn(battle, next);
+      else if (battle.lock) lockOn(battle, battle.lock);
+      sfx("cursor");
+    }
+    function hitEnemy(k, x, y) {
+      const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
+      const w = art.w * p.scale / 2 + 8, h = art.h * p.scale;
+      return x >= p.x - w && x <= p.x + w && y >= p.y - h - 10 && y <= p.y + 6;
+    }
+    function drawLock(ctx) {
+      const k = battle.enemies.findIndex((e2) => e2.uid === battle.lock);
+      if (k < 0) return;
+      const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
+      const cy = p.y - art.h * p.scale / 2, r2 = Math.max(art.w, art.h) * p.scale / 2 + 6;
+      const weak = weakActive(battle);
+      if (weak) {
+        ctx.fillStyle = `rgba(255, 232, 90, ${0.25 + 0.2 * Math.sin(t * 14)})`;
+        ctx.beginPath();
+        ctx.arc(p.x, cy, r2 * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+        text(ctx, "弱点！", p.x + r2 + 3, cy + 4, { size: 11, bold: true, color: "#ffe85a" });
+      }
+      ctx.strokeStyle = weak ? "#ffe85a" : "#ff5a5a";
+      ctx.lineWidth = 2;
+      const a0 = t * 1.5;
+      for (let i = 0; i < 4; i++) {
+        const a = a0 + i * Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(p.x, cy, r2, a, a + 0.6);
+        ctx.stroke();
+      }
     }
     function tryRescue() {
       const u = rescueTargets(battle)[0];
@@ -7952,6 +8022,11 @@ body.nopad #pad { display: none; }
         sfx("ok");
       }
       if (input2.pressed.help) tryRescue();
+      if (input2.pressed.up || input2.pressed.down) cycleLock(input2.pressed.down ? 1 : -1);
+      if (input2.topTap) {
+        const i = battle.enemies.findIndex((e, k) => !e.ko && hitEnemy(k, input2.topTap.x, input2.topTap.y));
+        if (i >= 0 && lockOn(battle, battle.enemies[i].uid)) sfx("cursor");
+      }
       const tc = input2.touch;
       if (tc.justDown) {
         const sp2 = SP_BTN.findIndex((bn) => hit(bn, tc.x, tc.y));
@@ -8117,6 +8192,7 @@ body.nopad #pad { display: none; }
       });
       if (mg && mg.phase === "act") drawAct(ctx);
       drawEffects(ctx);
+      if (!battle.outcome) drawLock(ctx);
       drawPickArrow(ctx);
       for (let i = pops.length - 1; i >= 0; i--) {
         const p = pops[i];
@@ -8314,6 +8390,7 @@ body.nopad #pad { display: none; }
       drawWheel(ctx);
       drawSpecialButtons(ctx);
       button(ctx, { ...FAST_BTN, label: g.fastBattle ? "倍速 ON" : "倍速" }, { active: Boolean(g.fastBattle), size: 10.5 });
+      text(ctx, battle.lock ? "ねらい中 (もう いちどで はずす)" : "ねらう: ↑↓・上の 敵を タップ", 66, 17, { size: 9, color: battle.lock ? "#ff9a9a" : COLORS.dim, maxWidth: 134 });
       text(ctx, btn("fast"), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: "center", color: COLORS.dim });
       if (menu) drawMenu(ctx);
     }

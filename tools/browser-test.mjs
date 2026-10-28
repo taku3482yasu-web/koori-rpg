@@ -210,6 +210,12 @@ try {
     check(await evaluate('(() => { const b = window.__app.scene.battle, u = b.wheel.find(x => x && x.uid === window.__pickUid); return u.hp > window.__pickHp && !window.__app.scene.debug.menu(); })()'), 'えらんだ なかまに おにぎりを 使う');
     await evaluate('(() => { window.__app.scene.battle.wheel.forEach(u => { if (u) { u.hp = u.max; u.ko = false; } }); return true; })()');
 
+    // ----- バトル: ロックオン (↑↓・上画面の タップ。設計書 3.2) -----
+    await key('ArrowDown');
+    check(await evaluate('window.__app.scene.battle.lock === window.__app.scene.battle.enemiesAlive()[0].uid'), '↓で 敵を ねらう (ロックオン)');
+    await key('ArrowUp');
+    check(await evaluate('window.__app.scene.battle.lock === null'), '↑で ねらいを はずす');
+
     // ----- バトル: 輪を 回す・必殺技・道具 -----
     await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.s.atk = 1; e.s.mag = 1; }); return true; })()');
     await evaluate('window.__app.g.items.onigiri = 3');

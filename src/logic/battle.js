@@ -10,6 +10,8 @@
 //   後ろの なかまは 少しずつ HP が 戻る。前の 3 体が 全員 たおれたら 2 秒後に 自動で 半分 回す
 //   ボスは 大技の 前に 予告 (telegraph) を 出す。そのあいだに 輪を 回して 守りの 強い なかまを 前に 出せる
 //   とりつき (2 章。設計書 3.4): なまけたり 味方を 攻めたり する。輪で 後ろに 回して「おたすけ」(ミニゲーム) で 治す
+//   ロックオン (設計書 3.2): プレイヤーが ねらう 敵を えらぶ。味方の 1 体ねらいの 攻撃は その 敵へ。
+//     ねらった 敵には 6 秒ごとに 2 秒「弱点の 光」が 出て、そのあいだに 当てると ダメージ +20%
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -19,6 +21,7 @@ export const GAUGE_MAX = 100;
 const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
 export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'とりつき' };
 const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
+export const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
 const BACK_REGEN = 0.004;      // 後ろに いる あいだ、1 秒に 最大HP の 0.4% 戻る (5 秒で 2%)
 const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
@@ -44,7 +47,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild' }) {
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null
+        bossTimer: 0, warned: false, food: null, lock: null, weakT: 0
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -70,12 +73,13 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null } 
     const stab = el === from.element && el !== 'ふつう' ? 1.2 : 1;
     const crit = !magic && b.rng.chance(0.06);
     const guard = to.guarding ? 0.5 : 1;
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1);
+    const weak = from.side === 'ally' && to.uid === b.lock && weakActive(b);
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1);
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding });
+    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding, weak });
     if (to.hp <= 0) {
         to.ko = true;
         to.status = {};
@@ -109,6 +113,11 @@ function friends(b, side) {
 function pickOne(b, side) {
     const list = opponents(b, side);
     if (!list.length) return null;
+    // ロックオンした 敵を ねらう
+    if (side === 'ally' && b.lock) {
+        const locked = list.find(u => u.uid === b.lock);
+        if (locked) return locked;
+    }
     // 敵は 守る役の なかまを ねらいやすい
     return b.rng.weighted(list.map(u => ({ u, w: side === 'enemy' && u.role === 'defender' ? 2 : 1 }))).u;
 }
@@ -253,6 +262,10 @@ export function step(b, dt) {
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
     b.itemCooldown = Math.max(0, b.itemCooldown - dt);
     b.rescueCooldown = Math.max(0, b.rescueCooldown - dt);
+    if (b.lock) {
+        if (b.enemiesAlive().some(e => e.uid === b.lock)) b.weakT += dt;
+        else { b.lock = null; b.weakT = 0; }
+    }
     const front = b.front();
     for (const u of b.wheel) {
         if (!u || u.ko) continue;
@@ -327,6 +340,17 @@ export function resolveSpecial(b, unit, mult) {
     applyEffects(b, unit, unit.special.effects, mult);
     checkOutcome(b);
 }
+
+// ロックオン: 同じ 敵を もう いちど えらぶと はずす
+export function lockOn(b, uid) {
+    if (b.outcome || !b.enemiesAlive().some(e => e.uid === uid)) return false;
+    b.lock = b.lock === uid ? null : uid;
+    b.weakT = 0;
+    emit(b, 'lock', { target: b.lock });
+    return true;
+}
+// 弱点の 光が 出ているか (ねらって 4 秒後から 2 秒、6 秒ごと)
+export const weakActive = b => Boolean(b.lock) && b.weakT % WEAK_EVERY >= WEAK_EVERY - WEAK_TIME;
 
 // おたすけ: 後ろに いる とりつかれた なかまを ミニゲームで 治す (ミニゲームの あいだは 止める)
 const unitByUid = (b, uid) => b.wheel.find(u => u && u.uid === uid) || null;

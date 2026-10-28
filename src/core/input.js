@@ -24,6 +24,7 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
     // 上画面の マウス (PC でレンズを動かす)。x, y は上画面の ドット。moved はそのコマで動いたとき
     const mouse = { x: 200, y: 120, moved: false, inside: false };
     let mouseMoved = false;
+    let topTapQueued = null;   // 上画面を さわった 場所 (1 コマだけ api.topTap に 出る)
     if (topCanvas) {
         topCanvas.addEventListener('pointermove', e => {
             if (e.pointerType !== 'mouse') return;
@@ -34,6 +35,11 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
             mouseMoved = true;
         });
         topCanvas.addEventListener('pointerleave', () => { mouse.inside = false; });
+        // 上画面を さわった (バトルで 敵を ねらう ロックオン)。指でも マウスでも
+        topCanvas.addEventListener('pointerdown', e => {
+            const r = topCanvas.getBoundingClientRect();
+            topTapQueued = { x: (e.clientX - r.left) / r.width * 400, y: (e.clientY - r.top) / r.height * 240 };
+        });
     }
     const sources = { key: {}, pad: {}, touchBtn: {}, fake: {} };
     const held = {}, pressed = {}, prev = {};
@@ -165,6 +171,8 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
         touchUpQueued = false;
         mouse.moved = mouseMoved;
         mouseMoved = false;
+        api.topTap = topTapQueued;
+        topTapQueued = null;
         // ホイールは 1 コマに 1 行ぶん まで (たくさん 回しても 少しずつ)
         wheel = Math.abs(wheelAcc) >= 40 ? Math.sign(wheelAcc) : 0;
         if (wheel) wheelAcc -= wheel * Math.min(Math.abs(wheelAcc), 100);
@@ -182,6 +190,7 @@ export function createInput({ bottomCanvas = null, topCanvas = null, padRoot = n
     };
 
     const fakeWheel = dy => { wheelAcc += dy; };
-    const api = { held, pressed, touch, mouse, wheel: 0, update, press, fakeTouch, fakeWheel, usesTouch: () => lastKind === 'touch' };
+    const fakeTopTap = (x, y) => { topTapQueued = { x, y }; };
+    const api = { held, pressed, touch, mouse, wheel: 0, topTap: null, update, press, fakeTouch, fakeWheel, fakeTopTap, usesTouch: () => lastKind === 'touch' };
     return api;
 }
