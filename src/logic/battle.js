@@ -25,6 +25,7 @@ export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: '�
 const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
 export const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
 export const PART_ORDER = ['rhand', 'lhand', 'head'];
+export const HEAD_GUARD = 0.15;   // 手が のこっている うちに 頭を ねらうと 手で ガードされる (ダメージ 15%。2026-10-28 ユーザー指定)
 const BACK_REGEN = 0.004;      // 後ろに いる あいだ、1 秒に 最大HP の 0.4% 戻る (5 秒で 2%)
 const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
@@ -104,12 +105,13 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null } 
     const crit = !magic && b.rng.chance(0.06);
     const guard = to.guarding ? 0.5 : 1;
     const weak = from.side === 'ally' && to.uid === b.lock && weakActive(b);
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1);
+    const headGuard = from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart === 'head' && !handsBroken(to) && !b.chance;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1);
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding, weak });
+    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard, weak: weak && !headGuard, headGuard });
     if (from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
     if (to.hp <= 0) {
         to.ko = true;

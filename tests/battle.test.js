@@ -212,6 +212,9 @@ test('2 章の ボス (影): 右手・左手を こわすと その わざを �
     for (let i = 0; i < 200; i++) step(b, 0.05);
     assert.equal(boss.parts.head.hp, boss.parts.head.max);
     assert.ok(b.events.some(e => e.type === 'partGuard'));
+    // 手が のこっている うちは 手で ガードされて ダメージが ほとんど 入らない (2026-10-28 ユーザー指定)
+    const guarded = b.events.filter(e => e.type === 'damage' && e.target === boss.uid);
+    assert.ok(guarded.length && guarded.every(e => e.headGuard), '頭への 攻撃は ガード');
     // 右手 → 左手 の 順に こわす
     lockOn(b, boss.uid, 'rhand');
     for (let i = 0; i < 4000 && !boss.parts.rhand.broken; i++) step(b, 0.05);
@@ -222,7 +225,9 @@ test('2 章の ボス (影): 右手・左手を こわすと その わざを �
     assert.ok(handsBroken(boss));
     assert.ok(!b.events.some(e => e.type === 'skill' && e.actor === boss.uid && e.name === '不明の右手' && e.t > b.events.find(x => x.type === 'partBreak').t), '右手を こわした あとは 不明の右手を 使わない');
     assert.equal(b.lockPart, 'head');
+    b.events.length = 0;
     for (let i = 0; i < 4000 && !b.chance; i++) step(b, 0.05);
+    assert.ok(b.events.filter(e => e.type === 'damage' && e.target === boss.uid).every(e => !e.headGuard), '両手を こわした あとは ガードされない');
     assert.ok(b.chance, '頭を こわすと チャンスタイム');
     const hpBefore = b.wheel.filter(Boolean).map(u => u.hp).join();
     b.events.length = 0;

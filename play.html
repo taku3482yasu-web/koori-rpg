@@ -2073,6 +2073,7 @@ body.nopad #pad { display: none; }
   const RESCUE_COOLDOWN = 3;
   const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
   const PART_ORDER = ["rhand", "lhand", "head"];
+  const HEAD_GUARD = 0.15;
   const BACK_REGEN = 4e-3;
   const ROTATE_COOLDOWN = 0.35;
   const ITEM_COOLDOWN = 4;
@@ -2183,12 +2184,13 @@ body.nopad #pad { display: none; }
     const crit = !magic && b.rng.chance(0.06);
     const guard = to.guarding ? 0.5 : 1;
     const weak = from.side === "ally" && to.uid === b.lock && weakActive(b);
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1);
+    const headGuard = from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart === "head" && !handsBroken(to) && !b.chance;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1);
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;
     if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding, weak });
+    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard, weak: weak && !headGuard, headGuard });
     if (from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
     if (to.hp <= 0) {
       to.ko = true;
@@ -7873,7 +7875,7 @@ body.nopad #pad { display: none; }
           const by = actor;
           at(delay, () => {
             var _a2;
-            if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? "#ffd84a" : e.eff < 1 ? "#a0a0b0" : "#ffffff", big: e.crit || e.eff > 1, until: t + 0.9 });
+            if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.headGuard ? "#8a90a8" : e.eff > 1 ? "#ffd84a" : e.eff < 1 ? "#a0a0b0" : "#ffffff", big: e.crit || e.eff > 1, until: t + 0.9 });
             if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: "じゃくてん！", color: "#ffe85a", small: true, until: t + 0.9 });
             flash[e.target] = t + 0.15;
             if (!motions[e.target] || motions[e.target].kind !== "ko") startHurt(e.target, by, (_a2 = unitOf2(e.target)) == null ? void 0 : _a2.ko);
@@ -7914,10 +7916,10 @@ body.nopad #pad { display: none; }
           banner = { text: "こわした ところが もとに もどった！", color: "#ff6a6a", until: t + 1.8 };
           sfx("cancel");
         } else if (e.type === "partGuard") {
-          if (t - guardTold > 2.5) {
+          if (t - guardTold > 1.5) {
             guardTold = t;
             const p = posOf(e.target);
-            if (p) pops.push({ x: p.x, y: p.y - 120, text: "かたい！ 先に 両手を こわそう", color: "#c0c8e0", small: true, until: t + 1.2 });
+            if (p) pops.push({ x: p.x, y: p.y - 120, text: "手で ガード！ 先に 両手を こわそう", color: "#c0c8e0", small: true, until: t + 1.2 });
           }
         } else if (e.type === "possessed") {
           const p = posOf(e.actor);
@@ -8486,7 +8488,7 @@ body.nopad #pad { display: none; }
       } else {
         const hx = q.x + 40;
         bar(ctx, hx, q.y - 6, 40, 4, head.hp / head.max, e.parts.rhand.broken && e.parts.lhand.broken ? "#ffb84a" : "#7a7a90");
-        text(ctx, e.parts.rhand.broken && e.parts.lhand.broken ? "頭" : "頭 (かたい)", hx, q.y - 10, { size: 9, bold: true, color: "#ffe0b0" });
+        text(ctx, e.parts.rhand.broken && e.parts.lhand.broken ? "頭" : "頭 (手で ガード)", hx, q.y - 10, { size: 9, bold: true, color: "#ffe0b0" });
       }
     }
     function drawShield(ctx, x, y, s = 1) {

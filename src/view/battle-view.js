@@ -193,7 +193,7 @@ export function createBattleView(app, battle, place) {
                 if (actor && kind === 'special' && from && to) effects.push({ kind: 'orb', from, to, start: t + (kind === 'special' ? 0.3 : 0.05), dur: delay - (kind === 'special' ? 0.3 : 0.05), color });
                 const by = actor;
                 at(delay, () => {
-                    if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
+                    if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.headGuard ? '#8a90a8' : e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
                     if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: 'じゃくてん！', color: '#ffe85a', small: true, until: t + 0.9 });
                     flash[e.target] = t + 0.15;
                     if (!motions[e.target] || motions[e.target].kind !== 'ko') startHurt(e.target, by, unitOf(e.target)?.ko);
@@ -231,10 +231,10 @@ export function createBattleView(app, battle, place) {
                 sfx('cancel');
             } else if (e.type === 'partGuard') {
                 // 両手を こわすまで 頭は こわせない (知らせるのは ときどき)
-                if (t - guardTold > 2.5) {
+                if (t - guardTold > 1.5) {
                     guardTold = t;
                     const p = posOf(e.target);
-                    if (p) pops.push({ x: p.x, y: p.y - 120, text: 'かたい！ 先に 両手を こわそう', color: '#c0c8e0', small: true, until: t + 1.2 });
+                    if (p) pops.push({ x: p.x, y: p.y - 120, text: '手で ガード！ 先に 両手を こわそう', color: '#c0c8e0', small: true, until: t + 1.2 });
                 }
             } else if (e.type === 'possessed') {
                 // とりつき: なまける / 味方を 攻める
@@ -730,7 +730,7 @@ export function createBattleView(app, battle, place) {
             // 頭の 右よこ (ボスの 名前と 重ならないように)
             const hx = q.x + 40;
             bar(ctx, hx, q.y - 6, 40, 4, head.hp / head.max, e.parts.rhand.broken && e.parts.lhand.broken ? '#ffb84a' : '#7a7a90');
-            text(ctx, e.parts.rhand.broken && e.parts.lhand.broken ? '頭' : '頭 (かたい)', hx, q.y - 10, { size: 9, bold: true, color: '#ffe0b0' });
+            text(ctx, e.parts.rhand.broken && e.parts.lhand.broken ? '頭' : '頭 (手で ガード)', hx, q.y - 10, { size: 9, bold: true, color: '#ffe0b0' });
         }
     }
 
