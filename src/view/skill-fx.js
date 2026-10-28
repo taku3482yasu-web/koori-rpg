@@ -38,7 +38,10 @@ const BY_NAME = {
     'ポクポク': { kind: 'song' }, 'リーチ宣言': { kind: 'song' }, 'はずれたカラオケ': { kind: 'song' }, '配信のお経': { kind: 'song' }, '百のかぞえうた': { kind: 'song' },
     'きんピカ': { kind: 'burst' }, 'まきびしまき': { kind: 'burst' }, 'ポップアップ広告': { kind: 'burst' },
     'はばたき': { kind: 'breath' }, 'ちょうちん火': { kind: 'breath' }, 'ブツン': { kind: 'magic' }, 'キラッ☆': { kind: 'magic' },
-    'あつあつラーメン': { kind: 'throw' }, 'さらの しずく': { kind: 'heal' }
+    'あつあつラーメン': { kind: 'throw' }, 'さらの しずく': { kind: 'heal' },
+    // 2 章の ボス (影)
+    'たたきつけ': { kind: 'smash' }, '未詳の左腕': { kind: 'punch' }, '不明の右手': { kind: 'magic' },
+    '振り払い': { kind: 'burst' }, '不安の眼': { kind: 'magic' }, '呪いの笑み': { kind: 'magic' }
 };
 // 名前に ない わざは ことばから (上から 順に 見る)
 const WORDS = [

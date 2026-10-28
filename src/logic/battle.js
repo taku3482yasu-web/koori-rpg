@@ -12,6 +12,8 @@
 //   とりつき (2 章。設計書 3.4): なまけたり 味方を 攻めたり する。輪で 後ろに 回して「おたすけ」(ミニゲーム) で 治す
 //   ロックオン (設計書 3.2): プレイヤーが ねらう 敵を えらぶ。味方の 1 体ねらいの 攻撃は その 敵へ。
 //     ねらった 敵には 6 秒ごとに 2 秒「弱点の 光」が 出て、そのあいだに 当てると ダメージ +20%
+//   部位の ある ボス (2 章の 影): 右手・左手・頭を ロックオンで ねらって こわす。頭を こわすと チャンスタイム
+//     (ボスが 決まった 回数 うごけない)。おわると 部位が もとに もどる
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -22,6 +24,7 @@ const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
 export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'とりつき' };
 const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
 export const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
+export const PART_ORDER = ['rhand', 'lhand', 'head'];
 const BACK_REGEN = 0.004;      // 後ろに いる あいだ、1 秒に 最大HP の 0.4% 戻る (5 秒で 2%)
 const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
@@ -36,8 +39,35 @@ function makeUnit({ uid, id, lv }, side) {
         name: sp.name, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
         waza: sp.waza, jutsu: sp.jutsu, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
-        timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false
+        timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
+        bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
+        parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
+}
+
+// ----- 部位 (部位の ある ボス) -----
+export const handsBroken = u => Boolean(u.parts) && u.parts.rhand.broken && u.parts.lhand.broken;
+// 次に ねらう 部位 (こわれていない 手 → 頭)
+export const nextPart = u => PART_ORDER.find(k => u.parts[k] && !u.parts[k].broken && (k !== 'head' || handsBroken(u))) || null;
+function hitPart(b, u, key, dmg) {
+    const part = u.parts[key];
+    if (!part || part.broken || b.chance) return;
+    if (key === 'head' && !handsBroken(u)) { emit(b, 'partGuard', { target: u.uid, part: key }); return; }
+    part.hp = Math.max(0, part.hp - dmg);
+    if (part.hp > 0) return;
+    part.broken = true;
+    emit(b, 'partBreak', { target: u.uid, part: key, name: part.name, move: part.move || null });
+    if (key === 'head') {
+        b.chance = { uid: u.uid, left: u.chanceTurns };
+        u.timer = 0;
+        emit(b, 'chance', { target: u.uid, turns: u.chanceTurns });
+    } else b.lockPart = nextPart(u) || b.lockPart;
+}
+function endChance(b, u) {
+    b.chance = null;
+    for (const p of Object.values(u.parts)) { p.hp = p.max; p.broken = false; }
+    if (b.lock === u.uid) b.lockPart = 'rhand';
+    emit(b, 'chanceEnd', { target: u.uid });
 }
 
 export function createBattle({ allies, enemies, rng, kind = 'wild' }) {
@@ -47,7 +77,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild' }) {
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, weakT: 0
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -80,6 +110,7 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null } 
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
     emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding, weak });
+    if (from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
     if (to.hp <= 0) {
         to.ko = true;
         to.status = {};
@@ -180,6 +211,13 @@ export function chooseCommand(b, u) {
 
 function act(b, u) {
     u.guarding = false;   // まもりは 次に 動くまで
+    // チャンスタイム: ボスは うごけない (決まった 回数)
+    if (b.chance && b.chance.uid === u.uid) {
+        b.chance.left--;
+        emit(b, 'stunned', { actor: u.uid, left: b.chance.left });
+        if (b.chance.left <= 0) endChance(b, u);
+        return;
+    }
     if (u.status.confuse > 0 && b.rng.chance(0.5)) {
         emit(b, 'confused', { actor: u.uid });
         return;
@@ -202,6 +240,14 @@ function act(b, u) {
         u.gauge = 0;
         emit(b, 'special', { actor: u.uid, name: u.special.name, side: 'enemy' });
         applyEffects(b, u, u.special.effects, 0.8);
+        return;
+    }
+    // 部位の ある ボス: ボスの わざから えらぶ (こわれた 部位の わざは 使えない)
+    if (u.bossMoves) {
+        const list = u.bossMoves.filter(m => !m.part || !u.parts[m.part].broken);
+        const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
+        emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
+        applyEffects(b, u, move.effects);
         return;
     }
     const cmd = chooseCommand(b, u);
@@ -264,7 +310,7 @@ export function step(b, dt) {
     b.rescueCooldown = Math.max(0, b.rescueCooldown - dt);
     if (b.lock) {
         if (b.enemiesAlive().some(e => e.uid === b.lock)) b.weakT += dt;
-        else { b.lock = null; b.weakT = 0; }
+        else { b.lock = null; b.lockPart = null; b.weakT = 0; }
     }
     const front = b.front();
     for (const u of b.wheel) {
@@ -295,6 +341,7 @@ export function step(b, dt) {
 }
 
 function bossTick(b, e, dt) {
+    if (b.chance && b.chance.uid === e.uid) return;   // チャンスタイムの あいだは 大技も 止まる
     const m = e.bigMove;
     b.bossTimer += dt;
     if (!b.warned && b.bossTimer >= m.every - m.warn) {
@@ -341,12 +388,16 @@ export function resolveSpecial(b, unit, mult) {
     checkOutcome(b);
 }
 
-// ロックオン: 同じ 敵を もう いちど えらぶと はずす
-export function lockOn(b, uid) {
-    if (b.outcome || !b.enemiesAlive().some(e => e.uid === uid)) return false;
-    b.lock = b.lock === uid ? null : uid;
+// ロックオン: 同じ 敵 (部位) を もう いちど えらぶと はずす。part: 部位の ある ボスの 部位 (rhand・lhand・head)
+export function lockOn(b, uid, part = null) {
+    const e = b.enemiesAlive().find(x => x.uid === uid);
+    if (b.outcome || !e) return false;
+    if (e.parts && !part) part = nextPart(e) || 'head';
+    const same = b.lock === uid && b.lockPart === part;
+    b.lock = same ? null : uid;
+    b.lockPart = same ? null : part;
     b.weakT = 0;
-    emit(b, 'lock', { target: b.lock });
+    emit(b, 'lock', { target: b.lock, part: b.lockPart });
     return true;
 }
 // 弱点の 光が 出ているか (ねらって 4 秒後から 2 秒、6 秒ごと)

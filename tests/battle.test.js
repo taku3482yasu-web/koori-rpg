@@ -197,3 +197,38 @@ test('ロックオン: 味方の 1 体ねらいは ねらった 敵へ。弱点�
     assert.ok(lockOn(b, target.uid) && b.lock === null, 'もう いちどで はずす');
     assert.equal(weakActive(b), false);
 });
+
+test('2 章の ボス (影): 右手・左手を こわすと その わざを 使わない。頭は 両手の あと、こわすと チャンスタイム → 部位が もどる (2026-10-28)', async () => {
+    const { lockOn, handsBroken } = await import('../src/logic/battle.js');
+    const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron', 'mizukirin', 'daichouenkin'].map(id => ({ id, lv: 13 }));
+    const b = createBattle({ allies, enemies: [{ id: 'kage', lv: 13 }], rng: createRng(7), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.ok(boss.max > 1000, `HP が とても 多い (${boss.max})`);
+    assert.deepEqual(Object.keys(boss.parts), ['rhand', 'lhand', 'head']);
+    boss.hp = boss.max = 999999;
+    b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; });
+    // 頭を ねらっても 両手が あるうちは こわれない
+    lockOn(b, boss.uid, 'head');
+    for (let i = 0; i < 200; i++) step(b, 0.05);
+    assert.equal(boss.parts.head.hp, boss.parts.head.max);
+    assert.ok(b.events.some(e => e.type === 'partGuard'));
+    // 右手 → 左手 の 順に こわす
+    lockOn(b, boss.uid, 'rhand');
+    for (let i = 0; i < 4000 && !boss.parts.rhand.broken; i++) step(b, 0.05);
+    assert.ok(boss.parts.rhand.broken, '右手を こわした');
+    assert.equal(b.lockPart, 'lhand', 'つぎは 左手を ねらう');
+    b.events.length = 0;
+    for (let i = 0; i < 4000 && !boss.parts.lhand.broken; i++) step(b, 0.05);
+    assert.ok(handsBroken(boss));
+    assert.ok(!b.events.some(e => e.type === 'skill' && e.actor === boss.uid && e.name === '不明の右手' && e.t > b.events.find(x => x.type === 'partBreak').t), '右手を こわした あとは 不明の右手を 使わない');
+    assert.equal(b.lockPart, 'head');
+    for (let i = 0; i < 4000 && !b.chance; i++) step(b, 0.05);
+    assert.ok(b.chance, '頭を こわすと チャンスタイム');
+    const hpBefore = b.wheel.filter(Boolean).map(u => u.hp).join();
+    b.events.length = 0;
+    for (let i = 0; i < 4000 && b.chance; i++) step(b, 0.05);
+    assert.equal(b.events.filter(e => e.type === 'stunned').length, boss.chanceTurns, '決まった 回数 うごけない');
+    assert.ok(!b.events.some(e => e.type === 'skill' && e.actor === boss.uid && e.t < b.events.find(x => x.type === 'chanceEnd').t), 'チャンスタイムの あいだは わざを 使わない');
+    assert.ok(!boss.parts.rhand.broken && !boss.parts.lhand.broken && !boss.parts.head.broken, 'おわると 部位が もどる');
+    assert.ok(hpBefore);
+});

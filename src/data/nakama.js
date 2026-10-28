@@ -495,11 +495,30 @@ export const BOSSES = {
         bigMove: { name: '足音 百かぞえ', every: 12, warn: 2.5, effects: [atk('all', 1.6, { magic: true })] },
         befriends: 'hashishita', lv: 8, place: 'bridge'
     },
-    // 2 章の ボス: 七不思議の 8 つ目「夜の ろうかを 走る 影」(ルナシャドウの 大きな すがた)。大技で なかまに とりつく
+    // 2 章の ボス: 七不思議の 8 つ目「夜の ろうかを 走る 影」(ルナシャドウの 大きな すがた。2026-10-28 ユーザー指定)
+    //   HP が とても 多く、体が 大きい。右手・左手・頭を ロックオンで ねらって こわせる (parts。hp は 最大HP に たいする わりあい)
+    //   右手を こわすと「不明の右手」、左手を こわすと「未詳の左腕」が 使えなくなる。頭は 両手を こわしてから
+    //   頭を こわすと チャンスタイム (chanceTurns 回 うごけない)。おわると こわした ところが もとに もどる
+    //   moves: ふだんの わざ (part: その 部位が こわれていると 使えない)。bigMove: 必殺技 アンノウン (予告つき)
     kage: {
         id: 'kage', name: 'ろうかの カゲ・ルナシャドウ', element: 'ふしぎ', role: 'attacker', art: 'lunashadow', scale: 2, rank: 'C',
-        base: { hp: 420, atk: 17, def: 13, spd: 11, mag: 17 },
-        bigMove: { name: '8 つ目の ふしぎ', every: 12, warn: 2.5, effects: [atk('all', 1.3, { magic: true }), { kind: 'status', target: 'all', status: 'possess', chance: 0.4 }] },
+        base: { hp: 700, atk: 14, def: 13, spd: 11, mag: 14 },
+        parts: {
+            rhand: { name: '右手', hp: 0.1, move: '不明の右手' },
+            lhand: { name: '左手', hp: 0.1, move: '未詳の左腕' },
+            head: { name: '頭', hp: 0.12 }
+        },
+        chanceTurns: 3,
+        moves: [
+            { name: 'たたきつけ', w: 3, effects: [atk('one', 1.1)] },                                                      // 敵 1 体に 中ダメージ
+            { name: '未詳の左腕', w: 2, part: 'lhand', effects: [atk('one', 1.8)] },                                      // 敵 1 体に 大ダメージ
+            { name: '不明の右手', w: 2, part: 'rhand', effects: [atk('one', 1.0, { magic: true, drain: 0.5 })] },         // 吸収の術 (中級)
+            { name: '振り払い', w: 2, effects: [atk('all', 0.55)] },                                                       // 敵全体に 小ダメージ
+            { name: '不安の眼', w: 1.5, effects: [{ kind: 'status', target: 'all', status: 'confuse', chance: 0.7 }] },   // 敵全体を こんらん
+            { name: '呪いの笑み', w: 1.5, effects: [{ kind: 'status', target: 'one', status: 'slow', chance: 0.9 }] }      // 敵 1 体を のろい
+        ],
+        // 必殺技 アンノウン: 敵全体に ふしぎ (中級) の 術の ダメージ × 3
+        bigMove: { name: 'アンノウン', every: 14, warn: 2.5, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ', hits: 3 })] },
         befriends: 'lunashadow', lv: 13, place: 'school'
     }
 };

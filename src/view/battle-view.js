@@ -16,7 +16,7 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -50,6 +50,8 @@ export function createBattleView(app, battle, place) {
 
     const enemyPos = i => {
         const n = battle.enemies.length;
+        // 部位の ある ボス (2 章の 影) は とても 大きい
+        if (n === 1 && battle.enemies[0].parts) return { x: 200, y: 156, scale: 6.5 };
         if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
         return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
     };
@@ -213,6 +215,27 @@ export function createBattleView(app, battle, place) {
                 const c = centerOf(e.actor), p = posOf(e.actor);
                 if (c && p && kind !== 'perf') at(0.62, () => effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[unitOf(e.actor)?.element] || '#ffffff' }));
                 if (e.big) warn = null;
+            } else if (e.type === 'partBreak') {
+                // 部位を こわした (2 章の 影)
+                banner = { text: `${e.name}を こわした！${e.move ? `「${e.move}」が 使えない！` : ''}`, color: COLORS.accent, until: t + 1.8 };
+                sfx('big');
+                const k = battle.enemies.findIndex(x => x.uid === e.target), pp = k >= 0 ? partPos(k, e.part) : null;
+                if (pp) effects.push({ kind: 'wave', x: pp.x, y: pp.y + 10, start: t, dur: 0.5, color: '#ffe85a' });
+            } else if (e.type === 'chance') {
+                sfx('special');
+            } else if (e.type === 'stunned') {
+                const p = posOf(e.actor);
+                if (p) pops.push({ x: p.x, y: p.y - 112, text: 'うごけない！', color: '#ffe85a', until: t + 1 });
+            } else if (e.type === 'chanceEnd') {
+                banner = { text: 'こわした ところが もとに もどった！', color: '#ff6a6a', until: t + 1.8 };
+                sfx('cancel');
+            } else if (e.type === 'partGuard') {
+                // 両手を こわすまで 頭は こわせない (知らせるのは ときどき)
+                if (t - guardTold > 2.5) {
+                    guardTold = t;
+                    const p = posOf(e.target);
+                    if (p) pops.push({ x: p.x, y: p.y - 120, text: 'かたい！ 先に 両手を こわそう', color: '#c0c8e0', small: true, until: t + 1.2 });
+                }
             } else if (e.type === 'possessed') {
                 // とりつき: なまける / 味方を 攻める
                 const p = posOf(e.actor);
@@ -264,14 +287,31 @@ export function createBattleView(app, battle, place) {
         mg = { unit, pos, sp, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1, resolved: false };
         sfx('ok');
     }
-    // ロックオン: 生きている 敵 + 「ねらわない」を 順に
+    // ロックオン: 生きている 敵 (部位の ある ボスは こわれていない 部位) + 「ねらわない」を 順に
+    let guardTold = -9;
     function cycleLock(dir) {
-        const list = [null, ...battle.enemiesAlive().map(e => e.uid)];
-        const i = list.indexOf(battle.lock);
+        const list = [null, ...battle.enemiesAlive().flatMap(e => (e.parts
+            ? PART_ORDER.filter(k => !e.parts[k].broken).map(part => ({ uid: e.uid, part }))
+            : [{ uid: e.uid, part: null }]))];
+        const i = list.findIndex(x => (x ? x.uid === battle.lock && x.part === battle.lockPart : !battle.lock));
         const next = list[(i + dir + list.length) % list.length];
-        if (next) lockOn(battle, next);
-        else if (battle.lock) lockOn(battle, battle.lock);
+        if (next) lockOn(battle, next.uid, next.part);
+        else if (battle.lock) lockOn(battle, battle.lock, battle.lockPart);
         sfx('cursor');
+    }
+    // 部位の 場所 (上画面)。右手は 見ている 人の 左
+    function partPos(k, key) {
+        const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
+        const h = art.h * p.scale, side = art.w * p.scale / 2 + 26;
+        const bob = Math.sin(t * 3 + (key === 'lhand' ? 1.5 : 0)) * 3;
+        if (key === 'rhand') return { x: p.x - side, y: p.y - h * 0.42 + bob };
+        if (key === 'lhand') return { x: p.x + side, y: p.y - h * 0.42 + bob };
+        return { x: p.x, y: p.y - h * 0.72 };
+    }
+    function hitPartAt(k, x, y) {
+        const e = battle.enemies[k];
+        if (!e.parts) return null;
+        return PART_ORDER.find(key => !e.parts[key].broken && Math.hypot(partPos(k, key).x - x, partPos(k, key).y - y) < 24) || null;
     }
     function hitEnemy(k, x, y) {
         const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
@@ -282,8 +322,10 @@ export function createBattleView(app, battle, place) {
     function drawLock(ctx) {
         const k = battle.enemies.findIndex(e => e.uid === battle.lock);
         if (k < 0) return;
-        const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-        const cy = p.y - art.h * p.scale / 2, r = Math.max(art.w, art.h) * p.scale / 2 + 6;
+        let p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
+        let cy = p.y - art.h * p.scale / 2, r = Math.max(art.w, art.h) * p.scale / 2 + 6;
+        // 部位を ねらっている ときは その 部位に 小さな 印
+        if (battle.lockPart) { const pp = partPos(k, battle.lockPart); p = { ...p, x: pp.x }; cy = pp.y; r = 24; }
         const weak = weakActive(battle);
         if (weak) {
             ctx.fillStyle = `rgba(255, 232, 90, ${0.25 + 0.2 * Math.sin(t * 14)})`;
@@ -507,8 +549,11 @@ export function createBattleView(app, battle, place) {
         // ロックオン: 上下で ねらう 敵を かえる (はしまで 行くと はずす)・上画面の 敵を タップ
         if (input.pressed.up || input.pressed.down) cycleLock(input.pressed.down ? 1 : -1);
         if (input.topTap) {
-            const i = battle.enemies.findIndex((e, k) => !e.ko && hitEnemy(k, input.topTap.x, input.topTap.y));
-            if (i >= 0 && lockOn(battle, battle.enemies[i].uid)) sfx('cursor');
+            const { x, y } = input.topTap;
+            const pk = battle.enemies.findIndex((e, k) => !e.ko && hitPartAt(k, x, y));
+            const i = battle.enemies.findIndex((e, k) => !e.ko && hitEnemy(k, x, y));
+            if (pk >= 0) { if (lockOn(battle, battle.enemies[pk].uid, hitPartAt(pk, x, y))) sfx('cursor'); }
+            else if (i >= 0 && lockOn(battle, battle.enemies[i].uid)) sfx('cursor');
         }
 
         // タッチ: 輪を なぞる・必殺技・どうぐ
@@ -617,7 +662,7 @@ export function createBattleView(app, battle, place) {
         // うしろ姿: 描いた 絵 (back-art.js) が なければ 顔を 消して 作る (back.js)
         const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null, sx, sy });
-        const w = 44, head = p.y - art.h * scale;
+        const w = u.parts ? 150 : 44, head = p.y - art.h * scale;
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
         const barY = head - 10, nameY = head - 14;
         bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
@@ -646,6 +691,49 @@ export function createBattleView(app, battle, place) {
         if (guards.length) text(ctx, guards.join(' '), p.x, head - (marks.length ? 38 : 26), { size: 9.5, align: 'center', color: '#8ad0ff', bold: true });
     }
 
+    // 部位の ある ボスの 両手と 部位の HP (こわれた 手は うすく、頭は ひびが 入る)
+    function drawParts(ctx, e, k) {
+        const lit = (flash[e.uid] || 0) > t;
+        for (const key of ['rhand', 'lhand']) {
+            const pt = e.parts[key], q = partPos(k, key);
+            ctx.save();
+            ctx.translate(q.x, q.y);
+            ctx.scale(key === 'lhand' ? -1 : 1, 1);
+            ctx.globalAlpha = pt.broken ? 0.25 : 1;
+            ctx.fillStyle = lit && !pt.broken ? '#ffffff' : '#1a1430';
+            ctx.beginPath();
+            ctx.ellipse(0, 4, 15, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+            for (let i = 0; i < 3; i++) ctx.fillRect(-13 + i * 9, -16, 6, 16);
+            ctx.fillRect(10, -2, 11, 6);
+            ctx.fillStyle = '#ffe080';
+            for (let i = 0; i < 3; i++) ctx.fillRect(-13 + i * 9, -19, 6, 3);
+            ctx.restore();
+            if (pt.broken) text(ctx, '×', q.x, q.y + 10, { size: 22, align: 'center', bold: true, color: '#ff6a6a' });
+            else bar(ctx, q.x - 16, q.y + 20, 32, 4, pt.hp / pt.max, '#ffb84a');
+            text(ctx, pt.name, q.x, q.y + 34, { size: 9, align: 'center', bold: true, color: pt.broken ? COLORS.dim : '#ffe0b0' });
+        }
+        const head = e.parts.head, q = partPos(k, 'head');
+        if (head.broken) {
+            ctx.strokeStyle = '#ffe85a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(q.x - 22, q.y - 10); ctx.lineTo(q.x - 6, q.y); ctx.lineTo(q.x - 14, q.y + 10);
+            ctx.moveTo(q.x + 20, q.y - 12); ctx.lineTo(q.x + 8, q.y + 2);
+            ctx.stroke();
+            // 目が まわる 星
+            for (let i = 0; i < 3; i++) {
+                const a = t * 4 + i * Math.PI * 2 / 3;
+                text(ctx, '★', q.x + Math.cos(a) * 30, q.y - 26 + Math.sin(a) * 8, { size: 11, align: 'center', color: '#ffe85a' });
+            }
+        } else {
+            // 頭の 右よこ (ボスの 名前と 重ならないように)
+            const hx = q.x + 40;
+            bar(ctx, hx, q.y - 6, 40, 4, head.hp / head.max, e.parts.rhand.broken && e.parts.lhand.broken ? '#ffb84a' : '#7a7a90');
+            text(ctx, e.parts.rhand.broken && e.parts.lhand.broken ? '頭' : '頭 (かたい)', hx, q.y - 10, { size: 9, bold: true, color: '#ffe0b0' });
+        }
+    }
+
     // 盾 (まもり)。(x, y) は まんなか
     function drawShield(ctx, x, y, s = 1) {
         ctx.fillStyle = 'rgba(138, 208, 255, 0.55)';
@@ -665,6 +753,7 @@ export function createBattleView(app, battle, place) {
     function drawTop(ctx) {
         drawBackground(ctx);
         battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
+        battle.enemies.forEach((e, i) => { if (e.parts && !e.ko) drawParts(ctx, e, i); });
         // 必殺技の 動きの あいだは、その キャラは 動きの ほうで 描く
         battle.front().forEach((u, i) => { if (!(mg && mg.phase === 'act' && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }); });
         if (mg && mg.phase === 'act') drawAct(ctx);
@@ -677,7 +766,12 @@ export function createBattleView(app, battle, place) {
             const k = 1 - (p.until - t) / 0.9;
             text(ctx, p.text, p.x, p.y - k * 14, { size: p.big ? 16 : p.small ? 10.5 : 13, align: 'center', bold: true, color: p.color });
         }
-        if (warn && warn.until > t) {
+        // チャンスタイム (ボスが うごけない あいだ ずっと 出す。2026-10-28 ユーザー指定)
+        if (battle.chance && !battle.outcome) {
+            panel(ctx, 90, 6, 220, 46, { fill: 'rgba(90, 40, 0, 0.88)', edge: '#ffe85a' });
+            text(ctx, 'チャンスタイム！', 200, 32, { size: 24, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
+            text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: 'center', bold: true });
+        } else if (warn && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
@@ -864,7 +958,8 @@ export function createBattleView(app, battle, place) {
         drawWheel(ctx);
         drawSpecialButtons(ctx);
         button(ctx, { ...FAST_BTN, label: g.fastBattle ? '倍速 ON' : '倍速' }, { active: Boolean(g.fastBattle), size: 10.5 });
-        text(ctx, battle.lock ? 'ねらい中 (もう いちどで はずす)' : 'ねらう: ↑↓・上の 敵を タップ', 66, 17, { size: 9, color: battle.lock ? '#ff9a9a' : COLORS.dim, maxWidth: 134 });
+        const lockedPart = battle.lock && battle.lockPart ? battle.enemies.find(e => e.uid === battle.lock)?.parts?.[battle.lockPart] : null;
+        text(ctx, lockedPart ? `ねらい: ${lockedPart.name} (↑↓で かえる)` : battle.lock ? 'ねらい中 (もう いちどで はずす)' : 'ねらう: ↑↓・上の 敵を タップ', 66, 17, { size: 9, color: battle.lock ? '#ff9a9a' : COLORS.dim, maxWidth: 134 });
         text(ctx, btn('fast'), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: 'center', color: COLORS.dim });
         if (menu) drawMenu(ctx);
     }
