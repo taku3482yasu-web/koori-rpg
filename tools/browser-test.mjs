@@ -170,7 +170,7 @@ try {
     await skipTalk();
     check(await sceneIs('field'), '見つけても すぐには バトルに ならない');
     // 出てきた キャラの 下に 立って 上を 向き、J で 話しかける
-    await evaluate('(() => { const g = window.__app.g, c = window.__app.field.debug.wild.list.find(x => x.revealed); g.pos.x = c.x; g.pos.y = c.y + 16; g.pos.dir = "up"; return true; })()');
+    await evaluate('(() => { const g = window.__app.g, c = window.__app.field.debug.wild.list.find(x => x.revealed); g.pos.x = c.x; g.pos.y = c.y + 16; g.pos.dir = "up"; c.pause = 99; c.target = null; window.__app.field.debug.wild.list.forEach(o => { if (o !== c && Math.hypot(o.x - c.x, o.y - c.y) < 64) { o.x += 200; o.pause = 99; o.target = null; } }); return true; })()');
     await shot('revealed');
     await key('KeyJ');
     check(await evaluate('window.__app.talk.isActive()'), '話しかけると キャラが しゃべる');
@@ -208,6 +208,7 @@ try {
     await key('KeyJ');
     await sleep(100);
     check(await evaluate('(() => { const b = window.__app.scene.battle, u = b.wheel.find(x => x && x.uid === window.__pickUid); return u.hp > window.__pickHp && !window.__app.scene.debug.menu(); })()'), 'えらんだ なかまに おにぎりを 使う');
+    await evaluate('(() => { window.__app.scene.battle.wheel.forEach(u => { if (u) { u.hp = u.max; u.ko = false; } }); return true; })()');
 
     // ----- バトル: 輪を 回す・必殺技・道具 -----
     await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.s.atk = 1; e.s.mag = 1; }); return true; })()');
@@ -217,13 +218,14 @@ try {
     await sleep(500);
     await key('KeyQ');
     await evaluate('(() => { const b = window.__app.scene.battle; b.front()[0].gauge = 100; return true; })()');
+    await evaluate('(() => { const st = window.__flow = { seen: new Set(), hurt: false, done: false, n: 0 }; const tick = () => { const s = window.__app.scene, m = s.debug && s.debug.mg(); if (m) st.seen.add(m.phase); if (s.debug && Object.values(s.debug.motions).some(x => x.kind === "hurt" || x.kind === "ko")) st.hurt = true; if ((!m && st.seen.size) || ++st.n > 1500) st.done = true; else requestAnimationFrame(tick); }; tick(); return true; })()');
     await key('Digit1');
     check(await evaluate('window.__app.scene.battle.paused && ["mash", "reel", "trace", "spin"].includes(window.__app.scene.debug.mg().command)'), '必殺技で コマンド (4 種類から ランダム)');
     await shot('command');
     // どの コマンドでも 決まるまで A を 押す (れんだ・目押し)。なぞる・ぐるぐるは 時間切れまで 待つ
     for (let i = 0; i < 12; i++) await key('Enter', 20);
     // コマンド → 結果 → カットイン → 動き を 見とどける (動きの 中で 敵が 食らう モーション)
-    const flow = await evaluate('new Promise(r => { const seen = new Set(); let hurt = false, n = 0; const tick = () => { const s = window.__app.scene, m = s.debug && s.debug.mg(); if (m) seen.add(m.phase); if (s.debug && Object.values(s.debug.motions).some(x => x.kind === "hurt" || x.kind === "ko")) hurt = true; if ((!m && seen.size) || ++n > 900) r({ phases: [...seen], hurt, mult: null }); else requestAnimationFrame(tick); }; tick(); })');
+    const flow = await evaluate('new Promise(r => { const w = () => (window.__flow.done ? r({ phases: [...window.__flow.seen], hurt: window.__flow.hurt }) : requestAnimationFrame(w)); w(); })');
     check(['result', 'cutin', 'act'].every(p => flow.phases.includes(p)), `必殺技: コマンドの あと 結果 → カットイン → キャラの 動き (${flow.phases.join(' → ')})`);
     check(flow.hurt, '必殺技が 当たると 敵が 食らった モーション');
     // 敵を 弱らせて 勝つ
