@@ -18,6 +18,8 @@ const cast = [
     { name: 'ふるカワ', art: 'furukawa' },
     { name: 'ともいし', art: 'tomoishi' },
     { name: 'おにおに', art: 'onioni' },
+    { name: 'ルキハ', art: 'rukiha' },
+    { name: 'トモオカ', art: 'tomooka' },
     ...Object.values(NAKAMA).sort((a, b) => a.no - b.no).map(n => ({ name: n.name, art: n.art, group: 'なかま' })),
     ...Object.values(BOSSES).map(b => ({ name: b.name, art: b.art, group: 'ボス' }))
 ];

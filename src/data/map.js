@@ -369,6 +369,8 @@ export const PEOPLE = [
     // 6 章: 庭の 戸口を ふさぐ ズミタニ → 奥の 間の おにおに (ルキハに あやつられている) → 東の 蔵の 鬼鬼団の 幹部 トモオカ
     { id: 'zumitani6', name: 'ズミタニ', art: 'zumitani', x: 24, y: YASHIKI_Y0 + 14, only: 'zumitani6', scale: 1.2 },
     { id: 'onioni6', name: 'おにおに', art: 'onioni', x: 24, y: YASHIKI_Y0 + 5, only: 'onioni6' },
+    // ルキハ (第 1 形態) は おにおにの うしろに 座っている (話しかけるのは おにおに)
+    { id: 'rukiha6', name: 'ルキハ', art: 'rukiha', x: 21, y: YASHIKI_Y0 + 4, only: 'onioni6' },
     { id: 'tomooka6', name: 'トモオカ', art: 'tomooka', x: 35, y: YASHIKI_Y0 + 5, only: 'tomooka6', scale: 1.3 }
 ];
 

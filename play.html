@@ -3163,6 +3163,8 @@ body.nopad #pad { display: none; }
     // 6 章: 庭の 戸口を ふさぐ ズミタニ → 奥の 間の おにおに (ルキハに あやつられている) → 東の 蔵の 鬼鬼団の 幹部 トモオカ
     { id: "zumitani6", name: "ズミタニ", art: "zumitani", x: 24, y: YASHIKI_Y0 + 14, only: "zumitani6", scale: 1.2 },
     { id: "onioni6", name: "おにおに", art: "onioni", x: 24, y: YASHIKI_Y0 + 5, only: "onioni6" },
+    // ルキハ (第 1 形態) は おにおにの うしろに 座っている (話しかけるのは おにおに)
+    { id: "rukiha6", name: "ルキハ", art: "rukiha", x: 21, y: YASHIKI_Y0 + 4, only: "onioni6" },
     { id: "tomooka6", name: "トモオカ", art: "tomooka", x: 35, y: YASHIKI_Y0 + 5, only: "tomooka6", scale: 1.3 }
   ];
   const START = { x: 6, y: 24 };
@@ -10034,6 +10036,106 @@ body.nopad #pad { display: none; }
         ".....ss....ss.....",
         "....ooo....ooo...."
       ])
+    },
+    // ルキハ (第 1 形態): 人と 同じ すがたの 男。けれど 右目は 赤黒く にごり、首すじに うろこ、右手の 指先は 黒く ねじれている
+    //   (2026-10-29 ユーザー指定。ラスボス。第 2 形態 ニオニオーテンは まだ)
+    rukiha: {
+      w: 24,
+      h: 35,
+      palette: {
+        h: "#2a2438",
+        H: "#4a3e60",
+        s: "#e8d0c0",
+        S: "#c8a898",
+        e: "#2a2a3a",
+        r: "#6a0a18",
+        R: "#e02040",
+        l: "#a06070",
+        g: "#3a5a48",
+        G: "#6a9a78",
+        c: "#2a2040",
+        C: "#3e3060",
+        p: "#7a3ac0",
+        w: "#d8d0e0",
+        k: "#0a0a10",
+        b: "#1a1420"
+      },
+      frames: [
+        [
+          "........................",
+          "........hhhhhhhh........",
+          "......hhhHHHhhhhhh......",
+          ".....hhHHHhhhhhhhhh.....",
+          "....hhhhhhhhhhhhhhhh....",
+          "....hhhhssssssssshhh....",
+          "....hhhssssssssrsssh....",
+          "....hsssesssssrRsssh....",
+          "....hsssssssssrrrssh....",
+          "....hsssssssSssssssh....",
+          ".....sssssslllSssss.....",
+          "......ssssssssssss......",
+          ".......gssssssssg.......",
+          "........gGssssGg........",
+          "...ccccccgGwwGgcccccc...",
+          "..cccccccgwwwwgccccccc..",
+          "..ccCcccccwwwwcccccCcc..",
+          ".ccCCcccccpwwpcccccCCcc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.ccccccppcccccc.Ccc.",
+          ".sss.cccccccccccccc.kkkk",
+          ".ss..cccccccccccccc.k.kk",
+          ".....ccccccCCcccccc.k..k",
+          ".....ccccccCCcccccc.....",
+          ".....cccccccccccccc.....",
+          ".....cccccc..cccccc.....",
+          ".....cccccc..cccccc.....",
+          "......ccccc..ccccc......",
+          "......pppcc..ccppp......",
+          ".......bbb....bbb.......",
+          ".......bbb....bbb.......",
+          "......bbbb....bbbb......"
+        ],
+        [
+          "........................",
+          "........hhhhhhhh........",
+          "......hhhHHHhhhhhh......",
+          ".....hhHHHhhhhhhhhh.....",
+          "....hhhhhhhhhhhhhhhh....",
+          "....hhhhssssssssshhh....",
+          "....hhhssssssssrsssh....",
+          "....hsssssssssrRsssh....",
+          "....hsssssssssrrrssh....",
+          "....hsssssssSssssssh....",
+          ".....sssssslllSssss.....",
+          "......ssssssssssss......",
+          ".......gssssssssg.......",
+          "........gGssssGg........",
+          "...ccccccgGwwGgcccccc...",
+          "..cccccccgwwwwgccccccc..",
+          "..ccCcccccwwwwcccccCcc..",
+          ".ccCCcccccpwwpcccccCCcc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.cccccpwwpccccc.Ccc.",
+          ".ccC.ccccccppcccccc.Ccc.",
+          ".sss.cccccccccccccc.kkkk",
+          ".ss..cccccccccccccc.k.kk",
+          ".....ccccccCCcccccc.k..k",
+          ".....ccccccCCcccccc.....",
+          ".....cccccccccccccc.....",
+          ".....cccccc..cccccc.....",
+          ".....cccccc..cccccc.....",
+          "......ccccc..ccccc......",
+          "......pppcc..ccppp......",
+          ".......bbb....bbb.......",
+          ".......bbb....bbb.......",
+          "......bbbb....bbbb......"
+        ]
+      ]
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -11514,11 +11616,11 @@ body.nopad #pad { display: none; }
           by("zumitani", "やっほー、77代目の ズミタニだよ！ メダルどろぼうを 追ってるんだ。……で、きみ、役に 立つの？ ためして あげるね♪"),
           furu("分身して くるよ！ 本物を 見つけて ロックオンして！ まちがえると しかえし されちゃう！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("zumitani6"), kind: "boss", place: "yashiki" }) });
-      } else if (p.id === "onioni6") {
+      } else if (p.id === "onioni6" || p.id === "rukiha6") {
         say([
           nar("奥の 間に、ひとりの 男が 座っていた。"),
           nar("人と おなじ 顔。けれど 片目は 赤黒く にごり、首すじには うろこの ような ものが のぞいている。"),
-          { who: "ルキハ", text: "はじめまして だな、こおり族の 子。王冠の 味は……なかなか だったぞ。" },
+          { who: "ルキハ", art: "rukiha", text: "はじめまして だな、こおり族の 子。王冠の 味は……なかなか だったぞ。" },
           nar("その うしろに、目の 光が 消えた おにおにが 立っていた。"),
           { who: "こおりくん", art: "koori", text: "（おにおに……！）" },
           by("onioni", "…………。ルキハさまの じゃまは させん。")

@@ -587,6 +587,14 @@ try {
     check(await evaluate('window.__app.g.flags.zumi6 && window.__app.g.medals.some(m => m.id === "zumitani")'), 'ズミタニに 勝つと なかまに なり 奥へ 行ける');
     // おにおに (奥の 間)
     await at(24, 198, 'up');
+    await sleep(300);
+    await shot('yashiki-rukiha');
+    check(await evaluate('(() => { const r = window.__app.g; return r.flags.zumi6 && !r.flags.oni6; })()'), '奥の 間に おにおにと ルキハ');
+    await key('KeyJ');
+    await sleep(1200);
+    await shot('yashiki-rukiha-talk');
+    await skipTalk();
+    await at(24, 198, 'up');
     await key('KeyJ');
     await skipTalk();
     await sleep(300);
