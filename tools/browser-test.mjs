@@ -552,6 +552,72 @@ try {
     await skipTalk();
     check(sawEvolve && await evaluate('window.__app.g.medals.some(m => m.id === "daichouenou")'), '進化: ダイチョウエンキンが Lv30 で ダイチョウエンオウに 進化 (結果画面に 出る)');
 
+    // ----- 6 章: ともいし → 電車で 忍びの屋敷 → ズミタニ (分身) → おにおに → トモオカ (右腕) (2026-10-29) -----
+    await evaluate('(() => { const g = window.__app.g; g.story = "clear5"; window.__app.field.debug.wild.list.length = 0; return true; })()');
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "shinobi"'), '5 章 クリアの あと ともいしと 話すと 6 章');
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    await key('ArrowDown');
+    await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('yashiki-arrive');
+    check(await evaluate('window.__app.g.story === "yashiki" && window.__app.g.pos.y > 192 * 16'), '石の川駅から 電車で 忍びの屋敷へ');
+    // ズミタニ: 分身 → 本物を ロックオン
+    await at(24, 207, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "zumitani6"'), '庭で ズミタニと バトル');
+    await key('KeyJ');
+    await sleep(800);
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.max = e.hp = 99999; e.bossMoves = e.bossMoves.filter(m => m.clones); e.timer = 99; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.clones) && window.__app.scene.battle.enemies.length === 3'), 'ズミタニ: かげぶんしんで 3 体に');
+    await sleep(500);
+    await shot('yashiki-clones');
+    await evaluate('(() => { const b = window.__app.scene.battle, real = b.enemies.find(e => !e.clone); b.lock = real.uid; b.lockPart = null; return true; })()');
+    check(await waitFor('(() => { const b = window.__app.scene.battle; return !b.clones && b.enemies.length === 1 && b.enemies[0].hp < b.enemies[0].max; })()'), 'ズミタニ: 本物を ロックオンすると 見やぶる');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.flags.zumi6 && window.__app.g.medals.some(m => m.id === "zumitani")'), 'ズミタニに 勝つと なかまに なり 奥へ 行ける');
+    // おにおに (奥の 間)
+    await at(24, 198, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "onioni6"'), '奥の 間で ルキハ と おにおに → おにおにと バトル');
+    await key('KeyJ');
+    await sleep(1200);
+    await shot('yashiki-onioni');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.flags.oni6 && !window.__app.g.medals.some(m => m.id === "onioni")'), 'おにおにに 勝っても まだ なかまに ならない');
+    // トモオカ (東の 蔵): 右腕
+    await at(35, 198, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "tomooka6"'), '東の 蔵で 幹部 トモオカと バトル');
+    await key('KeyJ');
+    await sleep(600);
+    await evaluate('(() => { const e = window.__app.scene.battle.enemies[0]; e.max = e.hp = 99999; e.armLv = 9; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.armCharge)'), 'トモオカ: 体を たたかれて 右腕が 限界 → 丘砕きの一撃の ため');
+    await sleep(300);
+    await shot('yashiki-arm');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.lock = e.uid; b.lockPart = "arm"; e.armDmg = e.max; return true; })()');
+    check(await waitFor('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; return !b.armCharge && e.armLv < e.armDef.max; })()'), 'トモオカ: 右腕を ねらって しぼませると 止まる');
+    await sleep(300);
+    await shot('yashiki-arm-shrink');
+    await winNow();
+    await skipTalk(30);
+    await shot('yashiki-clear');
+    check(await evaluate('window.__app.g.story === "clear6"'), 'トモオカを たおすと 6 章 クリア');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

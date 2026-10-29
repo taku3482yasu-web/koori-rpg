@@ -242,7 +242,7 @@ test('話せる キャラ: 歩く はんいに 通れる マスが あり、く�
 test('地図: ネット寺は ほかと つながって いない。紋の なかまは 通れる マスの 上・3 体とも ネット寺の キャラ (5 章)', () => {
     assert.ok([...TILES[TERA_Y0 - 1]].every(c => ['T', 'W'].includes(c)), '海の いちばん 下は 海');
     assert.ok([...TILES[TERA_Y0]].every(c => c === 'T'), 'お寺の いちばん 上は 木');
-    assert.deepEqual(regionOf(TERA_IN.y), [TERA_Y0, MAP_H]);
+    assert.deepEqual(regionOf(TERA_IN.y), [TERA_Y0, TERA_Y0 + 36]);
     assert.equal(TILES[TERA_IN.y][TERA_IN.x], 'K');
     assert.equal(TILES[TERA_AFTER_BOSS.y][TERA_AFTER_BOSS.x], 'K');
     for (const m of MONS) {
@@ -263,4 +263,30 @@ test('進化で なる キャラは 地区の 数に 入らない。ランクは
         assert.equal('EDCBAS'.indexOf(NAKAMA[id].rank), 'EDCBAS'.indexOf(from.rank) + 1, id);
     }
     assert.equal(idsInArea('ishinokawa').length, 20, '1 章の 20 体は そのまま');
+});
+
+test('地図: 忍びの屋敷 (6 章)。庭から ろうかへは 1 マスの 戸口で、ズミタニが ふさぐ。3 人の ボスの 前に 立てる', async () => {
+    const { YASHIKI_Y0, YASHIKI_IN } = await import('../src/data/map.js');
+    assert.ok([...TILES[YASHIKI_Y0]].every(c => c === 'T'));
+    assert.deepEqual(regionOf(YASHIKI_IN.y), [YASHIKI_Y0, MAP_H]);
+    assert.equal(TILES[YASHIKI_IN.y][YASHIKI_IN.x], 'K');
+    const z = PEOPLE.find(p => p.id === 'zumitani6');
+    assert.ok(BLOCK.has(TILES[z.y - 1][z.x - 1]) && BLOCK.has(TILES[z.y - 1][z.x + 1]) && !BLOCK.has(TILES[z.y - 1][z.x]), '戸口は 1 マス');
+    for (const id of ['zumitani6', 'onioni6', 'tomooka6']) {
+        const p = PEOPLE.find(q => q.id === id);
+        assert.ok(!BLOCK.has(TILES[p.y + 1][p.x]), `${id} の 前に 立てる`);
+    }
+    const ya = idsInArea('yashiki');
+    assert.equal(ya.length, 10);
+    const count = r => ya.filter(id => NAKAMA[id].rank === r).length;
+    assert.deepEqual([count('D'), count('C')], [6, 4]);
+});
+
+test('地図の マスの 文字は ぜんぶ 地図の 色と 絵が ある (描きわすれで ピンクに ならない)', async () => {
+    const { MINI_COLORS } = await import('../src/view/field-art.js');
+    const src = (await import('node:fs')).readFileSync(new URL('../src/view/field-art.js', import.meta.url), 'utf8');
+    for (const ch of new Set(TILES.join(''))) {
+        assert.ok(MINI_COLORS[ch], `${ch} の 地図の 色`);
+        assert.ok(src.includes(`case '${ch}'`), `${ch} の 絵`);
+    }
 });

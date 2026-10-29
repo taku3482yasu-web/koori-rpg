@@ -343,5 +343,18 @@ export const BACK_ART = {
     hyouzanmuscle: auto('hyouzanmuscle'),
     kinkomimic: auto('kinkomimic'),
     daichouenou: auto('daichouenou'),
-    daishi: auto('daishi')
+    daishi: auto('daishi'),
+    // ----- 忍びの屋敷の 10 体と 進化先 2 体 (6 章。2026-10-29) -----
+    geninman: auto('geninman'),
+    shurikenbo: auto('shurikenbo'),
+    bakudanjirou: auto('bakudanjirou'),
+    konin: auto('konin'),
+    aoonibo: auto('aoonibo'),
+    kanabone: auto('kanabone'),
+    makibikonmk3: auto('makibikonmk3'),
+    hyoutanoni: auto('hyoutanoni'),
+    taikooni: auto('taikooni'),
+    jouninman: auto('jouninman'),
+    daibakudanjirou: auto('daibakudanjirou'),
+    zumitani: auto('zumitani')
 };

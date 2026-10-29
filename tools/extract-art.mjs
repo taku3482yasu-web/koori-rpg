@@ -60,7 +60,9 @@ const BIG_KEYS = ['kogame', 'tsuribariuo', 'mokugyoro', 'rousokubi', 'daichouenk
 // 5 章 ネット寺の 10 体・ボスの ダイシ・進化先 16 体 (2026-10-29)。文字列の 絵か 四角の 絵かは 自動で 見る
 const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon', 'loadingu', 'mugenloop', 'notfound', 'virusn', 'firewall', 'daishi',
     'harigeneral', 'joubachi', 'oodonguriko', 'nemuridakeou', 'pekorisuking', 'tsutankobuju', 'yoakefukurou', 'hyougame',
-    'spamking', 'hitodamaou', 'kagebunshin', 'yukimidaifuku', 'muscletitan', 'hyouzanmuscle', 'kinkomimic', 'daichouenou'];
+    'spamking', 'hitodamaou', 'kagebunshin', 'yukimidaifuku', 'muscletitan', 'hyouzanmuscle', 'kinkomimic', 'daichouenou',
+    // 6 章 忍びの屋敷の 9 体・ズミタニ・進化先 2 体 (2026-10-29)
+    'geninman', 'shurikenbo', 'bakudanjirou', 'konin', 'aoonibo', 'kanabone', 'makibikonmk3', 'hyoutanoni', 'taikooni', 'jouninman', 'daibakudanjirou', 'zumitani'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

@@ -360,7 +360,7 @@ test('5 章: ともいしの 手紙 → 電車で ネット寺 → 紋の 3 体�
     const out = applyBattleResult(g, winBattle(g, bossEnemies('daishi5'), 'boss'), rng);
     assert.equal(out.befriend.id, 'daishi');
     assert.equal(g.story, 'clear5');
-    assert.match(objective(g), /寺 4\/11/);
+    assert.match(objective(g), /ともいし/, '5 章 クリアの あとは 6 章へ');
 });
 
 test('進化: 決まった Lv に なると 進化先の キャラに なる (メダル・Lv は そのまま。図鑑にも のる)', async () => {
@@ -404,4 +404,27 @@ test('絆レベル: 同じ キャラを もう 1 体 なかまに すると 上�
         return before - e.hp;
     };
     assert.ok(hit(5) > hit(0));
+});
+
+test('6 章: ともいし → 電車で 忍びの屋敷 → ズミタニ → おにおに → トモオカ の 3 回の ボスで 6 章 クリア (2026-10-29)', async () => {
+    const { startChapter6, arriveYashiki, trainLines } = await import('../src/logic/game.js');
+    const g = newGame('menkyo');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    g.story = 'clear5';
+    assert.ok(startChapter6(g));
+    assert.ok(trainLines(g).includes('yashiki'));
+    assert.ok(arriveYashiki(g));
+    const here = id => peopleHere(g).some(p => p.id === id);
+    assert.ok(here('zumitani6') && !here('onioni6') && !here('tomooka6'));
+    let out = applyBattleResult(g, winBattle(g, bossEnemies('zumitani6'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'zumitani', 'ズミタニは なかまに なる');
+    assert.ok(!here('zumitani6') && here('onioni6'));
+    out = applyBattleResult(g, winBattle(g, bossEnemies('onioni6'), 'boss'), rng);
+    assert.equal(out.befriend, null, 'おにおには まだ なかまに ならない');
+    assert.ok(!here('onioni6') && here('tomooka6'));
+    out = applyBattleResult(g, winBattle(g, bossEnemies('tomooka6'), 'boss'), rng);
+    assert.equal(out.befriend, null);
+    assert.equal(g.story, 'clear6');
+    assert.ok(!here('tomooka6'));
 });

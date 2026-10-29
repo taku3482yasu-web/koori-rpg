@@ -167,6 +167,19 @@ export const WAZA = {
     virusn: W('ウイルス感染', 'ふしぎ', 'front', 0.9, 'poison', 0.8),
     firewall: W('ファイアウォール', 'ほのお', 'around', 1.1, 'poison', 0.3),
     daishi: W('説法', 'ふしぎ', 'around', 0.6, 'sleep', 0.4),
+    // 忍びの屋敷 (6 章)。ひるみ は こんらん・まひ は のろい
+    geninman: W('しゅりけん', 'ふつう', 'line', 1),
+    shurikenbo: W('回転突進', 'かぜ', 'front', 1.6),
+    bakudanjirou: W('ばくだん なげ', 'ほのお', 'line', 1.3),
+    konin: W('こおにパンチ', 'ほのお', 'front', 1.2),
+    aoonibo: W('あおおにしぶき', 'みず', 'line', 1.2),
+    kanabone: W('かなぼう', 'ふつう', 'front', 1.6),
+    makibikonmk3: W('ビーム', 'ふつう', 'line', 1.2),
+    hyoutanoni: W('ひょうたんの酒', 'ふしぎ', 'front', 0.9, 'confuse', 0.6),
+    taikooni: W('かみなりだいこ', 'かぜ', 'around', 1, 'slow', 0.3),
+    jouninman: W('かげぎり', 'かぜ', 'front', 1.6, 'confuse', 0.2),
+    daibakudanjirou: W('大ばくはつ', 'ほのお', 'around', 2.4),
+    zumitani: W('クナイ乱れうち', 'かぜ', 'line', 1.3),
     // 進化で なる キャラ (ダンジョンの 進化先)
     harigeneral: W('針とばし', 'ふつう', 'line', 1.2),
     joubachi: W('じょおうばり', 'かぜ', 'front', 1.5, 'poison', 0.4),
@@ -197,7 +210,10 @@ export const WAZA = {
     kage: W('影の とりつき', 'ふしぎ', 'around', 0.6, 'possess', 0.3),
     himuro: W('ふぶき', 'こおり', 'around', 1.3, 'slow', 0.3),
     urashima4: W('玉手箱', 'ふしぎ', 'around', 0.8, 'confuse', 0.5),
-    daishi5: W('説法', 'ふしぎ', 'around', 0.6, 'sleep', 0.4)
+    daishi5: W('説法', 'ふしぎ', 'around', 0.6, 'sleep', 0.4),
+    zumitani6: W('クナイ乱れうち', 'かぜ', 'line', 1.3),
+    onioni6: W('金棒 たたき', 'ほのお', 'front', 1.4),
+    tomooka6: W('右ストレート', 'ふつう', 'front', 1.3)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
@@ -726,6 +742,81 @@ const LIST = [
         title: 'ネット寺の和尚', desc: 'ASO四天王の1人。有名な和尚で、いろいろな所に出向いてお経をあげてきた。仏の顔と鬼の顔をあわせ持ち、鬼になると戦闘力は計り知れない。最近はネットの世界を救おうと「ネット寺」を立ち上げた。',
         special: sp('鬼の 顔', [{ kind: 'buff', target: 'self', stat: 'atk', amount: 0.6, time: 10 }, atk('all', 1.5, { magic: true, element: 'ふしぎ' })])
     },
+    // ----- 忍びの屋敷の 10 体 (6 章「忍びの屋敷と 消えた メダル」。2026-10-29。ダンジョンの 忍びの屋敷と 鬼鬼団の キャラ。D 6・C 4) -----
+    //   ズミタニは 屋敷の 門の ボス (影分身) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'geninman', name: 'ゲニンマン', from: 'ダンジョン 022', area: 'yashiki', rank: 'D', element: 'ふつう', role: 'attacker', mul: {},
+        line: 'あ、まだいたんですね～', favorite: 'onigiri',
+        title: '忍者の男', desc: '忍者の一員。静かに行動し、敵を狙って攻撃する。',
+        special: sp('下忍の 百本手裏剣', [atk('all', 1.7)])
+    },
+    {
+        id: 'shurikenbo', name: 'シュリケンボー', from: 'ダンジョン 026', area: 'yashiki', rank: 'D', element: 'かぜ', role: 'attacker', mul: {},
+        line: 'シュルルル！', favorite: 'choco',
+        title: '手裏剣の妖怪。', desc: '手裏剣の付喪神。最近は手裏剣戦隊ニンニンジャーにあこがれている。',
+        special: sp('大回転 しゅりけん', [atk('all', 1.7)])
+    },
+    {
+        id: 'bakudanjirou', name: 'バクダンジロウ', from: 'ダンジョン 028', area: 'yashiki', rank: 'D', element: 'ほのお', role: 'attacker', mul: {},
+        line: 'あとはまかせた～！', favorite: 'cider',
+        title: '儚き命。', desc: '爆弾の忍者。爆発すると死ぬ。どう見たって儚いだろ！',
+        special: sp('あとは まかせた 大爆発', [atk('all', 1.7)])
+    },
+    {
+        id: 'konin', name: 'コオニン', from: 'ダンジョン V11', area: 'yashiki', rank: 'D', element: 'ほのお', role: 'attacker', mul: {},
+        line: 'オニ！ オニ！', favorite: 'cider',
+        title: '見習いの鬼', desc: '鬼鬼団の見習い。いつかゴウキオニのような一番槍になりたい。',
+        special: sp('こおに 連打', [atk('all', 1.7)])
+    },
+    {
+        id: 'aoonibo', name: 'アオオニボ', from: 'ダンジョン V12', area: 'yashiki', rank: 'D', element: 'みず', role: 'defender', mul: {},
+        line: 'あおくて わるいか', favorite: 'niboshi',
+        title: '青い鬼', desc: '青い体の鬼。青いことを気にしているが、気にしていないふりをしている。',
+        special: sp('あおおに 大しぶき', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'kanabone', name: 'カナボーン', from: 'ダンジョン V13', area: 'yashiki', rank: 'D', element: 'ふつう', role: 'attacker', mul: {},
+        line: '鬼に かなぼう だ！', favorite: 'onigiri',
+        title: '金棒の付喪神', desc: '鬼に持たれ続けた金棒が命を宿した。鬼に金棒というが、金棒にも鬼が必要らしい。',
+        special: sp('金棒 ぶんまわし', [atk('all', 1.7)])
+    },
+    {
+        id: 'makibikonmk3', name: 'マキビコンMk-3', from: 'ダンジョン 049', area: 'yashiki', rank: 'C', element: 'ふつう', role: 'attacker', mul: {},
+        line: '計算中であります…エラーであります', favorite: 'onigiri',
+        title: 'オールドタイプ', desc: '古いタイプのマキビコン。計算能力は高いが、最新機能は搭載されていない。',
+        special: sp('エラー ビーム', [atk('all', 1.7)])
+    },
+    {
+        id: 'hyoutanoni', name: 'ヒョウタンオニ', from: 'ダンジョン V16', area: 'yashiki', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: {},
+        line: 'ひっく……もう いっぱい……', favorite: 'melonpan',
+        title: 'ひょうたんの酒鬼', desc: 'ひょうたんの酒を手放さない鬼。もう一杯が口ぐせで、飲みすぎて城の廊下で寝ている。',
+        special: sp('よっぱらい 大宴会', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'taikooni', name: 'タイコオニ', from: 'ダンジョン V17', area: 'yashiki', rank: 'C', element: 'かぜ', role: 'supporter', mul: {},
+        line: 'ドドン！ カッ！', favorite: 'choco',
+        title: '太鼓の鬼', desc: '太鼓をたたいて仲間を元気づける鬼。ヨシブックとは太鼓仲間らしい。',
+        special: sp('雷 だいこ 乱れ打ち', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'zumitani', name: 'ズミタニ', from: 'アソ・ダンジョン', area: 'yashiki', rank: 'C', element: 'かぜ', role: 'attacker', mul: { spd: 1.25, atk: 1.05 },
+        line: 'やっほー、77代目の ズミタニだよ！ ついてこられるかな♪', favorite: 'choco',
+        title: '忍びの屋敷の主', desc: 'ASO四天王の1人。古くから続くズミタニ家の忍者で、77代目。すばやい動きで敵を翻弄する。口調は明るいが、言葉のふしぶしにとげがある。',
+        special: sp('影分身の術', [atk('all', 0.7, { hits: 3 })])
+    },
+    // 忍びの屋敷の キャラの 進化先 2 体 (6 章。町には 出ない)
+    {
+        id: 'jouninman', name: 'ジョウニンマン', from: 'ダンジョン 066', area: 'yashiki', evo: 'geninman', rank: 'C', element: 'かぜ', role: 'attacker', mul: {},
+        line: 'もう いましたよ～', favorite: 'choco',
+        title: '上忍の男', desc: 'ゲニンマンが修行を積んで上忍になった姿。気配を消すのがうますぎて、仲間にも「もういたんですね」と言われる。',
+        special: sp('上忍の かげ斬り', [atk('all', 1.7)])
+    },
+    {
+        id: 'daibakudanjirou', name: 'ダイバクダンジロウ', from: 'ダンジョン 068', area: 'yashiki', evo: 'bakudanjirou', rank: 'C', element: 'ほのお', role: 'attacker', mul: {},
+        line: 'あとは まかせた～～！！', favorite: 'cider',
+        title: 'さらに儚き命。', desc: 'バクダンジロウがマグマの石で進化した姿。爆発の大きさは何倍にもなった。そして爆発すると死ぬ。どう見たってさらに儚いだろ！',
+        special: sp('超 大ばくはつ', [atk('all', 1.7)])
+    },
     // ----- 進化で なる 16 体 (2026-10-29。ダンジョンの 進化表の 進化先。evo: 進化する 前の キャラ) -----
     //   町には 出ない。進化前の キャラが 決まった Lv に なると 進化する (EVOLVE)。ランクは 進化前の 1 つ上、好物と 能力の くせは 進化前と 同じ
     //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
@@ -836,7 +927,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -873,6 +964,8 @@ export const EVOLVE = {
     takaramimic: { to: 'kinkomimic', lv: 45 },
     koorimodoki: { to: 'koorimodokishin', lv: 50 },
     daichouenkin: { to: 'daichouenou', lv: 30 },
+    geninman: { to: 'jouninman', lv: 35 },
+    bakudanjirou: { to: 'daibakudanjirou', lv: 34 },
 };
 export const evolveOf = id => EVOLVE[id] || null;
 
@@ -987,6 +1080,50 @@ export const BOSSES = {
         },
         chanceTurns: 3,
         befriends: 'daishi', lv: 23, place: 'tera'
+    },
+    // ----- 6 章の ボス 3 体 (2026-10-29 ユーザー指定) -----
+    // 屋敷の 門: ズミタニ。かげぶんしんで 2 体の 分身を 出し、4 秒ごとに 瞬間移動で 3 体の 位置を 入れかえる (14 秒で 消える)。
+    //   分身が いる あいだは ロックオン した あいてにしか 攻撃が 当たらない。本物なら 分身が 消えて ダメージ 1.3 倍、
+    //   分身を ねらうと しっぱい: 当てた なかまに ダメージと とりつき (分身は 1 体 消える)。clones・battle.js の summonClones
+    zumitani6: {
+        id: 'zumitani6', name: 'ズミタニ', element: 'かぜ', role: 'attacker', art: 'zumitani', scale: 1.4, rank: 'B',
+        base: { hp: 660, atk: 15, def: 12, spd: 15, mag: 13 },
+        moves: [
+            { name: 'クナイ乱れうち', w: 3, effects: [atk('all', 0.6, { element: 'かぜ' })] },
+            { name: '忍び斬り', w: 3, effects: [atk('one', 1.4), { kind: 'status', target: 'one', status: 'confuse', chance: 0.3 }] },
+            { name: 'かげぶんしん', w: 4, clones: 2 }
+        ],
+        bigMove: { name: '百影 クナイ', every: 16, warn: 2.5, effects: [atk('all', 1.1, { element: 'かぜ' })] },
+        clones: { count: 2, life: 14, teleport: 4, bonus: 1.3, counter: [atk('one', 1.5), { kind: 'status', target: 'one', status: 'possess', chance: 1 }] },
+        befriends: 'zumitani', lv: 26, place: 'yashiki'
+    },
+    // 奥の 間: ルキハに あやつられた おにおに (第 1 形態だけ)。ふつうの 攻撃と、予告つきの 凪払い (全体)。なかまには ならない
+    onioni6: {
+        id: 'onioni6', name: 'おにおに', element: 'ほのお', role: 'attacker', art: 'onioni', scale: 2, rank: 'B',
+        base: { hp: 900, atk: 18, def: 14, spd: 12, mag: 11 },
+        moves: [
+            { name: '金棒 たたき', w: 3, effects: [atk('one', 1.4)] },
+            { name: '鬼パンチ', w: 3, effects: [atk('one', 1.1)] },
+            { name: 'お金かえせ！', w: 1.5, effects: [{ kind: 'status', target: 'one', status: 'slow', chance: 0.7 }] }
+        ],
+        bigMove: { name: '凪払い', every: 11, warn: 2.5, effects: [atk('all', 1.3)] },
+        befriends: null, lv: 27, place: 'yashiki'
+    },
+    // 東の 蔵: 鬼鬼団の 幹部 トモオカ (新キャラ)。体を 攻撃される たびに 右腕が 大きく なり (1 回で 1 段・10 段で 限界)、
+    //   限界に なると 4 秒 ためて 防御不能の 必殺技「丘砕きの一撃」。右腕を ロックオンして 当てると、最大HP の 3.5% ごとに 1 段ずつ
+    //   しぼむ (体への ダメージは 40% だけ)。ためている あいだに 限界より 小さく すると 止まる。arm・battle.js の armHit
+    tomooka6: {
+        id: 'tomooka6', name: 'トモオカ', element: 'ふつう', role: 'attacker', art: 'tomooka', scale: 2, rank: 'B',
+        base: { hp: 820, atk: 16, def: 15, spd: 9, mag: 10 },
+        moves: [
+            { name: '右ストレート', w: 3, effects: [atk('one', 1.3)] },
+            { name: '地ならし', w: 2, effects: [atk('all', 0.6)] },
+            { name: 'にらみ', w: 1.5, effects: [{ kind: 'status', target: 'all', status: 'slow', chance: 0.4 }] }
+        ],
+        arm: { max: 10, start: 2, perHit: 1, step: 0.035, bodyCut: 0.4, charge: 4, after: 0,
+            move: { name: '丘砕きの一撃', effects: [atk('all', 2.6, { unguardable: true })] } },
+        gims: { arm: { name: '右腕', hp: 99, when: 'always', pos: [-1.15, -0.68], arm: true } },
+        befriends: null, lv: 28, place: 'yashiki'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

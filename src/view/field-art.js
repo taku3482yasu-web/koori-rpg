@@ -15,7 +15,7 @@ const hash = (x, y, k = 0) => {
 export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72',
     L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a',
     U: '#8a6a4a', H: '#7a5a3a', N: '#f0f6fa', Q: '#9aa0a8', D: '#a89a80', E: '#b8a888', I: '#9ad8f0',
-    J: '#4a4e58', C: '#7a7468' };
+    J: '#4a4e58', C: '#7a7468', Z: '#4a3624', O: '#c8c070' };
 
 function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -145,6 +145,19 @@ function drawTile(c, ch, x, y, wet = false) {
             r(0, 0, 16, 16, '#7a7468');
             if (hash(x, y, 92) < 0.5) r(Math.floor(hash(x, y, 93) * 12), Math.floor(hash(x, y, 94) * 12), 4, 2, '#6a6458');
             if (hash(x, y, 95) < 0.3) r(Math.floor(hash(x, y, 96) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, '#c8e0f0');
+            break;
+        // ----- 忍びの屋敷 (6 章) -----
+        case 'Z': { // 屋敷の かべ (板べい)。ゆかや 庭に 面した ところは 明るい 板
+            r(0, 0, 16, 16, '#3a2818');
+            const below = tileAt(x, y + 1);
+            if (below !== 'Z' && below !== 'T') { r(0, 4, 16, 12, '#8a6440'); for (let i = 0; i < 16; i += 4) r(i, 4, 1, 12, '#6a4a2c'); r(0, 4, 16, 1, '#a07a50'); }
+            else r(0, 0, 16, 2, '#5a4028');
+            break;
+        }
+        case 'O':   // たたみ
+            r(0, 0, 16, 16, '#c8c070');
+            r(0, (x + y) % 2 ? 0 : 15, 16, 1, '#5a6a3a');
+            for (let i = 2; i < 16; i += 3) r(0, i, 16, 1, '#b8b060');
             break;
         default:
             r(0, 0, 16, 16, '#ff00ff');

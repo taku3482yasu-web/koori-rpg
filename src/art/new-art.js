@@ -124,5 +124,31 @@ export const NEW_ART = {
             'bbbbbbbbbbbbbbbb',
             '................'
         ], 'k', 's')
+    },
+    // トモオカ: 鬼鬼団の 幹部 (6 章の ボス。新キャラ・2026-10-29)。赤い 鬼・1 本角・緑の はちまき・とらがらの パンツ。
+    //   バトルでは 攻撃される たびに 右腕が 大きく なる (battle-view.js の drawArm)
+    tomooka: {
+        w: 18, h: 18,
+        palette: { o: '#2a1418', s: '#c84a3a', S: '#a03228', y: '#f0e0a0', g: '#3a8a4a', k: '#111111', w: '#ffffff', t: '#ffd040', b: '#2a2a2a' },
+        frames: bob([
+            '........yy........',
+            '.......yyyy.......',
+            '.....oooooooo.....',
+            '....osssssssso....',
+            '...osgggggggggo...',
+            '...ossskwsskwsso..',
+            '...osssssssssso...',
+            '...osswwwwwwsso...',
+            '....osssssssso....',
+            '..oooossssssoooo..',
+            '.ossssssssssssssso',
+            '.osSsssbbbbsssSso.',
+            '.osS.ttbttbtt.Sso.',
+            '.oso.tbttbttb.oso.',
+            '..o..tttttttt..o..',
+            '.....oo....oo.....',
+            '.....ss....ss.....',
+            '....ooo....ooo....'
+        ])
     }
 };

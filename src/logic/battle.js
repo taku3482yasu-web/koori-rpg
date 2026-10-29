@@ -25,6 +25,11 @@
 //     5 章 ダイシ: 攻撃を うけつづける (rage) と 鬼の顔 (oni。こうげきが 上がり わざが かわる)。鬼の顔の あいだ だけ 出る 鬼の面を
 //       こわすと 仏の顔に もどる。必殺技は お経を となえきると 打つ (chant)。となえている あいだ だけ うしろの 鐘を ねらえて、
 //       だれかが 当てると 鐘が 鳴り、おどろいた ダイシが チャンスタイム (鐘は ボスに ダメージを あたえない)
+//   影分身 (6 章の ズミタニ): わざ「かげぶんしん」で 分身を 出し、決まった 秒ごとに 瞬間移動で 位置を 入れかえる (b.clones)。
+//     分身が いる あいだは ロックオンした あいてにしか 当たらない。本物なら 分身が 消えて ダメージ アップ、
+//     分身なら しっぱい: 当てた なかまに しかえし (ダメージと とりつき)
+//   右腕 (6 章の トモオカ): 体を 攻撃される たびに 右腕が 1 段 大きく なり、限界で 防御不能の 必殺技を ためる (b.armCharge)。
+//     右腕を ねらって 当てると、決まった ダメージごとに 1 段ずつ しぼむ (体への ダメージは へる)
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -56,6 +61,7 @@ function makeUnit({ uid, id, lv, bond = 0 }, side) {
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
         gims: sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
+        cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
 }
@@ -128,6 +134,73 @@ function hitGim(b, u, key, dmg) {
         startChance(b, u, 'bell');
     }
 }
+// ----- 影分身 (6 章の ズミタニ) -----
+function summonClones(b, u) {
+    const c = u.cloneDef;
+    clearClones(b, null);
+    for (let i = 0; i < c.count; i++) {
+        const cl = makeUnit({ id: u.id, lv: u.lv }, 'enemy');
+        Object.assign(cl, { clone: true, owner: u.uid, boss: false, bigMove: null, bossMoves: null, special: null, gims: null, cloneDef: null, max: u.max, hp: u.hp });
+        b.enemies.push(cl);
+    }
+    b.clones = { uid: u.uid, left: c.life, tp: c.teleport };
+    shuffleClones(b);
+    emit(b, 'clones', { actor: u.uid });
+}
+// 瞬間移動: 本物と 分身の ならびを 入れかえる (画面の 位置は ならびで 決まる)
+function shuffleClones(b) {
+    const group = b.enemies.filter(e => e.uid === b.clones.uid || (e.clone && e.owner === b.clones.uid));
+    const rest = b.enemies.filter(e => !group.includes(e));
+    for (let i = group.length - 1; i > 0; i--) { const j = Math.floor(b.rng.next() * (i + 1)); [group[i], group[j]] = [group[j], group[i]]; }
+    b.enemies = [...rest, ...group];
+    emit(b, 'teleport', { actor: b.clones.uid });
+}
+function clearClones(b, why) {
+    if (!b.clones) return;
+    const owner = b.clones.uid;
+    b.enemies = b.enemies.filter(e => !(e.clone && e.owner === owner));
+    if (b.lock && !b.enemies.some(e => e.uid === b.lock)) { b.lock = null; b.lockPart = null; }
+    b.clones = null;
+    if (why) emit(b, 'clonesEnd', { actor: owner, why });
+}
+// 分身を 攻撃して しまった: 分身は 消え、本物が 当てた なかまに しかえし
+function cloneFail(b, from, clone) {
+    const boss = b.enemies.find(e => e.uid === clone.owner);
+    b.enemies = b.enemies.filter(e => e !== clone);
+    if (b.lock === clone.uid) { b.lock = null; b.lockPart = null; }
+    emit(b, 'cloneFail', { target: clone.uid, actor: from.uid });
+    if (!b.enemies.some(e => e.clone)) clearClones(b, null);
+    if (!boss || boss.ko) return;
+    for (const fx of boss.cloneDef.counter) {
+        if (fx.kind === 'attack') damage(b, boss, from, fx.power, { element: fx.element });
+        else if (fx.kind === 'status') addStatus(b, from, fx.status, fx.chance);
+    }
+}
+// ----- 右腕 (6 章の トモオカ) -----
+function armGrow(b, u) {
+    const a = u.armDef;
+    if (u.armLv >= a.max) return;
+    u.armLv = Math.min(a.max, u.armLv + a.perHit);
+    emit(b, 'armGrow', { target: u.uid, lv: u.armLv });
+    if (u.armLv >= a.max && !b.armCharge) {
+        b.armCharge = { uid: u.uid, left: a.charge };
+        emit(b, 'telegraph', { actor: u.uid, name: a.move.name, warn: a.charge, arm: true });
+    }
+}
+function armShrink(b, u, dmg) {
+    const a = u.armDef;
+    u.armDmg += dmg;
+    const stepHp = u.max * a.step;
+    let n = 0;
+    while (u.armDmg >= stepHp && u.armLv > 0) { u.armDmg -= stepHp; u.armLv--; n++; }
+    if (!n) return;
+    emit(b, 'armShrink', { target: u.uid, lv: u.armLv });
+    if (b.armCharge && b.armCharge.uid === u.uid && u.armLv < a.max) {
+        b.armCharge = null;
+        emit(b, 'bigCancel', { actor: u.uid, name: a.move.name, arm: true });
+    }
+}
+
 function startChance(b, u, why) {
     b.chance = { uid: u.uid, left: u.chanceTurns };
     u.timer = 0;
@@ -160,7 +233,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -202,6 +275,7 @@ function afterKo(b, u) {
         for (const idol of idolsOf(b, u)) { idol.hp = 0; idol.ko = true; emit(b, 'ko', { target: idol.uid, side: 'enemy' }); }
         if (b.charge && b.charge.uid === u.uid) b.charge = null;
     }
+    if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
 }
 
 const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
@@ -211,12 +285,21 @@ const effectOf = (element, target) => (CHART[element] && CHART[element][target])
 
 // ----- 攻撃・回復・状態異常 -----
 // element: わざの 属性 (なければ 術は 自分の 属性・ふつうの 攻撃は ふつう)
-function damage(b, from, to, power, { magic = false, mult = 1, element = null } = {}) {
+function damage(b, from, to, power, { magic = false, mult = 1, element = null, unguardable = false } = {}) {
     if (to.ko) return 0;
     // けむり (4 章の 玉手箱を こわした あと): 味方の 攻撃が ときどき 当たらない
     if (from.side === 'ally' && to.side === 'enemy' && b.smoke && b.rng.chance(b.smoke.miss)) {
         emit(b, 'miss', { actor: from.uid, target: to.uid });
         return 0;
+    }
+    // 影分身 (6 章): 分身が いる あいだは ロックオンした あいてにしか 当たらない
+    let cloneHit = 1;
+    if (b.clones && from.side === 'ally' && (to.clone ? to.owner === b.clones.uid : to.uid === b.clones.uid)) {
+        if (!b.lock) { emit(b, 'miss', { actor: from.uid, target: to.uid, clone: true }); return 0; }
+        if (to.uid !== b.lock) return 0;
+        if (to.clone) { cloneFail(b, from, to); return 0; }
+        cloneHit = to.cloneDef.bonus;
+        clearClones(b, 'found');
     }
     // しかけの 部位を ねらっている
     const gim = from.side === 'ally' && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
@@ -231,18 +314,23 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null } 
     const eff = effectOf(el, to.element);
     const stab = el === from.element && el !== 'ふつう' ? 1.2 : 1;
     const crit = !magic && b.rng.chance(0.06);
-    const guard = to.guarding ? 0.5 : 1;
+    const guard = to.guarding && !unguardable ? 0.5 : 1;   // 防御不能の 技は まもりを むしする
     const weak = from.side === 'ally' && to.uid === b.lock && weakActive(b);
     const headGuard = from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart === 'head' && !handsBroken(to) && !b.chance;
     // こうらに こもっている あいだは 体への ダメージが ぐっと へる (頭を ねらえば ふつう)
-    const shell = to.shell > 0 && !gim ? (to.shellCut ?? 0.15) : 1;
+    const shell = (to.shell > 0 && !gim ? (to.shellCut ?? 0.15) : 1) * (gim && to.gims[gim].arm ? to.armDef.bodyCut : 1) * cloneHit;
     let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell;
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
     emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1, weak: weak && !headGuard, headGuard, part: gim });
-    if (gim && to.hp > 0) hitGim(b, to, gim, dmg);
+    if (gim && to.hp > 0 && !to.gims[gim].arm) hitGim(b, to, gim, dmg);
+    // 右腕 (6 章): 右腕に 当てると しぼみ、体に 当てると ふくらむ
+    if (from.side === 'ally' && to.armDef && to.hp > 0) {
+        if (gim && to.gims[gim].arm) armShrink(b, to, dmg / to.armDef.bodyCut);
+        else armGrow(b, to);
+    }
     // 鬼の顔に なる いかり (5 章の ダイシ)
     if (from.side === 'ally' && to.oniDef && !to.oni && to.hp > 0) {
         to.rage += dmg;
@@ -309,7 +397,7 @@ function applyEffects(b, user, effects, mult = 1) {
         for (const to of targets) {
             if (fx.kind === 'attack') {
                 for (let h = 0; h < (fx.hits || 1); h++) {
-                    const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element });
+                    const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element, unguardable: fx.unguardable });
                     if (fx.drain) heal(b, user, user, dmg * fx.drain);
                 }
             } else if (fx.kind === 'heal') {
@@ -385,11 +473,12 @@ function act(b, u) {
     // 偶像を 作る わざは 偶像が 2 体 そろって いない あいだだけ
     if (u.bossMoves) {
         if (b.chant && b.chant.uid === u.uid) { emit(b, 'chanting', { actor: u.uid }); return; }   // お経を となえている あいだは ほかの ことを しない
-        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)));
+        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
         if (move.summon) summonIdol(b, u);
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
+        else if (move.clones) summonClones(b, u);
         else applyEffects(b, u, move.effects || []);
         return;
     }
@@ -466,6 +555,7 @@ export function step(b, dt) {
     }
     for (const e of b.enemies) {
         if (e.ko) continue;
+        if (e.clone) { const o = b.enemies.find(x => x.uid === e.owner); if (o) { e.hp = o.hp; e.max = o.max; } continue; }   // 分身は 動かない (HP は 本物と 同じに 見せる)
         tickUnit(b, e, dt, !e.idol);   // 偶像は 動かない
         if (e.shell > 0) {
             e.shell -= dt;
@@ -479,6 +569,27 @@ export function step(b, dt) {
         if (e.bigMove) bossTick(b, e, dt);
         checkOutcome(b);
         if (b.outcome) return;
+    }
+    if (b.clones) {
+        b.clones.left -= dt;
+        b.clones.tp -= dt;
+        if (b.clones.left <= 0) clearClones(b, 'time');
+        else if (b.clones.tp <= 0) { b.clones.tp = b.enemies.find(e => e.uid === b.clones.uid)?.cloneDef.teleport || 4; shuffleClones(b); }
+    }
+    if (b.armCharge) {
+        const u = b.enemies.find(e => e.uid === b.armCharge.uid);
+        if (!u || u.ko) b.armCharge = null;
+        else if (!(b.chance && b.chance.uid === u.uid)) {
+            b.armCharge.left -= dt;
+            if (b.armCharge.left <= 0) {
+                b.armCharge = null;
+                emit(b, 'special', { actor: u.uid, name: u.armDef.move.name, side: 'enemy', big: true });
+                applyEffects(b, u, u.armDef.move.effects);
+                u.armLv = u.armDef.after;
+                u.armDmg = 0;
+                emit(b, 'armShrink', { target: u.uid, lv: u.armLv });
+            }
+        }
     }
     if (b.smoke) {
         b.smoke.left -= dt;

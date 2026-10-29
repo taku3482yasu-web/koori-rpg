@@ -12,23 +12,26 @@
 // いちばん 下 (y 120〜155) は 海辺の 町と 浦の島の海岸どうくつ (4 章。2026-10-29)。商店街の 石の川駅から 電車で 行く
 //   (3 章 クリアの あと ともいしと 話してから)。海辺駅から 電車で もどる
 // その 下 (y 156〜191) は ネット寺 (5 章。2026-10-29)。4 章 クリアの あと ダイシの 手紙を 読むと、石の川駅から 電車で 行ける
+// いちばん 下 (y 192〜227) は 忍びの屋敷 (6 章。2026-10-29)。5 章 クリアの あと ともいしと 話すと、石の川駅から 電車で 行ける
 //
 //   tiles[y][x]: G 草 / F 花 / T 木 / R 道 / W 川 / B 橋 / P 川原の 石ころ / S 公園の 砂 / K 石だたみ / A 駐車場
 //                学校: L 木の ゆか / X かべ / Y プールサイド / M げた箱の マット (W は プールの 水)
 //                山: U 山道の 入り口 / H 畑 / N 雪 / Q ダムの かべ / D かれた 沢 / E 水が 消えた 湖の 底 / I 氷の 城
 //                    (D・E・I は 3 章 クリアで 水に もどって 通れなくなる。world.js の blockedTile)
 //                海: J 岩の がけ / C どうくつの ゆか (S 浜辺・W 海・B 桟橋・P 浜の 岩場 は 町と 同じ)
+//                屋敷: Z 屋敷の かべ (板べい) / O たたみ (L 木の ろうか は 学校と 同じ)
 //   BUILDINGS: 家などの 建物 (通れない)。door は 調べる マス (建物の 下の まんなか)
 //   SPOTS: レンズで さがす 場所 (設計書 5.2)。kinds の time は 出る 時間帯、weather: 'rain' は 雨の日だけ
 // =====================================================================
 export const TILE = 16;
-export const MAP_W = 48, MAP_H = 192;
+export const MAP_W = 48, MAP_H = 228;
 export const TOWN_H = 36;       // ここから 下が 商店街
 export const SCHOOL_Y0 = 60;    // ここから 下が 小学校の 中
 export const YAMA_Y0 = 84;      // ここから 下が 山と ダム
 export const UMI_Y0 = 120;      // ここから 下が 海辺の 町と 浦の島の海岸どうくつ (4 章)
 export const TERA_Y0 = 156;     // ここから 下が ネット寺 (5 章)
-export const BLOCK = new Set(['T', 'W', 'X', 'Q', 'I', 'J']);
+export const YASHIKI_Y0 = 192;  // ここから 下が 忍びの屋敷 (6 章)
+export const BLOCK = new Set(['T', 'W', 'X', 'Q', 'I', 'J', 'Z']);
 export const WET = new Set(['D', 'E', 'I']);   // 3 章 クリアで 水に もどる マス
 
 function build() {
@@ -147,6 +150,28 @@ function build() {
     fill(9, N + 18, 16, N + 19, 'F');
     [[3, N + 18], [5, N + 20], [2, N + 23], [7, N + 22], [4, N + 26], [10, N + 25], [14, N + 23], [17, N + 28], [12, N + 29], [20, N + 22],
         [42, N + 18], [44, N + 23], [40, N + 28], [45, N + 30], [28, N + 29]].forEach(([x, y]) => { t[y][x] = 'T'; });
+
+    // ----- 忍びの屋敷 (y 192〜227。6 章「忍びの屋敷と 消えた メダル」) -----
+    //   板べいで かこまれた 屋敷。南の 門 → 庭 → (ズミタニが ふさぐ 1 マスの 戸口) → ろうか → 北に 西の間・奥の 間・東の 蔵
+    //   南西に 忍びの屋敷前駅
+    const Y6 = YASHIKI_Y0;
+    fill(0, Y6, MAP_W - 1, MAP_H - 1, 'T');
+    fill(1, Y6 + 1, MAP_W - 2, Y6 + 34, 'G');
+    fill(8, Y6 + 2, 40, Y6 + 23, 'Z');                                   // 板べい
+    fill(9, Y6 + 14, 39, Y6 + 22, 'G');                                  // 庭
+    fill(22, Y6 + 15, 25, Y6 + 22, 'K');                                 // 庭の 石だたみ
+    fill(30, Y6 + 16, 35, Y6 + 19, 'W');                                 // 池
+    fill(11, Y6 + 16, 16, Y6 + 17, 'F');
+    fill(9, Y6 + 11, 39, Y6 + 12, 'L');                                  // ろうか
+    fill(24, Y6 + 13, 24, Y6 + 13, 'L');                                 // 庭から ろうかへの 戸口 (1 マス)
+    fill(9, Y6 + 3, 16, Y6 + 9, 'L');  fill(12, Y6 + 10, 12, Y6 + 10, 'L');    // 西の間
+    fill(18, Y6 + 3, 30, Y6 + 9, 'O'); fill(24, Y6 + 10, 24, Y6 + 10, 'O');    // 奥の 間 (たたみ)
+    fill(32, Y6 + 3, 39, Y6 + 9, 'L'); fill(35, Y6 + 10, 35, Y6 + 10, 'L');    // 東の 蔵
+    fill(23, Y6 + 23, 24, Y6 + 23, 'K');                                 // 南の 門
+    fill(23, Y6 + 24, 24, Y6 + 31, 'K');                                 // 門への 道
+    fill(4, Y6 + 31, 6, Y6 + 31, 'K'); fill(4, Y6 + 32, 24, Y6 + 33, 'K');    // 駅から 門へ
+    [[3, Y6 + 4], [5, Y6 + 10], [2, Y6 + 16], [4, Y6 + 22], [43, Y6 + 4], [45, Y6 + 12], [42, Y6 + 20], [44, Y6 + 27], [14, Y6 + 27], [33, Y6 + 28], [38, Y6 + 31]]
+        .forEach(([x, y]) => { t[y][x] = 'T'; });
     return t.map(row => row.join(''));
 }
 export const TILES = build();
@@ -183,7 +208,9 @@ export const BUILDINGS = [
     { id: 'hondou', label: 'ネット寺 本堂', x: 17, y: TERA_Y0 + 1, w: 14, h: 6, wall: '#b88a5a', roof: '#3a3a48', door: { x: 23, y: TERA_Y0 + 6 } },
     { id: 'shouro', label: '鐘楼', x: 9, y: TERA_Y0 + 3, w: 5, h: 4, wall: '#a87a4a', roof: '#3a3a48', door: { x: 11, y: TERA_Y0 + 6 } },
     { id: 'shoko', label: '書庫', x: 34, y: TERA_Y0 + 3, w: 6, h: 4, wall: '#c8a878', roof: '#4a3a3a', door: { x: 36, y: TERA_Y0 + 6 } },
-    { id: 'teraStation', label: 'ネット寺前駅', x: 2, y: TERA_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#5a3a8a', door: { x: 5, y: TERA_Y0 + 30 } }
+    { id: 'teraStation', label: 'ネット寺前駅', x: 2, y: TERA_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#5a3a8a', door: { x: 5, y: TERA_Y0 + 30 } },
+    // 忍びの屋敷 (6 章)
+    { id: 'yashikiStation', label: '忍びの屋敷前駅', x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#3a3a3a', door: { x: 5, y: YASHIKI_Y0 + 30 } }
 ];
 
 // 商店街へ 行く 道の 工事中の さく (1 章 クリアまで 通れない。調べると わけが わかる)
@@ -211,6 +238,8 @@ export const UMI_LV = [15, 18];
 export const CAVE_LV = [17, 20];
 // ネット寺の キャラの Lv (5 章)
 export const TERA_LV = [19, 22];
+// 忍びの屋敷の キャラの Lv (6 章)
+export const YASHIKI_LV = [22, 25];
 
 // かくれている キャラ (レンズで さがす。2026-10-26 ユーザー指定: ふだんの 画面でも「なにか へん」と わかるように 化けている)
 //   x, y はマス。cue: ふだんの 画面に 出す 違和感の 絵 (view/field.js の drawCue)
@@ -238,7 +267,10 @@ export const SPOTS = [
     { id: 'shiodamari', label: 'どうくつの しおだまり', x: 36, y: UMI_Y0 + 15, cue: 'tidePool', lv: CAVE_LV, kinds: [{ id: 'isoginchakku', w: 1 }] },
     // ネット寺 (5 章)
     { id: 'saisen', label: '本堂の 前の おさいせん箱', x: 19, y: TERA_Y0 + 8, cue: 'glitch', lv: TERA_LV, kinds: [{ id: 'nullpon', w: 1 }] },
-    { id: 'takeOku', label: '竹やぶの おく', x: 8, y: TERA_Y0 + 29, cue: 'nightEyes', lv: TERA_LV, kinds: [{ id: 'notfound', w: 1, time: ['evening', 'night'] }] }
+    { id: 'takeOku', label: '竹やぶの おく', x: 8, y: TERA_Y0 + 29, cue: 'nightEyes', lv: TERA_LV, kinds: [{ id: 'notfound', w: 1, time: ['evening', 'night'] }] },
+    // 忍びの屋敷 (6 章)
+    { id: 'tenjou', label: '西の間の 天井うら', x: 14, y: YASHIKI_Y0 + 4, cue: 'nightEyes', lv: YASHIKI_LV, kinds: [{ id: 'geninman', w: 1 }] },
+    { id: 'kuraTsubo', label: '蔵の すみ', x: 38, y: YASHIKI_Y0 + 8, cue: 'glitch', lv: YASHIKI_LV, kinds: [{ id: 'makibikonmk3', w: 1 }] }
 ];
 
 // 見えている キャラが 歩きまわる 場所 (なかまの 大多数はこちら)。x0..x1, y0..y1 はマス。max: 同時に 出る 数。lv: 出る Lv の はば
@@ -282,7 +314,12 @@ export const ROAMS = [
     { id: 'keidai', label: 'ネット寺の 境内', x0: 8, y0: TERA_Y0 + 8, x1: 40, y1: TERA_Y0 + 15, max: 2, lv: TERA_LV, kinds: [{ id: 'bugmushi', w: 2 }, { id: 'csspakkun', w: 2 }, { id: 'mugenloop', w: 1, time: ['evening', 'night'] }, { id: 'daishi', w: 1, after: 'clear5' }] },
     { id: 'sandou', label: 'ネット寺の 参道', x0: 22, y0: TERA_Y0 + 16, x1: 25, y1: TERA_Y0 + 31, max: 1, lv: TERA_LV, kinds: [{ id: 'firewall', w: 1 }, { id: 'htmlmokkun', w: 1, after: 'clear5' }, { id: 'loadingu', w: 1, after: 'clear5' }, { id: 'enjoubouzu', w: 1, after: 'clear5' }] },
     { id: 'takeyabu', label: '竹やぶ', x0: 1, y0: TERA_Y0 + 17, x1: 19, y1: TERA_Y0 + 30, max: 2, lv: TERA_LV, kinds: [{ id: 'bugmushi', w: 1 }, { id: 'csspakkun', w: 1 }, { id: 'firewall', w: 1 }] },
-    { id: 'ikenohata', label: '池の ほとり', x0: 27, y0: TERA_Y0 + 17, x1: 45, y1: TERA_Y0 + 31, max: 1, lv: TERA_LV, kinds: [{ id: 'virusn', w: 2 }, { id: 'mugenloop', w: 1 }] }
+    { id: 'ikenohata', label: '池の ほとり', x0: 27, y0: TERA_Y0 + 17, x1: 45, y1: TERA_Y0 + 31, max: 1, lv: TERA_LV, kinds: [{ id: 'virusn', w: 2 }, { id: 'mugenloop', w: 1 }] },
+    // 忍びの屋敷 (6 章)。ズミタニは 6 章 クリアの あと (clear6) 庭を 歩きまわる
+    { id: 'niwa', label: '屋敷の 庭', x0: 9, y0: YASHIKI_Y0 + 14, x1: 39, y1: YASHIKI_Y0 + 22, max: 2, lv: YASHIKI_LV, kinds: [{ id: 'shurikenbo', w: 2 }, { id: 'konin', w: 2 }, { id: 'aoonibo', w: 1 }, { id: 'zumitani', w: 1, after: 'clear6' }] },
+    { id: 'rouka6', label: '屋敷の ろうか', x0: 9, y0: YASHIKI_Y0 + 11, x1: 39, y1: YASHIKI_Y0 + 12, max: 1, lv: YASHIKI_LV, kinds: [{ id: 'kanabone', w: 2 }, { id: 'hyoutanoni', w: 1, time: ['evening', 'night'] }] },
+    { id: 'nishinoma', label: '西の間', x0: 9, y0: YASHIKI_Y0 + 3, x1: 16, y1: YASHIKI_Y0 + 9, max: 1, lv: YASHIKI_LV, kinds: [{ id: 'taikooni', w: 1 }, { id: 'bakudanjirou', w: 2 }] },
+    { id: 'yashikiSoto', label: '屋敷の まわり', x0: 1, y0: YASHIKI_Y0 + 24, x1: 46, y1: YASHIKI_Y0 + 33, max: 2, lv: YASHIKI_LV, kinds: [{ id: 'shurikenbo', w: 1 }, { id: 'konin', w: 1 }, { id: 'bakudanjirou', w: 1 }] }
 ];
 
 // 話せる キャラ (2026-10-28 ユーザー指定: 町の キャラは、戦える キャラに 赤い「！」が つき、
@@ -328,7 +365,11 @@ export const PEOPLE = [
     { id: 'urashima4', name: '浦の島重蔵', art: 'urashima', x: 43, y: UMI_Y0 + 1, h: 2, only: 'urashima4', scale: 1.5 },
     // 5 章: 本堂の 前の ダイシ。紋つきの 3 体を 助けるまでは 話せる 和尚、助けたあとは 黒い 紋に のまれて ボスに なる
     { id: 'daishiNpc', name: 'ダイシ', art: 'daishi', x: 26, y: TERA_Y0 + 8, only: 'daishiNpc', scale: 1.3 },
-    { id: 'daishi5', name: 'ダイシ', art: 'daishi', x: 26, y: TERA_Y0 + 8, only: 'daishi5', scale: 1.5 }
+    { id: 'daishi5', name: 'ダイシ', art: 'daishi', x: 26, y: TERA_Y0 + 8, only: 'daishi5', scale: 1.5 },
+    // 6 章: 庭の 戸口を ふさぐ ズミタニ → 奥の 間の おにおに (ルキハに あやつられている) → 東の 蔵の 鬼鬼団の 幹部 トモオカ
+    { id: 'zumitani6', name: 'ズミタニ', art: 'zumitani', x: 24, y: YASHIKI_Y0 + 14, only: 'zumitani6', scale: 1.2 },
+    { id: 'onioni6', name: 'おにおに', art: 'onioni', x: 24, y: YASHIKI_Y0 + 5, only: 'onioni6' },
+    { id: 'tomooka6', name: 'トモオカ', art: 'tomooka', x: 35, y: YASHIKI_Y0 + 5, only: 'tomooka6', scale: 1.3 }
 ];
 
 // こおりくんが 始める 場所 (家の 前)
@@ -401,6 +442,17 @@ export const STATION_OUT = { x: 5, y: 41, dir: 'down' };
 // ボスに 勝った あと (どうくつの 出口の 外)
 export const UMI_AFTER_BOSS = { x: 28, y: UMI_Y0 + 11, dir: 'right' };
 // 地図の 名札
+// ----- 忍びの屋敷 (6 章「忍びの屋敷と 消えた メダル」。2026-10-29) -----
+export const YASHIKI_IN = { x: 5, y: YASHIKI_Y0 + 31, dir: 'down' };
+export const YASHIKI_PLACES = [
+    { id: 'okunoma', label: '奥の間', x: 24, y: YASHIKI_Y0 + 4 },
+    { id: 'nishinoma', label: '西の間', x: 12.5, y: YASHIKI_Y0 + 4 },
+    { id: 'kura', label: '蔵', x: 35.5, y: YASHIKI_Y0 + 4 },
+    { id: 'niwa', label: '庭', x: 18, y: YASHIKI_Y0 + 18 },
+    { id: 'mon', label: '門', x: 23.5, y: YASHIKI_Y0 + 23 },
+    { id: 'yashikiStation', label: '駅', x: 5, y: YASHIKI_Y0 + 28 }
+];
+
 // ----- ネット寺 (5 章「ネット寺の のろい」。2026-10-29) -----
 export const TERA_IN = { x: 5, y: TERA_Y0 + 31, dir: 'down' };
 // ボスに 勝った あと (書庫の 前)
@@ -435,9 +487,9 @@ export const UMI_PLACES = [
 
 export const tileAt = (x, y) => (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? 'T' : TILES[y][x]);
 // その マスの 地区 (設計書 5.1)
-export const areaAt = (x, y) => (y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
+export const areaAt = (x, y) => (y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
 export const inSchoolTile = y => y >= SCHOOL_Y0 && y < YAMA_Y0;
 // 町・学校・山・海 は つながって いないので、カメラと 地図は べつに する。[上, 下) の マス
-export const regionOf = ty => (ty >= TERA_Y0 ? [TERA_Y0, MAP_H] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
+export const regionOf = ty => (ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MAP_H] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
 // どうくつの 中か (4 章。バトルの 背景が かわる)
 export const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;

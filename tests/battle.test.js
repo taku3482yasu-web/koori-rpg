@@ -404,3 +404,82 @@ test('5 章の ダイシ: お経を となえきると 必殺技。となえて�
     assert.ok(b2.events.some(e => e.type === 'special' && e.big && e.name === 'ネット念仏'), 'となえきると ネット念仏');
     void hp;
 });
+
+test('6 章の ズミタニ: 分身が いる あいだは ロックオンした あいてにだけ 当たる。本物なら 見やぶり、分身なら しかえし', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const make = () => {
+        const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 40 }, { uid: 'b', id: 'kogame', lv: 40 }, { uid: 'c', id: 'haribaby', lv: 40 }], enemies: [{ id: 'zumitani6', lv: 26 }], rng: createRng(11), kind: 'boss' });
+        const boss = b.enemies[0];
+        // 分身を 出させる
+        boss.bossMoves = boss.bossMoves.filter(m => m.clones);
+        boss.timer = 99;
+        step(b, 0.05);
+        return { b, boss };
+    };
+    let { b, boss } = make();
+    assert.ok(b.clones, '分身が 出た');
+    assert.equal(b.enemies.length, 3);
+    assert.equal(b.enemies.filter(e => e.clone).length, 2);
+    // ロックオン なしでは 当たらない
+    const hp0 = boss.hp;
+    b.wheel.forEach(u => { if (u) u.timer = 99; });
+    step(b, 0.05);
+    assert.equal(boss.hp, hp0, 'ロックオンしないと 当たらない');
+    assert.ok(b.events.some(e => e.type === 'miss' && e.clone));
+    // 本物を ロックオン → 見やぶって 分身が 消える
+    lockOn(b, boss.uid);
+    for (let i = 0; i < 40 && b.clones; i++) { b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+    assert.ok(!b.clones && boss.hp < hp0, '本物を 見やぶった');
+    assert.ok(b.events.some(e => e.type === 'clonesEnd' && e.why === 'found'));
+    // 分身を ロックオン → しかえし (ダメージと とりつき)
+    ({ b, boss } = make());
+    const clone = b.enemies.find(e => e.clone);
+    lockOn(b, clone.uid);
+    b.wheel[0].timer = 99;
+    for (let i = 0; i < 40 && !b.events.some(e => e.type === 'cloneFail'); i++) { b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+    const fail = b.events.find(e => e.type === 'cloneFail');
+    assert.ok(fail, '分身を 攻撃して しっぱい');
+    assert.ok(!b.enemies.includes(clone), 'その 分身は 消える');
+    const who = b.wheel.find(u => u && u.uid === fail.actor);
+    assert.ok(who.status.possess > 0 && who.hp < who.max, '当てた なかまに ダメージと とりつき');
+});
+
+test('6 章の ズミタニ: 分身は 瞬間移動で 位置が かわり、時間で 消える', async () => {
+    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 40 }], enemies: [{ id: 'zumitani6', lv: 26 }], rng: createRng(4), kind: 'boss' });
+    const boss = b.enemies[0];
+    boss.bossMoves = boss.bossMoves.filter(m => m.clones);
+    boss.timer = 99;
+    step(b, 0.05);
+    let tp = 0;
+    for (let i = 0; i < 300 && b.clones; i++) { boss.timer = -99; b.wheel[0].timer = -99; step(b, 0.05); }
+    tp = b.events.filter(e => e.type === 'teleport').length;
+    assert.ok(tp >= 3, `瞬間移動 ${tp} 回`);
+    assert.ok(!b.clones && b.events.some(e => e.type === 'clonesEnd' && e.why === 'time'));
+    assert.equal(b.enemies.length, 1);
+});
+
+test('6 章の トモオカ: 体を 攻撃されると 右腕が 大きく、右腕を ねらうと しぼむ。限界で 防御不能の 丘砕きの一撃', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 40 }, { uid: 'b', id: 'kogame', lv: 40 }, { uid: 'c', id: 'haribaby', lv: 40 }], enemies: [{ id: 'tomooka6', lv: 28 }], rng: createRng(2), kind: 'boss' });
+    const boss = b.enemies[0];
+    const start = boss.armLv;
+    const hit = n => { for (let i = 0; i < n; i++) { b.wheel.forEach(u => { if (u) u.timer = 99; }); boss.hp = boss.max; step(b, 0.05); } };
+    hit(4);
+    assert.ok(boss.armLv > start, '体を たたくと 右腕が 大きく なる');
+    // 限界まで → ため → 防御不能の 一撃
+    for (let i = 0; i < 200 && !b.armCharge; i++) hit(1);
+    assert.equal(boss.armLv, boss.armDef.max);
+    assert.ok(b.armCharge, '限界で ために 入る');
+    // 右腕を ねらって しぼませると 止まる
+    assert.ok(lockOn(b, boss.uid, 'arm'));
+    for (let i = 0; i < 200 && b.armCharge; i++) hit(1);
+    assert.ok(!b.armCharge && boss.armLv < boss.armDef.max, '右腕が しぼんで 止まる');
+    assert.ok(b.events.some(e => e.type === 'bigCancel' && e.arm));
+    // ためきると 打つ (まもりも むし)
+    boss.armLv = boss.armDef.max;
+    b.armCharge = { uid: boss.uid, left: 0.01 };
+    b.wheel.forEach(u => { if (u) u.guarding = true; });
+    step(b, 0.05);
+    assert.ok(b.events.some(e => e.type === 'special' && e.name === '丘砕きの一撃'));
+    assert.equal(boss.armLv, boss.armDef.after, '打つと 右腕は もとに もどる');
+});

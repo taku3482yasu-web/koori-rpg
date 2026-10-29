@@ -24,7 +24,11 @@ export function peopleHere(g) {
         (p.only === 'urashima4' && g.story === 'umibe' && g.flags.rival4) ||
         // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
         (p.only === 'daishiNpc' && g.story === 'netdera' && monsHere(g).length > 0) ||
-        (p.only === 'daishi5' && g.story === 'netdera' && !monsHere(g).length));
+        (p.only === 'daishi5' && g.story === 'netdera' && !monsHere(g).length) ||
+        // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
+        (p.only === 'zumitani6' && g.story === 'yashiki' && !g.flags.zumi6) ||
+        (p.only === 'onioni6' && g.story === 'yashiki' && g.flags.zumi6 && !g.flags.oni6) ||
+        (p.only === 'tomooka6' && g.story === 'yashiki' && g.flags.oni6));
 }
 // 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)
 export const personName = (g, p) => (p.nameBy ? p.nameBy[g.version] || p.name : p.name);

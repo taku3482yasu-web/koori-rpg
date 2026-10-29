@@ -15,7 +15,10 @@
 //   clear4   4 章 クリア。ここから 5 章「ネット寺の のろい」: 家の 前の ともいしと 話すと ダイシの 手紙
 //   tera     石の川駅から 電車で ネット寺へ 行ける
 //   netdera  ネット寺に 着いた。黒い 紋の 3 体を 助ける (g.mysteries・なかまに なる) → 紋に のまれた ダイシ (ボス)
-//   clear5   5 章 クリア。なかまを あつめる (順番は story.js)
+//   clear5   5 章 クリア。ここから 6 章「忍びの屋敷と 消えた メダル」: 家の 前の ともいしと 話す
+//   shinobi  石の川駅から 電車で 忍びの屋敷へ 行ける
+//   yashiki  屋敷に 着いた。ボス 3 回: 庭の ズミタニ (flags.zumi6) → 奥の 間の おにおに (flags.oni6) → 東の 蔵の トモオカ
+//   clear6   6 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
@@ -216,12 +219,16 @@ export function applyBattleResult(g, battle, rng) {
         const bossId = battle.enemies.find(e => BOSSES[e.id])?.id || 'nushi';
         const id = BOSSES[bossId].befriends;
         out.bossId = bossId;
-        out.befriend = { id, medal: addMedal(g, id, bossId === 'nushi' ? 6 : BOSSES[bossId].lv - 2), forced: true };
+        // なかまに ならない ボス (6 章の おにおに・トモオカ) も いる
+        if (id) out.befriend = { id, medal: addMedal(g, id, bossId === 'nushi' ? 6 : BOSSES[bossId].lv - 2), forced: true };
         if (bossId === 'nushi') { g.story = 'clear'; g.chapter = 2; }
         if (bossId === 'kage') { g.story = 'clear2'; g.chapter = 3; }
         if (bossId === 'himuro') { g.story = 'clear3'; g.chapter = 4; }
         if (bossId === 'urashima4') { g.story = 'clear4'; g.chapter = 5; }
         if (bossId === 'daishi5') { g.story = 'clear5'; g.chapter = 6; }
+        if (bossId === 'zumitani6') g.flags.zumi6 = true;
+        if (bossId === 'onioni6') g.flags.oni6 = true;
+        if (bossId === 'tomooka6') { g.story = 'clear6'; g.chapter = 7; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -298,11 +305,16 @@ export function objective(g) {
             const n = monsSaved(g);
             return n < MONS.length ? `ネット寺の 黒い 紋の なかまを 助けよう (${n}/${MONS.length})` : '本堂の 前の ダイシの ようすが へんだ……！';
         }
+        // 6 章「忍びの屋敷と 消えた メダル」
+        case 'clear5': return 'こおりくんの 家の 前の ともいしと 話そう';
+        case 'shinobi': return '石の川駅から、電車で 忍びの屋敷へ 行こう';
+        case 'yashiki': return !g.flags.zumi6 ? '忍びの屋敷の 庭で ズミタニに 会おう'
+            : !g.flags.oni6 ? '屋敷の いちばん 奥の「奥の間」へ 行こう' : '東の 蔵で 鬼鬼団の 幹部を たおして メダルを とりもどそう';
         default: {
-            // 5 章 クリアの あと: なかま あつめ
+            // 6 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}・${part('yashiki', '屋敷')}`;
         }
     }
 }
@@ -322,7 +334,20 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : [])];
+
+// 6 章の はじまり: 5 章 クリアの あと ともいしと 話す。はじめて なら true
+export function startChapter6(g) {
+    if (g.story !== 'clear5') return false;
+    g.story = 'shinobi';
+    return true;
+}
+// 忍びの屋敷に はじめて 着いた。はじめて なら true
+export function arriveYashiki(g) {
+    if (g.story !== 'shinobi') return false;
+    g.story = 'yashiki';
+    return true;
+}
 
 // 5 章の はじまり: 4 章 クリアの あと ともいしと 話すと ダイシの 手紙。はじめて なら true
 export function startChapter5(g) {

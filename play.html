@@ -706,6 +706,19 @@ body.nopad #pad { display: none; }
     virusn: W$1("ウイルス感染", "ふしぎ", "front", 0.9, "poison", 0.8),
     firewall: W$1("ファイアウォール", "ほのお", "around", 1.1, "poison", 0.3),
     daishi: W$1("説法", "ふしぎ", "around", 0.6, "sleep", 0.4),
+    // 忍びの屋敷 (6 章)。ひるみ は こんらん・まひ は のろい
+    geninman: W$1("しゅりけん", "ふつう", "line", 1),
+    shurikenbo: W$1("回転突進", "かぜ", "front", 1.6),
+    bakudanjirou: W$1("ばくだん なげ", "ほのお", "line", 1.3),
+    konin: W$1("こおにパンチ", "ほのお", "front", 1.2),
+    aoonibo: W$1("あおおにしぶき", "みず", "line", 1.2),
+    kanabone: W$1("かなぼう", "ふつう", "front", 1.6),
+    makibikonmk3: W$1("ビーム", "ふつう", "line", 1.2),
+    hyoutanoni: W$1("ひょうたんの酒", "ふしぎ", "front", 0.9, "confuse", 0.6),
+    taikooni: W$1("かみなりだいこ", "かぜ", "around", 1, "slow", 0.3),
+    jouninman: W$1("かげぎり", "かぜ", "front", 1.6, "confuse", 0.2),
+    daibakudanjirou: W$1("大ばくはつ", "ほのお", "around", 2.4),
+    zumitani: W$1("クナイ乱れうち", "かぜ", "line", 1.3),
     // 進化で なる キャラ (ダンジョンの 進化先)
     harigeneral: W$1("針とばし", "ふつう", "line", 1.2),
     joubachi: W$1("じょおうばり", "かぜ", "front", 1.5, "poison", 0.4),
@@ -736,7 +749,10 @@ body.nopad #pad { display: none; }
     kage: W$1("影の とりつき", "ふしぎ", "around", 0.6, "possess", 0.3),
     himuro: W$1("ふぶき", "こおり", "around", 1.3, "slow", 0.3),
     urashima4: W$1("玉手箱", "ふしぎ", "around", 0.8, "confuse", 0.5),
-    daishi5: W$1("説法", "ふしぎ", "around", 0.6, "sleep", 0.4)
+    daishi5: W$1("説法", "ふしぎ", "around", 0.6, "sleep", 0.4),
+    zumitani6: W$1("クナイ乱れうち", "かぜ", "line", 1.3),
+    onioni6: W$1("金棒 たたき", "ほのお", "front", 1.4),
+    tomooka6: W$1("右ストレート", "ふつう", "front", 1.3)
   };
   function wazaEffects(w) {
     if (w.heal) return [{ kind: "heal", target: "lowest", power: w.heal }];
@@ -1948,6 +1964,191 @@ body.nopad #pad { display: none; }
       desc: "ASO四天王の1人。有名な和尚で、いろいろな所に出向いてお経をあげてきた。仏の顔と鬼の顔をあわせ持ち、鬼になると戦闘力は計り知れない。最近はネットの世界を救おうと「ネット寺」を立ち上げた。",
       special: sp("鬼の 顔", [{ kind: "buff", target: "self", stat: "atk", amount: 0.6, time: 10 }, atk("all", 1.5, { magic: true, element: "ふしぎ" })])
     },
+    // ----- 忍びの屋敷の 10 体 (6 章「忍びの屋敷と 消えた メダル」。2026-10-29。ダンジョンの 忍びの屋敷と 鬼鬼団の キャラ。D 6・C 4) -----
+    //   ズミタニは 屋敷の 門の ボス (影分身) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+      id: "geninman",
+      name: "ゲニンマン",
+      from: "ダンジョン 022",
+      area: "yashiki",
+      rank: "D",
+      element: "ふつう",
+      role: "attacker",
+      mul: {},
+      line: "あ、まだいたんですね～",
+      favorite: "onigiri",
+      title: "忍者の男",
+      desc: "忍者の一員。静かに行動し、敵を狙って攻撃する。",
+      special: sp("下忍の 百本手裏剣", [atk("all", 1.7)])
+    },
+    {
+      id: "shurikenbo",
+      name: "シュリケンボー",
+      from: "ダンジョン 026",
+      area: "yashiki",
+      rank: "D",
+      element: "かぜ",
+      role: "attacker",
+      mul: {},
+      line: "シュルルル！",
+      favorite: "choco",
+      title: "手裏剣の妖怪。",
+      desc: "手裏剣の付喪神。最近は手裏剣戦隊ニンニンジャーにあこがれている。",
+      special: sp("大回転 しゅりけん", [atk("all", 1.7)])
+    },
+    {
+      id: "bakudanjirou",
+      name: "バクダンジロウ",
+      from: "ダンジョン 028",
+      area: "yashiki",
+      rank: "D",
+      element: "ほのお",
+      role: "attacker",
+      mul: {},
+      line: "あとはまかせた～！",
+      favorite: "cider",
+      title: "儚き命。",
+      desc: "爆弾の忍者。爆発すると死ぬ。どう見たって儚いだろ！",
+      special: sp("あとは まかせた 大爆発", [atk("all", 1.7)])
+    },
+    {
+      id: "konin",
+      name: "コオニン",
+      from: "ダンジョン V11",
+      area: "yashiki",
+      rank: "D",
+      element: "ほのお",
+      role: "attacker",
+      mul: {},
+      line: "オニ！ オニ！",
+      favorite: "cider",
+      title: "見習いの鬼",
+      desc: "鬼鬼団の見習い。いつかゴウキオニのような一番槍になりたい。",
+      special: sp("こおに 連打", [atk("all", 1.7)])
+    },
+    {
+      id: "aoonibo",
+      name: "アオオニボ",
+      from: "ダンジョン V12",
+      area: "yashiki",
+      rank: "D",
+      element: "みず",
+      role: "defender",
+      mul: {},
+      line: "あおくて わるいか",
+      favorite: "niboshi",
+      title: "青い鬼",
+      desc: "青い体の鬼。青いことを気にしているが、気にしていないふりをしている。",
+      special: sp("あおおに 大しぶき", [atk("one", 2), { kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }])
+    },
+    {
+      id: "kanabone",
+      name: "カナボーン",
+      from: "ダンジョン V13",
+      area: "yashiki",
+      rank: "D",
+      element: "ふつう",
+      role: "attacker",
+      mul: {},
+      line: "鬼に かなぼう だ！",
+      favorite: "onigiri",
+      title: "金棒の付喪神",
+      desc: "鬼に持たれ続けた金棒が命を宿した。鬼に金棒というが、金棒にも鬼が必要らしい。",
+      special: sp("金棒 ぶんまわし", [atk("all", 1.7)])
+    },
+    {
+      id: "makibikonmk3",
+      name: "マキビコンMk-3",
+      from: "ダンジョン 049",
+      area: "yashiki",
+      rank: "C",
+      element: "ふつう",
+      role: "attacker",
+      mul: {},
+      line: "計算中であります…エラーであります",
+      favorite: "onigiri",
+      title: "オールドタイプ",
+      desc: "古いタイプのマキビコン。計算能力は高いが、最新機能は搭載されていない。",
+      special: sp("エラー ビーム", [atk("all", 1.7)])
+    },
+    {
+      id: "hyoutanoni",
+      name: "ヒョウタンオニ",
+      from: "ダンジョン V16",
+      area: "yashiki",
+      rank: "C",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: {},
+      line: "ひっく……もう いっぱい……",
+      favorite: "melonpan",
+      title: "ひょうたんの酒鬼",
+      desc: "ひょうたんの酒を手放さない鬼。もう一杯が口ぐせで、飲みすぎて城の廊下で寝ている。",
+      special: sp("よっぱらい 大宴会", [atk("all", 0.8, { magic: true }), { kind: "status", target: "all", status: "confuse", chance: 0.6 }])
+    },
+    {
+      id: "taikooni",
+      name: "タイコオニ",
+      from: "ダンジョン V17",
+      area: "yashiki",
+      rank: "C",
+      element: "かぜ",
+      role: "supporter",
+      mul: {},
+      line: "ドドン！ カッ！",
+      favorite: "choco",
+      title: "太鼓の鬼",
+      desc: "太鼓をたたいて仲間を元気づける鬼。ヨシブックとは太鼓仲間らしい。",
+      special: sp("雷 だいこ 乱れ打ち", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, atk("all", 0.8)])
+    },
+    {
+      id: "zumitani",
+      name: "ズミタニ",
+      from: "アソ・ダンジョン",
+      area: "yashiki",
+      rank: "C",
+      element: "かぜ",
+      role: "attacker",
+      mul: { spd: 1.25, atk: 1.05 },
+      line: "やっほー、77代目の ズミタニだよ！ ついてこられるかな♪",
+      favorite: "choco",
+      title: "忍びの屋敷の主",
+      desc: "ASO四天王の1人。古くから続くズミタニ家の忍者で、77代目。すばやい動きで敵を翻弄する。口調は明るいが、言葉のふしぶしにとげがある。",
+      special: sp("影分身の術", [atk("all", 0.7, { hits: 3 })])
+    },
+    // 忍びの屋敷の キャラの 進化先 2 体 (6 章。町には 出ない)
+    {
+      id: "jouninman",
+      name: "ジョウニンマン",
+      from: "ダンジョン 066",
+      area: "yashiki",
+      evo: "geninman",
+      rank: "C",
+      element: "かぜ",
+      role: "attacker",
+      mul: {},
+      line: "もう いましたよ～",
+      favorite: "choco",
+      title: "上忍の男",
+      desc: "ゲニンマンが修行を積んで上忍になった姿。気配を消すのがうますぎて、仲間にも「もういたんですね」と言われる。",
+      special: sp("上忍の かげ斬り", [atk("all", 1.7)])
+    },
+    {
+      id: "daibakudanjirou",
+      name: "ダイバクダンジロウ",
+      from: "ダンジョン 068",
+      area: "yashiki",
+      evo: "bakudanjirou",
+      rank: "C",
+      element: "ほのお",
+      role: "attacker",
+      mul: {},
+      line: "あとは まかせた～～！！",
+      favorite: "cider",
+      title: "さらに儚き命。",
+      desc: "バクダンジロウがマグマの石で進化した姿。爆発の大きさは何倍にもなった。そして爆発すると死ぬ。どう見たってさらに儚いだろ！",
+      special: sp("超 大ばくはつ", [atk("all", 1.7)])
+    },
     // ----- 進化で なる 16 体 (2026-10-29。ダンジョンの 進化表の 進化先。evo: 進化する 前の キャラ) -----
     //   町には 出ない。進化前の キャラが 決まった Lv に なると 進化する (EVOLVE)。ランクは 進化前の 1 つ上、好物と 能力の くせは 進化前と 同じ
     //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
@@ -2213,7 +2414,7 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
-  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺" };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
@@ -2242,7 +2443,9 @@ body.nopad #pad { display: none; }
     yukidarumuscle: { to: "hyouzanmuscle", lv: 42 },
     takaramimic: { to: "kinkomimic", lv: 45 },
     koorimodoki: { to: "koorimodokishin", lv: 50 },
-    daichouenkin: { to: "daichouenou", lv: 30 }
+    daichouenkin: { to: "daichouenou", lv: 30 },
+    geninman: { to: "jouninman", lv: 35 },
+    bakudanjirou: { to: "daibakudanjirou", lv: 34 }
   };
   const evolveOf = (id) => EVOLVE[id] || null;
   const BOSSES = {
@@ -2409,6 +2612,82 @@ body.nopad #pad { display: none; }
       befriends: "daishi",
       lv: 23,
       place: "tera"
+    },
+    // ----- 6 章の ボス 3 体 (2026-10-29 ユーザー指定) -----
+    // 屋敷の 門: ズミタニ。かげぶんしんで 2 体の 分身を 出し、4 秒ごとに 瞬間移動で 3 体の 位置を 入れかえる (14 秒で 消える)。
+    //   分身が いる あいだは ロックオン した あいてにしか 攻撃が 当たらない。本物なら 分身が 消えて ダメージ 1.3 倍、
+    //   分身を ねらうと しっぱい: 当てた なかまに ダメージと とりつき (分身は 1 体 消える)。clones・battle.js の summonClones
+    zumitani6: {
+      id: "zumitani6",
+      name: "ズミタニ",
+      element: "かぜ",
+      role: "attacker",
+      art: "zumitani",
+      scale: 1.4,
+      rank: "B",
+      base: { hp: 660, atk: 15, def: 12, spd: 15, mag: 13 },
+      moves: [
+        { name: "クナイ乱れうち", w: 3, effects: [atk("all", 0.6, { element: "かぜ" })] },
+        { name: "忍び斬り", w: 3, effects: [atk("one", 1.4), { kind: "status", target: "one", status: "confuse", chance: 0.3 }] },
+        { name: "かげぶんしん", w: 4, clones: 2 }
+      ],
+      bigMove: { name: "百影 クナイ", every: 16, warn: 2.5, effects: [atk("all", 1.1, { element: "かぜ" })] },
+      clones: { count: 2, life: 14, teleport: 4, bonus: 1.3, counter: [atk("one", 1.5), { kind: "status", target: "one", status: "possess", chance: 1 }] },
+      befriends: "zumitani",
+      lv: 26,
+      place: "yashiki"
+    },
+    // 奥の 間: ルキハに あやつられた おにおに (第 1 形態だけ)。ふつうの 攻撃と、予告つきの 凪払い (全体)。なかまには ならない
+    onioni6: {
+      id: "onioni6",
+      name: "おにおに",
+      element: "ほのお",
+      role: "attacker",
+      art: "onioni",
+      scale: 2,
+      rank: "B",
+      base: { hp: 900, atk: 18, def: 14, spd: 12, mag: 11 },
+      moves: [
+        { name: "金棒 たたき", w: 3, effects: [atk("one", 1.4)] },
+        { name: "鬼パンチ", w: 3, effects: [atk("one", 1.1)] },
+        { name: "お金かえせ！", w: 1.5, effects: [{ kind: "status", target: "one", status: "slow", chance: 0.7 }] }
+      ],
+      bigMove: { name: "凪払い", every: 11, warn: 2.5, effects: [atk("all", 1.3)] },
+      befriends: null,
+      lv: 27,
+      place: "yashiki"
+    },
+    // 東の 蔵: 鬼鬼団の 幹部 トモオカ (新キャラ)。体を 攻撃される たびに 右腕が 大きく なり (1 回で 1 段・10 段で 限界)、
+    //   限界に なると 4 秒 ためて 防御不能の 必殺技「丘砕きの一撃」。右腕を ロックオンして 当てると、最大HP の 3.5% ごとに 1 段ずつ
+    //   しぼむ (体への ダメージは 40% だけ)。ためている あいだに 限界より 小さく すると 止まる。arm・battle.js の armHit
+    tomooka6: {
+      id: "tomooka6",
+      name: "トモオカ",
+      element: "ふつう",
+      role: "attacker",
+      art: "tomooka",
+      scale: 2,
+      rank: "B",
+      base: { hp: 820, atk: 16, def: 15, spd: 9, mag: 10 },
+      moves: [
+        { name: "右ストレート", w: 3, effects: [atk("one", 1.3)] },
+        { name: "地ならし", w: 2, effects: [atk("all", 0.6)] },
+        { name: "にらみ", w: 1.5, effects: [{ kind: "status", target: "all", status: "slow", chance: 0.4 }] }
+      ],
+      arm: {
+        max: 10,
+        start: 2,
+        perHit: 1,
+        step: 0.035,
+        bodyCut: 0.4,
+        charge: 4,
+        after: 0,
+        move: { name: "丘砕きの一撃", effects: [atk("all", 2.6, { unguardable: true })] }
+      },
+      gims: { arm: { name: "右腕", hp: 99, when: "always", pos: [-1.15, -0.68], arm: true } },
+      befriends: null,
+      lv: 28,
+      place: "yashiki"
     }
   };
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
@@ -2469,13 +2748,14 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 192;
+  const MAP_W = 48, MAP_H = 228;
   const TOWN_H = 36;
   const SCHOOL_Y0 = 60;
   const YAMA_Y0 = 84;
   const UMI_Y0 = 120;
   const TERA_Y0 = 156;
-  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J"]);
+  const YASHIKI_Y0 = 192;
+  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z"]);
   const WET = /* @__PURE__ */ new Set(["D", "E", "I"]);
   function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("G"));
@@ -2604,6 +2884,29 @@ body.nopad #pad { display: none; }
     ].forEach(([x, y]) => {
       t[y][x] = "T";
     });
+    const Y6 = YASHIKI_Y0;
+    fill(0, Y6, MAP_W - 1, MAP_H - 1, "T");
+    fill(1, Y6 + 1, MAP_W - 2, Y6 + 34, "G");
+    fill(8, Y6 + 2, 40, Y6 + 23, "Z");
+    fill(9, Y6 + 14, 39, Y6 + 22, "G");
+    fill(22, Y6 + 15, 25, Y6 + 22, "K");
+    fill(30, Y6 + 16, 35, Y6 + 19, "W");
+    fill(11, Y6 + 16, 16, Y6 + 17, "F");
+    fill(9, Y6 + 11, 39, Y6 + 12, "L");
+    fill(24, Y6 + 13, 24, Y6 + 13, "L");
+    fill(9, Y6 + 3, 16, Y6 + 9, "L");
+    fill(12, Y6 + 10, 12, Y6 + 10, "L");
+    fill(18, Y6 + 3, 30, Y6 + 9, "O");
+    fill(24, Y6 + 10, 24, Y6 + 10, "O");
+    fill(32, Y6 + 3, 39, Y6 + 9, "L");
+    fill(35, Y6 + 10, 35, Y6 + 10, "L");
+    fill(23, Y6 + 23, 24, Y6 + 23, "K");
+    fill(23, Y6 + 24, 24, Y6 + 31, "K");
+    fill(4, Y6 + 31, 6, Y6 + 31, "K");
+    fill(4, Y6 + 32, 24, Y6 + 33, "K");
+    [[3, Y6 + 4], [5, Y6 + 10], [2, Y6 + 16], [4, Y6 + 22], [43, Y6 + 4], [45, Y6 + 12], [42, Y6 + 20], [44, Y6 + 27], [14, Y6 + 27], [33, Y6 + 28], [38, Y6 + 31]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -2638,7 +2941,9 @@ body.nopad #pad { display: none; }
     { id: "hondou", label: "ネット寺 本堂", x: 17, y: TERA_Y0 + 1, w: 14, h: 6, wall: "#b88a5a", roof: "#3a3a48", door: { x: 23, y: TERA_Y0 + 6 } },
     { id: "shouro", label: "鐘楼", x: 9, y: TERA_Y0 + 3, w: 5, h: 4, wall: "#a87a4a", roof: "#3a3a48", door: { x: 11, y: TERA_Y0 + 6 } },
     { id: "shoko", label: "書庫", x: 34, y: TERA_Y0 + 3, w: 6, h: 4, wall: "#c8a878", roof: "#4a3a3a", door: { x: 36, y: TERA_Y0 + 6 } },
-    { id: "teraStation", label: "ネット寺前駅", x: 2, y: TERA_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#5a3a8a", door: { x: 5, y: TERA_Y0 + 30 } }
+    { id: "teraStation", label: "ネット寺前駅", x: 2, y: TERA_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#5a3a8a", door: { x: 5, y: TERA_Y0 + 30 } },
+    // 忍びの屋敷 (6 章)
+    { id: "yashikiStation", label: "忍びの屋敷前駅", x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#3a3a3a", door: { x: 5, y: YASHIKI_Y0 + 30 } }
   ];
   const GATES = [
     { id: "gateW", x: 12, y: TOWN_H - 1, w: 2, only: "beforeClear" },
@@ -2656,6 +2961,7 @@ body.nopad #pad { display: none; }
   const UMI_LV = [15, 18];
   const CAVE_LV = [17, 20];
   const TERA_LV = [19, 22];
+  const YASHIKI_LV = [22, 25];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -2678,7 +2984,10 @@ body.nopad #pad { display: none; }
     { id: "shiodamari", label: "どうくつの しおだまり", x: 36, y: UMI_Y0 + 15, cue: "tidePool", lv: CAVE_LV, kinds: [{ id: "isoginchakku", w: 1 }] },
     // ネット寺 (5 章)
     { id: "saisen", label: "本堂の 前の おさいせん箱", x: 19, y: TERA_Y0 + 8, cue: "glitch", lv: TERA_LV, kinds: [{ id: "nullpon", w: 1 }] },
-    { id: "takeOku", label: "竹やぶの おく", x: 8, y: TERA_Y0 + 29, cue: "nightEyes", lv: TERA_LV, kinds: [{ id: "notfound", w: 1, time: ["evening", "night"] }] }
+    { id: "takeOku", label: "竹やぶの おく", x: 8, y: TERA_Y0 + 29, cue: "nightEyes", lv: TERA_LV, kinds: [{ id: "notfound", w: 1, time: ["evening", "night"] }] },
+    // 忍びの屋敷 (6 章)
+    { id: "tenjou", label: "西の間の 天井うら", x: 14, y: YASHIKI_Y0 + 4, cue: "nightEyes", lv: YASHIKI_LV, kinds: [{ id: "geninman", w: 1 }] },
+    { id: "kuraTsubo", label: "蔵の すみ", x: 38, y: YASHIKI_Y0 + 8, cue: "glitch", lv: YASHIKI_LV, kinds: [{ id: "makibikonmk3", w: 1 }] }
   ];
   const ROAMS = [
     { id: "kawakami", label: "夏の川上", x0: 25, y0: 1, x1: 29, y1: 5, max: 1, kinds: [{ id: "soumennagare", w: 1 }] },
@@ -2720,7 +3029,12 @@ body.nopad #pad { display: none; }
     { id: "keidai", label: "ネット寺の 境内", x0: 8, y0: TERA_Y0 + 8, x1: 40, y1: TERA_Y0 + 15, max: 2, lv: TERA_LV, kinds: [{ id: "bugmushi", w: 2 }, { id: "csspakkun", w: 2 }, { id: "mugenloop", w: 1, time: ["evening", "night"] }, { id: "daishi", w: 1, after: "clear5" }] },
     { id: "sandou", label: "ネット寺の 参道", x0: 22, y0: TERA_Y0 + 16, x1: 25, y1: TERA_Y0 + 31, max: 1, lv: TERA_LV, kinds: [{ id: "firewall", w: 1 }, { id: "htmlmokkun", w: 1, after: "clear5" }, { id: "loadingu", w: 1, after: "clear5" }, { id: "enjoubouzu", w: 1, after: "clear5" }] },
     { id: "takeyabu", label: "竹やぶ", x0: 1, y0: TERA_Y0 + 17, x1: 19, y1: TERA_Y0 + 30, max: 2, lv: TERA_LV, kinds: [{ id: "bugmushi", w: 1 }, { id: "csspakkun", w: 1 }, { id: "firewall", w: 1 }] },
-    { id: "ikenohata", label: "池の ほとり", x0: 27, y0: TERA_Y0 + 17, x1: 45, y1: TERA_Y0 + 31, max: 1, lv: TERA_LV, kinds: [{ id: "virusn", w: 2 }, { id: "mugenloop", w: 1 }] }
+    { id: "ikenohata", label: "池の ほとり", x0: 27, y0: TERA_Y0 + 17, x1: 45, y1: TERA_Y0 + 31, max: 1, lv: TERA_LV, kinds: [{ id: "virusn", w: 2 }, { id: "mugenloop", w: 1 }] },
+    // 忍びの屋敷 (6 章)。ズミタニは 6 章 クリアの あと (clear6) 庭を 歩きまわる
+    { id: "niwa", label: "屋敷の 庭", x0: 9, y0: YASHIKI_Y0 + 14, x1: 39, y1: YASHIKI_Y0 + 22, max: 2, lv: YASHIKI_LV, kinds: [{ id: "shurikenbo", w: 2 }, { id: "konin", w: 2 }, { id: "aoonibo", w: 1 }, { id: "zumitani", w: 1, after: "clear6" }] },
+    { id: "rouka6", label: "屋敷の ろうか", x0: 9, y0: YASHIKI_Y0 + 11, x1: 39, y1: YASHIKI_Y0 + 12, max: 1, lv: YASHIKI_LV, kinds: [{ id: "kanabone", w: 2 }, { id: "hyoutanoni", w: 1, time: ["evening", "night"] }] },
+    { id: "nishinoma", label: "西の間", x0: 9, y0: YASHIKI_Y0 + 3, x1: 16, y1: YASHIKI_Y0 + 9, max: 1, lv: YASHIKI_LV, kinds: [{ id: "taikooni", w: 1 }, { id: "bakudanjirou", w: 2 }] },
+    { id: "yashikiSoto", label: "屋敷の まわり", x0: 1, y0: YASHIKI_Y0 + 24, x1: 46, y1: YASHIKI_Y0 + 33, max: 2, lv: YASHIKI_LV, kinds: [{ id: "shurikenbo", w: 1 }, { id: "konin", w: 1 }, { id: "bakudanjirou", w: 1 }] }
   ];
   const FRIENDS = [
     {
@@ -2845,7 +3159,11 @@ body.nopad #pad { display: none; }
     { id: "urashima4", name: "浦の島重蔵", art: "urashima", x: 43, y: UMI_Y0 + 1, h: 2, only: "urashima4", scale: 1.5 },
     // 5 章: 本堂の 前の ダイシ。紋つきの 3 体を 助けるまでは 話せる 和尚、助けたあとは 黒い 紋に のまれて ボスに なる
     { id: "daishiNpc", name: "ダイシ", art: "daishi", x: 26, y: TERA_Y0 + 8, only: "daishiNpc", scale: 1.3 },
-    { id: "daishi5", name: "ダイシ", art: "daishi", x: 26, y: TERA_Y0 + 8, only: "daishi5", scale: 1.5 }
+    { id: "daishi5", name: "ダイシ", art: "daishi", x: 26, y: TERA_Y0 + 8, only: "daishi5", scale: 1.5 },
+    // 6 章: 庭の 戸口を ふさぐ ズミタニ → 奥の 間の おにおに (ルキハに あやつられている) → 東の 蔵の 鬼鬼団の 幹部 トモオカ
+    { id: "zumitani6", name: "ズミタニ", art: "zumitani", x: 24, y: YASHIKI_Y0 + 14, only: "zumitani6", scale: 1.2 },
+    { id: "onioni6", name: "おにおに", art: "onioni", x: 24, y: YASHIKI_Y0 + 5, only: "onioni6" },
+    { id: "tomooka6", name: "トモオカ", art: "tomooka", x: 35, y: YASHIKI_Y0 + 5, only: "tomooka6", scale: 1.3 }
   ];
   const START = { x: 6, y: 24 };
   const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
@@ -2988,6 +3306,15 @@ body.nopad #pad { display: none; }
   const UMI_IN = { x: 5, y: UMI_Y0 + 5, dir: "down" };
   const STATION_OUT = { x: 5, y: 41, dir: "down" };
   const UMI_AFTER_BOSS = { x: 28, y: UMI_Y0 + 11, dir: "right" };
+  const YASHIKI_IN = { x: 5, y: YASHIKI_Y0 + 31, dir: "down" };
+  const YASHIKI_PLACES = [
+    { id: "okunoma", label: "奥の間", x: 24, y: YASHIKI_Y0 + 4 },
+    { id: "nishinoma", label: "西の間", x: 12.5, y: YASHIKI_Y0 + 4 },
+    { id: "kura", label: "蔵", x: 35.5, y: YASHIKI_Y0 + 4 },
+    { id: "niwa", label: "庭", x: 18, y: YASHIKI_Y0 + 18 },
+    { id: "mon", label: "門", x: 23.5, y: YASHIKI_Y0 + 23 },
+    { id: "yashikiStation", label: "駅", x: 5, y: YASHIKI_Y0 + 28 }
+  ];
   const TERA_IN = { x: 5, y: TERA_Y0 + 31, dir: "down" };
   const TERA_AFTER_BOSS = { x: 36, y: TERA_Y0 + 7, dir: "up" };
   const TERA_PLACES = [
@@ -3039,8 +3366,8 @@ body.nopad #pad { display: none; }
     { id: "cave", label: "海岸どうくつ", x: 37, y: UMI_Y0 + 13 }
   ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
-  const regionOf = (ty) => ty >= TERA_Y0 ? [TERA_Y0, MAP_H] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
+  const areaAt = (x, y) => y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const regionOf = (ty) => ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MAP_H] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
   const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
@@ -3074,7 +3401,7 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5"];
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6"];
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -3233,7 +3560,7 @@ body.nopad #pad { display: none; }
       const bossId = ((_a = battle.enemies.find((e) => BOSSES[e.id])) == null ? void 0 : _a.id) || "nushi";
       const id = BOSSES[bossId].befriends;
       out.bossId = bossId;
-      out.befriend = { id, medal: addMedal(g, id, bossId === "nushi" ? 6 : BOSSES[bossId].lv - 2), forced: true };
+      if (id) out.befriend = { id, medal: addMedal(g, id, bossId === "nushi" ? 6 : BOSSES[bossId].lv - 2), forced: true };
       if (bossId === "nushi") {
         g.story = "clear";
         g.chapter = 2;
@@ -3253,6 +3580,12 @@ body.nopad #pad { display: none; }
       if (bossId === "daishi5") {
         g.story = "clear5";
         g.chapter = 6;
+      }
+      if (bossId === "zumitani6") g.flags.zumi6 = true;
+      if (bossId === "onioni6") g.flags.oni6 = true;
+      if (bossId === "tomooka6") {
+        g.story = "clear6";
+        g.chapter = 7;
       }
       return out;
     }
@@ -3325,10 +3658,16 @@ body.nopad #pad { display: none; }
         const n = monsSaved(g);
         return n < MONS.length ? `ネット寺の 黒い 紋の なかまを 助けよう (${n}/${MONS.length})` : "本堂の 前の ダイシの ようすが へんだ……！";
       }
+      case "clear5":
+        return "こおりくんの 家の 前の ともいしと 話そう";
+      case "shinobi":
+        return "石の川駅から、電車で 忍びの屋敷へ 行こう";
+      case "yashiki":
+        return !g.flags.zumi6 ? "忍びの屋敷の 庭で ズミタニに 会おう" : !g.flags.oni6 ? "屋敷の いちばん 奥の「奥の間」へ 行こう" : "東の 蔵で 鬼鬼団の 幹部を たおして メダルを とりもどそう";
       default: {
         const got = (area) => idsInArea(area).filter((id) => g.zukan.friends[id]).length;
         const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}`;
+        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}・${part("yashiki", "屋敷")}`;
       }
     }
   }
@@ -3343,7 +3682,17 @@ body.nopad #pad { display: none; }
     return true;
   }
   const canRideTrain = (g) => reached(g, "umi");
-  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : []];
+  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : []];
+  function startChapter6(g) {
+    if (g.story !== "clear5") return false;
+    g.story = "shinobi";
+    return true;
+  }
+  function arriveYashiki(g) {
+    if (g.story !== "shinobi") return false;
+    g.story = "yashiki";
+    return true;
+  }
   function startChapter5(g) {
     if (g.story !== "clear4") return false;
     g.story = "tera";
@@ -3427,6 +3776,10 @@ body.nopad #pad { display: none; }
       shell: 0,
       baseMoves: null,
       shellCut: sp2.shellCut ?? 0.15,
+      cloneDef: sp2.clones || null,
+      armDef: sp2.arm || null,
+      armLv: sp2.arm ? sp2.arm.start : 0,
+      armDmg: 0,
       parts: sp2.parts ? Object.fromEntries(Object.entries(sp2.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
   }
@@ -3500,6 +3853,81 @@ body.nopad #pad { display: none; }
       startChance(b, u, "bell");
     }
   }
+  function summonClones(b, u) {
+    const c = u.cloneDef;
+    clearClones(b, null);
+    for (let i = 0; i < c.count; i++) {
+      const cl = makeUnit({ id: u.id, lv: u.lv }, "enemy");
+      Object.assign(cl, { clone: true, owner: u.uid, boss: false, bigMove: null, bossMoves: null, special: null, gims: null, cloneDef: null, max: u.max, hp: u.hp });
+      b.enemies.push(cl);
+    }
+    b.clones = { uid: u.uid, left: c.life, tp: c.teleport };
+    shuffleClones(b);
+    emit(b, "clones", { actor: u.uid });
+  }
+  function shuffleClones(b) {
+    const group = b.enemies.filter((e) => e.uid === b.clones.uid || e.clone && e.owner === b.clones.uid);
+    const rest = b.enemies.filter((e) => !group.includes(e));
+    for (let i = group.length - 1; i > 0; i--) {
+      const j = Math.floor(b.rng.next() * (i + 1));
+      [group[i], group[j]] = [group[j], group[i]];
+    }
+    b.enemies = [...rest, ...group];
+    emit(b, "teleport", { actor: b.clones.uid });
+  }
+  function clearClones(b, why) {
+    if (!b.clones) return;
+    const owner = b.clones.uid;
+    b.enemies = b.enemies.filter((e) => !(e.clone && e.owner === owner));
+    if (b.lock && !b.enemies.some((e) => e.uid === b.lock)) {
+      b.lock = null;
+      b.lockPart = null;
+    }
+    b.clones = null;
+    if (why) emit(b, "clonesEnd", { actor: owner, why });
+  }
+  function cloneFail(b, from, clone) {
+    const boss = b.enemies.find((e) => e.uid === clone.owner);
+    b.enemies = b.enemies.filter((e) => e !== clone);
+    if (b.lock === clone.uid) {
+      b.lock = null;
+      b.lockPart = null;
+    }
+    emit(b, "cloneFail", { target: clone.uid, actor: from.uid });
+    if (!b.enemies.some((e) => e.clone)) clearClones(b, null);
+    if (!boss || boss.ko) return;
+    for (const fx of boss.cloneDef.counter) {
+      if (fx.kind === "attack") damage(b, boss, from, fx.power, { element: fx.element });
+      else if (fx.kind === "status") addStatus(b, from, fx.status, fx.chance);
+    }
+  }
+  function armGrow(b, u) {
+    const a = u.armDef;
+    if (u.armLv >= a.max) return;
+    u.armLv = Math.min(a.max, u.armLv + a.perHit);
+    emit(b, "armGrow", { target: u.uid, lv: u.armLv });
+    if (u.armLv >= a.max && !b.armCharge) {
+      b.armCharge = { uid: u.uid, left: a.charge };
+      emit(b, "telegraph", { actor: u.uid, name: a.move.name, warn: a.charge, arm: true });
+    }
+  }
+  function armShrink(b, u, dmg) {
+    const a = u.armDef;
+    u.armDmg += dmg;
+    const stepHp = u.max * a.step;
+    let n = 0;
+    while (u.armDmg >= stepHp && u.armLv > 0) {
+      u.armDmg -= stepHp;
+      u.armLv--;
+      n++;
+    }
+    if (!n) return;
+    emit(b, "armShrink", { target: u.uid, lv: u.armLv });
+    if (b.armCharge && b.armCharge.uid === u.uid && u.armLv < a.max) {
+      b.armCharge = null;
+      emit(b, "bigCancel", { actor: u.uid, name: a.move.name, arm: true });
+    }
+  }
   function startChance(b, u, why) {
     b.chance = { uid: u.uid, left: u.chanceTurns };
     u.timer = 0;
@@ -3551,7 +3979,9 @@ body.nopad #pad { display: none; }
       chance: null,
       charge: null,
       smoke: null,
-      chant: null
+      chant: null,
+      clones: null,
+      armCharge: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -3595,16 +4025,31 @@ body.nopad #pad { display: none; }
       }
       if (b.charge && b.charge.uid === u.uid) b.charge = null;
     }
+    if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
   }
   const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
   const buffOf = (u, stat) => u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0;
   const interval = (u) => 3 * 20 / (u.s.spd * (1 + buffOf(u, "spd")) + 10) * (u.status.slow > 0 ? 1.6 : 1);
   const effectOf = (element, target) => CHART[element] && CHART[element][target] || 1;
-  function damage(b, from, to, power, { magic = false, mult = 1, element = null } = {}) {
+  function damage(b, from, to, power, { magic = false, mult = 1, element = null, unguardable = false } = {}) {
     if (to.ko) return 0;
     if (from.side === "ally" && to.side === "enemy" && b.smoke && b.rng.chance(b.smoke.miss)) {
       emit(b, "miss", { actor: from.uid, target: to.uid });
       return 0;
+    }
+    let cloneHit = 1;
+    if (b.clones && from.side === "ally" && (to.clone ? to.owner === b.clones.uid : to.uid === b.clones.uid)) {
+      if (!b.lock) {
+        emit(b, "miss", { actor: from.uid, target: to.uid, clone: true });
+        return 0;
+      }
+      if (to.uid !== b.lock) return 0;
+      if (to.clone) {
+        cloneFail(b, from, to);
+        return 0;
+      }
+      cloneHit = to.cloneDef.bonus;
+      clearClones(b, "found");
     }
     const gim = from.side === "ally" && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
     if (gim && to.gims[gim].noBody) {
@@ -3617,17 +4062,21 @@ body.nopad #pad { display: none; }
     const eff = effectOf(el, to.element);
     const stab = el === from.element && el !== "ふつう" ? 1.2 : 1;
     const crit = !magic && b.rng.chance(0.06);
-    const guard = to.guarding ? 0.5 : 1;
+    const guard = to.guarding && !unguardable ? 0.5 : 1;
     const weak = from.side === "ally" && to.uid === b.lock && weakActive(b);
     const headGuard = from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart === "head" && !handsBroken(to) && !b.chance;
-    const shell = to.shell > 0 && !gim ? to.shellCut ?? 0.15 : 1;
+    const shell = (to.shell > 0 && !gim ? to.shellCut ?? 0.15 : 1) * (gim && to.gims[gim].arm ? to.armDef.bodyCut : 1) * cloneHit;
     let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell;
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;
     if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
     emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1, weak: weak && !headGuard, headGuard, part: gim });
-    if (gim && to.hp > 0) hitGim(b, to, gim, dmg);
+    if (gim && to.hp > 0 && !to.gims[gim].arm) hitGim(b, to, gim, dmg);
+    if (from.side === "ally" && to.armDef && to.hp > 0) {
+      if (gim && to.gims[gim].arm) armShrink(b, to, dmg / to.armDef.bodyCut);
+      else armGrow(b, to);
+    }
     if (from.side === "ally" && to.oniDef && !to.oni && to.hp > 0) {
       to.rage += dmg;
       if (to.rage >= to.max * to.oniDef.at) enterOni(b, to);
@@ -3686,7 +4135,7 @@ body.nopad #pad { display: none; }
       for (const to of targets) {
         if (fx.kind === "attack") {
           for (let h = 0; h < (fx.hits || 1); h++) {
-            const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element });
+            const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element, unguardable: fx.unguardable });
             if (fx.drain) heal(b, user, user, dmg * fx.drain);
           }
         } else if (fx.kind === "heal") {
@@ -3755,14 +4204,15 @@ body.nopad #pad { display: none; }
         emit(b, "chanting", { actor: u.uid });
         return;
       }
-      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)));
+      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
       const move = b.rng.weighted(list.map((m) => ({ m, w: m.w }))).m;
       emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss" });
       if (move.summon) summonIdol(b, u);
       else if (move.shell) {
         u.shell = move.shell;
         emit(b, "shell", { actor: u.uid, time: move.shell });
-      } else applyEffects(b, u, move.effects || []);
+      } else if (move.clones) summonClones(b, u);
+      else applyEffects(b, u, move.effects || []);
       return;
     }
     const cmd = chooseCommand(b, u);
@@ -3815,6 +4265,7 @@ body.nopad #pad { display: none; }
     }
   }
   function step(b, dt) {
+    var _a;
     if (b.outcome || b.paused || b.waiting) return;
     b.t += dt;
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
@@ -3839,6 +4290,14 @@ body.nopad #pad { display: none; }
     }
     for (const e of b.enemies) {
       if (e.ko) continue;
+      if (e.clone) {
+        const o = b.enemies.find((x) => x.uid === e.owner);
+        if (o) {
+          e.hp = o.hp;
+          e.max = o.max;
+        }
+        continue;
+      }
       tickUnit(b, e, dt, !e.idol);
       if (e.shell > 0) {
         e.shell -= dt;
@@ -3852,6 +4311,30 @@ body.nopad #pad { display: none; }
       if (e.bigMove) bossTick(b, e, dt);
       checkOutcome(b);
       if (b.outcome) return;
+    }
+    if (b.clones) {
+      b.clones.left -= dt;
+      b.clones.tp -= dt;
+      if (b.clones.left <= 0) clearClones(b, "time");
+      else if (b.clones.tp <= 0) {
+        b.clones.tp = ((_a = b.enemies.find((e) => e.uid === b.clones.uid)) == null ? void 0 : _a.cloneDef.teleport) || 4;
+        shuffleClones(b);
+      }
+    }
+    if (b.armCharge) {
+      const u = b.enemies.find((e) => e.uid === b.armCharge.uid);
+      if (!u || u.ko) b.armCharge = null;
+      else if (!(b.chance && b.chance.uid === u.uid)) {
+        b.armCharge.left -= dt;
+        if (b.armCharge.left <= 0) {
+          b.armCharge = null;
+          emit(b, "special", { actor: u.uid, name: u.armDef.move.name, side: "enemy", big: true });
+          applyEffects(b, u, u.armDef.move.effects);
+          u.armLv = u.armDef.after;
+          u.armDmg = 0;
+          emit(b, "armShrink", { target: u.uid, lv: u.armLv });
+        }
+      }
     }
     if (b.smoke) {
       b.smoke.left -= dt;
@@ -8824,6 +9307,582 @@ body.nopad #pad { display: none; }
           "................"
         ]
       ]
+    },
+    geninman: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#2a2a4a", "b": "#f0c8a0", "c": "#111111", "d": "#a02a2a", "e": "#1a1a3a" },
+      frames: [
+        [
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....abcbbcba....",
+          "....abbbbbba....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....dddddddd....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          ".....ee..ee.....",
+          ".....ee..ee.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....abcbbcba....",
+          "....abbbbbba....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....dddddddd....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....ee....ee....",
+          "....ee....ee....",
+          "................"
+        ]
+      ]
+    },
+    shurikenbo: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#c0c0d0", "b": "#5a5a6a", "c": "#ff4040" },
+      frames: [
+        [
+          "................",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          "......bbbb......",
+          ".aaaaabccbaaaaa.",
+          ".aaaaabccbaaaaa.",
+          "......bbbb......",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          ".......aa.......",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "...aaa....aaa...",
+          "...aaa....aaa...",
+          "...aaa....aaa...",
+          "......bbbb......",
+          "......bccb......",
+          "......bccb......",
+          "......bbbb......",
+          "...aaa....aaa...",
+          "...aaa....aaa...",
+          "...aaa....aaa...",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    bakudanjirou: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#2a2a2a", "b": "#5a5a5a", "c": "#a07a4a", "d": "#ffb030", "e": "#ffffff", "f": "#111111", "g": "#ffe040" },
+      frames: [
+        [
+          "................",
+          "...........dd...",
+          "...........dd...",
+          "..........c.....",
+          "..........c.....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaaaaaaa..",
+          "..aaabbaaaaaaa..",
+          "..aaaeeaaeeaaa..",
+          "..aaaefaaefaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "................"
+        ],
+        [
+          "...........gg...",
+          "...........gg...",
+          "................",
+          "..........c.....",
+          "..........c.....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaaaaaaa..",
+          "..aaabbaaaaaaa..",
+          "..aaaeeaaeeaaa..",
+          "..aaaefaaefaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "................"
+        ]
+      ]
+    },
+    konin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#e85a4a", "b": "#f4e8c8", "c": "#2a1a10", "d": "#ffffff", "e": "#111111", "f": "#3a1010", "g": "#ffd840", "h": "#c84a3a" },
+      frames: [
+        [
+          "................",
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa....",
+          "....aaddaadd....",
+          "....aadeaade....",
+          "....aaaaaaaa....",
+          "....aafffffa....",
+          "....aaadaada.aa.",
+          "....aaaaaaaa.aa.",
+          "....aaaaaaaa.aa.",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "....hhh..hhh...."
+        ],
+        [
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa....",
+          "....aaddaadd....",
+          "....aadeaade....",
+          "....aaaaaaaa....",
+          "....aafffffa....",
+          "....aaadaada....",
+          ".............aa.",
+          "....aaaaaaaa.aa.",
+          "....aaaaaaaa.aa.",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "....hhh..hhh...."
+        ]
+      ]
+    },
+    aoonibo: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#4a7ad8", "b": "#f4e8c8", "c": "#2a1a10", "d": "#ffffff", "e": "#111111", "f": "#3a1010", "g": "#ffd840", "h": "#3a5ab8", "i": "#8ac8f0" },
+      frames: [
+        [
+          "................",
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...ccccccccccii.",
+          "....aaaaaaaa.ii.",
+          "....aaddaadd....",
+          "....aadeaade....",
+          "....aaaaaaaa....",
+          "....aafffffa....",
+          "....aaadaada....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...agcggcggca...",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "....hhh..hhh...."
+        ],
+        [
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa.ii.",
+          "....aaddaadd.ii.",
+          "....aadeaade....",
+          "....aaaaaaaa..i.",
+          "....aafffffa..i.",
+          "....aaadaada....",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...agcggcggca...",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "....hhh..hhh...."
+        ]
+      ]
+    },
+    kanabone: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#c8a080", "b": "#ffffff", "c": "#2a1a10", "d": "#111111", "e": "#3a1010", "f": "#ffd840", "g": "#3a3a4a", "h": "#c8c8d8", "i": "#6a4a2a" },
+      frames: [
+        [
+          "................",
+          ".....bb...bbggg.",
+          "...ccccccccchgg.",
+          "...cccccccccggg.",
+          "....aaaaaaaaggg.",
+          "....aabbaabbggh.",
+          "....aabdaabdggg.",
+          "....aaaaaaaaggg.",
+          "....aaeeeeeahgg.",
+          "....aaabaabaggg.",
+          "...aaaaaaaa.ggg.",
+          "...aaaaaaaa.ggg.",
+          "...afcffcffc.i..",
+          "....fcffcffc.i..",
+          "....fcffcffc.i..",
+          "................"
+        ],
+        [
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccggg.",
+          "....aaaaaaaahgg.",
+          "....aabbaabbggg.",
+          "....aabdaabdggg.",
+          "....aaaaaaaaggh.",
+          "....aaeeeeeaggg.",
+          "....aaabaabaggg.",
+          "............hgg.",
+          "...aaaaaaaa.ggg.",
+          "...aaaaaaaa.ggg.",
+          "...afcffcffcgig.",
+          "....fcffcffc.i..",
+          "....fcffcffc.i..",
+          "................"
+        ]
+      ]
+    },
+    makibikonmk3: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#802020", "b": "#9a9aa8", "c": "#2080c0", "d": "#8a8a98", "e": "#5a5a68", "f": "#a06a3a", "g": "#7a7a88", "h": "#6a6a78", "i": "#ff4040", "j": "#40c0ff" },
+      frames: [
+        [
+          ".......a........",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bccccccb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          ".ggddddddddddgg.",
+          ".ggdddeeeedddgg.",
+          ".ggdddeeeedddgg.",
+          ".ggdddddddffdgg.",
+          ".ggddddddddddgg.",
+          "...dddddddddd...",
+          "....hhh..hhh....",
+          "....hhh..hhh....",
+          "....hhh..hhh....",
+          "................"
+        ],
+        [
+          ".......i........",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bjjjjjjb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          ".ggddddddddddgg.",
+          ".ggdddeeeedddgg.",
+          ".ggdddeeeedddgg.",
+          ".ggdddddddffdgg.",
+          ".ggddddddddddgg.",
+          "...dddddddddd...",
+          "....hhh..hhh....",
+          "....hhh..hhh....",
+          "....hhh..hhh....",
+          "................"
+        ]
+      ]
+    },
+    hyoutanoni: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ff8aa0", "b": "#f4e8c8", "c": "#2a1a10", "d": "#ffffff", "e": "#111111", "f": "#3a1010", "g": "#ffd840", "h": "#ff5a7a", "i": "#e8b040", "j": "#c03a2a" },
+      frames: [
+        [
+          "................",
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa....",
+          "....aaddaadd.j..",
+          "....aadeaadeiii.",
+          "....aahaaaahiii.",
+          "....aafffffaiii.",
+          "....aaadaada.iii",
+          "....aaaaaaaa.iii",
+          "....aaaaaaaa.iii",
+          "....gcggcggc.iii",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "................"
+        ],
+        [
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa....",
+          "....aaddaadd....",
+          "....aadeaade.j..",
+          "....aahaaaahiii.",
+          "....aafffffaiii.",
+          "....aaadaadaiii.",
+          ".............iii",
+          "....aaaaaaaa.iii",
+          "....aaaaaaaa.iii",
+          "....gcggcggc.iii",
+          "....gcggcggc....",
+          "....gcggcggc....",
+          "................"
+        ]
+      ]
+    },
+    taikooni: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5ad8", "b": "#f4e8c8", "c": "#2a1a10", "d": "#ffffff", "e": "#111111", "f": "#3a1010", "g": "#ffd840", "h": "#c03a2a", "i": "#f8e8d0", "j": "#8a5a2a" },
+      frames: [
+        [
+          "................",
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa....",
+          "....aaddajdd....",
+          "....aadeajde....",
+          "....aaaaajaa....",
+          "....aafffjhhhhhh",
+          "....aaadaahiiiih",
+          "....aaaaaahihhih",
+          "....aaaaaahihhih",
+          "....gcggcghiiiih",
+          "....gcggcghhhhhh",
+          "....gcggcggc....",
+          "................"
+        ],
+        [
+          ".....bb...bb....",
+          "...cccccccccc...",
+          "...cccccccccc...",
+          "....aaaaaaaa....",
+          "....aaddaadd....",
+          "....aadeaade.j..",
+          "....aaaaaaaa.j..",
+          "....aafffffa.j..",
+          "....aaadaahhhjhh",
+          "..........hiiiih",
+          "....aaaaaahihhih",
+          "....aaaaaahihhih",
+          "....gcggcghiiiih",
+          "....gcggcghhhhhh",
+          "....gcggcggc....",
+          "................"
+        ]
+      ]
+    },
+    jouninman: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#17171e", "b": "#f0c8a0", "c": "#111111", "d": "#3b2020", "e": "#0f0f16", "f": "#e02a3a", "g": "#c01a2a" },
+      frames: [
+        [
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....abcbbcba....",
+          "....abbbbbba....",
+          "....aaaaaaaa....",
+          "..ffffffffff....",
+          ".gg.aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....dddddddd....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          ".....ee..ee.....",
+          ".....ee..ee.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....abcbbcba....",
+          "....abbbbbba....",
+          "....aaaaaaaa....",
+          ".ff.ffffffff....",
+          "gg..aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....dddddddd....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....ee....ee....",
+          "....ee....ee....",
+          "................"
+        ]
+      ]
+    },
+    daibakudanjirou: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#2a2a2a", "b": "#5a5a5a", "c": "#a9414a", "d": "#ff3041", "e": "#ffffff", "f": "#111111", "g": "#ffd040", "h": "#ff6a1a", "i": "#ff4050" },
+      frames: [
+        [
+          "............g...",
+          "...........hdh..",
+          "...........dd...",
+          "..........c.....",
+          "..........c.....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaaaaaaa..",
+          "..aaabbaaaaaaa..",
+          "..aaaeeaaeeaaa..",
+          "..aaaefaaefaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "................"
+        ],
+        [
+          "...........ie...",
+          "...........hig..",
+          "................",
+          "..........c.....",
+          "..........c.....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaaaaaaa..",
+          "..aaabbaaaaaaa..",
+          "..aaaeeaaeeaaa..",
+          "..aaaefaaefaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "................"
+        ]
+      ]
+    },
+    zumitani: {
+      w: 36,
+      h: 46,
+      palette: { "a": "#d02030", "b": "#b01828", "c": "#1e2a5a", "d": "#c0c8d8", "e": "#9aa4b8", "f": "#f0c8a0", "g": "#111111", "h": "#ffffff", "i": "#141c40", "j": "#4a3a2a", "k": "#e8e8e8" },
+      frames: [
+        [
+          "....................................",
+          "....................................",
+          "...........cccccccccccccc...........",
+          "...........cccccccccccccddddd.......",
+          "...........dddddeeeeddddd...........",
+          "...........dddddeeeedddddddd........",
+          "...........cccccccccccccc...........",
+          "...........ccffffffffffcc...........",
+          "...........ccfghgffghgfcc...........",
+          "...........ccfgggffgggfcc...........",
+          "...........ccffffffffffcc...........",
+          "...........cccccccccccccc...........",
+          "...........cccccccccccccc...........",
+          "...........cccccccccccccc...........",
+          "...........ccccccccccccccaaaaaaa....",
+          "...........caaaaaaaaaaaacaaaaaaa....",
+          "............aaaaaaaaaaaaaaaaaaaa....",
+          "............aaaaaaaaaaaa....bbbbbb..",
+          "......ccccccccccccccccccccccccbbbb..",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccciiiiiiiiiiiiiiiicccc......",
+          "......cccciiiiiiiiiiiiiiiicccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......ffffccccccccccccccccffff......",
+          "......ffffjjjjjjjjjjjjjjjjffff......",
+          ".......hd.jjjjjjjjjjjjjjjj.hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......dd..cccccc..cccccc..dd.......",
+          "...........kkkkkk..kkkkkk...........",
+          "...........kkkkkk..kkkkkk...........",
+          "...........kkkkkk..kkkkkk...........",
+          "...........cccccc..cccccc...........",
+          "..........iiiiiiiiiiiiiiii..........",
+          "..........iiiiiiiiiiiiiiii..........",
+          "..........iiiiiiiiiiiiiiii..........",
+          "....................................",
+          "...................................."
+        ],
+        [
+          "....................................",
+          "....................................",
+          "...........cccccccccccccc...........",
+          "...........cccccccccccccddddd.......",
+          "...........dddddeeeeddddd...........",
+          "...........dddddeeeedddddddd........",
+          "...........cccccccccccccc...........",
+          "...........ccffffffffffcc...........",
+          "...........ccfghgffghgfcc...........",
+          "...........ccfgggffgggfcc...........",
+          "...........ccffffffffffcc...........",
+          "...........cccccccccccccc...........",
+          "...........cccccccccccccc...........",
+          "...........cccccccccccccc...........",
+          "...........ccccccccccccccaaaaaaaaa..",
+          "...........caaaaaaaaaaaacaaaaaaaaa..",
+          "............aaaaaaaaaaaaaaaaaaaaaa..",
+          "......cccc..aaaaaaaaaaaa..ccccbbbb..",
+          "......ccccccccccccccccccccccccbbbb..",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccciiiiiiiiiiiiiiiicccc......",
+          "......cccciiiiiiiiiiiiiiiicccc......",
+          "......cccccccccccccccccccccccc......",
+          "......cccccccccccccccccccccccc......",
+          "......ffffccccccccccccccccffff......",
+          "......ffffccccccccccccccccffff......",
+          ".......hd.jjjjjjjjjjjjjjjj.hd.......",
+          ".......hd.jjjjjjjjjjjjjjjj.hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......hd..cccccc..cccccc..hd.......",
+          ".......dd..cccccc..cccccc..dd.......",
+          "...........cccccc..cccccc...........",
+          "...........kkkkkk..kkkkkk...........",
+          "...........kkkkkk..kkkkkk...........",
+          "...........kkkkkk..kkkkkk...........",
+          "...........cccccc..cccccc...........",
+          "..........iiiiiiiiiiiiiiii..........",
+          "..........iiiiiiiiiiiiiiii..........",
+          "..........iiiiiiiiiiiiiiii..........",
+          "....................................",
+          "...................................."
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -8948,6 +10007,33 @@ body.nopad #pad { display: none; }
         "bbbbbbbbbbbbbbbb",
         "................"
       ], "k", "s")
+    },
+    // トモオカ: 鬼鬼団の 幹部 (6 章の ボス。新キャラ・2026-10-29)。赤い 鬼・1 本角・緑の はちまき・とらがらの パンツ。
+    //   バトルでは 攻撃される たびに 右腕が 大きく なる (battle-view.js の drawArm)
+    tomooka: {
+      w: 18,
+      h: 18,
+      palette: { o: "#2a1418", s: "#c84a3a", S: "#a03228", y: "#f0e0a0", g: "#3a8a4a", k: "#111111", w: "#ffffff", t: "#ffd040", b: "#2a2a2a" },
+      frames: bob$1([
+        "........yy........",
+        ".......yyyy.......",
+        ".....oooooooo.....",
+        "....osssssssso....",
+        "...osgggggggggo...",
+        "...ossskwsskwsso..",
+        "...osssssssssso...",
+        "...osswwwwwwsso...",
+        "....osssssssso....",
+        "..oooossssssoooo..",
+        ".ossssssssssssssso",
+        ".osSsssbbbbsssSso.",
+        ".osS.ttbttbtt.Sso.",
+        ".oso.tbttbttb.oso.",
+        "..o..tttttttt..o..",
+        ".....oo....oo.....",
+        ".....ss....ss.....",
+        "....ooo....ooo...."
+      ])
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -9389,7 +10475,8 @@ body.nopad #pad { display: none; }
   function peopleHere(g) {
     return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "damNushi" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]) || // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
-    p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length);
+    p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
+    p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6);
   }
   const personArt = (g, p) => p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art;
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
@@ -9860,7 +10947,9 @@ body.nopad #pad { display: none; }
     E: "#b8a888",
     I: "#9ad8f0",
     J: "#4a4e58",
-    C: "#7a7468"
+    C: "#7a7468",
+    Z: "#4a3624",
+    O: "#c8c070"
   };
   function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -10031,6 +11120,21 @@ body.nopad #pad { display: none; }
         r2(0, 0, 16, 16, "#7a7468");
         if (hash(x, y, 92) < 0.5) r2(Math.floor(hash(x, y, 93) * 12), Math.floor(hash(x, y, 94) * 12), 4, 2, "#6a6458");
         if (hash(x, y, 95) < 0.3) r2(Math.floor(hash(x, y, 96) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, "#c8e0f0");
+        break;
+      case "Z": {
+        r2(0, 0, 16, 16, "#3a2818");
+        const below = tileAt(x, y + 1);
+        if (below !== "Z" && below !== "T") {
+          r2(0, 4, 16, 12, "#8a6440");
+          for (let i = 0; i < 16; i += 4) r2(i, 4, 1, 12, "#6a4a2c");
+          r2(0, 4, 16, 1, "#a07a50");
+        } else r2(0, 0, 16, 2, "#5a4028");
+        break;
+      }
+      case "O":
+        r2(0, 0, 16, 16, "#c8c070");
+        r2(0, (x + y) % 2 ? 0 : 15, 16, 1, "#5a6a3a");
+        for (let i = 2; i < 16; i += 3) r2(0, i, 16, 1, "#b8b060");
         break;
       default:
         r2(0, 0, 16, 16, "#ff00ff");
@@ -10278,7 +11382,8 @@ body.nopad #pad { display: none; }
     const wild = createWild(g, app2.rng);
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
-    const inTera = () => g.pos.y >= TERA_Y0 * TILE;
+    const inYashiki = () => g.pos.y >= YASHIKI_Y0 * TILE;
+    const inTera = () => g.pos.y >= TERA_Y0 * TILE && !inYashiki();
     const inUmi = () => g.pos.y >= UMI_Y0 * TILE && !inTera();
     const inYama = () => g.pos.y >= YAMA_Y0 * TILE && g.pos.y < UMI_Y0 * TILE;
     const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && g.pos.y < YAMA_Y0 * TILE;
@@ -10354,8 +11459,19 @@ body.nopad #pad { display: none; }
           clear4: ["海辺の 町でも 大活躍したらしいね！ ……でも その フードの 人、なんか 気味が わるかね。", `なかまは ${friendCount(g)} 人？ ……それより こおり、お金は ちゃんと 返しなさいよ！`],
           tera: ["ネット寺に 行くとね？ 電車は 石の川駅からよ。", "お寺では しずかに しなさいよ！ こおり、あんたは いっつも うるさいけん。"],
           netdera: ["ネット寺は どうやった？ ダイシさん、元気に しとんしゃった？"],
-          clear5: ["ネット寺の のろいも といたらしいね！ ……ルキハ？ なんか こわい 名前やね。", `なかまは ${friendCount(g)} 人？ ……こおり、ちゃんと 宿題も しなさいよ！`]
+          clear5: ["ネット寺の のろいも といたらしいね！ ……ルキハ？ なんか こわい 名前やね。", `なかまは ${friendCount(g)} 人？ ……こおり、ちゃんと 宿題も しなさいよ！`],
+          shinobi: ["忍びの屋敷へ 行くとね？ 電車は 石の川駅からよ。", "こおり、メダルを とりもどすまで 帰ってこんでいいけんね！ ……うそうそ、ごはんには 帰ってきなさい。"],
+          yashiki: ["忍びの屋敷は どうやった？ 忍者さんって ほんとに いるとね？"],
+          clear6: ["町の 子たちの メダル、とりもどしてくれたって？ こおり、えらいやん！", "おにおにくん……どうしたっちゃろうね。こおり、なんか しっとうと？"]
         }[g.story];
+        if (startChapter6(g)) {
+          say([
+            tomo("こおり！ 町の 子たちの メダルが ぬすまれたって 大さわぎよ。あんた なにしよっと！ はよ 行きなさい！"),
+            furu("鬼鬼団の しわざだって うわさだよ。忍びの屋敷の ズミタニさんが 追ってるみたい！"),
+            nar("石の川駅から、電車で 忍びの屋敷へ 行けるように なった！")
+          ], { done: () => app2.save() });
+          return;
+        }
         if (startChapter5(g)) {
           say([
             tomo("こおり、あんた あてに 手紙が きとるよ。"),
@@ -10393,6 +11509,25 @@ body.nopad #pad { display: none; }
         ], { done: () => app2.startBattle({ enemies: bossEnemies("urashima4"), kind: "boss", place: "cave" }) });
       } else if (p.id === "daishiNpc") {
         say([by("daishi", `紋つきの 者たちを、どうか 救って くだされ。……紋を はらえば、きっと 正気に もどりますぞ。(${monsSaved(g)}/${MONS.length})`)]);
+      } else if (p.id === "zumitani6") {
+        say([
+          by("zumitani", "やっほー、77代目の ズミタニだよ！ メダルどろぼうを 追ってるんだ。……で、きみ、役に 立つの？ ためして あげるね♪"),
+          furu("分身して くるよ！ 本物を 見つけて ロックオンして！ まちがえると しかえし されちゃう！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("zumitani6"), kind: "boss", place: "yashiki" }) });
+      } else if (p.id === "onioni6") {
+        say([
+          nar("奥の 間に、ひとりの 男が 座っていた。"),
+          nar("人と おなじ 顔。けれど 片目は 赤黒く にごり、首すじには うろこの ような ものが のぞいている。"),
+          { who: "ルキハ", text: "はじめまして だな、こおり族の 子。王冠の 味は……なかなか だったぞ。" },
+          nar("その うしろに、目の 光が 消えた おにおにが 立っていた。"),
+          { who: "こおりくん", art: "koori", text: "（おにおに……！）" },
+          by("onioni", "…………。ルキハさまの じゃまは させん。")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni6"), kind: "boss", place: "yashiki" }) });
+      } else if (p.id === "tomooka6") {
+        say([
+          { who: "トモオカ", art: "tomooka", text: "メダルは わたさんぞ！ 鬼鬼団 幹部、トモオカさまの 右腕を 見せてやる！" },
+          furu("たたかれるほど 右腕が 大きく なるみたい！ 右腕を ねらって しぼませて！ 大きく なりきったら 防げない 一撃が くるよ！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("tomooka6"), kind: "boss", place: "yashiki" }) });
       } else if (p.id === "daishi5") {
         say([
           nar("ダイシの 体に、黒い 紋が どくどくと 脈うっている……。"),
@@ -10454,6 +11589,16 @@ body.nopad #pad { display: none; }
         readOkunoin();
       } else if (b.id === "station") {
         rideTrain();
+      } else if (b.id === "yashikiStation") {
+        say([nar("忍びの屋敷前駅。石の川 行きの 電車が とまっている。")], {
+          choices: ["石の川へ もどる", "やめる"],
+          done: (i) => {
+            if (i === 0) {
+              sfx("watch");
+              warp(STATION_OUT);
+            }
+          }
+        });
       } else if (b.id === "teraStation") {
         say([nar("ネット寺前駅。石の川 行きの 電車が とまっている。")], {
           choices: ["石の川へ もどる", "やめる"],
@@ -10587,7 +11732,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const lines = trainLines(g);
-      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く" };
+      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く" };
       say([nar(`石の川駅。${lines.length > 1 ? "どこへ 行こうか？" : lines[0] === "tera" ? "ネット寺 行きの 電車が とまっている。" : "海辺の 町 行きの 電車が とまっている。"}`)], {
         choices: [...lines.map((l) => names[l]), "やめる"],
         done: (i) => {
@@ -10596,6 +11741,10 @@ body.nopad #pad { display: none; }
           sfx("watch");
           if (dest === "tera") {
             goTera();
+            return;
+          }
+          if (dest === "yashiki") {
+            goYashiki();
             return;
           }
           warp(UMI_IN);
@@ -10618,6 +11767,14 @@ body.nopad #pad { display: none; }
         by("daishi", "よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。"),
         by("daishi", "寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。"),
         nar("境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。")
+      ], { done: () => app2.save() });
+    }
+    function goYashiki() {
+      warp(YASHIKI_IN);
+      if (!arriveYashiki(g)) return;
+      say([
+        nar("電車に ゆられて、忍びの屋敷に 着いた。"),
+        nar("板べいの 門の 中で、だれかが 待っている……。")
       ], { done: () => app2.save() });
     }
     function examineMon(m) {
@@ -10699,6 +11856,27 @@ body.nopad #pad { display: none; }
           );
         }
         say(lines, { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "zumitani6") {
+        say([
+          by("zumitani", "へえ、思ったより やるじゃん♪ 鬼鬼団は この 屋敷の 奥に メダルを はこんでるよ。ただの どろぼうに しては、手ぎわが よすぎるんだよね～。"),
+          nar("ズミタニが 道を あけた。屋敷の 奥へ 行けるように なった！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "onioni6") {
+        say([
+          by("onioni", "……ぐっ……。"),
+          nar("黒い 霧が おにおにを つつみ、ルキハと いっしょに 消えた……。"),
+          furu("おにおに、ぜんぜん いつもと ちがった……。"),
+          by("zumitani", "あの 男の 目、見た？ あれ、人の 目じゃ ないよ。……きみ、気を付けたほうがいいよ。次は 喰われちゃうかもね♪"),
+          nar("東の 蔵から、ガタガタと 音が する。だれかが メダルを はこび出そうと している！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "tomooka6") {
+        say([
+          { who: "トモオカ", art: "tomooka", text: "ぐぬぬ……この 右腕が……しぼむとは……！ おぼえとけよ！" },
+          nar("トモオカは メダルの 袋を 落として にげていった！"),
+          nar("町の 子たちの メダルを 少し とりもどした！"),
+          nar("６章 クリア！ ズミタニが 屋敷の 庭を 歩きまわるように なった。"),
+          nar("―― ７章は つぎの アップデートで。")
+        ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "daishi5") {
         warp(TERA_AFTER_BOSS);
         say([
@@ -10707,7 +11885,7 @@ body.nopad #pad { display: none; }
           by("daishi", "紋を つけた 者の 名は……「ルキハ」。人の すがたを した、なにか ですぞ。"),
           furu("ルキハ……。"),
           nar("５章 クリア！ 紋が 消えた キャラたちが ネット寺を 歩きまわるように なった。"),
-          nar("―― ６章は つぎの アップデートで。")
+          furu("こおりくん、いちど 家に 帰ろう。ともいしさんが 心配してるよ。")
         ], { done: () => app2.save() });
       } else if (result2.rival && result2.outcome === "win") {
         say([...rivalLines().lose.map(([id, text2]) => by(id, text2)), nar("ライバル探検隊は 道を ゆずった。"), furu("奥から だれかの 声が する……！ 行ってみよう！")], { done: () => app2.save() });
@@ -10991,7 +12169,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
         }
       });
     }
@@ -11049,7 +12227,7 @@ body.nopad #pad { display: none; }
       ensureCanvas(reached(g, "clear3"));
       ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && i < 6; i++) {
+      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && i < 6; i++) {
         const wy = (i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE);
         ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
       }
@@ -11216,7 +12394,7 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -11231,7 +12409,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -11663,7 +12841,20 @@ body.nopad #pad { display: none; }
     hyouzanmuscle: auto("hyouzanmuscle"),
     kinkomimic: auto("kinkomimic"),
     daichouenou: auto("daichouenou"),
-    daishi: auto("daishi")
+    daishi: auto("daishi"),
+    // ----- 忍びの屋敷の 10 体と 進化先 2 体 (6 章。2026-10-29) -----
+    geninman: auto("geninman"),
+    shurikenbo: auto("shurikenbo"),
+    bakudanjirou: auto("bakudanjirou"),
+    konin: auto("konin"),
+    aoonibo: auto("aoonibo"),
+    kanabone: auto("kanabone"),
+    makibikonmk3: auto("makibikonmk3"),
+    hyoutanoni: auto("hyoutanoni"),
+    taikooni: auto("taikooni"),
+    jouninman: auto("jouninman"),
+    daibakudanjirou: auto("daibakudanjirou"),
+    zumitani: auto("zumitani")
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -11753,6 +12944,19 @@ body.nopad #pad { display: none; }
     virusn: { motion: "cloud", color: "#d8a8ff" },
     firewall: { motion: "aura", color: "#ff8a4a" },
     daishi: { motion: "aura", color: "#d8a8ff", glyph: "鬼" },
+    // 忍びの屋敷の 10 体 (6 章。仮)
+    geninman: { motion: "dash", color: "#e0e0e0" },
+    shurikenbo: { motion: "dash", color: "#c8f08a" },
+    bakudanjirou: { motion: "dash", color: "#ff8a4a" },
+    konin: { motion: "dash", color: "#ff8a4a" },
+    aoonibo: { motion: "aura", color: "#4aa8e0" },
+    kanabone: { motion: "dash", color: "#e0e0e0" },
+    makibikonmk3: { motion: "dash", color: "#e0e0e0" },
+    hyoutanoni: { motion: "cloud", color: "#d8a8ff" },
+    taikooni: { motion: "aura", color: "#c8f08a" },
+    jouninman: { motion: "dash", color: "#c8f08a" },
+    daibakudanjirou: { motion: "dash", color: "#ff8a4a" },
+    zumitani: { motion: "multi", color: "#c8f08a", glyph: "影", hits: 3 },
     // 進化で なる 16 体 (仮)
     harigeneral: { motion: "dash", color: "#e0e0e0" },
     joubachi: { motion: "dash", color: "#c8f08a" },
@@ -12766,6 +13970,28 @@ body.nopad #pad { display: none; }
         } else if (e.type === "chance") {
           if (e.why === "flip") banner = { text: "ひっくり返った！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           sfx("special");
+        } else if (e.type === "clones") {
+          banner = { text: "かげぶんしん！ 本物を ロックオンして こうげき！", color: "#c8f08a", until: t + 1.8 };
+          sfx("lens");
+        } else if (e.type === "teleport") {
+          battle.enemies.forEach((x, i) => {
+            if (x.clone || x.uid === e.actor) {
+              const q = enemyPos(i);
+              effects.push({ kind: "wave", x: q.x, y: q.y - 20, start: t, dur: 0.35, color: "#c8f08a" });
+            }
+          });
+          sfx("cursor");
+        } else if (e.type === "clonesEnd") {
+          if (e.why === "found") {
+            banner = { text: "本物を 見やぶった！ ダメージ アップ！", color: COLORS.accent, until: t + 1.6 };
+            sfx("big");
+          } else if (e.why === "time") banner = { text: "分身が 消えた", color: "#c0c8e0", until: t + 1.2 };
+        } else if (e.type === "cloneFail") {
+          banner = { text: "それは 分身！ しかえしが くる！", color: "#ff6a6a", until: t + 1.6 };
+          sfx("cancel");
+        } else if (e.type === "armGrow" || e.type === "armShrink") {
+          const k = battle.enemies.findIndex((x) => x.uid === e.target), pp = k >= 0 ? partPos(k, "arm") : null;
+          if (pp) pops.push({ x: pp.x, y: pp.y - 30, text: e.type === "armGrow" ? `右腕 ↑ ${e.lv}` : `右腕 ↓ ${e.lv}`, color: e.type === "armGrow" ? "#ff8a6a" : "#9ae08a", small: true, until: t + 0.8 });
         } else if (e.type === "smoke") {
           banner = { text: "けむりが もくもく……！ 攻撃が 当たりにくい！", color: "#d0d0d8", until: t + 1.8 };
           sfx("cancel");
@@ -12773,7 +13999,7 @@ body.nopad #pad { display: none; }
           banner = { text: "けむりが 晴れた！", color: COLORS.accent, until: t + 1.2 };
         } else if (e.type === "miss") {
           const p = posOf(e.target);
-          if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
+          if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: e.clone ? "どれが 本物？" : "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
         } else if (e.type === "shell") {
           banner = { text: "こうらに こもった！ 頭を ねらえ！", color: "#9ae08a", until: t + 1.8 };
           sfx("cancel");
@@ -12809,7 +14035,7 @@ body.nopad #pad { display: none; }
           banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
-          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant) };
+          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm) };
           sfx("cancel");
         } else if (e.type === "summon") {
           banner = { text: `${nameOf(e.target)}が あらわれた！`, color: "#bfeaff", until: t + 1.4 };
@@ -12818,7 +14044,7 @@ body.nopad #pad { display: none; }
           if (p) effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.5, color: "#bfeaff" });
         } else if (e.type === "bigCancel") {
           warn = null;
-          banner = { text: `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+          banner = { text: e.arm ? `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
           sfx("big");
         } else if (e.type === "food") {
           banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: "#ff9ad8", until: t + 1.6 };
@@ -13379,6 +14605,16 @@ body.nopad #pad { display: none; }
           ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
           ctx.fill();
         }
+      } else if (place === "yashiki") {
+        ctx.fillStyle = "#4a3624";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        for (let i = 0; i < 6; i++) {
+          ctx.fillStyle = "#e8e0c8";
+          ctx.fillRect(14 + i * 66, 12, 52, HORIZON - 18);
+          ctx.fillStyle = "#6a5038";
+          for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66 + k * 17, 12, 2, HORIZON - 18);
+          for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66, 12 + k * 17, 52, 2);
+        }
       } else if (place === "tera") {
         ctx.fillStyle = "rgba(40, 30, 50, 0.45)";
         for (let i = 0; i < 5; i++) ctx.fillRect(300 + i * 2, HORIZON - 14 - i * 12, 40 - i * 4, 4);
@@ -13394,7 +14630,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -13574,6 +14810,28 @@ body.nopad #pad { display: none; }
           ctx.fillStyle = "#fff";
           ctx.fillRect(q.x - 6, q.y + 6, 12, 2);
           label(key2, q, 16);
+        } else if (key2 === "arm") {
+          const lv = e.armLv, mx = e.armDef.max, k2 = 0.7 + lv * 0.14, hot = lv >= mx - 2;
+          ctx.save();
+          ctx.translate(q.x, q.y);
+          ctx.scale(k2, k2);
+          ctx.fillStyle = hot ? `rgba(255, 80, 60, ${0.35 + 0.25 * Math.sin(t * 10)})` : "rgba(0,0,0,0)";
+          ctx.beginPath();
+          ctx.arc(0, 0, 22, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#c84a3a";
+          ctx.fillRect(4, -7, 22, 14);
+          ctx.fillStyle = "#a03228";
+          ctx.fillRect(4, 3, 22, 4);
+          ctx.fillStyle = "#c84a3a";
+          ctx.beginPath();
+          ctx.arc(-4, 0, 13, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#a03228";
+          for (let i = 0; i < 3; i++) ctx.fillRect(-14, -8 + i * 6, 6, 2);
+          ctx.restore();
+          bar(ctx, q.x - 22, q.y + 18 * k2, 44, 4, lv / mx, hot ? "#ff4a3a" : "#ffb84a");
+          text(ctx, `右腕 ${lv}/${mx}`, q.x, q.y + 18 * k2 + 13, { size: 9.5, align: "center", bold: true, color: hot ? "#ff9a8a" : "#ffe0b0" });
         } else if (key2 === "bell") {
           const swing = open ? Math.sin(t * 5) * 0.08 : 0;
           ctx.save();
@@ -13656,6 +14914,10 @@ body.nopad #pad { display: none; }
         panel(ctx, 90, 6, 220, 46, { fill: "rgba(90, 40, 0, 0.88)", edge: "#ffe85a" });
         text(ctx, "チャンスタイム！", 200, 32, { size: 24, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
         text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: "center", bold: true });
+      } else if (battle.armCharge && !battle.outcome) {
+        panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.92)", edge: "#ffb84a" });
+        text(ctx, `!! 防御不能「${warn ? warn.name : ""}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `右腕を ねらって しぼませろ！ (${Math.max(0, battle.armCharge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
       } else if (battle.chant && !battle.outcome) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(90, 20, 90, 0.9)", edge: "#ffe85a" });
         text(ctx, `お経を となえている……「${warn ? warn.name : ""}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
@@ -13667,7 +14929,7 @@ body.nopad #pad { display: none; }
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
-      } else if (warn && !warn.idols && !warn.chant && warn.until > t) {
+      } else if (warn && !warn.idols && !warn.chant && !warn.arm && warn.until > t) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
