@@ -335,3 +335,18 @@ test('にげる: ふつうの バトルは にげられる・ボスと 七不思
     begin(wild);
     assert.ok(!flee(boss) && begin(boss) && !flee(boss), '始まってからは にげられない');
 });
+
+test('5 章の ダイシ: HP が 半分を 下まわると 鬼の顔 (わざと 必殺技が かわり こうげきが 上がる)', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 30 }], enemies: [{ id: 'daishi5', lv: 23 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    step(b, 0.05);
+    assert.ok(!boss.phased);
+    boss.hp = Math.floor(boss.max * 0.45);
+    step(b, 0.05);
+    assert.ok(boss.phased, '鬼の顔に なった');
+    assert.equal(boss.bossMoves, BOSSES.daishi5.phase2.moves);
+    assert.equal(boss.bigMove.name, '鬼神 ネット念仏');
+    assert.ok(boss.buffs.atk && boss.buffs.atk.amount > 0);
+    assert.ok(b.events.some(e => e.type === 'phase'));
+});

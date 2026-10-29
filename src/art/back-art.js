@@ -8,6 +8,7 @@
 // =====================================================================
 import { LEGACY_ART } from './legacy-art.js';
 import { NEW_ART } from './new-art.js';
+import { backArt } from './back.js';
 
 const FRONT = { ...LEGACY_ART, ...NEW_ART };
 const W = 16;
@@ -34,6 +35,11 @@ const faceless = (id, swap, { mirror = true, still = false, rows = [0, 99] } = {
     return { w: f.w, h: f.h, palette: f.palette, frames: still ? [r, r] : bob(r) };
 };
 const pal = id => FRONT[id].palette;
+// 顔を 自動で 消して (back.js) 左右を 反転 (5 章の キャラと 進化先。2026-10-29)
+const auto = id => {
+    const r = backArt(FRONT[id]).frames[0].map(line => [...line].reverse().join(''));
+    return { w: FRONT[id].w, h: FRONT[id].h, palette: FRONT[id].palette, frames: bob(r) };
+};
 
 export const BACK_ART = {
     // ハリベビー: まるい 背中 いっぱいの トゲ
@@ -308,5 +314,34 @@ export const BACK_ART = {
     ryuuguudai: faceless('ryuuguudai', { c: 'a', d: 'a' }),
     nakatadraco: faceless('nakatadraco', { c: 'a', b: 'a' }, { rows: [3, 99] }),  // 角は そのまま
     umibozuou: faceless('umibozuou', { b: 'a', c: 'a' }),
-    urashima: faceless('urashima', { f: 'm', l: 'm', n: 'm', o: 'm', q: 'm' }, { rows: [3, 17] })   // 白い 髪と ひげの うしろ
+    urashima: faceless('urashima', { f: 'm', l: 'm', n: 'm', o: 'm', q: 'm' }, { rows: [3, 17] }),  // 白い 髪と ひげの うしろ
+
+    // ----- ネット寺の 10 体 (5 章) と 進化先 16 体 (2026-10-29): 顔を 自動で 消して 左右を 反転 -----
+    enjoubouzu: auto('enjoubouzu'),
+    bugmushi: auto('bugmushi'),
+    htmlmokkun: auto('htmlmokkun'),
+    csspakkun: auto('csspakkun'),
+    nullpon: auto('nullpon'),
+    loadingu: auto('loadingu'),
+    mugenloop: auto('mugenloop'),
+    notfound: auto('notfound'),
+    virusn: auto('virusn'),
+    firewall: auto('firewall'),
+    harigeneral: auto('harigeneral'),
+    joubachi: auto('joubachi'),
+    oodonguriko: auto('oodonguriko'),
+    nemuridakeou: auto('nemuridakeou'),
+    pekorisuking: auto('pekorisuking'),
+    tsutankobuju: auto('tsutankobuju'),
+    yoakefukurou: auto('yoakefukurou'),
+    hyougame: auto('hyougame'),
+    spamking: auto('spamking'),
+    hitodamaou: auto('hitodamaou'),
+    kagebunshin: auto('kagebunshin'),
+    yukimidaifuku: auto('yukimidaifuku'),
+    muscletitan: auto('muscletitan'),
+    hyouzanmuscle: auto('hyouzanmuscle'),
+    kinkomimic: auto('kinkomimic'),
+    daichouenou: auto('daichouenou'),
+    daishi: auto('daishi')
 };

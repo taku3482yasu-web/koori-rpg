@@ -155,6 +155,35 @@ export const WAZA = {
     nakatadraco: W('水のブレス', 'みず', 'line', 1.2),
     umibozuou: W('だいおおなみ', 'みず', 'line', 1.5),
     urashima: W('玉手箱', 'ふしぎ', 'around', 0.8, 'confuse', 0.6),
+    // ネット寺 (5 章)。やけど は どく・めくらまし・ひるみ は こんらん
+    enjoubouzu: W('炎上', 'ほのお', 'front', 1.2, 'poison', 0.4),
+    bugmushi: W('バグかみつき', 'しぜん', 'front', 1.2, 'confuse', 0.3),
+    htmlmokkun: W('タグとじわすれ', 'ふつう', 'front', 1, 'confuse', 0.4),
+    csspakkun: W('パックンスタイル', 'しぜん', 'front', 1.5),
+    nullpon: W('ぬるぽ', 'ふしぎ', 'front', 1.3, 'confuse', 0.4),
+    loadingu: W('ぐるぐる読みこみ', 'かぜ', 'around', 0, 'sleep', 0.6),
+    mugenloop: W('むげんループ', 'ふしぎ', 'front', 0.8, 'confuse', 0.7),
+    notfound: W('ページがみつかりません', 'ふしぎ', 'line', 1.2, 'confuse', 0.4),
+    virusn: W('ウイルス感染', 'ふしぎ', 'front', 0.9, 'poison', 0.8),
+    firewall: W('ファイアウォール', 'ほのお', 'around', 1.1, 'poison', 0.3),
+    daishi: W('説法', 'ふしぎ', 'around', 0.6, 'sleep', 0.4),
+    // 進化で なる キャラ (ダンジョンの 進化先)
+    harigeneral: W('針とばし', 'ふつう', 'line', 1.2),
+    joubachi: W('じょおうばり', 'かぜ', 'front', 1.5, 'poison', 0.4),
+    oodonguriko: W('おおころがり', 'しぜん', 'front', 1.8),
+    nemuridakeou: W('ほうしのあらし', 'しぜん', 'around', 0, 'sleep', 0.8),
+    pekorisuking: W('キングたねマシンガン', 'しぜん', 'line', 1.3),
+    tsutankobuju: W('つたしばり', 'しぜん', 'around', 0.8, 'slow', 0.6),
+    yoakefukurou: W('あさやけの風', 'かぜ', 'line', 1.2, 'confuse', 0.4),
+    hyougame: W('ひょうこうら', 'こおり', 'front', 1.4, 'slow', 0.3),
+    spamking: W('スパムのあらし', 'ふしぎ', 'line', 0.7, 'confuse', 0.6),
+    hitodamaou: W('青い火の玉', 'ほのお', 'line', 1.3, 'poison', 0.4),
+    kagebunshin: W('かげぶんしん', 'ふしぎ', 'front', 0.9, 'confuse', 0.5),
+    yukimidaifuku: W('だいふくゆきだま', 'こおり', 'front', 1.3, 'slow', 0.4),
+    muscletitan: W('タイタンプレス', 'ふつう', 'front', 2.6),
+    hyouzanmuscle: W('ふぶき', 'こおり', 'around', 1.3, 'slow', 0.3),
+    kinkomimic: W('金庫かみつき', 'ふつう', 'front', 2, 'confuse', 0.3),
+    daichouenou: W('大ばい菌', 'ふしぎ', 'around', 0.6, 'poison', 0.5),
     // ライバル探検隊 (4 章。前作の 必殺わざ)。ひるみ・めくらまし は こんらん、まひ は のろい
     asahara: W('DOPAPANCHI', 'ほのお', 'front', 1.6),
     sasaki: W('ASAスラッシュ', 'ふつう', 'front', 1.4),
@@ -167,7 +196,8 @@ export const WAZA = {
     nushi: W('百のかぞえうた', 'ふしぎ', 'around', 0.6, 'confuse', 0.3),
     kage: W('影の とりつき', 'ふしぎ', 'around', 0.6, 'possess', 0.3),
     himuro: W('ふぶき', 'こおり', 'around', 1.3, 'slow', 0.3),
-    urashima4: W('玉手箱', 'ふしぎ', 'around', 0.8, 'confuse', 0.5)
+    urashima4: W('玉手箱', 'ふしぎ', 'around', 0.8, 'confuse', 0.5),
+    daishi5: W('説法', 'ふしぎ', 'around', 0.6, 'sleep', 0.4)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
@@ -626,7 +656,175 @@ const LIST = [
         line: 'わしは……なんじゃったかの……', favorite: 'niboshi',
         title: '帰れなくなった釣り人', desc: '一人で摩天楼に挑戦したが、道に迷って帰れなくなった 釣り人。今は 浦の島の海岸どうくつに 家を建てて住んでいる。亀の甲羅で守り、玉手箱で煙幕を放って戦う。物忘れがひどい。',
         special: sp('玉手箱 ぜんかい', [atk('all', 1.4, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.5 }])
-    }
+    },
+    // ----- ネット寺の 10 体 (5 章「ネット寺の のろい」。2026-10-29。ダンジョンの ネット寺と ネットの キャラ。D 6・C 4) -----
+    //   HTMLモックン・ローディン・エンジョウボウズは 黒い 紋に とりつかれて 寺に いる (map.js の MONS。助けると なかまに なる)
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'enjoubouzu', name: 'エンジョウボウズ', from: 'ダンジョン 016', area: 'tera', rank: 'D', element: 'ほのお', role: 'attacker', mul: {},
+        line: '炎上上等！', favorite: 'cider',
+        title: '炎上の申し子', desc: '炎上上等をモットーに炎上行為を繰り返している迷惑な奴。',
+        special: sp('大炎上', [atk('all', 1.7)])
+    },
+    {
+        id: 'bugmushi', name: 'バグムシ', from: 'ダンジョン 093', area: 'tera', rank: 'D', element: 'しぜん', role: 'jammer', mul: {},
+        line: 'ジジッ…エラー…', favorite: 'kyuuri',
+        title: 'バグを知らせる虫', desc: 'バグが発生すると、大量に湧いて出て、バグを知らせる。',
+        special: sp('バグ 大発生', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'htmlmokkun', name: 'HTMLモックン', from: 'ダンジョン 094', area: 'tera', rank: 'D', element: 'ふつう', role: 'defender', mul: {},
+        line: '<モックン>こんにちは</モックン>', favorite: 'onigiri',
+        title: 'よくあるよね', desc: 'タグを閉じ忘れると現れ、小ばかにしてくる。',
+        special: sp('タグ とじわすれ地獄', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'csspakkun', name: 'CSSパックン', from: 'ダンジョン 095', area: 'tera', rank: 'D', element: 'しぜん', role: 'attacker', mul: {},
+        line: 'パックン！ スタイル いただき！', favorite: 'kyuuri',
+        title: 'スタイル泥棒', desc: 'CSSでデザインしたスタイルを丸パクリする怪人。',
+        special: sp('スタイル まるパクリ', [atk('all', 1.7)])
+    },
+    {
+        id: 'nullpon', name: 'ヌルポン', from: 'ダンジョン 096', area: 'tera', rank: 'D', element: 'ふしぎ', role: 'jammer', mul: {},
+        line: 'ぬるぽ', favorite: 'melonpan',
+        title: 'ガッ！', desc: 'NullPointerExceptionの略。Javaでよくあるエラー。',
+        special: sp('ガッ！', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'loadingu', name: 'ローディン', from: 'ダンジョン 098', area: 'tera', rank: 'D', element: 'かぜ', role: 'jammer', mul: {},
+        line: 'しょうしょう おまちください…', favorite: 'choco',
+        title: 'くるくる回る者', desc: '読み込み中の画面に現れ、ずっとくるくる回っている。本人も何を待っているのかは知らない。',
+        special: sp('むげん 読みこみ', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.6 }])
+    },
+    {
+        id: 'mugenloop', name: 'ムゲンループ', from: 'ダンジョン 107', area: 'tera', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: {},
+        line: 'もういちど もういちど もういちど', favorite: 'melonpan',
+        title: '終わらない繰り返し', desc: '止まる条件を書き忘れると生まれる。同じことを永遠に繰り返し、パソコンを熱くする。',
+        special: sp('おわらない ループ', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'notfound', name: 'ノットファウンド', from: 'ダンジョン 110', area: 'tera', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: {},
+        line: '404……ここには なにも ない', favorite: 'melonpan',
+        title: 'ここには何もない', desc: 'リンク切れのページにひっそり住んでいる。探しに来た者に「何もない」と伝えるのが仕事。',
+        special: sp('404 の 闇', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'virusn', name: 'ウイルスン', from: 'ダンジョン 112', area: 'tera', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: {},
+        line: 'ぞうしょく します', favorite: 'melonpan',
+        title: '増える厄介者', desc: 'パソコンからパソコンへ渡り歩き、勝手に増える。ファイアウォールとは犬猿の仲。',
+        special: sp('パンデミック', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
+    },
+    {
+        id: 'firewall', name: 'ファイアウォール', from: 'ダンジョン 113', area: 'tera', rank: 'C', element: 'ほのお', role: 'defender', mul: {},
+        line: 'ここは とおしません', favorite: 'cider',
+        title: '炎の門番', desc: '燃える壁で怪しい者を通さない門番。たまに味方まで通さないのが玉にきず。',
+        special: sp('炎の 防壁', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'daishi', name: 'ダイシ', from: 'アソ・ダンジョン', area: 'tera', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: { mag: 1.15, hp: 1.05 },
+        line: 'よくぞ参られた。拙僧が相手いたそう。', favorite: 'onigiri',
+        title: 'ネット寺の和尚', desc: 'ASO四天王の1人。有名な和尚で、いろいろな所に出向いてお経をあげてきた。仏の顔と鬼の顔をあわせ持ち、鬼になると戦闘力は計り知れない。最近はネットの世界を救おうと「ネット寺」を立ち上げた。',
+        special: sp('鬼の 顔', [{ kind: 'buff', target: 'self', stat: 'atk', amount: 0.6, time: 10 }, atk('all', 1.5, { magic: true, element: 'ふしぎ' })])
+    },
+    // ----- 進化で なる 16 体 (2026-10-29。ダンジョンの 進化表の 進化先。evo: 進化する 前の キャラ) -----
+    //   町には 出ない。進化前の キャラが 決まった Lv に なると 進化する (EVOLVE)。ランクは 進化前の 1 つ上、好物と 能力の くせは 進化前と 同じ
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'harigeneral', name: 'ハリジェネラル', from: 'ダンジョン 053', area: 'ishinokawa', evo: 'haribaby', rank: 'D', element: 'ふつう', role: 'attacker', mul: { hp: 0.9, atk: 1.05 },
+        line: '突撃ハリ！', favorite: 'cider',
+        title: '優秀な兵', desc: '免許を持ったハリー。見違えるほどたくましく成長した。',
+        special: sp('針の 総攻撃', [atk('all', 1.7)])
+    },
+    {
+        id: 'joubachi', name: 'ジョオウバチ', from: 'ダンジョン 054', area: 'ishinokawa', evo: 'mumenbachi', rank: 'D', element: 'かぜ', role: 'attacker', mul: { hp: 0.8, spd: 1.25 },
+        line: '免許？ 女王には いらないの', favorite: 'choco',
+        title: '無免許の女王', desc: '無免許のまま女王になったが、女王なので、何とかなる。',
+        special: sp('女王の 一刺し', [atk('all', 1.7)])
+    },
+    {
+        id: 'oodonguriko', name: 'オオドングリコ', from: 'ダンジョン 055', area: 'ishinokawa', evo: 'donguriko', rank: 'D', element: 'しぜん', role: 'defender', mul: { hp: 0.9 },
+        line: 'ゴロゴロゴロ～！', favorite: 'kyuuri',
+        title: 'でかいドングリ', desc: '前兆３Mのドングリ。どんぐりころころで魚ごと叩き潰した。',
+        special: sp('どんぐり 大ころがし', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'nemuridakeou', name: 'ネムリダケオウ', from: 'ダンジョン 056', area: 'ishinokawa', evo: 'nemuridake', rank: 'D', element: 'しぜん', role: 'jammer', mul: {  },
+        line: 'おやすみ…みんな…', favorite: 'melonpan',
+        title: '不眠症の王', desc: 'ネムリダケが月のちりを浴びて進化した姿。「おやすみ」が口ぐせだが、本人は一度も眠れたことがない。王になって、周りを不眠症にする範囲も広がった。',
+        special: sp('王の 子守歌', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.6 }])
+    },
+    {
+        id: 'pekorisuking', name: 'ペコリスキング', from: 'ダンジョン 057', area: 'ishinokawa', evo: 'pekorisu', rank: 'D', element: 'かぜ', role: 'supporter', mul: { spd: 1.1 },
+        line: 'ぜんぶ いただきっ！', favorite: 'onigiri',
+        title: '森の大盗賊', desc: 'ペコリスがラッキーコインで進化した姿。食べ物だけでは満足できなくなり、目についたものを全部いただくようになった。それでもおなかはすいている。',
+        special: sp('キング たね ガトリング', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'tsutankobuju', name: 'ツタンコブジュ', from: 'ダンジョン 058', area: 'ishinokawa', evo: 'tsutankobu', rank: 'D', element: 'しぜん', role: 'defender', mul: { hp: 1.1, atk: 1.1 },
+        line: 'からめとる…', favorite: 'kyuuri',
+        title: '巨大なツタ', desc: 'ツタンコブが昆布を取りこんで進化した姿。これで昆布説がますます有力になったが、本人はツタだと言いはっている。',
+        special: sp('大ツタしばり', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'yoakefukurou', name: 'ヨアケフクロウ', from: 'ダンジョン 059', area: 'ishinokawa', evo: 'yofukashi', rank: 'D', element: 'かぜ', role: 'jammer', mul: { atk: 1.1 },
+        line: 'もう朝だホー', favorite: 'cider',
+        title: '朝をむかえた鳥', desc: 'ヨフカシフクロウが月の迷宮で夜を明かして進化した姿。何日も寝ないで朝をむかえた記録保持者として、仲間内では伝説になっている。まだ寝ない。',
+        special: sp('よあけの 一閃', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'hyougame', name: 'ヒョウガメ', from: 'ダンジョン 060', area: 'ishinokawa', evo: 'kogame', rank: 'D', element: 'こおり', role: 'defender', mul: { def: 1.2, spd: 0.9 },
+        line: '…（ひえひえ）', favorite: 'kyuuri',
+        title: '凍った亀', desc: 'コガメが海岸どうくつの冷たい海で凍って進化した姿。少しだけ大きくなって、少しだけ冷たくなった。それ以外の何物でもない。',
+        special: sp('ひょうけつ こうら', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'spamking', name: 'スパムキング', from: 'ダンジョン 064', area: 'shoutengai', evo: 'spamdama', rank: 'D', element: 'ふしぎ', role: 'supporter', mul: { spd: 1.1 },
+        line: '100万人目の お客様です！', favorite: 'choco',
+        title: '広告の王', desc: 'スパムダマが壊れたケーブルで進化した姿。見てもらいたい気持ちがあふれ、ついに「100万人目のお客様」を名乗り出した。当選した人は今のところいない。',
+        special: sp('100万人目の あらし', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'hitodamaou', name: 'ヒトダマオウ', from: 'ダンジョン 065', area: 'ishinokawa', evo: 'rousokubi', rank: 'D', element: 'ほのお', role: 'attacker', mul: { mag: 1.2 },
+        line: 'めら～り', favorite: 'choco',
+        title: '青い炎の怪異', desc: 'ロウソクビがお寺のお香で進化した姿。火は青く燃えるようになり、もう簡単には消えない。それでも消えたときのことは、考えないほうがいい。',
+        special: sp('青い 鬼火', [atk('all', 1.7)])
+    },
+    {
+        id: 'kagebunshin', name: 'カゲブンシンダヌキ', from: 'ダンジョン 067', area: 'ishinokawa', evo: 'kawarimidanuki', rank: 'D', element: 'ふしぎ', role: 'jammer', mul: {  },
+        line: 'ドロロン！', favorite: 'onigiri',
+        title: '分身の達人', desc: 'カワリミダヌキが修行を重ねて進化した姿。変身だけでなく分身もできるようになったが、どれが本物か自分でもわからなくなるときがある。',
+        special: sp('百分身', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'yukimidaifuku', name: 'ユキミダイフク', from: 'ダンジョン 071', area: 'yama', evo: 'yukimidango', rank: 'C', element: 'こおり', role: 'defender', mul: { def: 1.1, hp: 1.05 },
+        line: 'ひんやり おつきみ～', favorite: 'onigiri',
+        title: '雪の大福', desc: 'ユキミダンゴが星のかけらで進化した姿。団子がひとつにまとまって大福になった。中身はたぶん長男。',
+        special: sp('おつきみ 大福', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'muscletitan', name: 'マッスルタイタン', from: 'ダンジョン 072', area: 'school', evo: 'proteingolem', rank: 'C', element: 'ふつう', role: 'defender', mul: { hp: 1.15, atk: 1.2, spd: 0.8 },
+        line: 'タンパク…シツ…ゴールド…', favorite: 'niboshi',
+        title: 'プロテインの巨人', desc: 'プロテインゴーレムが鍛えぬいて進化した姿。ゴールドのプロテインしか口にしない。ステロイドのうわさは、本人がかたく否定している。',
+        special: sp('ゴールド タイタンプレス', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'hyouzanmuscle', name: 'ヒョウザンマッスル', from: 'ダンジョン 074', area: 'yama', evo: 'yukidarumuscle', rank: 'C', element: 'こおり', role: 'attacker', mul: { atk: 1.15, spd: 0.9 },
+        line: '冷えきった 筋肉こそ 最強', favorite: 'cider',
+        title: '氷山の筋肉', desc: 'ユキダルマッスルが月の迷宮の寒さで進化した姿。冷えきった筋肉は氷山のようにかたい。筋肉自慢の３男は、兄たちに追いつこうと今日も鍛えている。',
+        special: sp('氷山 マッスル', [atk('all', 1.7)])
+    },
+    {
+        id: 'kinkomimic', name: 'キンコミミック', from: 'ダンジョン 076', area: 'school', evo: 'takaramimic', rank: 'C', element: 'ふつう', role: 'defender', mul: { atk: 1.15 },
+        line: 'あけたな？ 暗証番号は？', favorite: 'choco',
+        title: '金庫のミミック', desc: 'タカラミミックが金の腕輪で進化した姿。宝箱から金庫になり、ますますかわいくなくなった。暗証番号を聞いてくるが、答えても噛まれる。',
+        special: sp('金庫 クラッシュ', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'daichouenou', name: 'ダイチョウエンオウ', from: 'ダンジョン 079', area: 'ishinokawa', evo: 'daichouenkin', rank: 'D', element: 'ふしぎ', role: 'jammer', mul: { hp: 1.05 },
+        line: 'おなか、ぐるぐるぐる～！', favorite: 'melonpan',
+        title: '大腸菌の王', desc: 'ダイチョウエンキンが育ちきった姿。友好型のままだが、おなかのぐるぐるは何倍にもなった。こおりくんとは昔からの友達らしい。',
+        special: sp('大腸 大混乱', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
+    },
 ];
 
 // わざ・術を つける
@@ -638,7 +836,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -649,7 +847,34 @@ LIST.forEach((n, i) => {
     NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || 'ishinokawa', base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
 });
 export const NAKAMA_IDS = LIST.map(n => n.id);
-export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area);
+// 地区で 出会う キャラ (進化で なる キャラは 入れない)
+export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo);
+
+// ----- 進化 (設計書 4.3。2026-10-29) -----
+//   なかまが 決まった Lv に なると、すがたが 変わって 進化先の キャラに なる (メダルは そのまま。Lv・けいけんちも そのまま)
+//   ダンジョンの 進化表 (allies.js の EVOLVE) を 写した。道具・ダンジョンが 条件の 進化も、いまは Lv だけで 進化する
+export const EVOLVE = {
+    haribaby: { to: 'harigeneral', lv: 22 },
+    mumenbachi: { to: 'joubachi', lv: 25 },
+    donguriko: { to: 'oodonguriko', lv: 20 },
+    nemuridake: { to: 'nemuridakeou', lv: 18 },
+    pekorisu: { to: 'pekorisuking', lv: 20 },
+    tsutankobu: { to: 'tsutankobuju', lv: 25 },
+    yofukashi: { to: 'yoakefukurou', lv: 26 },
+    kogame: { to: 'hyougame', lv: 24 },
+    otohimedai: { to: 'ryuuguudai', lv: 30 },
+    umibozun: { to: 'umibozuou', lv: 40 },
+    spamdama: { to: 'spamking', lv: 24 },
+    rousokubi: { to: 'hitodamaou', lv: 28 },
+    kawarimidanuki: { to: 'kagebunshin', lv: 38 },
+    yukimidango: { to: 'yukimidaifuku', lv: 30 },
+    proteingolem: { to: 'muscletitan', lv: 48 },
+    yukidarumuscle: { to: 'hyouzanmuscle', lv: 42 },
+    takaramimic: { to: 'kinkomimic', lv: 45 },
+    koorimodoki: { to: 'koorimodokishin', lv: 50 },
+    daichouenkin: { to: 'daichouenou', lv: 30 },
+};
+export const evolveOf = id => EVOLVE[id] || null;
 
 // 1 章の ボス: 石の川橋の ヌシ (ハシシタボウズの 大きな すがた)。たおすと ハシシタボウズが なかまに なる
 export const BOSSES = {
@@ -719,6 +944,31 @@ export const BOSSES = {
         ],
         bigMove: { name: '黒い紋の 玉手箱', every: 13, warn: 2.5, effects: [atk('all', 1.4, { magic: true, element: 'みず' }), { kind: 'status', target: 'all', status: 'possess', chance: 0.25 }] },
         befriends: 'urashima', lv: 20, place: 'cave'
+    },
+    // 5 章の ボス: 黒い 紋に のまれた ダイシ (ネット寺の 本堂の 前)。たおすと 紋が 消えて なかまに なる
+    //   仏の顔: 説法 (全体 ねむり)・錫杖 (1 体に 中)・数珠まわし (全体に 小)・配信の お経 (全体 こんらん)
+    //   HP が 半分に なると 鬼の顔 (phase2) に かわる (前作の「鬼になると戦闘力は計り知れない」): こうげきが 上がり、わざが かわる
+    //   必殺技: 鬼神 ネット念仏 (予告つき。鬼の顔の あいだは 間かくが みじかい)
+    daishi5: {
+        id: 'daishi5', name: 'ダイシ (黒い紋)', element: 'ふしぎ', role: 'jammer', art: 'daishi', scale: 1.5, rank: 'B',
+        base: { hp: 740, atk: 14, def: 14, spd: 10, mag: 15 },
+        moves: [
+            { name: '説法', w: 2, effects: [{ kind: 'status', target: 'all', status: 'sleep', chance: 0.35 }] },
+            { name: '錫杖', w: 3, effects: [atk('one', 1.3)] },
+            { name: '数珠まわし', w: 2, effects: [atk('all', 0.6)] },
+            { name: '配信の お経', w: 1.5, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.4 }] }
+        ],
+        bigMove: { name: 'ネット念仏', every: 14, warn: 2.5, effects: [atk('all', 1.2, { magic: true, element: 'ふしぎ' })] },
+        phase2: {
+            at: 0.5, name: '鬼の顔', atk: 0.3,
+            moves: [
+                { name: '鬼の 錫杖', w: 3, effects: [atk('one', 1.6)] },
+                { name: '鬼の にらみ', w: 2, effects: [{ kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }] },
+                { name: '鬼の 数珠ぜめ', w: 2, effects: [atk('all', 0.85)] }
+            ],
+            bigMove: { name: '鬼神 ネット念仏', every: 12, warn: 2.5, effects: [atk('all', 1.35, { magic: true, element: 'ふしぎ' })] }
+        },
+        befriends: 'daishi', lv: 23, place: 'tera'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

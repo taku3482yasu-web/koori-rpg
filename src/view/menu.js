@@ -8,13 +8,13 @@
 // 一覧は 十字キー・マウスホイール で スクロール
 // =====================================================================
 import { ART } from '../art/index.js';
-import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf, evolveOf } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, isKeyboard } from '../core/keys.js';
-import { medalByUid, friendCount } from '../logic/game.js';
+import { medalByUid, friendCount, bondLevel } from '../logic/game.js';
 import { statsAt, expFor } from '../logic/units.js';
 import { questList, questState, questProgress, questReady } from '../logic/quests.js';
 import { FRIENDS } from '../data/map.js';
@@ -125,8 +125,9 @@ export function createMenu(app) {
     function drawNakama(ctx, id, medal, { known = true } = {}) {
         const n = unitOf(id);
         panel(ctx, 10, 10, 150, 220, { fill: 'rgba(255,255,255,0.06)' });
-        if (known) drawArt(ctx, ART[n.art], Math.floor(t * 2), 85, 130, { scale: 6 });
-        else drawArt(ctx, ART[n.art], 0, 85, 130, { scale: 6, tint: '#0a0f20' });
+        const big = ART[n.art].h > 24 ? 3.4 : 6;   // 人の 絵の ように 背の 高い 絵は 小さく
+        if (known) drawArt(ctx, ART[n.art], Math.floor(t * 2), 85, 130, { scale: big });
+        else drawArt(ctx, ART[n.art], 0, 85, 130, { scale: big, tint: '#0a0f20' });
         text(ctx, n.hero ? 'しゅじんこう' : `No.${String(n.no).padStart(3, '0')}`, 20, 30, { size: 11, color: COLORS.sub });
         text(ctx, known ? n.name : '？？？', 170, 30, { size: 17, bold: true });
         if (!known) {
@@ -139,8 +140,11 @@ export function createMenu(app) {
         wrap(ctx, n.desc, 215, ds).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * (ds + 3.5), { size: ds }));
         // バトルで 使う わざ・術・必殺技 (2026-10-27)
         text(ctx, `わざ: ${n.waza.name}　術: ${n.jutsu.name} (${JUTSU_RANK_NAMES[n.jutsu.tier]})`, 170, 150, { size: 11, maxWidth: 220 });
-        text(ctx, `必殺技: ${n.special.name}`, 170, 166, { size: 11, maxWidth: 220 });
-        if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}`, 170, 182, { size: 11 });
+        const bond = known && !n.hero ? bondLevel(g, id) : 0;
+        text(ctx, `必殺技: ${n.special.name}${bond ? `　絆Lv${bond} (威力 +${bond * 10}%)` : ''}`, 170, 166, { size: 11, maxWidth: 220 });
+        // 進化 (2026-10-29): 進化する Lv と 進化先
+        const ev = evolveOf(id);
+        if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}${ev ? `　Lv${ev.lv}で ${NAKAMA[ev.to].name}に 進化` : n.evo ? `　${NAKAMA[n.evo].name}が 進化した すがた` : ''}`, 170, 182, { size: 11, maxWidth: 220 });
         if (medal) {
             const s = statsAt(id, medal.lv);
             text(ctx, `Lv${medal.lv}  HP${s.hp} こうげき${s.atk} ぼうぎょ${s.def}`, 170, 196, { size: 11 });

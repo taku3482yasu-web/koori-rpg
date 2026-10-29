@@ -118,7 +118,7 @@ test('4 章: ともいしと 話す → 電車で 海辺の 町 → ライバル
         assert.equal(out.befriend.id, 'urashima');
         assert.equal(g.story, 'clear4');
         assert.ok(!peopleHere(g).some(p => p.id === 'urashima4'));
-        assert.match(objective(g), /海 1\/9/);
+        assert.match(objective(g), /ともいし/, '4 章 クリアの あとは 5 章へ');
     }
 });
 
@@ -328,4 +328,80 @@ test('にげたら お金も けいけんちも かわらない', () => {
     assert.equal(g.money, 500);
     assert.equal(out.money, 0);
     assert.equal(out.exp, 0);
+});
+
+test('5 章: ともいしの 手紙 → 電車で ネット寺 → 紋の 3 体を 助けると なかまに → 紋の ダイシを たおすと 5 章 クリア (2026-10-29)', async () => {
+    const { startChapter5, arriveTera, trainLines, monsSaved } = await import('../src/logic/game.js');
+    const { MONS } = await import('../src/data/map.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    g.story = 'umibe';
+    assert.ok(!startChapter5(g));
+    assert.deepEqual(trainLines(g), ['umi']);
+    g.story = 'clear4';
+    assert.ok(startChapter5(g));
+    assert.deepEqual(trainLines(g), ['umi', 'tera'], '電車の 行き先が ふえる');
+    assert.ok(arriveTera(g));
+    assert.ok(!arriveTera(g));
+    assert.ok(peopleHere(g).some(p => p.id === 'daishiNpc'));
+    assert.ok(!peopleHere(g).some(p => p.id === 'daishi5'));
+    for (const m of MONS) {
+        assert.ok(blockedTile(g, m.x, m.y), `${m.id} は 立っている`);
+        const b = winBattle(g, [{ id: m.nakama, lv: m.lv }]);
+        b.mystery = m.id;
+        const out = applyBattleResult(g, b, rng);
+        assert.ok(out.befriend && out.befriend.forced && out.befriend.id === m.nakama, '助けると なかまに なる');
+        assert.ok(!blockedTile(g, m.x, m.y), '助けると いなくなる');
+    }
+    assert.equal(monsSaved(g), 3);
+    assert.ok(!peopleHere(g).some(p => p.id === 'daishiNpc'));
+    assert.ok(peopleHere(g).some(p => p.id === 'daishi5'), '3 体 助けると ダイシが 紋に のまれる');
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('daishi5'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'daishi');
+    assert.equal(g.story, 'clear5');
+    assert.match(objective(g), /寺 4\/11/);
+});
+
+test('進化: 決まった Lv に なると 進化先の キャラに なる (メダル・Lv は そのまま。図鑑にも のる)', async () => {
+    const { evolveMedal } = await import('../src/logic/game.js');
+    const { EVOLVE, NAKAMA } = await import('../src/data/nakama.js');
+    for (const [from, ev] of Object.entries(EVOLVE)) {
+        assert.ok(NAKAMA[from] && NAKAMA[ev.to], `${from} → ${ev.to}`);
+        assert.ok(ev.lv > 1);
+    }
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const medal = g.medals.find(m => m.id === 'daichouenkin');
+    assert.equal(evolveMedal(g, medal), null, 'Lv が たりないと 進化しない');
+    // けいけんちを たくさん もらう バトルに 勝つと Lv30 を こえて 進化する
+    medal.lv = 29;
+    medal.exp = 8 * Math.pow(28, 1.9) + 1;
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const out = applyBattleResult(g, winBattle(g, [{ id: 'koorimodoki', lv: 60 }]), rng);
+    assert.ok(out.evolved.some(e => e.from === 'daichouenkin' && e.to === 'daichouenou'));
+    assert.equal(medal.id, 'daichouenou');
+    assert.ok(g.zukan.friends.daichouenou);
+    assert.ok(out.levelUps.some(u => u.uid === medal.uid && u.id === 'daichouenou'));
+});
+
+test('絆レベル: 同じ キャラを もう 1 体 なかまに すると 上がり (最大 5)、必殺技の 威力が 上がる', async () => {
+    const { bondLevel, addMedal } = await import('../src/logic/game.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    assert.equal(bondLevel(g, 'daichouenkin'), 0);
+    addMedal(g, 'daichouenkin', 5);
+    assert.equal(bondLevel(g, 'daichouenkin'), 1);
+    for (let i = 0; i < 8; i++) addMedal(g, 'daichouenkin', 5);
+    assert.equal(bondLevel(g, 'daichouenkin'), 5, '最大 5');
+    assert.equal(bondLevel(g, 'koori'), 0);
+    // 同じ ゲージ・同じ 乱数で、絆 5 の 必殺技は 絆 0 より 強い
+    const { createBattle, resolveSpecial } = await import('../src/logic/battle.js');
+    const hit = bond => {
+        const b = createBattle({ allies: [{ uid: 'a', id: 'daichouenkin', lv: 20, bond }], enemies: [{ id: 'kogame', lv: 40 }], rng: createRng(5) });
+        const e = b.enemies[0], before = e.hp;
+        resolveSpecial(b, b.wheel[0], 1);
+        return before - e.hp;
+    };
+    assert.ok(hit(5) > hit(0));
 });

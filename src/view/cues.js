@@ -123,6 +123,12 @@ const CUES = {
         }
         if ((t % 3) < 0.6) { r(ctx, x - 6, y + 1, 3, 2, '#e05a3a'); r(ctx, x + 4, y + 1, 3, 2, '#e05a3a'); }
     },
+    // おさいせん箱の まわりに ときどき 色の ノイズ (バグった 画面の ような。5 章)
+    glitch(ctx, x, y, t) {
+        if ((t % 2.2) > 0.5) return;
+        const cols = ['#ff3a8a', '#3affe0', '#ffe03a'];
+        for (let i = 0; i < 5; i++) r(ctx, x - 8 + ((i * 7 + Math.floor(t * 30)) % 16), y - 6 + i * 3, 3 + (i % 3) * 2, 1, cols[i % 3]);
+    },
     // しおだまりから ピンクの しょくしゅが ゆらゆら 出ている (4 章)
     tidePool(ctx, x, y, t) {
         for (let i = 0; i < 4; i++) {

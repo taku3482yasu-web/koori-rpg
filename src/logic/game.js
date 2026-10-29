@@ -12,14 +12,17 @@
 //   clear3   3 章 クリア。ここから 4 章「海辺の どうくつと ライバル探検隊」: 家の 前の ともいしと 話す
 //   umi      商店街の 石の川駅から 電車で 海辺の 町へ 行ける
 //   umibe    海辺の 町に 着いた。ライバル探検隊が どうくつの 通路を ふさぐ → 勝つ (flags.rival4) → 奥の 浦の島重蔵 (ボス)
-//   clear4   4 章 クリア。なかまを あつめる (順番は story.js)
+//   clear4   4 章 クリア。ここから 5 章「ネット寺の のろい」: 家の 前の ともいしと 話すと ダイシの 手紙
+//   tera     石の川駅から 電車で ネット寺へ 行ける
+//   netdera  ネット寺に 着いた。黒い 紋の 3 体を 助ける (g.mysteries・なかまに なる) → 紋に のまれた ダイシ (ボス)
+//   clear5   5 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached } from './story.js';
-import { MYSTERIES, SEALS } from '../data/map.js';
+import { MYSTERIES, SEALS, MONS } from '../data/map.js';
 
 export const SAVE_VERSION = 1;
 export const VERSIONS = { naitei: '内定', menkyo: '免許' };
@@ -95,6 +98,23 @@ export function addHero(g, lv = 5) {
 }
 export const watchMedals = g => g.watch.map(uid => (uid ? medalByUid(g, uid) : null));
 
+// ----- 絆レベル (設計書 4.3。2026-10-29) -----
+// 同じ キャラを もう 1 体 なかまに すると 絆レベルが 1 上がる (最大 5)。必殺技の 威力が 1 つにつき +10%
+export const BOND_MAX = 5;
+export const bondLevel = (g, id) => (id === HERO_ID ? 0 : Math.min(BOND_MAX, Math.max(0, g.medals.filter(m => m.id === id).length - 1)));
+
+// ----- 進化 (設計書 4.3。2026-10-29) -----
+// 決まった Lv に なったら 進化先の キャラに なる (メダル・Lv・けいけんちは そのまま)。図鑑にも のる。進化したら { uid, from, to }
+export function evolveMedal(g, medal) {
+    const ev = evolveOf(medal.id);
+    if (!ev || medal.lv < ev.lv) return null;
+    const from = medal.id;
+    medal.id = ev.to;
+    g.zukan.friends[ev.to] = true;
+    g.zukan.seen[ev.to] = true;
+    return { uid: medal.uid, from, to: ev.to };
+}
+
 // ----- 時間と 天気 -----
 // ベッドで ねると 時間が 進む。夜の 次は 次の日の 朝 (天気を 決めなおす)
 export function advanceTime(g, rng) {
@@ -155,7 +175,7 @@ export function befriendRate(g, id, food) {
 
 // バトルの 結果を ゲームに 入れる。返り値は 結果画面に 出す 中身
 export function applyBattleResult(g, battle, rng) {
-    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === 'boss', mystery: battle.mystery || null };
+    const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], evolved: [], befriend: null, boss: battle.kind === 'boss', mystery: battle.mystery || null };
     if (battle.outcome === 'flee') return out;   // にげたら なにも かわらない
     if (battle.outcome !== 'win') {
         out.money = -Math.floor(g.money * 0.1);
@@ -172,10 +192,20 @@ export function applyBattleResult(g, battle, rng) {
     for (const m of watchMedals(g)) {
         if (!m) continue;
         const up = gainExp(m, out.exp);
-        if (up) out.levelUps.push({ uid: m.uid, id: m.id, lv: m.lv });
+        if (!up) continue;
+        const ev = evolveMedal(g, m);
+        if (ev) out.evolved.push(ev);
+        out.levelUps.push({ uid: m.uid, id: m.id, lv: m.lv });
     }
     // 七不思議の 正体に 勝った (2 章)
     if (out.mystery) g.mysteries[out.mystery] = true;
+    // 黒い 紋の なかまを 助けた (5 章): 紋が 消えて なかまに なる
+    const mon = MONS.find(m => m.id === out.mystery);
+    if (mon) {
+        out.befriend = { id: mon.nakama, medal: addMedal(g, mon.nakama, mon.lv), forced: true };
+        out.mon = mon.id;
+        return out;
+    }
     // ライバル探検隊に 勝った (4 章)。なかまには ならない
     if (battle.kind === 'rival') {
         g.flags.rival4 = true;
@@ -191,6 +221,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'kage') { g.story = 'clear2'; g.chapter = 3; }
         if (bossId === 'himuro') { g.story = 'clear3'; g.chapter = 4; }
         if (bossId === 'urashima4') { g.story = 'clear4'; g.chapter = 5; }
+        if (bossId === 'daishi5') { g.story = 'clear5'; g.chapter = 6; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -260,11 +291,18 @@ export function objective(g) {
         case 'umi': return '商店街の 西の はしの 石の川駅から、電車で 海辺の 町へ 行こう';
         case 'umibe': return g.flags.rival4 ? '浦の島の海岸どうくつの いちばん 奥へ 行こう'
             : '浦の島の海岸どうくつの 奥へ すすもう (ライバル探検隊が 先に 行った)';
+        // 5 章「ネット寺の のろい」
+        case 'clear4': return 'こおりくんの 家の 前の ともいしと 話そう';
+        case 'tera': return '石の川駅から、電車で ネット寺へ 行こう';
+        case 'netdera': {
+            const n = monsSaved(g);
+            return n < MONS.length ? `ネット寺の 黒い 紋の なかまを 助けよう (${n}/${MONS.length})` : '本堂の 前の ダイシの ようすが へんだ……！';
+        }
         default: {
-            // 4 章 クリアの あと: なかま あつめ
+            // 5 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}`;
         }
     }
 }
@@ -283,6 +321,24 @@ export function arriveUmi(g) {
 }
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
+// 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : [])];
+
+// 5 章の はじまり: 4 章 クリアの あと ともいしと 話すと ダイシの 手紙。はじめて なら true
+export function startChapter5(g) {
+    if (g.story !== 'clear4') return false;
+    g.story = 'tera';
+    return true;
+}
+// ネット寺に はじめて 着いた。はじめて なら true
+export function arriveTera(g) {
+    if (g.story !== 'tera') return false;
+    g.story = 'netdera';
+    return true;
+}
+// 黒い 紋の なかまを 何体 助けたか (5 章)
+export const monsSaved = g => MONS.filter(m => g.mysteries && g.mysteries[m.id]).length;
+export const allMonsSaved = g => monsSaved(g) >= MONS.length;
 
 export const spotById = id => SPOTS.find(s => s.id === id);
 

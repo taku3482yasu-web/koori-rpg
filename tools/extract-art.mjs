@@ -57,9 +57,14 @@ const BIG_KEYS = ['kogame', 'tsuribariuo', 'mokugyoro', 'rousokubi', 'daichouenk
     'tamatebakogani', 'isoginchakku', 'otohimedai', 'asedakku', 'uniharry', 'ryuuguudai', 'nakatadraco', 'umibozuou', 'urashima',
     // 4 章の ライバル探検隊 (内定: ASK-3 / 免許: お願いマッスル)
     'asahara', 'sasaki', 'kotani', 'ueno', 'shibata', 'ikekimu'];
+// 5 章 ネット寺の 10 体・ボスの ダイシ・進化先 16 体 (2026-10-29)。文字列の 絵か 四角の 絵かは 自動で 見る
+const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon', 'loadingu', 'mugenloop', 'notfound', 'virusn', 'firewall', 'daishi',
+    'harigeneral', 'joubachi', 'oodonguriko', 'nemuridakeou', 'pekorisuking', 'tsutankobuju', 'yoakefukurou', 'hyougame',
+    'spamking', 'hitodamaou', 'kagebunshin', 'yukimidaifuku', 'muscletitan', 'hyouzanmuscle', 'kinkomimic', 'daichouenou'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);
+for (const k of AUTO_KEYS) out[k] = KD.Art.SPRITES[k] ? fromSprite(KD.Art.SPRITES[k]) : fromBig(KD.BigArt.BIG[k]);
 
 const body = Object.entries(out).map(([k, a]) =>
     `    ${k}: {\n        w: ${a.w}, h: ${a.h},\n        palette: ${JSON.stringify(a.palette)},\n        frames: [\n${a.frames.map(f => `            [\n${f.map(r => `                '${r}'`).join(',\n')}\n            ]`).join(',\n')}\n        ]\n    }`).join(',\n');

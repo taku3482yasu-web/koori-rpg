@@ -470,6 +470,62 @@ try {
     await skipTalk();
     check(await evaluate('window.__app.g.pos.y < 60 * 16'), '海辺駅から 電車で 石の川に もどる');
 
+    // ----- 5 章: ともいしの 手紙 → 電車で ネット寺 → 紋の 3 体 → 紋の ダイシ (鬼の顔) (2026-10-29) -----
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "tera"'), '4 章 クリアの あと ともいしと 話すと ダイシの 手紙 (5 章)');
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('tera-arrive');
+    check(await evaluate('window.__app.g.story === "netdera" && window.__app.g.pos.y > 156 * 16'), '石の川駅で 行き先を えらんで 電車で ネット寺へ');
+    for (const [id, x, y] of [['monShouro', 12, 168], ['monShoko', 35, 168], ['monSandou', 23, 177]]) {
+        await at(x, y, 'up');
+        await key('KeyJ');
+        await skipTalk();
+        await sleep(300);
+        check(await evaluate(`window.__app.scene.name === "battle" && window.__app.scene.battle.mystery === "${id}"`), `黒い 紋の なかま (${id}) と バトル`);
+        await winNow();
+        await skipTalk(30);
+    }
+    await shot('tera-mons');
+    check(await evaluate('["htmlmokkun", "loadingu", "enjoubouzu"].every(id => window.__app.g.medals.some(m => m.id === id))'), '紋の 3 体を 助けると なかまに なる');
+    await at(26, 165, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "daishi5"'), '3 体 助けると 紋に のまれた ダイシと バトル');
+    await key('KeyJ');
+    await sleep(800);
+    await evaluate('(() => { const e = window.__app.scene.battle.enemies[0]; e.hp = Math.floor(e.max * 0.4); return true; })()');
+    await sleep(600);
+    await shot('tera-boss');
+    check(await evaluate('window.__app.scene.battle.enemies[0].phased === true'), 'ダイシ: HP が 半分を 下まわると 鬼の顔');
+    await winNow();
+    await skipTalk(30);
+    await shot('tera-clear');
+    check(await evaluate('window.__app.g.story === "clear5" && window.__app.g.medals.some(m => m.id === "daishi")'), 'ダイシを たおすと 5 章 クリア (なかまに なる)');
+
+    // ----- 進化 (2026-10-29): Lv が 上がって 決まった Lv を こえると 結果画面で 進化 -----
+    await evaluate('(() => { const g = window.__app.g; const m = g.medals.find(x => x.id === "daichouenkin"); m.lv = 29; m.exp = Math.ceil(8 * Math.pow(28, 1.9)) + 1; if (!g.watch.includes(m.uid)) g.watch[0] = m.uid; window.__app.startBattle({ enemies: [{ id: "koorimodoki", lv: 60 }], kind: "wild", place: "tera" }); return true; })()');
+    await sleep(300);
+    await key('KeyJ');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
+    let sawEvolve = false;
+    for (let i = 0; i < 10 && !(await sceneIs('field')); i++) {
+        if (await evaluate('window.__app.scene.name === "result" && window.__app.scene.debug.page() === "evolve"')) { sawEvolve = true; await sleep(900); await shot('evolve'); }
+        await key('KeyJ');
+        await sleep(400);
+    }
+    await skipTalk();
+    check(sawEvolve && await evaluate('window.__app.g.medals.some(m => m.id === "daichouenou")'), '進化: ダイチョウエンキンが Lv30 で ダイチョウエンオウに 進化 (結果画面に 出る)');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

@@ -3,21 +3,23 @@
 // 2 章: 小学校の 入り口 (夕方・夜) から 校舎の 中へ。七不思議を 調べると バトル。げた箱の マットで 外へ
 // 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → 氷の 封印 3 つ → ダムの主 (ヒョウガリュウ)
 // 4 章: ともいしと 話す → 商店街の 石の川駅から 電車で 海辺の 町へ → ライバル探検隊 (バージョンで ちがう) → 黒い 紋の 浦の島重蔵
-//   セリフは ストーリー工房 (https://claude.ai/artifact/2FExjjNSVxzmaDyk81oJxH) の 4 章の とおり
+// 5 章: ともいし → ダイシの 手紙 → 電車で ネット寺 → 黒い 紋の 3 体を 助ける → コオニンの かげ → 紋に のまれた ダイシ
+//   セリフは ストーリー工房 (https://claude.ai/artifact/2FExjjNSVxzmaDyk81oJxH) の 4 章・5 章の とおり
 // =====================================================================
 import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
-    YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile } from '../data/map.js';
+    YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
+    TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
-import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved, personArt } from '../logic/world.js';
+import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved, personArt, monsHere } from '../logic/world.js';
 import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
-    startChapter4, arriveUmi, canRideTrain, rivalEnemies } from '../logic/game.js';
+    startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -62,8 +64,9 @@ export function createField(app) {
     const hiding = s => spotActive(g, s, g.playTime) && !wild.list.some(c => c.spot === s.id);
 
     // 学校の 中・山・海に いるか (町と 学校と 山と 海は つながって いないので、カメラも 地図も べつに する)
-    const inUmi = () => g.pos.y >= UMI_Y0 * TILE;
-    const inYama = () => g.pos.y >= YAMA_Y0 * TILE && !inUmi();
+    const inTera = () => g.pos.y >= TERA_Y0 * TILE;
+    const inUmi = () => g.pos.y >= UMI_Y0 * TILE && !inTera();
+    const inYama = () => g.pos.y >= YAMA_Y0 * TILE && g.pos.y < UMI_Y0 * TILE;
     const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && g.pos.y < YAMA_Y0 * TILE;
     const inCave = () => { const ht = heroTile(g); return inCaveTile(ht.x, ht.y); };
     const region = () => regionOf(Math.floor(g.pos.y / TILE));
@@ -134,8 +137,22 @@ export function createField(app) {
                 // 4 章から (前作の ともいしの 口調: こおりを「こおり」と よぶ・博多弁)
                 umi: ['海辺の 町に 行くとね？ 電車は 商店街の 西の はしの 石の川駅からよ。', 'こおり、知らない 人に ついて いったら いかんよ！'],
                 umibe: ['海辺の 町は どうやった？ ……こおり、あんた とけとらんね？ 日焼けには 気を つけなさい！'],
-                clear4: ['海辺の 町でも 大活躍したらしいね！ ……でも その フードの 人、なんか 気味が わるかね。', `なかまは ${friendCount(g)} 人？ ……それより こおり、お金は ちゃんと 返しなさいよ！`]
+                clear4: ['海辺の 町でも 大活躍したらしいね！ ……でも その フードの 人、なんか 気味が わるかね。', `なかまは ${friendCount(g)} 人？ ……それより こおり、お金は ちゃんと 返しなさいよ！`],
+                tera: ['ネット寺に 行くとね？ 電車は 石の川駅からよ。', 'お寺では しずかに しなさいよ！ こおり、あんたは いっつも うるさいけん。'],
+                netdera: ['ネット寺は どうやった？ ダイシさん、元気に しとんしゃった？'],
+                clear5: ['ネット寺の のろいも といたらしいね！ ……ルキハ？ なんか こわい 名前やね。', `なかまは ${friendCount(g)} 人？ ……こおり、ちゃんと 宿題も しなさいよ！`]
             }[g.story];
+            if (startChapter5(g)) {
+                // 5 章の はじまり「ダイシの 手紙」(ストーリー工房 5 章 場面 1)
+                say([
+                    tomo('こおり、あんた あてに 手紙が きとるよ。'),
+                    nar('ネット寺の ダイシから 手紙が とどいた。'),
+                    nar('「寺の 者たちが 黒い 紋に のろわれた。たすけて ほしい。」'),
+                    furu('また 黒い 紋……！ 行こう、こおりくん！'),
+                    nar('石の川駅から、電車で ネット寺へ 行けるように なった！')
+                ], { done: () => app.save() });
+                return;
+            }
             if (startChapter4(g)) {
                 // 4 章の はじまり「王冠の なぞ」(ストーリー工房 4 章 場面 1)
                 say([
@@ -161,6 +178,15 @@ export function createField(app) {
                 furu('あの 紋、王冠の 箱に のこってた 黒い すすと 同じだ！'),
                 furu('紋が 光ったら 大技が くるよ！ 輪を 回して、守りの 強い なかまを 前に 出して！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('urashima4'), kind: 'boss', place: 'cave' }) });
+        } else if (p.id === 'daishiNpc') {
+            say([by('daishi', `紋つきの 者たちを、どうか 救って くだされ。……紋を はらえば、きっと 正気に もどりますぞ。(${monsSaved(g)}/${MONS.length})`)]);
+        } else if (p.id === 'daishi5') {
+            // 5 章の ボス: 紋に のまれた ダイシ (仏の顔 → HP が 半分で 鬼の顔)
+            say([
+                nar('ダイシの 体に、黒い 紋が どくどくと 脈うっている……。'),
+                by('daishi', '……ぐ……拙僧は……鬼に……なっては……ならぬ……！'),
+                furu('ダイシさんまで 紋に のまれちゃった！ 気を つけて、こおりくん！ 鬼の 顔に なったら もっと 強く なるよ！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('daishi5'), kind: 'boss', place: 'tera' }) });
         } else if (p.id === 'furukawaShrine') {
             meetFurukawa();
         } else if (p.id === 'kage') {
@@ -216,6 +242,11 @@ export function createField(app) {
             readOkunoin();
         } else if (b.id === 'station') {
             rideTrain();
+        } else if (b.id === 'teraStation') {
+            say([nar('ネット寺前駅。石の川 行きの 電車が とまっている。')], {
+                choices: ['石の川へ もどる', 'やめる'],
+                done: i => { if (i === 0) { sfx('watch'); warp(STATION_OUT); } }
+            });
         } else if (b.id === 'umiStation') {
             say([nar('海辺駅。石の川 行きの 電車が とまっている。')], {
                 choices: ['石の川へ もどる', 'やめる'],
@@ -242,7 +273,11 @@ export function createField(app) {
                 // 海辺の 町 (4 章)
                 umiHouse: reached(g, 'clear4') ? '漁師の おじさん「浦の島の じいさん、もとに もどったらしいな。よかった よかった。また 釣りばっかり しとるよ」'
                     : '漁師の おじさん「さいきん どうくつの 奥で、浦の島の じいさんが あばれとるらしい。いつもは 釣りばっかり しとる おとなしい じいさんなのに……」',
-                tsuriguya: '釣具屋の おばさん「夜の 桟橋には、大きな 黒い 坊主が 出るって うわさだよ。こわいねえ」'
+                tsuriguya: '釣具屋の おばさん「夜の 桟橋には、大きな 黒い 坊主が 出るって うわさだよ。こわいねえ」',
+                // ネット寺 (5 章)
+                hondou: reached(g, 'clear5') ? '本堂の 中で、ネット配信の お経が しずかに ながれている。' : '本堂の 中から、ノイズまじりの お経が 聞こえる……。',
+                shouro: '鐘楼の 鐘に「通知を オンに してね」と 書いた 札が はってある。',
+                shoko: reached(g, 'clear5') ? '書庫には 古い 書と、ノートパソコンが ならんでいる。' : '書庫の とびらに カギが かかっている。'
             }[b.id];
             say([{ who: '', text: msg }]);
         }
@@ -328,11 +363,15 @@ export function createField(app) {
     // 電車 (4 章): 商店街の 石の川駅 ⇔ 海辺駅。はじめて 着くと ライバル探検隊に 出会う (ストーリー工房 4 章 場面 2)
     function rideTrain() {
         if (!canRideTrain(g)) { say([nar('石の川駅。いまは 電車に 乗る 用事が ない。')]); return; }
-        say([nar('石の川駅。海辺の 町 行きの 電車が とまっている。')], {
-            choices: ['海辺の 町へ 行く', 'やめる'],
+        const lines = trainLines(g);
+        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く' };
+        say([nar(`石の川駅。${lines.length > 1 ? 'どこへ 行こうか？' : lines[0] === 'tera' ? 'ネット寺 行きの 電車が とまっている。' : '海辺の 町 行きの 電車が とまっている。'}`)], {
+            choices: [...lines.map(l => names[l]), 'やめる'],
             done: i => {
-                if (i !== 0) return;
+                const dest = lines[i];
+                if (!dest) return;
                 sfx('watch');
+                if (dest === 'tera') { goTera(); return; }
                 warp(UMI_IN);
                 if (!arriveUmi(g)) return;
                 const L = rivalLines();
@@ -343,6 +382,27 @@ export function createField(app) {
                     nar(`チーム「${rivalTeam(g.version).name}」は 東の 浦の島の海岸どうくつへ 走っていった！`)
                 ], { done: () => app.save() });
             }
+        });
+    }
+
+    // ネット寺に 着く (5 章)。はじめて なら ダイシが むかえる (ストーリー工房 5 章 場面 2)
+    function goTera() {
+        warp(TERA_IN);
+        if (!arriveTera(g)) return;
+        say([
+            nar('電車に ゆられて、ネット寺に 着いた。'),
+            by('daishi', 'よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。'),
+            by('daishi', '寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。'),
+            nar('境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。')
+        ], { done: () => app.save() });
+    }
+
+    // 黒い 紋の なかま (5 章): 話しかけると バトル。勝つと 紋が 消えて なかまに なる
+    function examineMon(m) {
+        const n = NAKAMA[m.nakama];
+        g.zukan.seen[m.nakama] = true;
+        say([...m.lines.map(text => nar(text)), { who: n.name, art: n.art, text: '「……ウ……ア……」' }, nar(`黒い 紋に とりつかれた ${n.name}が おそいかかってきた！`)], {
+            done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: 'wild', place: 'tera', mystery: m.id })
         });
     }
 
@@ -405,6 +465,31 @@ export function createField(app) {
                 { who: '', text: '３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。' },
                 furu('こおりくん、いちど 家に 帰ろうか。ともいしさんが 心配してるかも。')
             ], { done: () => app.save() });
+        } else if (result.mon && result.outcome === 'win') {
+            // 5 章: 紋が 消えて なかまに。3 体 ぜんぶ 助けると 鬼鬼団の かげ → ダイシが 紋に のまれる (ストーリー工房 5 章 場面 3)
+            const m = MONS.find(x => x.id === result.mon), n = monsSaved(g);
+            const lines = [nar(`${NAKAMA[m.nakama].name}の 黒い 紋が 消えた！ (${n}/${MONS.length})`)];
+            if (allMonsSaved(g)) {
+                lines.push(
+                    nar('本堂の うらから、鬼の 角の かげが 走り去った。'),
+                    furu('いまの……鬼鬼団の コオニンだよ！ なんで 鬼鬼団が……？'),
+                    { who: 'こおりくん', art: 'koori', text: '（おにおにが こんな こと する かな……？）' },
+                    { who: 'こおりくん', art: 'koori', text: '（まあ、パチンコに負けたらしそうかな。）' },
+                    nar('そのとき、本堂の 前の ダイシの 体に、黒い 紋が うかびあがった！')
+                );
+            }
+            say(lines, { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'daishi5') {
+            // 5 章 クリア: 書庫で ルキハの 名前 (ストーリー工房 5 章 場面 4)
+            warp(TERA_AFTER_BOSS);
+            say([
+                nar('ダイシの 黒い 紋が、けむりの ように 消えた。'),
+                by('daishi', '……かたじけない。拙僧も 紋に のまれ、鬼の 顔に なって おりました。'),
+                by('daishi', '紋を つけた 者の 名は……「ルキハ」。人の すがたを した、なにか ですぞ。'),
+                furu('ルキハ……。'),
+                nar('５章 クリア！ 紋が 消えた キャラたちが ネット寺を 歩きまわるように なった。'),
+                nar('―― ６章は つぎの アップデートで。')
+            ], { done: () => app.save() });
         } else if (result.rival && result.outcome === 'win') {
             // 4 章: ライバル探検隊に 勝つと 通路を ゆずって くれる
             say([...rivalLines().lose.map(([id, text]) => by(id, text)), nar('ライバル探検隊は 道を ゆずった。'), furu('奥から だれかの 声が する……！ 行ってみよう！')], { done: () => app.save() });
@@ -420,7 +505,7 @@ export function createField(app) {
                 { who: 'フードの 人', text: '……ほう、紋が とけたか。まあ いい。味見は じゅうぶんだ。' },
                 nar('人かげは 霧の ように 消えた。'),
                 nar('４章 クリア！ どうくつの 奥にも キャラが 出るように なった。'),
-                nar('―― ５章は つぎの アップデートで。')
+                furu('こおりくん、いちど 家に 帰ろう。ともいしさんに 話を しなきゃ。')
             ], { done: () => app.save() });
         } else if (result.mystery && result.outcome === 'win' && SEALS.some(x => x.id === result.mystery)) {
             const m = SEALS.find(x => x.id === result.mystery), n = sealsSolved(g);
@@ -538,6 +623,7 @@ export function createField(app) {
             const target = lookAt(g);
             if (target?.type === 'mystery') { sfx('ok'); examineMystery(target.mystery); return; }
             if (target?.type === 'seal') { sfx('ok'); examineSeal(target.seal); return; }
+            if (target?.type === 'mon') { sfx('ok'); examineMon(target.mon); return; }
             if (target?.type === 'gate' && target.gate.id === 'gateYama') {
                 sfx('ok');
                 say([{ who: '', text: '「この先 山道。落石の ため 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('学校の さわぎが おちついたら 通れるように なるかも。')] : [])]);
@@ -627,7 +713,7 @@ export function createField(app) {
             done: () => {
                 fighting = c;
                 const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
             }
         });
     }
@@ -692,7 +778,7 @@ export function createField(app) {
         ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
         // 川の きらきら (町だけ)
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        for (let i = 0; !inSchool() && !inYama() && !inUmi() && i < 6; i++) {
+        for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && i < 6; i++) {
             const wy = ((i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE));
             ctx.fillRect(30 * TILE + ((i * 23) % 60) - cam.x, wy - cam.y, 4, 1);
         }
@@ -722,6 +808,7 @@ export function createField(app) {
         for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
         drawGates(ctx);
         drawSeals(ctx);
+        drawMons(ctx);
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
@@ -753,6 +840,22 @@ export function createField(app) {
             ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 5, y - 9, 1, 6);
             ctx.fillStyle = '#5aa8d0'; ctx.fillRect(x + 11, y - 8, 1, 20);
             if (g.flags.oku) text(ctx, '？', x + 8, y - 20 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: 'center', bold: true, color: '#8ae0ff' });
+        }
+    }
+
+    // 黒い 紋の なかま (5 章): キャラの 絵に 黒い もやと どくどく 動く 紋
+    function drawMons(ctx) {
+        for (const m of monsHere(g)) {
+            const x = m.x * TILE + 8 - cam.x, y = m.y * TILE + 14 - cam.y;
+            if (x < -30 || x > 430 || y < -40 || y > 270) continue;
+            ctx.fillStyle = `rgba(30, 0, 40, ${0.25 + 0.15 * Math.sin(t * 4 + m.x)})`;
+            ctx.beginPath(); ctx.ellipse(x, y - 8, 12, 12, 0, 0, Math.PI * 2); ctx.fill();
+            drawArt(ctx, ART[NAKAMA[m.nakama].art], Math.floor(t * 2), x, y);
+            const k = 2 + Math.sin(t * 6) * 1;
+            ctx.fillStyle = '#1a0010';
+            ctx.fillRect(x - k, y - 10 - k, k * 2, k * 2);
+            ctx.fillRect(x - 1, y - 14 - k, 2, k * 2 + 8);
+            text(ctx, '！', x, y - 24 + Math.sin(t * 5) * 1.5, { size: 12, align: 'center', bold: true, color: '#c040ff' });
         }
     }
 
@@ -846,7 +949,9 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        const labels = inUmi()
+        const labels = inTera()
+            ? TERA_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
+            : inUmi()
             ? UMI_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
             : inYama()
             ? YAMA_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
@@ -873,7 +978,9 @@ export function createField(app) {
             : g.story === 'clear2' ? { x: 26.5, y: 0 } : g.story === 'yama' && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 }
             : g.story === 'yama' && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 }
             : g.story === 'clear3' ? { x: 8, y: 24 } : g.story === 'umi' ? { x: 5, y: 40 }
-            : g.story === 'umibe' ? (g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 }) : null;
+            : g.story === 'umibe' ? (g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 })
+            : g.story === 'clear4' ? { x: 8, y: 24 } : g.story === 'tera' ? { x: 5, y: 40 }
+            : g.story === 'netdera' ? (monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 }) : null;
         const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
         if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });

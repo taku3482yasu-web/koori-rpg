@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, tileAt } from '../data/map.js';
+import { TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, tileAt } from '../data/map.js';
 import { reached } from './story.js';
 
 const HALF_W = 5, BOX_H = 6;
@@ -21,7 +21,10 @@ export function peopleHere(g) {
         (p.only === 'damNushi' && g.story === 'yama' && g.flags.oku && SEALS.every(q => g.mysteries[q.id])) ||
         // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
         (p.only === 'rival4' && g.story === 'umibe' && !g.flags.rival4) ||
-        (p.only === 'urashima4' && g.story === 'umibe' && g.flags.rival4));
+        (p.only === 'urashima4' && g.story === 'umibe' && g.flags.rival4) ||
+        // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
+        (p.only === 'daishiNpc' && g.story === 'netdera' && monsHere(g).length > 0) ||
+        (p.only === 'daishi5' && g.story === 'netdera' && !monsHere(g).length));
 }
 // 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)
 export const personName = (g, p) => (p.nameBy ? p.nameBy[g.version] || p.name : p.name);
@@ -31,6 +34,8 @@ export const personArt = (g, p) => (p.artBy ? p.artBy[g.version] || Object.value
 export const gatesHere = g => GATES.filter(q => (q.only === 'beforeClear2' ? !reached(g, 'clear2') : !reached(g, 'clear')));
 // まだ とけて いない 氷の 封印 (3 章)
 export const sealsHere = g => SEALS.filter(q => !(g.mysteries && g.mysteries[q.id]));
+// まだ 助けて いない 黒い 紋の なかま (5 章)。助けるまで その マスに 立っている
+export const monsHere = g => (g.story === 'netdera' ? MONS.filter(q => !(g.mysteries && g.mysteries[q.id])) : []);
 const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
 
 // そのマスに 入れないか
@@ -43,6 +48,7 @@ export function blockedTile(g, tx, ty) {
     if (PROPS.some(p => p.x === tx && p.y === ty)) return true;
     if (MYSTERIES.some(m => m.x === tx && m.y === ty)) return true;
     if (sealsHere(g).some(m => m.x === tx && m.y === ty)) return true;
+    if (monsHere(g).some(m => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some(p => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
 }
 
@@ -95,6 +101,8 @@ export function lookAt(g) {
     if (mystery) return { type: 'mystery', mystery };
     const seal = SEALS.find(m => m.x === f.x && m.y === f.y);
     if (seal) return { type: 'seal', seal };
+    const mon = monsHere(g).find(m => m.x === f.x && m.y === f.y);
+    if (mon) return { type: 'mon', mon };
     return null;
 }
 

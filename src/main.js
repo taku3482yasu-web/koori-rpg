@@ -9,7 +9,7 @@ import { createInput } from './core/input.js';
 import { createRng } from './core/rng.js';
 import { loadSave, writeSave } from './core/save.js';
 import { unlockSound } from './core/sound.js';
-import { newGame, migrate, VERSIONS, watchMedals, applyBattleResult } from './logic/game.js';
+import { newGame, migrate, VERSIONS, watchMedals, applyBattleResult, bondLevel } from './logic/game.js';
 import { createBattle } from './logic/battle.js';
 import { createTalk } from './view/talk.js';
 import { createTitle } from './view/title.js';
@@ -64,7 +64,7 @@ const app = {
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     startBattle({ enemies, kind, place, mystery = null }) {
-        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv } : null));
+        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id) } : null));
         const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
         battle.mystery = mystery;
         this.scene = createBattleView(this, battle, place);

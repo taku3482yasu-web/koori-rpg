@@ -7,7 +7,8 @@ import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
 import { BACK_ART } from '../src/art/back-art.js';
 import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS, MYSTERIES, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT,
-    SEALS, YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, BLOCK, regionOf, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, PEOPLE } from '../src/data/map.js';
+    SEALS, YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, BLOCK, regionOf, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, PEOPLE,
+    TERA_Y0, TERA_IN, TERA_AFTER_BOSS, MONS, BUILDINGS as ALL_BUILDINGS } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
 
@@ -106,7 +107,7 @@ test('地図: 山と ダムは 町・学校と つながって いない。封�
 test('地図: 海辺の 町と 海岸どうくつは ほかと つながって いない。駅の 前と ボスの あとの 場所は 通れる (4 章)', () => {
     assert.ok([...TILES[UMI_Y0 - 1]].every(c => c === 'T'), '山の いちばん 下は 木');
     assert.ok([...TILES[UMI_Y0]].every(c => c === 'T'), '海の いちばん 上は 木');
-    assert.deepEqual(regionOf(UMI_IN.y), [UMI_Y0, MAP_H]);
+    assert.deepEqual(regionOf(UMI_IN.y), [UMI_Y0, TERA_Y0]);
     assert.deepEqual(regionOf(STATION_OUT.y), [0, SCHOOL_Y0]);
     assert.equal(TILES[UMI_IN.y][UMI_IN.x], 'R');
     assert.equal(TILES[STATION_OUT.y][STATION_OUT.x], 'G');
@@ -150,9 +151,10 @@ test('地図: 大きさ・レンズの 場所は 通れる マス・建物の �
 });
 
 test('全員が どこかに 出る。見えている キャラが 大多数・かくれている キャラは 少し', () => {
-    const hidden = new Set([...SPOTS.flatMap(s => s.kinds.map(k => k.id)), ...MYSTERIES.map(m => m.nakama), ...SEALS.map(m => m.nakama)]);
+    const hidden = new Set([...SPOTS.flatMap(s => s.kinds.map(k => k.id)), ...MYSTERIES.map(m => m.nakama), ...SEALS.map(m => m.nakama), ...MONS.map(m => m.nakama)]);
     const roam = new Set(ROAMS.flatMap(s => s.kinds.map(k => k.id)));
-    for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id), `${id} の 出る場所`);
+    // 進化で なる キャラ (evo) は 町には 出ない。進化前の キャラが どこかに 出る
+    for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id) || (NAKAMA[id].evo && (hidden.has(NAKAMA[id].evo) || roam.has(NAKAMA[id].evo))), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
     for (const s of SPOTS) assert.ok(s.cue, `${s.id} の 違和感`);
 });
@@ -235,4 +237,30 @@ test('話せる キャラ: 歩く はんいに 通れる マスが あり、く�
         for (let y = f.y0; y <= f.y1; y++) for (let x = f.x0; x <= f.x1; x++) if (!['T', 'W'].includes(TILES[y][x])) free++;
         assert.ok(free >= 4, `${f.id}: ${free}`);
     }
+});
+
+test('地図: ネット寺は ほかと つながって いない。紋の なかまは 通れる マスの 上・3 体とも ネット寺の キャラ (5 章)', () => {
+    assert.ok([...TILES[TERA_Y0 - 1]].every(c => ['T', 'W'].includes(c)), '海の いちばん 下は 海');
+    assert.ok([...TILES[TERA_Y0]].every(c => c === 'T'), 'お寺の いちばん 上は 木');
+    assert.deepEqual(regionOf(TERA_IN.y), [TERA_Y0, MAP_H]);
+    assert.equal(TILES[TERA_IN.y][TERA_IN.x], 'K');
+    assert.equal(TILES[TERA_AFTER_BOSS.y][TERA_AFTER_BOSS.x], 'K');
+    for (const m of MONS) {
+        assert.ok(!BLOCK.has(TILES[m.y][m.x]), `${m.id} は 通れる マスの 上`);
+        assert.equal(NAKAMA[m.nakama].area, 'tera', m.id);
+    }
+    const tera = idsInArea('tera');
+    assert.equal(tera.length, 11);
+    const count = r => tera.filter(id => NAKAMA[id].rank === r).length;
+    assert.deepEqual([count('D'), count('C')], [6, 5]);
+});
+
+test('進化で なる キャラは 地区の 数に 入らない。ランクは 進化前の 1 つ上', () => {
+    for (const id of NAKAMA_IDS.filter(i => NAKAMA[i].evo)) {
+        const from = NAKAMA[NAKAMA[id].evo];
+        assert.ok(from, id);
+        assert.ok(!idsInArea(NAKAMA[id].area).includes(id), id);
+        assert.equal('EDCBAS'.indexOf(NAKAMA[id].rank), 'EDCBAS'.indexOf(from.rank) + 1, id);
+    }
+    assert.equal(idsInArea('ishinokawa').length, 20, '1 章の 20 体は そのまま');
 });

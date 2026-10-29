@@ -9,13 +9,14 @@ import { NAKAMA, unitOf } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { acceptBefriend } from '../logic/game.js';
+import { acceptBefriend, bondLevel } from '../logic/game.js';
 
 const CHOICE_BTN = [{ x: 30, y: 196, w: 124, h: 34, label: 'なかまに する' }, { x: 166, y: 196, w: 124, h: 34, label: 'しない' }];
 
 export function createResult(app, result) {
-    // 出す 順: けいけんち → なかまに なりたそう (えらぶ) → メダルを もらった / さっていった
+    // 出す 順: けいけんち → 進化 (2026-10-29) → なかまに なりたそう (えらぶ) → メダルを もらった / さっていった
     const pages = [result.outcome === 'win' ? 'reward' : 'lose'];
+    if (result.evolved && result.evolved.length) pages.push('evolve');
     const forced = Boolean(result.befriend && result.befriend.forced);
     if (result.befriend) pages.push(forced ? 'look' : 'ask');
     if (forced) pages.push('medal');
@@ -25,7 +26,7 @@ export function createResult(app, result) {
     function next() {
         page++;
         t = 0;
-        if (pages[page] === 'medal') sfx('watch');
+        if (pages[page] === 'medal' || pages[page] === 'evolve') sfx('watch');
         else if (pages[page] === 'look' || pages[page] === 'ask') sfx('friend');
         else sfx('cursor');
         if (page >= pages.length) app.backToField(result);
@@ -83,6 +84,18 @@ export function createResult(app, result) {
                 text(ctx, `Lv${u.lv} に アップ！`, x, y + 27, { size: 11, align: 'center', bold: true, color: COLORS.accent });
             });
             if (!result.levelUps.length) text(ctx, 'なかまが 少し 強くなった。', 200, 140, { size: 13, align: 'center', color: COLORS.sub });
+        } else if (kind === 'evolve') {
+            // 進化: 光の 中で 前の すがた → 新しい すがた
+            rings(ctx);
+            const list = result.evolved.slice(0, 2);
+            list.forEach((e, i) => {
+                const y = list.length === 1 ? 150 : 100 + i * 90, k = Math.min(1, t / 1.2);
+                drawArt(ctx, ART[unitOf(e.from).art], 0, 120, y, { scale: 3.5, alpha: 1 - k * 0.6 });
+                text(ctx, '▶', 200, y - 24, { size: 18, align: 'center', bold: true, color: COLORS.accent });
+                drawArt(ctx, ART[unitOf(e.to).art], Math.floor(t * 3), 280, y, { scale: 3.5, alpha: 0.4 + k * 0.6, tint: t < 0.6 ? '#ffffff' : null });
+                text(ctx, `${unitOf(e.from).name}は ${unitOf(e.to).name}に 進化した！`, 200, y + 18, { size: 13, align: 'center', bold: true, color: COLORS.accent });
+            });
+            if (result.evolved.length > 2) text(ctx, `ほかにも ${result.evolved.length - 2} 体 進化した！`, 200, 232, { size: 11, align: 'center', color: COLORS.sub });
         } else if (kind === 'lose') {
             text(ctx, 'まけてしまった……', 200, 110, { size: 20, align: 'center', bold: true, color: '#a0b0d0' });
             text(ctx, '家に もどって 体勢を たてなおそう。', 200, 140, { size: 13, align: 'center' });
@@ -111,7 +124,8 @@ export function createResult(app, result) {
             ctx.fill();
             drawArt(ctx, ART[friend.art], 0, 200, 134, { scale: 3 });
             panel(ctx, 20, 186, 360, 46);
-            text(ctx, `${friend.name}の おなかまメダルを もらった！`, 200, 205, { size: 14, align: 'center', bold: true, color: COLORS.accent });
+            const bond = bondLevel(app.g, friend.id);
+            text(ctx, bond ? `${friend.name}と 絆レベルが ${bond} に 上がった！` : `${friend.name}の おなかまメダルを もらった！`, 200, 205, { size: 14, align: 'center', bold: true, color: COLORS.accent });
             text(ctx, result.befriend.medal && app.g.watch.includes(result.befriend.medal.uid) ? 'ウォッチに セットした。' : 'メダル帳に しまった。(メニューの「へんせい」で ウォッチに セットできる)', 200, 224, { size: 11, align: 'center', color: COLORS.sub });
         }
     }

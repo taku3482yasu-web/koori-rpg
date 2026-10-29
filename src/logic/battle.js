@@ -18,6 +18,7 @@
 //     (ボスが 決まった 回数 うごけない)。おわると 部位が もとに もどる
 //   氷の 偶像 (3 章の ダムの主。2026-10-29 ユーザー指定): ボスの わざ「氷の偶像」で 左右 どちらかに 偶像を 1 体 作る。
 //     2 体 そろうと 必殺技の ため (charge) に 入る。ためて いる あいだに 偶像を こわすと 必殺技は 止まる。チャンスタイムは なし
+//   2 つめの すがた (5 章の ダイシ): HP が phase2.at を 下まわると 鬼の顔に。わざ・必殺技が かわり こうげきが 上がる
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -35,17 +36,17 @@ const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
 
 let uidSeq = 0;
-function makeUnit({ uid, id, lv }, side) {
+function makeUnit({ uid, id, lv, bond = 0 }, side) {
     const sp = speciesOf(id);
     const st = statsAt(id, lv);
     return {
         uid: uid ?? `${side}-${++uidSeq}`,
-        id, lv, side,
+        id, lv, side, bond,
         name: sp.name, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
         waza: sp.waza, jutsu: sp.jutsu, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
-        bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
+        bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3, phase2: sp.phase2 || null, phased: false,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
 }
@@ -367,6 +368,7 @@ export function step(b, dt) {
     for (const e of b.enemies) {
         if (e.ko) continue;
         tickUnit(b, e, dt, !e.idol);   // 偶像は 動かない
+        if (e.phase2 && !e.phased && !e.ko && e.hp <= e.max * e.phase2.at) enterPhase(b, e);
         if (e.bigMove) bossTick(b, e, dt);
         checkOutcome(b);
         if (b.outcome) return;
@@ -381,6 +383,19 @@ export function step(b, dt) {
         }
     } else b.frontDownTime = 0;
     checkOutcome(b);
+}
+
+// 2 つめの すがた (5 章の ダイシの 鬼の顔。2026-10-29): HP が へると わざと 必殺技が かわり、こうげきが 上がる
+function enterPhase(b, e) {
+    const ph = e.phase2;
+    e.phased = true;
+    e.bossMoves = ph.moves;
+    if (ph.bigMove) e.bigMove = ph.bigMove;
+    b.bossTimer = 0;
+    b.warned = false;
+    if (ph.atk) e.buffs.atk = { amount: ph.atk, t: 9999 };
+    emit(b, 'phase', { actor: e.uid, name: ph.name });
+    emit(b, 'skill', { actor: e.uid, name: ph.name, cmd: 'boss' });
 }
 
 function bossTick(b, e, dt) {
@@ -438,7 +453,8 @@ export function resolveSpecial(b, unit, mult) {
     if (!unit || unit.ko) return;
     unit.gauge = 0;
     emit(b, 'special', { actor: unit.uid, name: unit.special.name, side: 'ally', mult });
-    applyEffects(b, unit, unit.special.effects, mult);
+    // 絆レベル (同じ キャラを 何体も なかまに した): 1 つにつき 必殺技の 威力 +10% (最大 +50%。2026-10-29)
+    applyEffects(b, unit, unit.special.effects, mult * (1 + 0.1 * Math.min(5, unit.bond || 0)));
     checkOutcome(b);
 }
 
