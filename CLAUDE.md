@@ -10,3 +10,4 @@
 - テスト: `npm test`（画面なし）と `node tools/browser-test.mjs`（Chrome で遊ぶ）。
 - main に push すると GitHub Pages に公開される（`.github/workflows/pages.yml`）。
 - 変更ができてテストが通ったら、聞かずに commit して main に push する（2026-10-29 ユーザー指定）。テストが落ちたら push しない。
+- ストーリーは ユーザーが「ストーリー工房」で 書く: https://claude.ai/artifact/2FExjjNSVxzmaDyk81oJxH （2026-10-29）。中身は Artifact の db の `chapters` コレクション（章ごとに 1 つ。scenes → lines は ゲームの `{ who, art, text }` と 同じ形）。読むときは ArtifactData の list。ページの もとは `tools/story-editor.html`、なかまが ふえたら `node tools/build-story-editor.mjs <出力先>` で 作りなおして 同じ URL に 出しなおす。
