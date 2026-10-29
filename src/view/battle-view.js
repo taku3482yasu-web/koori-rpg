@@ -71,7 +71,8 @@ export function createBattleView(app, battle, place) {
         // 部位の ある ボス (2 章の 影) は とても 大きい
         if (n === 1 && battle.enemies[0].parts) return { x: 200, y: 156, scale: 6.5 };
         if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
-        return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
+        if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
+        return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];   // 3 体 (まんなかが 奥)
     };
     function posOf(uid) {
         const fi = battle.front().findIndex(u => u && u.uid === uid);

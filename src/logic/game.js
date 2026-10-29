@@ -115,15 +115,18 @@ export function spotActive(g, spot, now) {
     return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
 }
 
-// 話しかけた キャラ (first: { id, lv }) と 戦う。ときどき 同じ 場所の キャラが もう 1 体 出る
+// 話しかけた キャラ (first: { id, lv }) と 戦う。ときどき 同じ 場所の キャラが もう 1 体・2 体 出る (3 体まで。2026-10-29 ユーザー指定)
+//   3 体の ときは 話しかけた キャラが まんなか
+export const MAX_ENEMIES = 3;
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
     const [lo, hi] = source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
     const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
-    if (kinds.length && rng.chance(0.2)) {
-        const other = rng.weighted(kinds);
-        enemies.push({ id: other.id, lv: Math.max(1, lead.lv - 1) });
+    const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
+    if (kinds.length && rng.chance(0.25)) {
+        enemies.push(more());
+        if (rng.chance(0.4)) enemies.unshift(more());
     }
     enemies.forEach(e => { g.zukan.seen[e.id] = true; });
     return enemies;

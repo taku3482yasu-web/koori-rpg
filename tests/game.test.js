@@ -183,11 +183,15 @@ test('出会い: 話しかけた キャラが 先頭・1 章の 野生は Lv5 �
     const g = newGame('naitei');
     receiveWatch(g);
     const rng = createRng(2);
-    for (let i = 0; i < 50; i++) {
+    const sizes = new Set();
+    for (let i = 0; i < 200; i++) {
         const enemies = encounter(g, spot('park'), rng, { id: 'nemuridake', lv: 4 });
-        assert.deepEqual(enemies[0], { id: 'nemuridake', lv: 4 });
+        sizes.add(enemies.length);
+        assert.ok(enemies.length <= 3, '3 体まで');
+        assert.deepEqual(enemies[Math.floor((enemies.length - 1) / 2)], { id: 'nemuridake', lv: 4 }, '話しかけた キャラが まんなか (2 体なら 左)');
         for (const e of enemies) assert.ok(e.lv >= 1 && e.lv <= 5);
     }
+    assert.deepEqual([...sizes].sort(), [1, 2, 3], '1 体・2 体・3 体 どれも 出る');
     assert.ok(g.zukan.seen.nemuridake);
 });
 

@@ -406,6 +406,18 @@ try {
     await at(23.5, 117, 'down');
     await key('KeyS', 400);
     check(await evaluate('window.__app.g.pos.y < 60 * 16'), '山の 入り口から 町に もどる');
+    // 敵は 3 体まで (2026-10-29)。「あらわれた！」は まんなかの 敵
+    await evaluate('(() => { window.__app.startBattle({ enemies: [{ id: "fubukipenguin", lv: 12 }, { id: "yukimidango", lv: 13 }, { id: "dai" + "chouenkin", lv: 12 }], kind: "wild", place: "yama" }); return true; })()');
+    await sleep(300);
+    await shot('three-appear');
+    check(await evaluate('window.__app.scene.battle.enemies.length === 3 && window.__app.scene.debug.appearText() === "ユキミダンゴたちが あらわれた！"'), '敵 3 体: まんなかの 敵で「○○たちが あらわれた！」');
+    await key('KeyJ');
+    await sleep(1500);
+    await shot('three-battle');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
+    for (let i = 0; i < 10 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
+    await skipTalk();
 
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });

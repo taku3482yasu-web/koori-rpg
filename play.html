@@ -2239,9 +2239,10 @@ body.nopad #pad { display: none; }
     const [lo, hi] = source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
     const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
-    if (kinds.length && rng.chance(0.2)) {
-      const other = rng.weighted(kinds);
-      enemies.push({ id: other.id, lv: Math.max(1, lead.lv - 1) });
+    const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
+    if (kinds.length && rng.chance(0.25)) {
+      enemies.push(more());
+      if (rng.chance(0.4)) enemies.unshift(more());
     }
     enemies.forEach((e) => {
       g.zukan.seen[e.id] = true;
@@ -8789,7 +8790,8 @@ body.nopad #pad { display: none; }
       const n = battle.enemies.length;
       if (n === 1 && battle.enemies[0].parts) return { x: 200, y: 156, scale: 6.5 };
       if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
-      return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
+      if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
+      return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];
     };
     function posOf(uid) {
       const fi = battle.front().findIndex((u) => u && u.uid === uid);
