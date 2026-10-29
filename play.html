@@ -1966,6 +1966,7 @@ body.nopad #pad { display: none; }
   function applyBattleResult(g, battle, rng) {
     var _a;
     const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === "boss", mystery: battle.mystery || null };
+    if (battle.outcome === "flee") return out;
     if (battle.outcome !== "win") {
       out.money = -Math.floor(g.money * 0.1);
       g.money += out.money;
@@ -2139,12 +2140,13 @@ body.nopad #pad { display: none; }
     if (b.lock === u.uid) b.lockPart = "rhand";
     emit(b, "chanceEnd", { target: u.uid });
   }
-  function createBattle({ allies, enemies, rng, kind = "wild" }) {
+  function createBattle({ allies, enemies, rng, kind = "wild", intro = false }) {
     const b = {
       kind,
       rng,
       t: 0,
       rot: 0,
+      waiting: intro,
       wheel: Array.from({ length: 6 }, (_, i) => allies[i] ? makeUnit(allies[i], "ally") : null),
       enemies: enemies.map((e) => makeUnit(e, "enemy")),
       events: [],
@@ -2365,7 +2367,7 @@ body.nopad #pad { display: none; }
     }
   }
   function step(b, dt) {
-    if (b.outcome || b.paused) return;
+    if (b.outcome || b.paused || b.waiting) return;
     b.t += dt;
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
     b.itemCooldown = Math.max(0, b.itemCooldown - dt);
@@ -2482,6 +2484,7 @@ body.nopad #pad { display: none; }
     if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
     b.itemCooldown = ITEM_COOLDOWN;
     emit(b, "item", { target: target.uid, itemId });
+    begin(b);
     return true;
   }
   function throwFood(b, itemId, uid = null) {
@@ -2491,6 +2494,24 @@ body.nopad #pad { display: none; }
     const fav = speciesOf(to.id).favorite === itemId;
     b.food = { itemId, target: to.id, favorite: fav };
     emit(b, "food", { target: to.uid, itemId, favorite: fav });
+    begin(b);
+    return true;
+  }
+  function begin(b) {
+    if (!b.waiting || b.outcome) return false;
+    b.waiting = false;
+    emit(b, "begin");
+    return true;
+  }
+  const canFlee = (b) => b.kind === "wild" && !b.mystery;
+  function flee(b) {
+    if (!b.waiting || b.outcome) return false;
+    if (!canFlee(b)) {
+      emit(b, "noFlee");
+      return false;
+    }
+    b.outcome = "flee";
+    emit(b, "flee");
     return true;
   }
   const LEGACY_ART = {
@@ -7719,6 +7740,13 @@ body.nopad #pad { display: none; }
   const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: "どうぐ" };
   const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: "おやつ" };
   const FAST_BTN = { x: 4, y: 4, w: 56, h: 24, label: "倍速" };
+  const INTRO_BTN = [
+    { x: 20, y: 64, w: 136, h: 62, label: "たたかう", key: "fight" },
+    { x: 164, y: 64, w: 136, h: 62, label: "どうぐ", key: "item" },
+    { x: 20, y: 134, w: 136, h: 62, label: "おやつ", key: "food" },
+    { x: 164, y: 134, w: 136, h: 62, label: "にげる", key: "run" }
+  ];
+  const ENTER_TIME = 0.45;
   const RESCUE_BTN = { x: WHEEL.x - 34, y: WHEEL.y - 22, w: 68, h: 44 };
   const BATTLE_SPEED = { normal: 0.6, fast: 1.2 };
   const BUFF_NAMES = { atk: "こうげき↑", def: "まもり↑", spd: "すばやさ↑", mag: "ようじゅつ↑" };
@@ -7737,6 +7765,13 @@ body.nopad #pad { display: none; }
     let banner = null;
     let warn = null;
     const pops = [];
+    let introIndex = 0;
+    let enterT = battle.waiting ? null : -9;
+    const appearText = (() => {
+      const names = [...new Set(battle.enemies.map((e) => e.name))];
+      if (names.length === 1) return battle.enemies.length > 1 ? `${names[0]}たちが あらわれた！` : `${names[0]}が あらわれた！`;
+      return `${names.join("と ")}が あらわれた！`;
+    })();
     const flash = {};
     const enemyPos = (i) => {
       const n = battle.enemies.length;
@@ -7849,6 +7884,12 @@ body.nopad #pad { display: none; }
       const list = battle.events.splice(0);
       list.forEach((e, idx) => {
         var _a, _b, _c, _d;
+        if (e.type === "begin") {
+          enterT = t;
+          banner = { text: "いけっ！ なかまたち！", color: COLORS.accent, until: t + 1.2 };
+          sfx("ok");
+        }
+        if (e.type === "noFlee") banner = { text: "この バトルからは にげられない！", color: "#ff6a6a", until: t + 1.4 };
         if (e.type === "attack" || e.type === "skill" || e.type === "special") {
           actor = e.actor;
           kind = e.type;
@@ -8248,12 +8289,60 @@ body.nopad #pad { display: none; }
         }
       }
     }
+    function chooseIntro(key2) {
+      if (key2 === "fight") begin(battle);
+      else if (key2 === "item") {
+        menu = { kind: "item", index: 0 };
+        sfx("ok");
+      } else if (key2 === "food") {
+        if (battle.kind !== "wild") {
+          banner = { text: "この あいてには おやつを 投げられない", color: "#ff6a6a", until: t + 1.2 };
+          sfx("cancel");
+          return;
+        }
+        menu = { kind: "food", index: 0 };
+        sfx("ok");
+      } else if (key2 === "run") {
+        if (flee(battle)) {
+          banner = { text: "うまく にげきれた！", color: "#8ad0ff", until: t + 1.6 };
+          sfx("ok");
+        } else sfx("cancel");
+      }
+    }
+    function updateIntro(input2) {
+      const i = introIndex;
+      if (input2.pressed.left || input2.pressed.right) {
+        introIndex = i ^ 1;
+        sfx("cursor");
+      }
+      if (input2.pressed.up || input2.pressed.down) {
+        introIndex = i ^ 2;
+        sfx("cursor");
+      }
+      if (input2.pressed.a) chooseIntro(INTRO_BTN[introIndex].key);
+      else if (input2.pressed.y) chooseIntro("item");
+      else if (input2.pressed.x) chooseIntro("food");
+      const tc = input2.touch;
+      if (tc.justDown) {
+        const k = INTRO_BTN.findIndex((bn) => hit(bn, tc.x, tc.y));
+        if (k >= 0) {
+          introIndex = k;
+          chooseIntro(INTRO_BTN[k].key);
+        }
+      }
+    }
     function update(dt, input2) {
       t += dt;
       g.playTime += dt;
       runLater();
       if (mg) {
         updateMinigame(dt, input2);
+        readEvents();
+        return;
+      }
+      if (battle.waiting && !battle.outcome) {
+        if (menu) updateMenu(input2);
+        else updateIntro(input2);
         readEvents();
         return;
       }
@@ -8511,8 +8600,12 @@ body.nopad #pad { display: none; }
       battle.enemies.forEach((e, i) => {
         if (e.parts && !e.ko) drawParts(ctx, e, i);
       });
-      battle.front().forEach((u, i) => {
-        if (!(mg && mg.phase === "act" && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true });
+      if (enterT !== null) battle.front().forEach((u, i) => {
+        if (mg && mg.phase === "act" && u === mg.unit) return;
+        const k = Math.min(1, Math.max(0, (t - enterT - i * 0.1) / ENTER_TIME));
+        if (k <= 0) return;
+        const p = ALLY_POS[i];
+        drawUnit(ctx, u, k < 1 ? { x: p.x, y: p.y + (1 - k) * (1 - k) * 140 - Math.sin(Math.PI * k) * 18 } : p, { scale: ALLY_SCALE, back: true });
       });
       if (mg && mg.phase === "act") drawAct(ctx);
       drawEffects(ctx);
@@ -8539,7 +8632,11 @@ body.nopad #pad { display: none; }
         panel(ctx, 40, 12, 320, 26, { fill: "rgba(16,22,42,0.9)", edge: banner.color });
         text(ctx, banner.text, 200, 30, { size: 13, align: "center", bold: true, color: banner.color });
       }
-      if (battle.outcome && endT > 0.5) {
+      if (battle.waiting && !battle.outcome) {
+        panel(ctx, 30, 176, 340, 50, { fill: "rgba(16,22,42,0.92)", edge: "#ffffff" });
+        text(ctx, appearText, 200, 208, { size: 16, align: "center", bold: true, maxWidth: 320 });
+      }
+      if (battle.outcome && battle.outcome !== "flee" && endT > 0.5) {
         ctx.fillStyle = "rgba(0,0,0,0.35)";
         ctx.fillRect(0, 0, 400, 240);
         text(ctx, battle.outcome === "win" ? "かった！" : "まけた……", 200, 128, { size: 34, align: "center", bold: true, color: battle.outcome === "win" ? COLORS.accent : "#a0b0d0" });
@@ -8650,6 +8747,18 @@ body.nopad #pad { display: none; }
       text(ctx, btn("x"), FOOD_BTN.x + FOOD_BTN.w / 2, 216, { size: 9.5, align: "center", color: COLORS.dim });
       if (battle.itemCooldown > 0) text(ctx, `どうぐ まで ${battle.itemCooldown.toFixed(1)}`, 259, 232, { size: 9.5, align: "center", color: COLORS.dim });
     }
+    function drawIntro(ctx) {
+      text(ctx, "どうする？", 160, 40, { size: 16, align: "center", bold: true, color: COLORS.accent });
+      INTRO_BTN.forEach((bn, k) => {
+        const off = bn.key === "run" && !canFlee(battle) || bn.key === "food" && battle.kind !== "wild";
+        const on = k === introIndex;
+        panel(ctx, bn.x, bn.y, bn.w, bn.h, { fill: on ? "#2d5aa8" : "rgba(26,36,64,0.95)", edge: on ? COLORS.accent : "#3a4a70" });
+        text(ctx, bn.label, bn.x + bn.w / 2, bn.y + 36, { size: 18, align: "center", bold: true, color: off ? COLORS.dim : "#ffffff" });
+        const note = bn.key === "item" ? btn("y") : bn.key === "food" ? off ? "投げられない" : btn("x") : bn.key === "run" && off ? "にげられない" : "";
+        if (note) text(ctx, note, bn.x + bn.w / 2, bn.y + 54, { size: 9.5, align: "center", color: COLORS.dim });
+      });
+      text(ctx, `十字キーで えらんで ${btn("a")}　どうぐ・おやつを 使うと バトル開始`, 160, 222, { size: 9.5, align: "center", color: COLORS.dim, maxWidth: 300 });
+    }
     function drawMenu(ctx) {
       ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fillRect(0, 0, 320, 240);
@@ -8697,7 +8806,7 @@ body.nopad #pad { display: none; }
       const u = menuTargets()[menu.pick.index];
       if (!u) return;
       const ei = battle.enemies.indexOf(u), fi = battle.front().indexOf(u);
-      const p = ei >= 0 ? enemyPos(ei) : fi >= 0 ? ALLY_POS[fi] : null;
+      const p = ei >= 0 ? enemyPos(ei) : fi >= 0 && enterT !== null ? ALLY_POS[fi] : null;
       if (!p) return;
       const scale = ei >= 0 ? p.scale : ALLY_SCALE;
       const y = p.y - ART[u.art].h * scale - 30 + Math.sin(t * 8) * 2;
@@ -8716,6 +8825,11 @@ body.nopad #pad { display: none; }
         }
         return;
       }
+      if (battle.waiting || battle.outcome === "flee") {
+        drawIntro(ctx);
+        if (menu) drawMenu(ctx);
+        return;
+      }
       drawWheel(ctx);
       drawSpecialButtons(ctx);
       button(ctx, { ...FAST_BTN, label: g.fastBattle ? "倍速 ON" : "倍速" }, { active: Boolean(g.fastBattle), size: 10.5 });
@@ -8724,7 +8838,7 @@ body.nopad #pad { display: none; }
       text(ctx, btn("fast"), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: "center", color: COLORS.dim });
       if (menu) drawMenu(ctx);
     }
-    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu } };
+    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => battle.waiting ? introIndex : null, allyShown: () => enterT !== null } };
   }
   const CHOICE_BTN = [{ x: 30, y: 196, w: 124, h: 34, label: "なかまに する" }, { x: 166, y: 196, w: 124, h: 34, label: "しない" }];
   function createResult(app2, result2) {
@@ -9275,12 +9389,16 @@ body.nopad #pad { display: none; }
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     startBattle({ enemies, kind, place, mystery = null }) {
       const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv } : null);
-      const battle = createBattle({ allies, enemies, rng: this.rng, kind });
+      const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
       battle.mystery = mystery;
       this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {
       const result2 = applyBattleResult(this.g, battle, this.rng);
+      if (result2.outcome === "flee") {
+        this.backToField(result2);
+        return;
+      }
       if (result2.outcome === "lose") {
         this.g.pos = { x: 6 * 16 + 8, y: 24 * 16 + 12, dir: "down" };
       }

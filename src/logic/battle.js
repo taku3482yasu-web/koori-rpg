@@ -12,6 +12,8 @@
 //   とりつき (2 章。設計書 3.4): なまけたり 味方を 攻めたり する。輪で 後ろに 回して「おたすけ」(ミニゲーム) で 治す
 //   ロックオン (設計書 3.2): プレイヤーが ねらう 敵を えらぶ。味方の 1 体ねらいの 攻撃は その 敵へ。
 //     ねらった 敵には 6 秒ごとに 2 秒「弱点の 光」が 出て、そのあいだに 当てると ダメージ +20%
+//   はじまり (2026-10-29 ユーザー指定): intro の バトルは「○○が あらわれた！」で 止まって 待つ (waiting)。
+//     たたかう (begin)・どうぐ・おやつ の どれかで 始まる。にげる (flee) は 特別な バトル (ボス・七不思議) では できない
 //   部位の ある ボス (2 章の 影): 右手・左手・頭を ロックオンで ねらって こわす。頭を こわすと チャンスタイム
 //     (ボスが 決まった 回数 うごけない)。おわると 部位が もとに もどる
 // =====================================================================
@@ -71,9 +73,9 @@ function endChance(b, u) {
     emit(b, 'chanceEnd', { target: u.uid });
 }
 
-export function createBattle({ allies, enemies, rng, kind = 'wild' }) {
+export function createBattle({ allies, enemies, rng, kind = 'wild', intro = false }) {
     const b = {
-        kind, rng, t: 0, rot: 0,
+        kind, rng, t: 0, rot: 0, waiting: intro,
         wheel: Array.from({ length: 6 }, (_, i) => (allies[i] ? makeUnit(allies[i], 'ally') : null)),
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
@@ -305,7 +307,7 @@ function checkOutcome(b) {
 }
 
 export function step(b, dt) {
-    if (b.outcome || b.paused) return;
+    if (b.outcome || b.paused || b.waiting) return;
     b.t += dt;
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
     b.itemCooldown = Math.max(0, b.itemCooldown - dt);
@@ -439,6 +441,7 @@ export function useItem(b, itemId, uid = null) {
     if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
     b.itemCooldown = ITEM_COOLDOWN;
     emit(b, 'item', { target: target.uid, itemId });
+    begin(b);
     return true;
 }
 
@@ -450,5 +453,23 @@ export function throwFood(b, itemId, uid = null) {
     const fav = speciesOf(to.id).favorite === itemId;
     b.food = { itemId, target: to.id, favorite: fav };
     emit(b, 'food', { target: to.uid, itemId, favorite: fav });
+    begin(b);
+    return true;
+}
+
+// ----- はじまり: たたかう・にげる -----
+export function begin(b) {
+    if (!b.waiting || b.outcome) return false;
+    b.waiting = false;
+    emit(b, 'begin');
+    return true;
+}
+// 特別な バトル (ボス・七不思議) からは にげられない
+export const canFlee = b => b.kind === 'wild' && !b.mystery;
+export function flee(b) {
+    if (!b.waiting || b.outcome) return false;
+    if (!canFlee(b)) { emit(b, 'noFlee'); return false; }
+    b.outcome = 'flee';
+    emit(b, 'flee');
     return true;
 }

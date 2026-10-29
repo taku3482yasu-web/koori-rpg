@@ -65,12 +65,13 @@ const app = {
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     startBattle({ enemies, kind, place, mystery = null }) {
         const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv } : null));
-        const battle = createBattle({ allies, enemies, rng: this.rng, kind });
+        const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
         battle.mystery = mystery;
         this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {
         const result = applyBattleResult(this.g, battle, this.rng);
+        if (result.outcome === 'flee') { this.backToField(result); return; }   // にげたら 結果画面は 出さない
         if (result.outcome === 'lose') {
             this.g.pos = { x: 6 * 16 + 8, y: 24 * 16 + 12, dir: 'down' };
         }

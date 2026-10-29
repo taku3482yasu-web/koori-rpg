@@ -142,6 +142,7 @@ export function befriendRate(g, id, food) {
 // バトルの 結果を ゲームに 入れる。返り値は 結果画面に 出す 中身
 export function applyBattleResult(g, battle, rng) {
     const out = { outcome: battle.outcome, exp: 0, money: 0, levelUps: [], befriend: null, boss: battle.kind === 'boss', mystery: battle.mystery || null };
+    if (battle.outcome === 'flee') return out;   // にげたら なにも かわらない
     if (battle.outcome !== 'win') {
         out.money = -Math.floor(g.money * 0.1);
         g.money += out.money;

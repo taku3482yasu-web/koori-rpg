@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, canRescue, rescueTargets, startRescue, resolveRescue } from '../src/logic/battle.js';
+import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, canRescue, rescueTargets, startRescue, resolveRescue, begin, flee, canFlee } from '../src/logic/battle.js';
 import { NAKAMA_IDS } from '../src/data/nakama.js';
 
 const run = (b, seconds, dt = 1 / 30) => {
@@ -236,4 +236,36 @@ test('2 章の ボス (影): 右手・左手を こわすと その わざを �
     assert.ok(!b.events.some(e => e.type === 'skill' && e.actor === boss.uid && e.t < b.events.find(x => x.type === 'chanceEnd').t), 'チャンスタイムの あいだは わざを 使わない');
     assert.ok(!boss.parts.rhand.broken && !boss.parts.lhand.broken && !boss.parts.head.broken, 'おわると 部位が もどる');
     assert.ok(hpBefore);
+});
+
+test('はじまり: 「たたかう」まで 止まっている・どうぐ / おやつを 使っても 始まる (2026-10-29 ユーザー指定)', () => {
+    const mk = () => createBattle({ allies: [{ id: 'kogame', lv: 9 }], enemies: [{ id: 'saikoron', lv: 3 }], rng: createRng(3), intro: true });
+    const b = mk();
+    run(b, 3);
+    assert.equal(b.t, 0);
+    assert.ok(begin(b));
+    run(b, 1);
+    assert.ok(b.t > 0);
+    const c = mk();
+    c.wheel[0].hp = 10;
+    assert.ok(useItem(c, 'onigiri', c.wheel[0].uid));
+    assert.equal(c.waiting, false);
+    const d = mk();
+    assert.ok(throwFood(d, 'onigiri'));
+    assert.equal(d.waiting, false);
+});
+
+test('にげる: ふつうの バトルは にげられる・ボスと 七不思議は にげられない', () => {
+    const wild = createBattle({ allies: [{ id: 'kogame', lv: 9 }], enemies: [{ id: 'saikoron', lv: 3 }], rng: createRng(4), intro: true });
+    assert.ok(canFlee(wild) && flee(wild));
+    assert.equal(wild.outcome, 'flee');
+    const boss = createBattle({ allies: [{ id: 'kogame', lv: 9 }], enemies: [{ id: 'nushi', lv: 8 }], rng: createRng(5), kind: 'boss', intro: true });
+    assert.ok(!flee(boss));
+    assert.equal(boss.outcome, null);
+    assert.ok(boss.events.some(e => e.type === 'noFlee'));
+    const mystery = createBattle({ allies: [{ id: 'kogame', lv: 9 }], enemies: [{ id: 'saikoron', lv: 3 }], rng: createRng(6), intro: true });
+    mystery.mystery = 'rika';
+    assert.ok(!flee(mystery));
+    begin(wild);
+    assert.ok(!flee(boss) && begin(boss) && !flee(boss), '始まってからは にげられない');
 });

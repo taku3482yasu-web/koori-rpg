@@ -177,6 +177,13 @@ try {
     await skipTalk();
     await sleep(200);
     check(await sceneIs('battle'), '話しかけると バトルが 始まる');
+    // はじまり (2026-10-29): 「○○が あらわれた！」で 止まり、なかまは まだ 出ていない → たたかう で 開始
+    await sleep(600);
+    await shot('battle-appear');
+    check(await evaluate('window.__app.scene.debug.intro() === 0 && !window.__app.scene.debug.allyShown() && window.__app.scene.battle.t === 0'), 'バトルの はじめは「あらわれた！」で 止まって 待つ');
+    await key('KeyJ');
+    await sleep(300);
+    check(await evaluate('window.__app.scene.debug.allyShown() && !window.__app.scene.battle.waiting'), '「たたかう」で なかまが 出てきて 始まる');
     await sleep(1500);
     await shot('battle');
 
@@ -306,6 +313,8 @@ try {
     check(await evaluate('window.__app.field.debug.wild.list.some(c => window.__app.g.pos && c.y > 36 * 16)'), '商店街に キャラが いる');
     // バトル: 5 つの コマンド (わざ・術の 名前が 出る) と こおりくん
     await evaluate('(() => { window.__app.startBattle({ enemies: [{ id: "yataiman", lv: 8 }, { id: "saikoron", lv: 7 }], kind: "wild", place: "arcadeW" }); return true; })()');
+    await sleep(100);
+    await key('KeyJ');
     await sleep(4000);
     await shot('shoutengai-battle');
     check(await evaluate('(() => { const b = window.__app.scene.battle; return b.wheel.some(u => u && u.hero); })()'), 'こおりくんも バトルに 出る');
@@ -330,6 +339,7 @@ try {
     await skipTalk();
     await sleep(300);
     check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.mystery === "rika"'), '理科室の ガイコツを 調べると バトル');
+    await key('KeyJ');
     await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
     for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
     for (let i = 0; i < 8 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
@@ -360,7 +370,26 @@ try {
     await shot('phone-field');
     // 6 体 そろえて ボス戦 (味方の うしろ姿を 見る)
     await evaluate('(() => { const g = window.__app.g; ["kozarappa", "ishikoron", "haribaby", "kogame", "mizukirin"].forEach((id, i) => { g.medals.push({ uid: "t" + i, id, lv: 5, exp: 0 }); g.watch[i + 1] = "t" + i; }); return true; })()');
+    // にげる: ふつうの バトルは にげられる (お金は へらない)・ボスからは にげられない
+    await evaluate('(() => { const a = window.__app; window.__money = a.g.money; a.startBattle({ enemies: [{ id: "saikoron", lv: 3 }], kind: "wild", place: "kawara" }); return true; })()');
+    await sleep(100);
+    await key('KeyD');
+    await key('KeyS');
+    await key('KeyJ');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(150);
+    check(await sceneIs('field') && await evaluate('window.__app.g.money === window.__money'), '「にげる」で バトルから にげられる (お金は へらない)');
+    await skipTalk();
     await evaluate('(() => { const a = window.__app; a.startBattle({ enemies: [{ id: "nushi", lv: 8 }], kind: "boss", place: "bridge" }); return true; })()');
+    await sleep(100);
+    await key('KeyD');
+    await key('KeyS');
+    await key('KeyJ');
+    await sleep(200);
+    await shot('boss-noflee');
+    check(await sceneIs('battle') && await evaluate('window.__app.scene.battle.waiting'), 'ボスからは にげられない');
+    await key('KeyW');
+    await key('KeyA');
+    await key('KeyJ');
     await sleep(1500);
     await shot('phone-battle');
     // 動きを 見るための 連写 (--shots の ときだけ)

@@ -229,3 +229,14 @@ test('町の キャラとは ぶつかる (すけない)。重なっていても
     moveHero(g, -1, 0, [on]);
     assert.equal(g.pos.x, x0 - 1, 'はなれる 向きには 動ける');
 });
+
+test('にげたら お金も けいけんちも かわらない', () => {
+    const g = newGame('naitei', 1);
+    g.money = 500;
+    const b = createBattle({ allies: [{ id: 'kogame', lv: 9 }], enemies: [{ id: 'saikoron', lv: 3 }], rng: createRng(8) });
+    b.outcome = 'flee';
+    const out = applyBattleResult(g, b, createRng(1));
+    assert.equal(g.money, 500);
+    assert.equal(out.money, 0);
+    assert.equal(out.exp, 0);
+});

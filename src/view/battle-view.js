@@ -5,6 +5,8 @@
 //       Y → どうぐ (なかまを 回復) / X → おやつ (敵に 投げる。仲間に なりやすくなる)
 //       F キー・START・下画面の「倍速」 → 倍速 (2026-10-28 ユーザー指定: ふだんは ゆっくり。g.fastBattle に 残る)
 // どうぐ・おやつを えらんでいる あいだは バトルを 止める (2026-10-28 ユーザー指定)
+// はじまり (2026-10-29 ユーザー指定): 敵だけが 出て「○○が あらわれた！」。下画面で たたかう・どうぐ・おやつ・にげる を えらぶ。
+//   たたかう か どうぐ・おやつを 使うと なかまが 出てきて バトル開始。にげるは 特別な バトル (ボス・七不思議) では できない
 // =====================================================================
 import { ART } from '../art/index.js';
 import { backArt } from '../art/back.js';
@@ -16,13 +18,21 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, begin, flee, canFlee } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
 const ITEM_BTN = { x: 204, y: 172, w: 52, h: 30, label: 'どうぐ' };
 const FOOD_BTN = { x: 262, y: 172, w: 52, h: 30, label: 'おやつ' };
 const FAST_BTN = { x: 4, y: 4, w: 56, h: 24, label: '倍速' };
+// はじまりの コマンド (2×2)
+const INTRO_BTN = [
+    { x: 20, y: 64, w: 136, h: 62, label: 'たたかう', key: 'fight' },
+    { x: 164, y: 64, w: 136, h: 62, label: 'どうぐ', key: 'item' },
+    { x: 20, y: 134, w: 136, h: 62, label: 'おやつ', key: 'food' },
+    { x: 164, y: 134, w: 136, h: 62, label: 'にげる', key: 'run' }
+];
+const ENTER_TIME = 0.45;       // なかまが とびだしてくる 時間
 // おたすけ: 後ろに とりつかれた なかまが いるとき、輪の まんなかが ボタンに なる (2 章)
 const RESCUE_BTN = { x: WHEEL.x - 34, y: WHEEL.y - 22, w: 68, h: 44 };
 // バトルの 進む 速さ (2026-10-28 ユーザー指定: 1 回 1 回の 行動が 速いので ゆっくり。倍速で その 2 倍)
@@ -46,6 +56,14 @@ export function createBattleView(app, battle, place) {
     let banner = null;             // { text, color, until }
     let warn = null;               // ボスの 予告 { name, until }
     const pops = [];               // ダメージの 数字
+    let introIndex = 0;            // はじまりの コマンドの カーソル
+    let enterT = battle.waiting ? null : -9;   // なかまが 出てきた 時間 (null は まだ 出ていない)
+    // 「○○が あらわれた！」(同じ 敵が ならぶと「○○たち」)
+    const appearText = (() => {
+        const names = [...new Set(battle.enemies.map(e => e.name))];
+        if (names.length === 1) return battle.enemies.length > 1 ? `${names[0]}たちが あらわれた！` : `${names[0]}が あらわれた！`;
+        return `${names.join('と ')}が あらわれた！`;
+    })();
     const flash = {};              // uid → 光る 時間
 
     const enemyPos = i => {
@@ -168,6 +186,12 @@ export function createBattleView(app, battle, place) {
         let skillHit = HIT_DELAY.skill;         // わざ・術の 当たる 時間 (わざごとの 動きで 変わる)
         const list = battle.events.splice(0);
         list.forEach((e, idx) => {
+            if (e.type === 'begin') {
+                enterT = t;
+                banner = { text: 'いけっ！ なかまたち！', color: COLORS.accent, until: t + 1.2 };
+                sfx('ok');
+            }
+            if (e.type === 'noFlee') banner = { text: 'この バトルからは にげられない！', color: '#ff6a6a', until: t + 1.4 };
             if (e.type === 'attack' || e.type === 'skill' || e.type === 'special') {
                 actor = e.actor;
                 kind = e.type;
@@ -513,11 +537,43 @@ export function createBattleView(app, battle, place) {
         }
     }
 
+    function chooseIntro(key) {
+        if (key === 'fight') begin(battle);
+        else if (key === 'item') { menu = { kind: 'item', index: 0 }; sfx('ok'); }
+        else if (key === 'food') {
+            if (battle.kind !== 'wild') { banner = { text: 'この あいてには おやつを 投げられない', color: '#ff6a6a', until: t + 1.2 }; sfx('cancel'); return; }
+            menu = { kind: 'food', index: 0 };
+            sfx('ok');
+        } else if (key === 'run') {
+            if (flee(battle)) { banner = { text: 'うまく にげきれた！', color: '#8ad0ff', until: t + 1.6 }; sfx('ok'); } else sfx('cancel');
+        }
+    }
+    function updateIntro(input) {
+        const i = introIndex;
+        if (input.pressed.left || input.pressed.right) { introIndex = i ^ 1; sfx('cursor'); }
+        if (input.pressed.up || input.pressed.down) { introIndex = i ^ 2; sfx('cursor'); }
+        if (input.pressed.a) chooseIntro(INTRO_BTN[introIndex].key);
+        else if (input.pressed.y) chooseIntro('item');
+        else if (input.pressed.x) chooseIntro('food');
+        const tc = input.touch;
+        if (tc.justDown) {
+            const k = INTRO_BTN.findIndex(bn => hit(bn, tc.x, tc.y));
+            if (k >= 0) { introIndex = k; chooseIntro(INTRO_BTN[k].key); }
+        }
+    }
+
     function update(dt, input) {
         t += dt;
         g.playTime += dt;
         runLater();
         if (mg) { updateMinigame(dt, input); readEvents(); return; }
+        // はじまり: たたかう・どうぐ・おやつ・にげる を えらぶ あいだは バトルは 止まっている
+        if (battle.waiting && !battle.outcome) {
+            if (menu) updateMenu(input);
+            else updateIntro(input);
+            readEvents();
+            return;
+        }
         if (input.pressed.fast || input.pressed.start || (input.touch.justDown && hit(FAST_BTN, input.touch.x, input.touch.y) && !menu)) toggleFast();
         // どうぐ・おやつを えらんでいる あいだは バトルを 止める
         if (menu) { updateMenu(input); return; }
@@ -755,7 +811,14 @@ export function createBattleView(app, battle, place) {
         battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
         battle.enemies.forEach((e, i) => { if (e.parts && !e.ko) drawParts(ctx, e, i); });
         // 必殺技の 動きの あいだは、その キャラは 動きの ほうで 描く
-        battle.front().forEach((u, i) => { if (!(mg && mg.phase === 'act' && u === mg.unit)) drawUnit(ctx, u, ALLY_POS[i], { scale: ALLY_SCALE, back: true }); });
+        // なかまは「たたかう」まで 出てこない。出てくる ときは 下から とびだす
+        if (enterT !== null) battle.front().forEach((u, i) => {
+            if (mg && mg.phase === 'act' && u === mg.unit) return;
+            const k = Math.min(1, Math.max(0, (t - enterT - i * 0.1) / ENTER_TIME));
+            if (k <= 0) return;
+            const p = ALLY_POS[i];
+            drawUnit(ctx, u, k < 1 ? { x: p.x, y: p.y + (1 - k) * (1 - k) * 140 - Math.sin(Math.PI * k) * 18 } : p, { scale: ALLY_SCALE, back: true });
+        });
         if (mg && mg.phase === 'act') drawAct(ctx);
         drawEffects(ctx);
         if (!battle.outcome) drawLock(ctx);
@@ -779,8 +842,12 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 40, 12, 320, 26, { fill: 'rgba(16,22,42,0.9)', edge: banner.color });
             text(ctx, banner.text, 200, 30, { size: 13, align: 'center', bold: true, color: banner.color });
         }
+        if (battle.waiting && !battle.outcome) {
+            panel(ctx, 30, 176, 340, 50, { fill: 'rgba(16,22,42,0.92)', edge: '#ffffff' });
+            text(ctx, appearText, 200, 208, { size: 16, align: 'center', bold: true, maxWidth: 320 });
+        }
         // 最後の 一撃の 動きが 見えるように、少し 待ってから「かった！」
-        if (battle.outcome && endT > 0.5) {
+        if (battle.outcome && battle.outcome !== 'flee' && endT > 0.5) {
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
             ctx.fillRect(0, 0, 400, 240);
             text(ctx, battle.outcome === 'win' ? 'かった！' : 'まけた……', 200, 128, { size: 34, align: 'center', bold: true, color: battle.outcome === 'win' ? COLORS.accent : '#a0b0d0' });
@@ -896,6 +963,20 @@ export function createBattleView(app, battle, place) {
         if (battle.itemCooldown > 0) text(ctx, `どうぐ まで ${battle.itemCooldown.toFixed(1)}`, 259, 232, { size: 9.5, align: 'center', color: COLORS.dim });
     }
 
+    // はじまりの コマンド
+    function drawIntro(ctx) {
+        text(ctx, 'どうする？', 160, 40, { size: 16, align: 'center', bold: true, color: COLORS.accent });
+        INTRO_BTN.forEach((bn, k) => {
+            const off = (bn.key === 'run' && !canFlee(battle)) || (bn.key === 'food' && battle.kind !== 'wild');
+            const on = k === introIndex;
+            panel(ctx, bn.x, bn.y, bn.w, bn.h, { fill: on ? '#2d5aa8' : 'rgba(26,36,64,0.95)', edge: on ? COLORS.accent : '#3a4a70' });
+            text(ctx, bn.label, bn.x + bn.w / 2, bn.y + 36, { size: 18, align: 'center', bold: true, color: off ? COLORS.dim : '#ffffff' });
+            const note = bn.key === 'item' ? btn('y') : bn.key === 'food' ? (off ? '投げられない' : btn('x')) : bn.key === 'run' && off ? 'にげられない' : '';
+            if (note) text(ctx, note, bn.x + bn.w / 2, bn.y + 54, { size: 9.5, align: 'center', color: COLORS.dim });
+        });
+        text(ctx, `十字キーで えらんで ${btn('a')}　どうぐ・おやつを 使うと バトル開始`, 160, 222, { size: 9.5, align: 'center', color: COLORS.dim, maxWidth: 300 });
+    }
+
     function drawMenu(ctx) {
         ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(0, 0, 320, 240);
@@ -936,7 +1017,7 @@ export function createBattleView(app, battle, place) {
         const u = menuTargets()[menu.pick.index];
         if (!u) return;
         const ei = battle.enemies.indexOf(u), fi = battle.front().indexOf(u);
-        const p = ei >= 0 ? enemyPos(ei) : fi >= 0 ? ALLY_POS[fi] : null;
+        const p = ei >= 0 ? enemyPos(ei) : fi >= 0 && enterT !== null ? ALLY_POS[fi] : null;
         if (!p) return;
         const scale = ei >= 0 ? p.scale : ALLY_SCALE;
         const y = p.y - ART[u.art].h * scale - 30 + Math.sin(t * 8) * 2;
@@ -955,6 +1036,11 @@ export function createBattleView(app, battle, place) {
             }
             return;
         }
+        if (battle.waiting || battle.outcome === 'flee') {
+            drawIntro(ctx);
+            if (menu) drawMenu(ctx);
+            return;
+        }
         drawWheel(ctx);
         drawSpecialButtons(ctx);
         button(ctx, { ...FAST_BTN, label: g.fastBattle ? '倍速 ON' : '倍速' }, { active: Boolean(g.fastBattle), size: 10.5 });
@@ -964,5 +1050,5 @@ export function createBattleView(app, battle, place) {
         if (menu) drawMenu(ctx);
     }
 
-    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu } };
+    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => (battle.waiting ? introIndex : null), allyShown: () => enterT !== null } };
 }
