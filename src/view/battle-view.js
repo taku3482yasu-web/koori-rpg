@@ -58,11 +58,11 @@ export function createBattleView(app, battle, place) {
     const pops = [];               // ダメージの 数字
     let introIndex = 0;            // はじまりの コマンドの カーソル
     let enterT = battle.waiting ? null : -9;   // なかまが 出てきた 時間 (null は まだ 出ていない)
-    // 「○○が あらわれた！」(同じ 敵が ならぶと「○○たち」)
+    // 「○○が あらわれた！」(2 体 いじょうは まんなかの 敵で「○○たちが」・2026-10-29 ユーザー指定。2 体なら 左)
     const appearText = (() => {
-        const names = [...new Set(battle.enemies.map(e => e.name))];
-        if (names.length === 1) return battle.enemies.length > 1 ? `${names[0]}たちが あらわれた！` : `${names[0]}が あらわれた！`;
-        return `${names.join('と ')}が あらわれた！`;
+        const es = battle.enemies;
+        if (es.length === 1) return `${es[0].name}が あらわれた！`;
+        return `${es[Math.floor((es.length - 1) / 2)].name}たちが あらわれた！`;
     })();
     const flash = {};              // uid → 光る 時間
 
@@ -1050,5 +1050,5 @@ export function createBattleView(app, battle, place) {
         if (menu) drawMenu(ctx);
     }
 
-    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => (battle.waiting ? introIndex : null), allyShown: () => enterT !== null } };
+    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => (battle.waiting ? introIndex : null), allyShown: () => enterT !== null, appearText: () => appearText } };
 }

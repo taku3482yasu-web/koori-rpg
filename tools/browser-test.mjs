@@ -181,6 +181,8 @@ try {
     await sleep(600);
     await shot('battle-appear');
     check(await evaluate('window.__app.scene.debug.intro() === 0 && !window.__app.scene.debug.allyShown() && window.__app.scene.battle.t === 0'), 'バトルの はじめは「あらわれた！」で 止まって 待つ');
+    check(await evaluate(`(() => { const s = window.__app.scene, es = s.battle.enemies, t = s.debug.appearText();
+        return es.length === 1 ? t === es[0].name + 'が あらわれた！' : t === es[Math.floor((es.length - 1) / 2)].name + 'たちが あらわれた！'; })()`), '2 体 いじょうは まんなかの 敵で「○○たちが あらわれた！」');
     await key('KeyJ');
     await sleep(300);
     check(await evaluate('window.__app.scene.debug.allyShown() && !window.__app.scene.battle.waiting'), '「たたかう」で なかまが 出てきて 始まる');

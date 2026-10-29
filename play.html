@@ -7768,9 +7768,9 @@ body.nopad #pad { display: none; }
     let introIndex = 0;
     let enterT = battle.waiting ? null : -9;
     const appearText = (() => {
-      const names = [...new Set(battle.enemies.map((e) => e.name))];
-      if (names.length === 1) return battle.enemies.length > 1 ? `${names[0]}たちが あらわれた！` : `${names[0]}が あらわれた！`;
-      return `${names.join("と ")}が あらわれた！`;
+      const es = battle.enemies;
+      if (es.length === 1) return `${es[0].name}が あらわれた！`;
+      return `${es[Math.floor((es.length - 1) / 2)].name}たちが あらわれた！`;
     })();
     const flash = {};
     const enemyPos = (i) => {
@@ -8838,7 +8838,7 @@ body.nopad #pad { display: none; }
       text(ctx, btn("fast"), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: "center", color: COLORS.dim });
       if (menu) drawMenu(ctx);
     }
-    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => battle.waiting ? introIndex : null, allyShown: () => enterT !== null } };
+    return { name: "battle", update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => battle.waiting ? introIndex : null, allyShown: () => enterT !== null, appearText: () => appearText } };
   }
   const CHOICE_BTN = [{ x: 30, y: 196, w: 124, h: 34, label: "なかまに する" }, { x: 166, y: 196, w: 124, h: 34, label: "しない" }];
   function createResult(app2, result2) {
