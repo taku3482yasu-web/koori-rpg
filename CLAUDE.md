@@ -9,3 +9,4 @@
 - ユーザーは `play.html` をダブルクリックして遊ぶ。直したら `npm run build:file` で作り直してからコミットする（`.githooks/pre-commit` が自動でやる）。
 - テスト: `npm test`（画面なし）と `node tools/browser-test.mjs`（Chrome で遊ぶ）。
 - main に push すると GitHub Pages に公開される（`.github/workflows/pages.yml`）。
+- 変更ができてテストが通ったら、聞かずに commit して main に push する（2026-10-29 ユーザー指定）。テストが落ちたら push しない。
