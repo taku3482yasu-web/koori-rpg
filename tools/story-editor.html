@@ -57,7 +57,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 /* 台本 */
 .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
 .field label { font-size: 12px; color: var(--sub); letter-spacing: 0.04em; }
-.row2 { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 10px; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) 150px 80px 110px; gap: 10px; }
+@media (max-width: 900px) { .row2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+input[type=number] { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); font: inherit; }
 .row2b { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 @media (max-width: 520px) { .row2, .row2b { grid-template-columns: minmax(0, 1fr); } }
 input[type=text], textarea, select { width: 100%; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); font: inherit; }
@@ -128,6 +130,10 @@ textarea { resize: vertical; min-height: 2.4em; }
 const CAST = /*CAST*/[];
 const ART = /*ART*/{};
 const STATUS = { done: 'ゲームに 入っている', wip: '書きかけ', todo: 'これから' };
+// バージョン: 同じ 章番号で 内定と 免許の 2 つを 書ける (2026-10-29 ユーザー指定: 14 章は バージョンで ちがう)
+const VERSIONS = { both: '両方', naitei: '内定だけ', menkyo: '免許だけ' };
+const VER_ORDER = { both: 0, naitei: 1, menkyo: 2 };
+const verTag = c => c.version && c.version !== 'both' ? `（${c.version === 'naitei' ? '内定' : '免許'}）` : '';
 const LOCAL_KEY = 'koori-story-draft';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -166,13 +172,13 @@ async function flush(id) {
 }
 
 // ---------- 目次 ----------
-const sortedIds = () => Object.keys(chapters).sort((a, b) => (chapters[a].no ?? 0) - (chapters[b].no ?? 0));
+const sortedIds = () => Object.keys(chapters).sort((a, b) => (chapters[a].no ?? 0) - (chapters[b].no ?? 0) || VER_ORDER[chapters[a].version || 'both'] - VER_ORDER[chapters[b].version || 'both']);
 function renderList() {
     const ids = sortedIds();
     $('#chlist').innerHTML = ids.length ? ids.map(id => {
         const c = chapters[id];
         const st = c.status || 'todo';
-        return `<li><button type="button" data-ch="${id}" class="${id === selCh ? 'on' : ''}"><span class="no">${c.no}章</span><span class="tt">${esc(c.title) || '（題名なし）'}</span><span class="st"><span class="pill ${st}">${STATUS[st]}</span></span></button></li>`;
+        return `<li><button type="button" data-ch="${id}" class="${id === selCh ? 'on' : ''}"><span class="no">${c.no}章${verTag(c)}</span><span class="tt">${esc(c.title) || '（題名なし）'}</span><span class="st"><span class="pill ${st}">${STATUS[st]}</span></span></button></li>`;
     }).join('') : '<li class="hint">まだ 章が ありません</li>';
 }
 
@@ -228,10 +234,12 @@ function renderEditor() {
     }
     const open = new Set([...ed.querySelectorAll('details.scene[open]')].map(d => d.dataset.scene));
     if (pv.scene && c.scenes.some(s => s.id === pv.scene)) open.add(pv.scene);
-    ed.innerHTML = `<h2>${c.no}章の 台本</h2>
+    ed.innerHTML = `<h2>${c.no}章${verTag(c)}の 台本</h2>
         <div class="row2">
             <div class="field"><label for="ct">章の 題名</label><input type="text" id="ct" class="chtitle" data-c="title" value="${esc(c.title)}" placeholder="例: 学校の七不思議"></div>
             <div class="field"><label for="cs">ようす</label><select id="cs" data-c="status">${Object.entries(STATUS).map(([k, t]) => `<option value="${k}"${k === (c.status || 'todo') ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+            <div class="field"><label for="cn">章の 番号</label><input type="number" id="cn" data-c="no" min="1" max="99" value="${c.no}"></div>
+            <div class="field"><label for="cv">バージョン</label><select id="cv" data-c="version">${Object.entries(VERSIONS).map(([k, t]) => `<option value="${k}"${k === (c.version || 'both') ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
         </div>
         <div class="field"><label for="cm">あらすじ</label><textarea id="cm" data-c="summary" rows="4" placeholder="この 章で おきること・はじまりと おわり">${esc(c.summary)}</textarea></div>
         <h2>場面 (${c.scenes.length})</h2>
@@ -273,7 +281,7 @@ $('#chlist').addEventListener('click', e => {
 $('#addCh').addEventListener('click', () => {
     const no = Math.max(0, ...Object.values(chapters).map(c => c.no ?? 0)) + 1;
     const id = 'ch' + String(no).padStart(2, '0') + (chapters['ch' + String(no).padStart(2, '0')] ? newId('_') : '');
-    chapters[id] = { no, title: '', status: 'todo', summary: '', scenes: [] };
+    chapters[id] = { no, version: 'both', title: '', status: 'todo', summary: '', scenes: [] };
     selCh = id;
     touch(id);
     render();
@@ -284,6 +292,7 @@ editor.addEventListener('input', e => {
     const el = e.target;
     const { c, sc, i } = ctx(el);
     if (!c) return;
+    if (el.dataset.c === 'no') return;
     if (el.dataset.c) { c[el.dataset.c] = el.value; if (el.dataset.c === 'title') renderList(); }
     else if (el.dataset.s && sc) { sc[el.dataset.s] = el.value; if (el.dataset.s === 'title') el.closest('details').querySelector('.stt').textContent = el.value || '（場面の 名前なし）'; }
     else if (sc && i >= 0) {
@@ -298,7 +307,8 @@ editor.addEventListener('input', e => {
 editor.addEventListener('change', e => {
     const el = e.target;
     const { c, sc, i } = ctx(el);
-    if (el.dataset.c === 'status') { renderList(); touch(selCh); return; }
+    if (el.dataset.c === 'status' || el.dataset.c === 'version') { renderList(); renderEditor(); touch(selCh); return; }
+    if (el.dataset.c === 'no') { c.no = Math.max(1, Math.round(+el.value) || c.no); renderList(); renderEditor(); touch(selCh); return; }
     if (el.dataset.k !== 'who' || !sc) return;
     const l = sc.lines[i];
     if (el.value === '*') { l.who = l.who && !CAST.some(x => x.name === l.who) ? l.who : 'ほかの人'; l.art = ''; }
@@ -443,7 +453,7 @@ document.fonts?.ready.then(drawPreview);
 function adopt(list) {
     for (const [id, c] of Object.entries(list)) {
         if (dirty.has(id) || saving.has(id)) continue;   // 書いている 途中の 章は そのまま
-        chapters[id] = { no: c.no ?? 0, title: c.title ?? '', status: c.status ?? 'todo', summary: c.summary ?? '', scenes: (c.scenes ?? []).map(s => ({ id: s.id || newId('s'), title: s.title ?? '', where: s.where ?? '', when: s.when ?? '', memo: s.memo ?? '', lines: (s.lines ?? []).map(l => ({ who: l.who ?? '', art: l.art ?? '', text: l.text ?? '' })) })) };
+        chapters[id] = { no: c.no ?? 0, version: c.version ?? 'both', title: c.title ?? '', status: c.status ?? 'todo', summary: c.summary ?? '', scenes: (c.scenes ?? []).map(s => ({ id: s.id || newId('s'), title: s.title ?? '', where: s.where ?? '', when: s.when ?? '', memo: s.memo ?? '', lines: (s.lines ?? []).map(l => ({ who: l.who ?? '', art: l.art ?? '', text: l.text ?? '' })) })) };
     }
     if (!selCh || !chapters[selCh]) selCh = sortedIds().find(id => chapters[id].status !== 'done') ?? sortedIds()[0] ?? null;
     if (selCh && !curScene()) pv = { scene: chapters[selCh].scenes[0]?.id ?? null, i: 0 };

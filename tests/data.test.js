@@ -7,7 +7,7 @@ import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
 import { BACK_ART } from '../src/art/back-art.js';
 import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS, MYSTERIES, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT,
-    SEALS, YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, BLOCK, regionOf } from '../src/data/map.js';
+    SEALS, YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, BLOCK, regionOf, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, PEOPLE } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
 
@@ -91,7 +91,7 @@ test('地図: 小学校の 中は 町と つながって いない。七不思�
 test('地図: 山と ダムは 町・学校と つながって いない。封印は 通れる マスの 上、入り口と 出口は 山道 (3 章)', () => {
     assert.ok([...TILES[YAMA_Y0 - 1]].every(c => c === 'X'), '学校の いちばん 下は かべ');
     assert.ok([...TILES[YAMA_Y0]].every(c => c === 'T'), '山の いちばん 上は 木');
-    assert.deepEqual(regionOf(YAMA_IN.y), [YAMA_Y0, MAP_H]);
+    assert.deepEqual(regionOf(YAMA_IN.y), [YAMA_Y0, UMI_Y0]);
     assert.deepEqual(regionOf(YAMA_OUT.y), [0, SCHOOL_Y0]);
     assert.equal(TILES[YAMA_IN.y][Math.floor(YAMA_IN.x)], 'R');
     assert.equal(TILES[YAMA_OUT.y][Math.floor(YAMA_OUT.x)], 'G');
@@ -100,6 +100,42 @@ test('地図: 山と ダムは 町・学校と つながって いない。封�
     for (const m of SEALS) {
         assert.ok(!BLOCK.has(TILES[m.y][m.x]) && TILES[m.y][m.x] !== 'W', `${m.id} は 通れる マスの 上`);
         assert.ok(NAKAMA[m.nakama] && NAKAMA[m.nakama].area === 'yama', `${m.id} を まもる キャラ`);
+    }
+});
+
+test('地図: 海辺の 町と 海岸どうくつは ほかと つながって いない。駅の 前と ボスの あとの 場所は 通れる (4 章)', () => {
+    assert.ok([...TILES[UMI_Y0 - 1]].every(c => c === 'T'), '山の いちばん 下は 木');
+    assert.ok([...TILES[UMI_Y0]].every(c => c === 'T'), '海の いちばん 上は 木');
+    assert.deepEqual(regionOf(UMI_IN.y), [UMI_Y0, MAP_H]);
+    assert.deepEqual(regionOf(STATION_OUT.y), [0, SCHOOL_Y0]);
+    assert.equal(TILES[UMI_IN.y][UMI_IN.x], 'R');
+    assert.equal(TILES[STATION_OUT.y][STATION_OUT.x], 'G');
+    assert.equal(TILES[UMI_AFTER_BOSS.y][UMI_AFTER_BOSS.x], 'R');
+    for (const id of ['rival4', 'urashima4']) {
+        const p = PEOPLE.find(q => q.id === id);
+        assert.equal(TILES[p.y][p.x], 'C', `${id} は どうくつの ゆか`);
+        assert.equal(TILES[p.y + (p.h || 1)][p.x], 'C', `${id} の 前に 立てる`);
+    }
+    // ライバルの いる 通路は 1 マスの はば (よこを すりぬけられない)
+    const rival = PEOPLE.find(q => q.id === 'rival4');
+    assert.ok(BLOCK.has(TILES[rival.y][rival.x - 1]) && BLOCK.has(TILES[rival.y][rival.x + 1]));
+    const umi = idsInArea('umi');
+    assert.equal(umi.length, 9);
+    const count = r => umi.filter(id => NAKAMA[id].rank === r).length;
+    assert.deepEqual([count('D'), count('C')], [5, 4]);
+});
+
+test('ライバル探検隊: バージョンごとの 3 人に 絵と わざと 術が ある (4 章)', async () => {
+    const { RIVALS, RIVAL_TEAMS } = await import('../src/data/nakama.js');
+    for (const team of Object.values(RIVAL_TEAMS)) {
+        assert.equal(team.members.length, 3);
+        assert.ok(team.members.includes(team.leader));
+        assert.ok(RIVALS[team.leader].bigMove, 'リーダーは 予告つきの 必殺技');
+        for (const id of team.members) {
+            const r = RIVALS[id];
+            assert.ok(ART[r.art], `${id} の 絵`);
+            assert.ok(r.waza.effects.length && r.jutsu && r.special, id);
+        }
     }
 });
 

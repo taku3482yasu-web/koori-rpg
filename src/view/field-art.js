@@ -14,7 +14,8 @@ const hash = (x, y, k = 0) => {
 
 export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72',
     L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a',
-    U: '#8a6a4a', H: '#7a5a3a', N: '#f0f6fa', Q: '#9aa0a8', D: '#a89a80', E: '#b8a888', I: '#9ad8f0' };
+    U: '#8a6a4a', H: '#7a5a3a', N: '#f0f6fa', Q: '#9aa0a8', D: '#a89a80', E: '#b8a888', I: '#9ad8f0',
+    J: '#4a4e58', C: '#7a7468' };
 
 function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -133,6 +134,18 @@ function drawTile(c, ch, x, y, wet = false) {
             r(2, 2, 3, 2, '#ffffff');
             break;
         }
+        // ----- 海辺の 町と 海岸どうくつ (4 章) -----
+        case 'J': { // 岩の がけ (どうくつの かべ)。ゆかに 面した ところは 明るい 岩はだ
+            r(0, 0, 16, 16, '#3a3e48');
+            r(Math.floor(hash(x, y, 90) * 10), Math.floor(hash(x, y, 91) * 10), 6, 4, '#4a4e58');
+            if (tileAt(x, y + 1) === 'C' || tileAt(x, y + 1) === 'S' || tileAt(x, y + 1) === 'G' || tileAt(x, y + 1) === 'R') { r(0, 9, 16, 7, '#6a6e78'); r(0, 15, 16, 1, '#2a2e36'); }
+            break;
+        }
+        case 'C':   // どうくつの ゆか (しめった 岩と 小石)
+            r(0, 0, 16, 16, '#7a7468');
+            if (hash(x, y, 92) < 0.5) r(Math.floor(hash(x, y, 93) * 12), Math.floor(hash(x, y, 94) * 12), 4, 2, '#6a6458');
+            if (hash(x, y, 95) < 0.3) r(Math.floor(hash(x, y, 96) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, '#c8e0f0');
+            break;
         default:
             r(0, 0, 16, 16, '#ff00ff');
     }

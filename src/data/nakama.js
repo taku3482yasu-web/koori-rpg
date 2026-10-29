@@ -1,5 +1,5 @@
 // =====================================================================
-// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体。3 章で 山と ダムの 12 体)
+// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体。3 章で 山と ダムの 12 体。4 章で 海辺の 町の 9 体)
 // ---------------------------------------------------------------------
 // 前作 (koori-dungeon) から来た 15 体は、名前・属性・役割・説明・口ぐせを ダンジョンの データから写した。
 // 新キャラ 5 体 (イシコロン〜ハシシタボウズ) は 設計書 4.6 の案。
@@ -60,6 +60,7 @@ export const JUTSU_TYPE = {
     // 回復: 世話を する キャラ (治す 役の コザラッパは わざで 治すので、術は みずの 術)
     soumennagare: 'heal', mokugyoro: 'heal', gomibakon: 'heal', gachapon: 'heal',
     // 吸収: 取る・うばう・命を 吸う キャラ
+    ryuuguudai: 'heal',
     pekorisu: 'drain', rousokubi: 'drain', daichouenkin: 'drain', burakrasher: 'drain', hoshikuzun: 'drain', neontanuki: 'drain'
 };
 export function jutsuOf(element, tier, type = 'element') {
@@ -144,11 +145,29 @@ export const WAZA = {
     kokemusha: W('こけむし斬り', 'しぜん', 'front', 1.8),
     koorimodokishin: W('コオリハンマー', 'こおり', 'front', 2.0, 'confuse', 0.3),
     hyougaryu: W('ひょうがブレス', 'こおり', 'line', 1.3, 'slow', 0.2),
+    // 海辺の 町と 浦の島の海岸どうくつ (4 章)。めくらまし は こんらんに 置きかえ
+    tamatebakogani: W('けむり', 'みず', 'front', 0.6, 'confuse', 0.8),
+    isoginchakku: W('すいこみ', 'しぜん', 'front', 1.3),
+    otohimedai: W('乙姫の舞', 'みず', 'front', 0, 'confuse', 1.0),
+    asedakku: W('汗とばし', 'みず', 'line', 0.9),
+    uniharry: W('うにトゲ', 'みず', 'front', 1.3, 'poison', 0.3),
+    ryuuguudai: W('りゅうぐうの舞', 'みず', 'around', 0, 'confuse', 0.6),
+    nakatadraco: W('水のブレス', 'みず', 'line', 1.2),
+    umibozuou: W('だいおおなみ', 'みず', 'line', 1.5),
+    urashima: W('玉手箱', 'ふしぎ', 'around', 0.8, 'confuse', 0.6),
+    // ライバル探検隊 (4 章。前作の 必殺わざ)。ひるみ・めくらまし は こんらん、まひ は のろい
+    asahara: W('DOPAPANCHI', 'ほのお', 'front', 1.6),
+    sasaki: W('ASAスラッシュ', 'ふつう', 'front', 1.4),
+    kotani: W('NABIテンポ', 'ふしぎ', 'around', 0, 'slow', 0.7),
+    ueno: W('マッスルウエノクラッシュ', 'ふつう', 'around', 1.3),
+    shibata: W('シバタードライバー', 'ふつう', 'front', 1.9, 'confuse', 0.4),
+    ikekimu: W('イケキムドライブ', 'かぜ', 'line', 1.5, 'confuse', 0.3),
     // こおりくん・ボス
     koori: W('コオリソード', 'こおり', 'front', 1.4),
     nushi: W('百のかぞえうた', 'ふしぎ', 'around', 0.6, 'confuse', 0.3),
     kage: W('影の とりつき', 'ふしぎ', 'around', 0.6, 'possess', 0.3),
-    himuro: W('ふぶき', 'こおり', 'around', 1.3, 'slow', 0.3)
+    himuro: W('ふぶき', 'こおり', 'around', 1.3, 'slow', 0.3),
+    urashima4: W('玉手箱', 'ふしぎ', 'around', 0.8, 'confuse', 0.5)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
@@ -550,6 +569,63 @@ const LIST = [
         line: '氷河の 底で 眠っていた……', favorite: 'niboshi',
         title: '氷河の龍', desc: '氷河の底に眠っていた龍。氷の力を持つ。',
         special: sp('氷河の咆哮', [atk('all', 2.0, { element: 'こおり', magic: true })])
+    },
+    // ----- 海辺の 町と 浦の島の海岸どうくつの 9 体 (4 章「海辺の どうくつと ライバル探検隊」。2026-10-29。ダンジョンから。D 5・C 4) -----
+    //   ダンジョンの 浦の島の海岸どうくつに 出る キャラと 海の キャラ。浦の島重蔵は どうくつの ボス (黒い 紋つき) を たおすと なかまに なる
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'tamatebakogani', name: 'タマテバコガニ', from: 'ダンジョン 009', area: 'umi', rank: 'D', element: 'みず', role: 'jammer', mul: { def: 1.1 },
+        line: 'ケムッ！', favorite: 'niboshi',
+        title: '玉手箱を守るカニ', desc: '玉手箱を守っている。この中にはラフテルへのエターナルポースが入っているとか。',
+        special: sp('けむりの 玉手箱', [atk('all', 0.6), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'isoginchakku', name: 'イソギンチャック', from: 'ダンジョン 013', area: 'umi', rank: 'D', element: 'しぜん', role: 'defender', mul: { hp: 1.1 },
+        line: 'ジジジ…', favorite: 'kyuuri',
+        title: 'お口チャック', desc: '口がチャックになっていて、この口の中を見たものは誰もいない。',
+        special: sp('チャック すいこみ', [atk('one', 2.2, { drain: 0.5 })])
+    },
+    {
+        id: 'otohimedai', name: 'オトヒメダイ', from: 'ダンジョン 012', area: 'umi', rank: 'D', element: 'みず', role: 'supporter', mul: { spd: 1.1 },
+        line: '踊りましょ♪', favorite: 'melonpan',
+        title: '踊る大捜査線', desc: '珍しい踊る魚。ダンスは地上で踊るんじゃない！洞窟で踊るんだ！',
+        special: sp('乙姫の 大舞台', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'asedakku', name: 'アセダック', from: 'ダンジョン 040', area: 'umi', rank: 'D', element: 'みず', role: 'supporter', mul: { hp: 1.05 },
+        line: 'あせあせ！', favorite: 'cider',
+        title: '汗だくの鳥', desc: '汗腺が崩壊した鳥。いつもびしょびしょ。',
+        special: sp('汗だく スプラッシュ', [atk('all', 1.3, { element: 'みず' })])
+    },
+    {
+        id: 'uniharry', name: 'ウニハリー', from: 'ダンジョン 139', area: 'umi', rank: 'D', element: 'みず', role: 'defender', mul: { def: 1.15 },
+        line: 'うにうに', favorite: 'cider',
+        title: '海のハリー', desc: '海で暮らすことを選んだハリー。ウニと間違えられて食べられそうになるのが悩み。',
+        special: sp('うにうに ニードル', [atk('one', 0.9, { hits: 3 }), { kind: 'status', target: 'one', status: 'poison', chance: 0.6 }])
+    },
+    {
+        id: 'ryuuguudai', name: 'リュウグウダイ', from: 'ダンジョン 061', area: 'umi', rank: 'C', element: 'みず', role: 'healer', mul: { mag: 1.1 },
+        line: '竜宮へ ご案内♪', favorite: 'choco',
+        title: '竜宮の踊り子', desc: 'オトヒメダイが海岸どうくつの奥で進化した姿。洞窟で踊るだけでは物足りず、竜宮城でショーを開くようになった。踊りを見た者は元気になるらしい。',
+        special: sp('竜宮の 宴', [{ kind: 'heal', target: 'party', power: 0.5 }])
+    },
+    {
+        id: 'nakatadraco', name: 'ナカタドラコ', from: 'ダンジョン 048', area: 'umi', rank: 'C', element: 'みず', role: 'attacker', mul: { atk: 1.1 },
+        line: 'ガオー（加減中）', favorite: 'onigiri',
+        title: '中田のドラゴン', desc: '幼体のドラゴン。活発で、元気いっぱい。',
+        special: sp('加減しない ブレス', [atk('all', 1.8, { element: 'みず' })])
+    },
+    {
+        id: 'umibozuou', name: 'ウミボウズオウ', from: 'ダンジョン 062', area: 'umi', rank: 'C', element: 'ふしぎ', role: 'attacker', mul: { hp: 1.1 },
+        line: 'ぼうず～～ん！！', favorite: 'onigiri',
+        title: '海の大怪異', desc: 'ウミボウズンが深い迷宮の底で進化した姿。新月でなくても現れるようになり、漁師たちはもう海に出られない。闇はさらに暗く深くなった。',
+        special: sp('大海嘯', [atk('all', 2.0, { element: 'みず' })])
+    },
+    {
+        id: 'urashima', name: '浦の島重蔵', from: 'スロット・ダンジョン', area: 'umi', rank: 'C', element: 'みず', role: 'defender', mul: { hp: 1.1, def: 1.1, spd: 0.85 },
+        line: 'わしは……なんじゃったかの……', favorite: 'niboshi',
+        title: '帰れなくなった釣り人', desc: '一人で摩天楼に挑戦したが、道に迷って帰れなくなった 釣り人。今は 浦の島の海岸どうくつに 家を建てて住んでいる。亀の甲羅で守り、玉手箱で煙幕を放って戦う。物忘れがひどい。',
+        special: sp('玉手箱 ぜんかい', [atk('all', 1.4, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.5 }])
     }
 ];
 
@@ -562,7 +638,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -627,9 +703,53 @@ export const BOSSES = {
         // 必殺技は 時間では 打たない (偶像が 2 体 そろうと charge 秒 ためて 打つ)。偶像の HP は ボスの 最大HP の idolHp
         bigMove: { name: '氷河の咆哮', trigger: 'idols', charge: 7, idolName: '氷の偶像', idolHp: 0.06, effects: [atk('all', 1.6, { magic: true, element: 'こおり' })] },
         befriends: 'hyougaryu', lv: 17, place: 'dam'
+    },
+    // 4 章の ボス: 黒い 紋に とりつかれた 浦の島重蔵 (浦の島の海岸どうくつの いちばん 奥)。たおすと 紋が 消えて なかまに なる
+    //   わざ: 玉手箱 (全体に ふしぎ 小 + こんらん)・つりざお (1 体に 中)・こうらガード (自分の ぼうぎょ アップ)・
+    //     「……なんじゃったかの」(もの忘れで なにも しない)
+    //   必殺技: 黒い紋の 玉手箱 (全体に みず 大 + ときどき とりつき。紋に あやつられている)
+    urashima4: {
+        id: 'urashima4', name: '浦の島重蔵 (黒い紋)', element: 'みず', role: 'defender', art: 'urashima', scale: 1.5, rank: 'B',
+        base: { hp: 700, atk: 14, def: 15, spd: 10, mag: 14 },
+        moves: [
+            { name: '玉手箱', w: 3, effects: [atk('all', 0.7, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.35 }] },
+            { name: 'つりざお', w: 3, effects: [atk('one', 1.3)] },
+            { name: 'こうらガード', w: 2, effects: [{ kind: 'buff', target: 'self', stat: 'def', amount: 0.6, time: 8 }] },
+            { name: '……なんじゃったかの', w: 1.2, effects: [] }
+        ],
+        bigMove: { name: '黒い紋の 玉手箱', every: 13, warn: 2.5, effects: [atk('all', 1.4, { magic: true, element: 'みず' }), { kind: 'status', target: 'all', status: 'possess', chance: 0.25 }] },
+        befriends: 'urashima', lv: 20, place: 'cave'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
+
+// ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)
+//   内定: ASK-3 (リーダー KING.ASAHARA) / 免許: お願いマッスル (リーダー マッスルウエノーブル)。設計書では リーダー S・メンバー A
+//   だが 4 章の あいては 少し 弱め (リーダー B・メンバー C)。まだ なかまに ならない。リーダーの 必殺技は 予告つき
+//   名前・属性・口ぐせ・わざは ダンジョンの データから 写した
+const rival = (id, name, element, role, rank, mul, line, special, extra = {}) => {
+    const base = {};
+    for (const [k, v] of Object.entries(ROLE_BASE[role])) base[k] = Math.round(v * (mul[k] || 1) * RANK_K[rank]);
+    return { id, name, element, role, rank, art: id, base, line, special, ...moves(id, element, rank), ...extra };
+};
+export const RIVAL_TEAMS = {
+    naitei: { name: 'ASK-3', leader: 'asahara', members: ['sasaki', 'asahara', 'kotani'] },
+    menkyo: { name: 'お願いマッスル', leader: 'ueno', members: ['shibata', 'ueno', 'ikekimu'] }
+};
+export const RIVALS = {
+    asahara: rival('asahara', 'KING.ASAHARA', 'ほのお', 'attacker', 'B', { hp: 1.15, atk: 1.0 }, 'CS城の主の力、見せてやろう！ ひれ伏せ！',
+        sp('DOPAPANCHI', [atk('one', 2.0)]),
+        { bigMove: { name: 'DOPAPANCHI！！', every: 14, warn: 2.5, effects: [atk('all', 1.3, { element: 'ほのお' })] } }),
+    sasaki: rival('sasaki', 'Mr.SASAKI', 'ふつう', 'supporter', 'C', { atk: 1.1 }, 'どうも、しご出来です。', sp('しめきり厳守', [atk('one', 1.8)])),
+    kotani: rival('kotani', 'Mr.KOTANI', 'かぜ', 'jammer', 'C', { spd: 1.1 }, '勝率は計算済みです。', sp('計算どおり', [{ kind: 'status', target: 'all', status: 'slow', chance: 0.7 }])),
+    ueno: rival('ueno', 'マッスルウエノーブル', 'ふつう', 'defender', 'B', { hp: 1.2, atk: 1.25 }, '我が筋肉の前にひれ伏すがよい！',
+        sp('マッスルウエノクラッシュ', [atk('all', 1.3)]),
+        { bigMove: { name: '筋肉 大解放！', every: 14, warn: 2.5, effects: [atk('all', 1.3, { element: 'ふつう' })] } }),
+    shibata: rival('shibata', 'シバター', 'ふつう', 'attacker', 'C', {}, 'ぶんぶん！ 撮れ高いただき！ んなああ～', sp('撮れ高 ばっちり', [atk('one', 2.0)])),
+    ikekimu: rival('ikekimu', 'イケキム', 'かぜ', 'attacker', 'C', { spd: 1.1 }, 'チッ…邪魔だ。', sp('暗殺術', [atk('one', 1.9)]))
+};
+export const RIVAL_LV = 17;
+export const rivalTeam = version => RIVAL_TEAMS[version] || RIVAL_TEAMS.naitei;
 
 // こおりくん (2026-10-27 ユーザー指定: バトルに こおりくんも 出られる)。メダル帳の いちばん はじめに いて、ウォッチの 輪に 入れられる
 //   能力は 主人公なので 少し 高め (ダンジョンの こおりくんと 同じく どの 能力も そこそこの アタッカー)。図鑑には のらない
@@ -644,6 +764,6 @@ export const HERO = {
 Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
 
 // 絵の 名前 (ボスは なかまの 絵を 大きくして 使う)
-export const unitArtKey = id => (NAKAMA[id] ? NAKAMA[id].art : BOSSES[id] ? BOSSES[id].art : id);
-// なかま・こおりくん・ボスの どれでも
-export const unitOf = id => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || null;
+export const unitArtKey = id => (NAKAMA[id] ? NAKAMA[id].art : BOSSES[id] ? BOSSES[id].art : RIVALS[id] ? RIVALS[id].art : id);
+// なかま・こおりくん・ボス・ライバル探検隊の どれでも
+export const unitOf = id => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;

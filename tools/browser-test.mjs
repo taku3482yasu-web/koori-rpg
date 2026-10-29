@@ -430,6 +430,46 @@ try {
     for (let i = 0; i < 10 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
     await skipTalk();
 
+    // ----- 4 章: ともいし → 石の川駅から 電車 → 海辺の 町 → ライバル探検隊 → 浦の島重蔵 (2026-10-29) -----
+    await evaluate('window.__app.g.story = "clear3"; window.__app.g.time = 1; true');
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "umi"'), '3 章 クリアの あと ともいしと 話すと 4 章が 始まる');
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(200);
+    await shot('umi-arrive');
+    check(await evaluate('window.__app.g.story === "umibe" && window.__app.g.pos.y > 120 * 16'), '石の川駅から 電車で 海辺の 町へ (ライバル探検隊に 出会う)');
+    await at(39, 128, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.kind === "rival" && window.__app.scene.battle.enemies.length === 3'), 'どうくつの 通路で ライバル探検隊と 3 体の バトル');
+    await key('KeyJ');
+    await sleep(1200);
+    await shot('umi-rival');
+    await winNow();
+    await skipTalk();
+    check(await evaluate('window.__app.g.flags.rival4 === true && window.__app.g.story === "umibe"'), 'ライバル探検隊に 勝つと 通路を ゆずる');
+    await at(43, 123, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "urashima4"'), 'どうくつの 奥で 黒い 紋の 浦の島重蔵と バトル');
+    await key('KeyJ');
+    await sleep(1500);
+    await shot('umi-boss');
+    await winNow();
+    await skipTalk(30);
+    await shot('umi-clear');
+    check(await evaluate('window.__app.g.story === "clear4" && window.__app.g.medals.some(m => m.id === "urashima")'), '浦の島重蔵を たおすと 4 章 クリア (なかまに なる)');
+    await at(5, 125, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.pos.y < 60 * 16'), '海辺駅から 電車で 石の川に もどる');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

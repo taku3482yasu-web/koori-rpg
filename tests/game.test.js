@@ -2,9 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM, bossEnemies, readLegend, sealsSolved } from '../src/logic/game.js';
+import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM, bossEnemies, readLegend, sealsSolved, startChapter4, arriveUmi, canRideTrain, rivalEnemies } from '../src/logic/game.js';
 import { createBattle } from '../src/logic/battle.js';
-import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS, MYSTERIES, SEALS, YAMA_Y0 } from '../src/data/map.js';
+import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS, MYSTERIES, SEALS, YAMA_Y0, UMI_Y0 } from '../src/data/map.js';
 import { blockedTile, moveHero, lookAt, peopleHere, mysteriesSolved, gatesHere } from '../src/logic/world.js';
 
 const spot = id => SPOTS.find(s => s.id === id) || ROAMS.find(s => s.id === id);
@@ -85,7 +85,53 @@ test('3 章: 山に 入り、奥の院で 言いつたえを 読み、封印を 
     assert.equal(g.story, 'clear3');
     assert.ok(!peopleHere(g).some(p => p.id === 'damNushi'), 'たおすと いなくなる');
     assert.ok(blockedTile(g, lake.x, lake.y), 'クリアで 湖に 水が もどる');
-    assert.match(objective(g), /山 1\/12/);
+    assert.match(objective(g), /ともいし/, '3 章 クリアの あとは ともいしと 話す (4 章へ)');
+});
+
+test('4 章: ともいしと 話す → 電車で 海辺の 町 → ライバル探検隊 (バージョンで ちがう) → 浦の島重蔵を たおすと 4 章 クリア (2026-10-29)', () => {
+    for (const version of ['naitei', 'menkyo']) {
+        const g = newGame(version);
+        receiveWatch(g);
+        const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+        g.story = 'yama';
+        assert.ok(!canRideTrain(g), '3 章の あいだは 電車に 乗れない');
+        assert.ok(!startChapter4(g), '3 章 クリア前は 始まらない');
+        g.story = 'clear3';
+        assert.ok(startChapter4(g));
+        assert.equal(g.story, 'umi');
+        assert.ok(canRideTrain(g));
+        assert.match(objective(g), /石の川駅/);
+        assert.ok(arriveUmi(g), 'はじめて 着いた');
+        assert.ok(!arriveUmi(g), '2 回目は なにも おきない');
+        assert.ok(peopleHere(g).some(p => p.id === 'rival4'), 'ライバル探検隊が 通路を ふさぐ');
+        assert.ok(!peopleHere(g).some(p => p.id === 'urashima4'));
+        const team = rivalEnemies(g);
+        assert.equal(team.length, 3);
+        assert.deepEqual(team.map(e => e.id), version === 'naitei' ? ['sasaki', 'asahara', 'kotani'] : ['shibata', 'ueno', 'ikekimu']);
+        const rival = applyBattleResult(g, winBattle(g, team, 'rival'), rng);
+        assert.ok(rival.rival && !rival.befriend, 'ライバルは なかまに ならない');
+        assert.ok(g.flags.rival4);
+        assert.ok(!peopleHere(g).some(p => p.id === 'rival4'), '勝つと 通れる');
+        assert.ok(peopleHere(g).some(p => p.id === 'urashima4'), '奥に 浦の島重蔵');
+        const out = applyBattleResult(g, winBattle(g, bossEnemies('urashima4'), 'boss'), rng);
+        assert.equal(out.bossId, 'urashima4');
+        assert.equal(out.befriend.id, 'urashima');
+        assert.equal(g.story, 'clear4');
+        assert.ok(!peopleHere(g).some(p => p.id === 'urashima4'));
+        assert.match(objective(g), /海 1\/9/);
+    }
+});
+
+test('4 章: どうくつの せまい 通路は ライバルが いる あいだ 通れない。がけと 海は 通れない', () => {
+    const g = newGame('naitei');
+    receiveWatch(g);
+    g.story = 'umibe';
+    assert.ok(blockedTile(g, 39, UMI_Y0 + 7), 'ライバル探検隊が ふさぐ');
+    assert.ok(!blockedTile(g, 39, UMI_Y0 + 8), 'しおだまりの 広間');
+    assert.ok(blockedTile(g, 31, UMI_Y0 + 5), '岩の がけ');
+    assert.ok(blockedTile(g, 10, UMI_Y0 + 28), '海');
+    g.flags.rival4 = true;
+    assert.ok(!blockedTile(g, 39, UMI_Y0 + 7), '勝つと 通れる');
 });
 
 test('3 章: 山道は 2 章 クリアまで 通行止め', () => {

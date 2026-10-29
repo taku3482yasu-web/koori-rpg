@@ -18,8 +18,14 @@ export function peopleHere(g) {
         (p.only === 'beforeWatch' && g.story === 'intro') ||
         (p.only === 'beforeClear' && !reached(g, 'clear')) ||
         (p.only === 'kage' && g.story === 'school' && allMysteriesSolved(g)) ||
-        (p.only === 'damNushi' && g.story === 'yama' && g.flags.oku && SEALS.every(q => g.mysteries[q.id])));
+        (p.only === 'damNushi' && g.story === 'yama' && g.flags.oku && SEALS.every(q => g.mysteries[q.id])) ||
+        // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
+        (p.only === 'rival4' && g.story === 'umibe' && !g.flags.rival4) ||
+        (p.only === 'urashima4' && g.story === 'umibe' && g.flags.rival4));
 }
+// 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)
+export const personName = (g, p) => (p.nameBy ? p.nameBy[g.version] || p.name : p.name);
+export const personArt = (g, p) => (p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art);
 
 // 工事中の さく (1 章 クリアまで 商店街へ 行けない・2 章 クリアまで 山へ 行けない)
 export const gatesHere = g => GATES.filter(q => (q.only === 'beforeClear2' ? !reached(g, 'clear2') : !reached(g, 'clear')));

@@ -18,7 +18,7 @@ const row = r => {
     const left = Math.floor((W - r.length) / 2);
     return '.'.repeat(left) + r + '.'.repeat(W - r.length - left);
 };
-const bob = rows => [rows, [...rows.slice(1), '.'.repeat(W)]];
+const bob = rows => [rows, [...rows.slice(1), '.'.repeat(rows[0].length)]];
 const drawn = (palette, rows, { still = false } = {}) => {
     const r = rows.map(row);
     return { w: W, h: r.length, palette, frames: still ? [r, r] : bob(r) };
@@ -297,5 +297,16 @@ export const BACK_ART = {
     haetorigusan: faceless('haetorigusan', { f: 'c', e: 'd' }),
     kokemusha: faceless('kokemusha', { d: 'a', e: 'a' }),                         // かぶとの うしろ
     koorimodokishin: faceless('koorimodokishin', { e: 'c', f: 'c' }, { rows: [2, 99] }),  // 王冠は そのまま
-    hyougaryu: faceless('hyougaryu', { e: 'b', g: 'f' })                                  // 頭と つばさの うしろ
+    hyougaryu: faceless('hyougaryu', { e: 'b', g: 'f' }),                                 // 頭と つばさの うしろ
+
+    // ----- 海辺の 町と 浦の島の海岸どうくつの 9 体 (4 章。2026-10-29): 顔を 消して 左右を 反転 -----
+    tamatebakogani: faceless('tamatebakogani', { d: 'c' }),                       // 玉手箱の うしろ (金具が 見えない)
+    isoginchakku: faceless('isoginchakku', { c: 'a', d: 'a' }),                   // チャックの 口が 見えない
+    otohimedai: faceless('otohimedai', { c: 'a', d: 'a' }),
+    asedakku: faceless('asedakku', { b: 'a', c: 'a' }, { rows: [0, 13] }),        // くちばしは 見えない・足は そのまま
+    uniharry: faceless('uniharry', { c: 'a' }),
+    ryuuguudai: faceless('ryuuguudai', { c: 'a', d: 'a' }),
+    nakatadraco: faceless('nakatadraco', { c: 'a', b: 'a' }, { rows: [3, 99] }),  // 角は そのまま
+    umibozuou: faceless('umibozuou', { b: 'a', c: 'a' }),
+    urashima: faceless('urashima', { f: 'm', l: 'm', n: 'm', o: 'm', q: 'm' }, { rows: [3, 17] })   // 白い 髪と ひげの うしろ
 };

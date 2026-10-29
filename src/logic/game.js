@@ -9,9 +9,12 @@
 //   school   夜の 学校に 入った。七不思議を 7 つ たしかめる → 8 つ目の ふしぎ (ボス) を たおす
 //   clear2   2 章 クリア。ここから 3 章「ダムの水が消える」: 町の 北の 山道から 山へ
 //   yama     山に 入った。奥の院で 言いつたえを 読む (flags.oku) → 氷の 封印を 3 つ とく → ダムの ヌシ (ボス) を たおす
-//   clear3   3 章 クリア。なかまを あつめる (順番は story.js)
+//   clear3   3 章 クリア。ここから 4 章「海辺の どうくつと ライバル探検隊」: 家の 前の ともいしと 話す
+//   umi      商店街の 石の川駅から 電車で 海辺の 町へ 行ける
+//   umibe    海辺の 町に 着いた。ライバル探検隊が どうくつの 通路を ふさぐ → 勝つ (flags.rival4) → 奥の 浦の島重蔵 (ボス)
+//   clear4   4 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
@@ -132,8 +135,13 @@ export function encounter(g, source, rng, first = null) {
     return enemies;
 }
 
-// ボス: nushi (1 章・石の川橋) / kage (2 章・学校の ろうか)
+// ボス: nushi (1 章・石の川橋) / kage (2 章・学校の ろうか) / himuro (3 章・ダム) / urashima4 (4 章・海岸どうくつ)
 export const bossEnemies = (id = 'nushi') => [{ id, lv: BOSSES[id].lv }];
+// ライバル探検隊 (4 章): バージョンの チーム 3 人 (まんなかが リーダー)
+export const rivalEnemies = g => {
+    const team = rivalTeam(g.version);
+    return team.members.map(id => ({ id, lv: RIVAL_LV + (id === team.leader ? 1 : 0) }));
+};
 
 // 仲間に なる 確率 (設計書 4.2)
 export function befriendRate(g, id, food) {
@@ -168,6 +176,12 @@ export function applyBattleResult(g, battle, rng) {
     }
     // 七不思議の 正体に 勝った (2 章)
     if (out.mystery) g.mysteries[out.mystery] = true;
+    // ライバル探検隊に 勝った (4 章)。なかまには ならない
+    if (battle.kind === 'rival') {
+        g.flags.rival4 = true;
+        out.rival = true;
+        return out;
+    }
     if (out.boss) {
         const bossId = battle.enemies.find(e => BOSSES[e.id])?.id || 'nushi';
         const id = BOSSES[bossId].befriends;
@@ -176,6 +190,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'nushi') { g.story = 'clear'; g.chapter = 2; }
         if (bossId === 'kage') { g.story = 'clear2'; g.chapter = 3; }
         if (bossId === 'himuro') { g.story = 'clear3'; g.chapter = 4; }
+        if (bossId === 'urashima4') { g.story = 'clear4'; g.chapter = 5; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -240,14 +255,34 @@ export function objective(g) {
             const n = sealsSolved(g);
             return n < SEALS.length ? `山の どこかに ある 氷の 封印を とこう (${n}/${SEALS.length})` : 'ダムの 湖の 底の 氷の 城へ 行こう';
         }
+        // 4 章「海辺の どうくつと ライバル探検隊」
+        case 'clear3': return 'こおりくんの 家の 前の ともいしと 話そう';
+        case 'umi': return '商店街の 西の はしの 石の川駅から、電車で 海辺の 町へ 行こう';
+        case 'umibe': return g.flags.rival4 ? '浦の島の海岸どうくつの いちばん 奥へ 行こう'
+            : '浦の島の海岸どうくつの 奥へ すすもう (ライバル探検隊が 先に 行った)';
         default: {
-            // 3 章 クリアの あと: なかま あつめ
+            // 4 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}`;
         }
     }
 }
+
+// 4 章の はじまり: 3 章 クリアの あと ともいしと 話すと 電車で 海辺の 町へ 行けるように なる。はじめて なら true
+export function startChapter4(g) {
+    if (g.story !== 'clear3') return false;
+    g.story = 'umi';
+    return true;
+}
+// 海辺の 町に はじめて 着いた (ライバル探検隊と 出会う)。はじめて なら true
+export function arriveUmi(g) {
+    if (g.story !== 'umi') return false;
+    g.story = 'umibe';
+    return true;
+}
+// 電車に のれるか (4 章)
+export const canRideTrain = g => reached(g, 'umi');
 
 export const spotById = id => SPOTS.find(s => s.id === id);
 

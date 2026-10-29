@@ -2,19 +2,22 @@
 // 町の 場面: 上画面で 歩く・調べる・レンズで さがす、下画面に 地図と ボタン (設計書 5 章・7 章)
 // 2 章: 小学校の 入り口 (夕方・夜) から 校舎の 中へ。七不思議を 調べると バトル。げた箱の マットで 外へ
 // 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → 氷の 封印 3 つ → ダムの主 (ヒョウガリュウ)
+// 4 章: ともいしと 話す → 商店街の 石の川駅から 電車で 海辺の 町へ → ライバル探検隊 (バージョンで ちがう) → 黒い 紋の 浦の島重蔵
+//   セリフは ストーリー工房 (https://claude.ai/artifact/2FExjjNSVxzmaDyk81oJxH) の 4 章の とおり
 // =====================================================================
 import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
-    YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS } from '../data/map.js';
+    YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
-import { NAKAMA, AREAS } from '../data/nakama.js';
+import { NAKAMA, AREAS, RIVALS, rivalTeam } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
-import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved } from '../logic/world.js';
+import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved, personArt } from '../logic/world.js';
 import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
-import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved } from '../logic/game.js';
+import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
+    startChapter4, arriveUmi, canRideTrain, rivalEnemies } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -28,7 +31,7 @@ const TINT = ['rgba(255, 220, 160, 0.10)', null, 'rgba(255, 120, 40, 0.20)', 'rg
 const MINI_NAMES = {
     home: 'いえ', dagashi: '駄菓子屋', school: '学校', shrine: '神社', toilet: 'トイレ', temple: 'お寺',
     gamecenter: 'ゲーセン', pachinkoAto: 'パチ跡', yaoya: '八百屋', omenya: 'お面屋', kouban: '交番',
-    jansou: '雀荘', denkiya: '電気屋', honya: '本屋', karaoke: 'カラオケ', sentou: '銭湯', okunoin: '奥の院'
+    jansou: '雀荘', denkiya: '電気屋', honya: '本屋', karaoke: 'カラオケ', sentou: '銭湯', okunoin: '奥の院', station: '駅'
 };
 
 const BTN = {
@@ -58,9 +61,11 @@ export function createField(app) {
     // かくれている 場所に いて、まだ 見つけていない (違和感を 出す・レンズに 反応する)
     const hiding = s => spotActive(g, s, g.playTime) && !wild.list.some(c => c.spot === s.id);
 
-    // 学校の 中・山に いるか (町と 学校と 山は つながって いないので、カメラも 地図も べつに する)
-    const inYama = () => g.pos.y >= YAMA_Y0 * TILE;
-    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && !inYama();
+    // 学校の 中・山・海に いるか (町と 学校と 山と 海は つながって いないので、カメラも 地図も べつに する)
+    const inUmi = () => g.pos.y >= UMI_Y0 * TILE;
+    const inYama = () => g.pos.y >= YAMA_Y0 * TILE && !inUmi();
+    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && g.pos.y < YAMA_Y0 * TILE;
+    const inCave = () => { const ht = heroTile(g); return inCaveTile(ht.x, ht.y); };
     const region = () => regionOf(Math.floor(g.pos.y / TILE));
     function camera() {
         const [top, bottom] = region().map(v => v * TILE);
@@ -81,6 +86,23 @@ export function createField(app) {
     // ----- できごと -----
     const say = (lines, opts) => app.talk.open(lines, opts);
     const furu = text => ({ who: 'ふるカワ', art: 'furukawa', text });
+    const tomo = text => ({ who: 'ともいし', art: 'tomoishi', text });
+    const nar = text => ({ who: '', text });
+    const by = (id, text) => ({ who: RIVALS[id]?.name || NAKAMA[id]?.name || id, art: RIVALS[id]?.art || NAKAMA[id]?.art || id, text });
+    // ライバル探検隊の セリフ (4 章。前作の 口調。バージョンで チームが ちがう)
+    const RIVAL_LINES = {
+        naitei: {
+            meet: ['asahara', 'おまえが うわさの こおりくんか。海岸どうくつの 奥の お宝は、ワシら ASK-3が いただく！'],
+            block: [['asahara', 'ここを 通りたくば、ワシらに 勝ってみせよ！ CS城の主の力、見せてやろう！'], ['sasaki', 'どうも、しご出来です。'], ['kotani', '勝率は計算済みです。']],
+            lose: [['asahara', 'ぐぬぬ……この ワシが……負けただと……！'], ['asahara', '……約束は 約束だ。先に 行くがよい。ただし、お宝の 分けまえは もらうぞ！']]
+        },
+        menkyo: {
+            meet: ['ueno', 'おまえが うわさの こおりくんか。海岸どうくつの 奥の お宝は、我ら お願いマッスルが いただく！'],
+            block: [['ueno', 'ここを 通りたくば、我らに 勝ってみせよ！ 我が筋肉の前に ひれ伏すがよい！'], ['shibata', 'ぶんぶん！ 撮れ高いただき！ んなああ～'], ['ikekimu', 'チッ…邪魔だ。']],
+            lose: [['ueno', 'み……見事な……筋肉……いや、見事な なかまたちだ……。'], ['ueno', '我らの 負けだ。先に 行くがよい！']]
+        }
+    };
+    const rivalLines = () => RIVAL_LINES[g.version] || RIVAL_LINES.naitei;
 
     function meetFurukawa() {
         say([
@@ -109,9 +131,36 @@ export function createField(app) {
                 school: ['夜の 学校に 行ってるの？ 暗いから 気を つけるのよ。', 'おなかが すいたら、駄菓子屋で おやつを 買っていきなさい。'],
                 clear2: ['学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！', 'そういえば 石の川の 水が へってるの。山の ダムの 水が 消えたって うわさよ。町の 北の 山道から 行けるわ。'],
                 yama: ['山に 行ってるの？ 山の 上は すずしいから、かぜを ひかないようにね。', 'ダムの 水が もどらないと、町の 水道も こまっちゃうわ。'],
-                clear3: ['ダムに 水が もどったんですって！ こおりくん、おてがらね。', `町の なかまは ${friendCount(g)} 人？ 山にも まだまだ いそうね。`]
+                // 4 章から (前作の ともいしの 口調: こおりを「こおり」と よぶ・博多弁)
+                umi: ['海辺の 町に 行くとね？ 電車は 商店街の 西の はしの 石の川駅からよ。', 'こおり、知らない 人に ついて いったら いかんよ！'],
+                umibe: ['海辺の 町は どうやった？ ……こおり、あんた とけとらんね？ 日焼けには 気を つけなさい！'],
+                clear4: ['海辺の 町でも 大活躍したらしいね！ ……でも その フードの 人、なんか 気味が わるかね。', `なかまは ${friendCount(g)} 人？ ……それより こおり、お金は ちゃんと 返しなさいよ！`]
             }[g.story];
-            say(lines.map(text => ({ who: 'ともいし', art: 'tomoishi', text })));
+            if (startChapter4(g)) {
+                // 4 章の はじまり「王冠の なぞ」(ストーリー工房 4 章 場面 1)
+                say([
+                    tomo('こおり、ダムの 水 よう もどしたね！ ……で、王冠を ぬすんだ 人は まだ つかまっとらんと？'),
+                    furu('うん……。王冠の 箱の まわりに、黒い すすみたいな ものが のこってたの。'),
+                    furu('海辺の 町でも、なかまが 急に あばれだす 事件が あるんだって。もしかしたら 関係 あるかも！'),
+                    { who: 'こおりくん', art: 'koori', text: '（行ってみよう！）' },
+                    nar('商店街の 西の はしの 石の川駅から、電車で 海辺の 町へ 行けるように なった！')
+                ], { done: () => app.save() });
+                return;
+            }
+            say(lines.map(text => tomo(text)));
+        } else if (p.id === 'rival4') {
+            // 4 章: ライバル探検隊が どうくつの 通路を ふさいでいる → 3 体の バトル
+            const L = rivalLines();
+            say([...L.block.map(([id, text]) => by(id, text)), nar(`チーム「${rivalTeam(g.version).name}」が 勝負を いどんできた！`)],
+                { done: () => app.startBattle({ enemies: rivalEnemies(g), kind: 'rival', place: 'cave' }) });
+        } else if (p.id === 'urashima4') {
+            // 4 章の ボス: 黒い 紋に とりつかれた 浦の島重蔵 (ストーリー工房 4 章 場面 3)
+            say([
+                nar('どうくつの 主の 体に、ドクドクと 動く 黒い 紋が うかんでいる……。'),
+                by('urashima', 'わしは……えーと……なんじゃったかの……。体が かってに……うごくんじゃ……！ ……つり？'),
+                furu('あの 紋、王冠の 箱に のこってた 黒い すすと 同じだ！'),
+                furu('紋が 光ったら 大技が くるよ！ 輪を 回して、守りの 強い なかまを 前に 出して！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('urashima4'), kind: 'boss', place: 'cave' }) });
         } else if (p.id === 'furukawaShrine') {
             meetFurukawa();
         } else if (p.id === 'kage') {
@@ -165,6 +214,15 @@ export function createField(app) {
             enterSchool();
         } else if (b.id === 'okunoin') {
             readOkunoin();
+        } else if (b.id === 'station') {
+            rideTrain();
+        } else if (b.id === 'umiStation') {
+            say([nar('海辺駅。石の川 行きの 電車が とまっている。')], {
+                choices: ['石の川へ もどる', 'やめる'],
+                done: i => { if (i === 0) { sfx('watch'); warp(STATION_OUT); } }
+            });
+        } else if (b.id === 'uminoie') {
+            shop('いらっしゃい！ 海の家だよ。なんに する？', '海の家の おじさん');
         } else {
             const msg = {
                 shrine: 'おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……',
@@ -180,7 +238,11 @@ export function createField(app) {
                 denkiya: '古い テレビが 山づみ。1 台だけ、電源が 入っていないのに ついている。',
                 honya: '本が ぎっしり。「全部 読んだら ヨシ！」と だれかが 言っていた。',
                 karaoke: '中から 同じ 歌が ずっと 聞こえる。もう 何曲目だろう。',
-                sentou: 'ゆ と 書いた のれん。「こおりの お客さまは とけるので ご注意ください」'
+                sentou: 'ゆ と 書いた のれん。「こおりの お客さまは とけるので ご注意ください」',
+                // 海辺の 町 (4 章)
+                umiHouse: reached(g, 'clear4') ? '漁師の おじさん「浦の島の じいさん、もとに もどったらしいな。よかった よかった。また 釣りばっかり しとるよ」'
+                    : '漁師の おじさん「さいきん どうくつの 奥で、浦の島の じいさんが あばれとるらしい。いつもは 釣りばっかり しとる おとなしい じいさんなのに……」',
+                tsuriguya: '釣具屋の おばさん「夜の 桟橋には、大きな 黒い 坊主が 出るって うわさだよ。こわいねえ」'
             }[b.id];
             say([{ who: '', text: msg }]);
         }
@@ -263,9 +325,29 @@ export function createField(app) {
         });
     }
 
-    // 品物を えらんで、何こ 買うか えらぶ (2026-10-28 ユーザー指定)
-    function shop(greet = 'いらっしゃい。なにに するかね？') {
-        const OBA = '駄菓子屋の おばあちゃん';
+    // 電車 (4 章): 商店街の 石の川駅 ⇔ 海辺駅。はじめて 着くと ライバル探検隊に 出会う (ストーリー工房 4 章 場面 2)
+    function rideTrain() {
+        if (!canRideTrain(g)) { say([nar('石の川駅。いまは 電車に 乗る 用事が ない。')]); return; }
+        say([nar('石の川駅。海辺の 町 行きの 電車が とまっている。')], {
+            choices: ['海辺の 町へ 行く', 'やめる'],
+            done: i => {
+                if (i !== 0) return;
+                sfx('watch');
+                warp(UMI_IN);
+                if (!arriveUmi(g)) return;
+                const L = rivalLines();
+                say([
+                    nar('電車に ゆられて、海辺の 町に 着いた。'),
+                    by(L.meet[0], L.meet[1]),
+                    furu('ライバル探検隊だ……！ どっちが 先に 奥まで 行けるか 勝負だね！'),
+                    nar(`チーム「${rivalTeam(g.version).name}」は 東の 浦の島の海岸どうくつへ 走っていった！`)
+                ], { done: () => app.save() });
+            }
+        });
+    }
+
+    // 品物を えらんで、何こ 買うか えらぶ (2026-10-28 ユーザー指定)。海の家 (4 章) でも 同じ 品物
+    function shop(greet = 'いらっしゃい。なにに するかね？', OBA = '駄菓子屋の おばあちゃん') {
         const labels = SHOP.map(id => `${ITEMS[id].name}  ${ITEMS[id].price}円 (${g.items[id] || 0}こ)`);
         say([{ who: OBA, text: `${greet} (おこづかい ${g.money}円)` }], {
             choices: [...labels, 'やめる'],
@@ -276,16 +358,16 @@ export function createField(app) {
                 if (max === 0) {
                     sfx('cancel');
                     const full = (g.items[id] || 0) >= MAX_ITEM;
-                    say([{ who: OBA, text: full ? `${it.name}は もう もちきれないよ。` : 'おこづかいが たりないねえ。' }], { done: () => shop() });
+                    say([{ who: OBA, text: full ? `${it.name}は もう もちきれないよ。` : 'おこづかいが たりないねえ。' }], { done: () => shop(undefined, OBA) });
                     return;
                 }
                 say([{ who: OBA, text: `${it.name}を いくつ ほしいかね？ (おこづかい ${g.money}円)` }], {
                     count: { max, label: n => `${it.name} × ${n} = ${it.price * n}円` },
                     done: n => {
-                        if (!n) { shop(); return; }
+                        if (!n) { shop(undefined, OBA); return; }
                         buyItem(g, id, n);
                         sfx('ok');
-                        shop(`まいど。${it.name}を ${n}こ だね。ほかには？`);
+                        shop(`まいど。${it.name}を ${n}こ だね。ほかには？`, OBA);
                     }
                 });
             }
@@ -321,7 +403,24 @@ export function createField(app) {
                 furu('おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。'),
                 { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'こおり族の 子よ……王冠を まもれなかった わびだ。わしも 力を かそう。' },
                 { who: '', text: '３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。' },
-                { who: '', text: '―― ４章は つぎの アップデートで。' }
+                furu('こおりくん、いちど 家に 帰ろうか。ともいしさんが 心配してるかも。')
+            ], { done: () => app.save() });
+        } else if (result.rival && result.outcome === 'win') {
+            // 4 章: ライバル探検隊に 勝つと 通路を ゆずって くれる
+            say([...rivalLines().lose.map(([id, text]) => by(id, text)), nar('ライバル探検隊は 道を ゆずった。'), furu('奥から だれかの 声が する……！ 行ってみよう！')], { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'urashima4') {
+            // 4 章 クリア: 紋が 消える → どうくつの 出口に フードの 人かげ (ストーリー工房 4 章 場面 4)
+            warp(UMI_AFTER_BOSS);
+            say([
+                nar('浦の島重蔵の 黒い 紋が、けむりの ように 消えた。'),
+                by('urashima', '……はて。わしは なにを しておったんじゃ……。ほっほっほ。強い 若者じゃのう。ひさしぶりに 脳汁が でたわい。'),
+                by('urashima', 'お礼に 力を かそう。……なんの お礼じゃったかの。'),
+                nar('どうくつの 出口に、フードを かぶった 人が 立っていた。'),
+                nar('……ふりむいた その 指先は、黒く ねじれて、ひとの ものでは なかった。'),
+                { who: 'フードの 人', text: '……ほう、紋が とけたか。まあ いい。味見は じゅうぶんだ。' },
+                nar('人かげは 霧の ように 消えた。'),
+                nar('４章 クリア！ どうくつの 奥にも キャラが 出るように なった。'),
+                nar('―― ５章は つぎの アップデートで。')
             ], { done: () => app.save() });
         } else if (result.mystery && result.outcome === 'win' && SEALS.some(x => x.id === result.mystery)) {
             const m = SEALS.find(x => x.id === result.mystery), n = sealsSolved(g);
@@ -528,7 +627,7 @@ export function createField(app) {
             done: () => {
                 fighting = c;
                 const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inYama() ? 'yama' : source.id });
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
             }
         });
     }
@@ -543,7 +642,7 @@ export function createField(app) {
     function drawPeople(ctx) {
         const list = [];
         for (const p of peopleHere(g)) {
-            list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[p.art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
+            list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[personArt(g, p)], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
         }
         const talkable = !lens && !app.talk.isActive() ? wild.facing(g.pos) : null;
         for (const c of wild.list) {
@@ -593,7 +692,7 @@ export function createField(app) {
         ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
         // 川の きらきら (町だけ)
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        for (let i = 0; !inSchool() && !inYama() && i < 6; i++) {
+        for (let i = 0; !inSchool() && !inYama() && !inUmi() && i < 6; i++) {
             const wy = ((i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE));
             ctx.fillRect(30 * TILE + ((i * 23) % 60) - cam.x, wy - cam.y, 4, 1);
         }
@@ -626,7 +725,7 @@ export function createField(app) {
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
-        if (g.weather === 'rain' && !inSchool()) {
+        if (g.weather === 'rain' && !inSchool() && !inCave()) {
             ctx.fillStyle = 'rgba(40, 60, 100, 0.15)';
             ctx.fillRect(0, 0, 400, 240);
             ctx.strokeStyle = 'rgba(200, 220, 255, 0.55)';
@@ -747,7 +846,9 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        const labels = inYama()
+        const labels = inUmi()
+            ? UMI_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
+            : inYama()
             ? YAMA_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
             : inSchool()
             ? SCHOOL_ROOMS.filter(r => r.id !== 'getabako').map(r => ({ id: r.id, name: r.label, cx: r.x + 0.5, cy: r.y + 3 }))
@@ -770,7 +871,9 @@ export function createField(app) {
         const goal = g.story === 'intro' ? { x: 6, y: 5 } : g.story === 'bridge' ? { x: 31, y: 17 }
             : g.story === 'clear' ? { x: 19, y: 6 } : g.story === 'school' && allMysteriesSolved(g) ? { x: 9, y: 70 }
             : g.story === 'clear2' ? { x: 26.5, y: 0 } : g.story === 'yama' && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 }
-            : g.story === 'yama' && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : null;
+            : g.story === 'yama' && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 }
+            : g.story === 'clear3' ? { x: 8, y: 24 } : g.story === 'umi' ? { x: 5, y: 40 }
+            : g.story === 'umibe' ? (g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 }) : null;
         const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
         if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });

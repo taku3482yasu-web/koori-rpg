@@ -82,6 +82,16 @@ export const SPECIALS = {
     kokemusha: { motion: 'dash', color: '#6ab04a' },
     koorimodokishin: { motion: 'spin', color: '#7aaad0' },
     hyougaryu: { motion: 'beam', color: '#bff0ff' },
+    // 海辺の 町と 海岸どうくつの 9 体 (4 章。仮の 必殺技に 合わせた 動き)
+    tamatebakogani: { motion: 'cloud', color: '#f0f0f0', glyph: '〜' },
+    isoginchakku: { motion: 'dash', color: '#ff8ac8', drain: true },
+    otohimedai: { motion: 'aura', color: '#ffb0b8', glyph: '♪' },
+    asedakku: { motion: 'rain', color: '#7ac8ff', glyph: '◎' },
+    uniharry: { motion: 'multi', color: '#5a2a6a', glyph: '✶', hits: 3 },
+    ryuuguudai: { motion: 'aura', color: '#ff7ab6', glyph: '♪' },
+    nakatadraco: { motion: 'beam', color: '#4aa8e0' },
+    umibozuou: { motion: 'rain', color: '#2a6aa8', glyph: '〜' },
+    urashima: { motion: 'cloud', color: '#e8e8f0', glyph: '〜' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };

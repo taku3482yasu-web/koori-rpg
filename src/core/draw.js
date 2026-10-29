@@ -109,8 +109,12 @@ export function drawFriendMark(ctx, x, y, r = 5) {
 
 // ドット絵 ({ w, h, palette, frames }) を描く。(x, y) は足元のまんなか。scale: 1 ドットの大きさ
 // sx, sy: 横・たての のびちぢみ (攻撃を 食らった ときに つぶれる など。足元は 動かない)
+// 大きな 絵 (前作の 人の 絵 32 × 40 など。4 章の 浦の島重蔵・ライバル探検隊) は ちぢめて、ふつうの キャラ (16 × 16) と 大きさを そろえる
+export const artFit = art => (art && art.w > 24 ? 22 / art.w : 1);
+
 export function drawArt(ctx, art, frame, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {
     if (!art) return;
+    scale *= artFit(art);
     const n = art.frames.length;
     const rows = art.frames[((Math.floor(frame) % n) + n) % n];
     const pw = scale * sx, ph = scale * sy;

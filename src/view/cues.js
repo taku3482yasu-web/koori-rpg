@@ -114,6 +114,22 @@ const CUES = {
         r(ctx, x + dx, y - 10, 2, 9, '#4ab04a');
         r(ctx, x + 3 + dx, y - 7, 2, 6, '#3a9a3a');
         r(ctx, x - 2, y - 1, 6, 3, '#f4f0e8');
+    },
+    // 浜辺の 砂から 小さな あわが ぷくぷく 出て、ときどき 赤い はさみが のぞく (4 章)
+    sandBubbles(ctx, x, y, t) {
+        for (let i = 0; i < 3; i++) {
+            const k = (t * 0.9 + i * 0.33) % 1;
+            r(ctx, x - 3 + i * 3, y + 2 - k * 8, 2, 2, `rgba(255,255,255,${0.9 - k * 0.8})`);
+        }
+        if ((t % 3) < 0.6) { r(ctx, x - 6, y + 1, 3, 2, '#e05a3a'); r(ctx, x + 4, y + 1, 3, 2, '#e05a3a'); }
+    },
+    // しおだまりから ピンクの しょくしゅが ゆらゆら 出ている (4 章)
+    tidePool(ctx, x, y, t) {
+        for (let i = 0; i < 4; i++) {
+            const sw = Math.sin(t * 3 + i) * 1.5;
+            r(ctx, x - 5 + i * 3 + sw, y - 6 + (i % 2), 1, 6, '#ff8ac8');
+        }
+        r(ctx, x - 6, y, 13, 2, '#c84a8a');
     }
 };
 

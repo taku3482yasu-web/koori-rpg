@@ -15,7 +15,7 @@ import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMM
 import { skillMotion, skillPose, drawSkillFx, SKILL_KIND } from './skill-fx.js';
 import { ITEMS } from '../data/items.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
-import { COLORS, drawArt, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
+import { COLORS, drawArt, artFit, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
 import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, begin, flee, canFlee } from '../logic/battle.js';
@@ -73,7 +73,8 @@ export function createBattleView(app, battle, place) {
         const main = battle.enemies.filter(x => !x.idol), n = main.length, i = main.indexOf(e);
         // 部位の ある ボス (2 章の 影) は とても 大きい
         if (n === 1 && main[0].parts) return { x: 200, y: 156, scale: 6.5 };
-        if (n === 1) return main[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
+        // 人の 絵の ように 背の 高い ボス (4 章の 浦の島重蔵) は 名前と HP が 画面に 入るように 少し 小さく
+        if (n === 1) return main[0].boss ? { x: 200, y: 142, scale: ART[main[0].art].h > 24 ? 3.6 : 5 } : { x: 200, y: 132, scale: 3.5 };
         if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
         return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];   // 3 体 (まんなかが 奥)
     };
@@ -99,7 +100,7 @@ export function createBattleView(app, battle, place) {
         const p = posOf(uid), u = unitOf(uid);
         if (!p || !u) return null;
         const scale = u.side === 'ally' ? ALLY_SCALE : p.scale || 3;
-        return { x: p.x, y: p.y - ART[u.art].h * scale / 2 };
+        return { x: p.x, y: p.y - ART[u.art].h * scale * artFit(ART[u.art]) / 2 };
     }
     // skill: わざ・術の 動き (skill-fx.js の skillMotion)。相手の そばまで 近づく わざは 相手との きょりの near ぶん 動く
     function startMotion(uid, kind, targetUid, skill = null) {
@@ -340,7 +341,7 @@ export function createBattleView(app, battle, place) {
     // 部位の 場所 (上画面)。右手は 見ている 人の 左
     function partPos(k, key) {
         const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-        const h = art.h * p.scale, side = art.w * p.scale / 2 + 26;
+        const fk = p.scale * artFit(art), h = art.h * fk, side = art.w * fk / 2 + 26;
         const bob = Math.sin(t * 3 + (key === 'lhand' ? 1.5 : 0)) * 3;
         if (key === 'rhand') return { x: p.x - side, y: p.y - h * 0.42 + bob };
         if (key === 'lhand') return { x: p.x + side, y: p.y - h * 0.42 + bob };
@@ -353,7 +354,7 @@ export function createBattleView(app, battle, place) {
     }
     function hitEnemy(k, x, y) {
         const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-        const w = art.w * p.scale / 2 + 8, h = art.h * p.scale;
+        const fk = p.scale * artFit(art), w = art.w * fk / 2 + 8, h = art.h * fk;
         return x >= p.x - w && x <= p.x + w && y >= p.y - h - 10 && y <= p.y + 6;
     }
     // ねらいの 印 (回る 四すみ)。弱点の 光が 出ている ときは 黄色く 光る
@@ -361,7 +362,8 @@ export function createBattleView(app, battle, place) {
         const k = battle.enemies.findIndex(e => e.uid === battle.lock);
         if (k < 0) return;
         let p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-        let cy = p.y - art.h * p.scale / 2, r = Math.max(art.w, art.h) * p.scale / 2 + 6;
+        const fk = p.scale * artFit(art);
+        let cy = p.y - art.h * fk / 2, r = Math.max(art.w, art.h) * fk / 2 + 6;
         // 部位を ねらっている ときは その 部位に 小さな 印
         if (battle.lockPart) { const pp = partPos(k, battle.lockPart); p = { ...p, x: pp.x }; cy = pp.y; r = 24; }
         const weak = weakActive(battle);
@@ -680,8 +682,34 @@ export function createBattleView(app, battle, place) {
         ctx.stroke();
     }
 
+    // 浦の島の海岸どうくつの 中 (4 章): くらい 岩の かべと しおだまり
+    function drawCaveBackground(ctx) {
+        const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
+        grad.addColorStop(0, '#141820');
+        grad.addColorStop(1, '#2a3440');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 400, HORIZON);
+        // 岩の でこぼこと つらら石
+        ctx.fillStyle = '#3a4654';
+        for (let i = 0; i < 9; i++) ctx.fillRect(i * 46 - 8, HORIZON - 18 - (i % 3) * 9, 40, 30);
+        ctx.fillStyle = '#222a34';
+        for (let i = 0; i < 12; i++) { const x = i * 35 + 6; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 8, 0); ctx.lineTo(x + 4, 10 + (i % 4) * 6); ctx.fill(); }
+        const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+        gg.addColorStop(0, '#3a4048');
+        gg.addColorStop(1, '#6a7078');
+        ctx.fillStyle = gg;
+        ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+        // しおだまり (きらきら)
+        ctx.fillStyle = 'rgba(60, 140, 200, 0.55)';
+        ctx.beginPath(); ctx.ellipse(70, 200, 50, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(340, 170, 40, 8, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        for (let i = 0; i < 4; i++) ctx.fillRect(40 + i * 20 + Math.sin(t * 2 + i) * 4, 198, 6, 1);
+    }
+
     function drawBackground(ctx) {
         if (place === 'school') { drawSchoolBackground(ctx); return; }
+        if (place === 'cave') { drawCaveBackground(ctx); return; }
         const river = RIVER.includes(place);
         const sky = g.time === 3 ? ['#141a3a', '#2a2a5a'] : g.time === 2 ? ['#f08a4a', '#f8c070'] : ['#7ac8f8', '#c8ecff'];
         const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
@@ -699,13 +727,19 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'umi') {
+            // 水平線の 海と きらきら (4 章)
+            ctx.fillStyle = '#2a7ac0';
+            ctx.fillRect(0, HORIZON - 22, 400, 22);
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
+            for (let i = 0; i < 7; i++) ctx.fillRect((i * 67 + t * 12) % 420 - 10, HORIZON - 18 + (i % 3) * 6, 10, 1);
         } else {
             // 遠くの 町
             ctx.fillStyle = 'rgba(40, 60, 90, 0.25)';
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
-        // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : ['#4a9a3a', '#7ad05a'];
+        // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -746,7 +780,7 @@ export function createBattleView(app, battle, place) {
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
         // 氷の 偶像: 水色の 氷を 重ねる
         if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: '#cdf2ff', sx, sy });
-        const w = u.parts ? 150 : 44, head = p.y - art.h * scale;
+        const w = u.parts ? 150 : 44, head = p.y - art.h * scale * artFit(art);
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
         const barY = head - 10, nameY = head - 14;
         bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
@@ -767,7 +801,8 @@ export function createBattleView(app, battle, place) {
             ctx.strokeStyle = '#8ad0ff';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.ellipse(p.x, p.y - art.h * scale / 2, art.w * scale / 2 + 4, art.h * scale / 2 + 4, 0, 0, Math.PI * 2);
+            const fk = scale * artFit(art);
+            ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 4, art.h * fk / 2 + 4, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.globalAlpha = 1;
             drawShield(ctx, p.x - w / 2 - 8, barY + 1, 0.55);
@@ -1053,7 +1088,7 @@ export function createBattleView(app, battle, place) {
         const p = ei >= 0 ? enemyPos(ei) : fi >= 0 && enterT !== null ? ALLY_POS[fi] : null;
         if (!p) return;
         const scale = ei >= 0 ? p.scale : ALLY_SCALE;
-        const y = p.y - ART[u.art].h * scale - 30 + Math.sin(t * 8) * 2;
+        const y = p.y - ART[u.art].h * scale * artFit(ART[u.art]) - 30 + Math.sin(t * 8) * 2;
         text(ctx, '▼', p.x, y, { size: 16, align: 'center', bold: true, color: COLORS.accent });
     }
 
