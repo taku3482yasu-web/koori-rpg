@@ -7,14 +7,16 @@
 //   bridge   石の川橋の ヌシを たおす (たおすと ハシシタボウズが なかまに なり、東へ 渡れる)
 //   clear    1 章 クリア。ここから 2 章「学校の七不思議」: 夕方・夜に 小学校へ 行く
 //   school   夜の 学校に 入った。七不思議を 7 つ たしかめる → 8 つ目の ふしぎ (ボス) を たおす
-//   clear2   2 章 クリア。なかまを あつめる (順番は story.js)
+//   clear2   2 章 クリア。ここから 3 章「ダムの水が消える」: 町の 北の 山道から 山へ
+//   yama     山に 入った。奥の院で 言いつたえを 読む (flags.oku) → 氷の 封印を 3 つ とく → ダムの ヌシ (ボス) を たおす
+//   clear3   3 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached } from './story.js';
-import { MYSTERIES } from '../data/map.js';
+import { MYSTERIES, SEALS } from '../data/map.js';
 
 export const SAVE_VERSION = 1;
 export const VERSIONS = { naitei: '内定', menkyo: '免許' };
@@ -46,7 +48,8 @@ export function newGame(version, seed = 1) {
         playTime: 0,
         spotCooldown: {},
         gifts: {},          // 話せる キャラから 道具を もらった 日 (1 日 1 回)
-        mysteries: {},      // たしかめた 七不思議 (2 章)
+        mysteries: {},      // たしかめた 七不思議 (2 章)・といた 氷の 封印 (3 章)
+        flags: {},          // ストーリーの できごと (oku: 奥の院で 言いつたえを 読んだ。3 章)
         quests: {}          // 町の 依頼 (logic/quests.js)
     };
 }
@@ -169,6 +172,7 @@ export function applyBattleResult(g, battle, rng) {
         out.befriend = { id, medal: addMedal(g, id, bossId === 'nushi' ? 6 : BOSSES[bossId].lv - 2), forced: true };
         if (bossId === 'nushi') { g.story = 'clear'; g.chapter = 2; }
         if (bossId === 'kage') { g.story = 'clear2'; g.chapter = 3; }
+        if (bossId === 'himuro') { g.story = 'clear3'; g.chapter = 4; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -226,16 +230,34 @@ export function objective(g) {
             const n = MYSTERIES.filter(m => g.mysteries[m.id]).length;
             return n < MYSTERIES.length ? `学校の 七不思議を たしかめよう (${n}/${MYSTERIES.length})` : 'ろうかの おくの 黒い 影を おいかけよう';
         }
+        // 3 章「ダムの水が消える」
+        case 'clear2': return '山の ダムの 水が 消えたらしい。町の 北の はしの 山道から 山へ 行ってみよう';
+        case 'yama': {
+            if (!g.flags.oku) return '山の 奥の院を 調べてみよう (山道を 北へ 行って 西)';
+            const n = sealsSolved(g);
+            return n < SEALS.length ? `山の どこかに ある 氷の 封印を とこう (${n}/${SEALS.length})` : 'ダムの 湖の 底の 氷の 城へ 行こう';
+        }
         default: {
-            // 2 章 クリアの あと: なかま あつめ
+            // 3 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}`;
         }
     }
 }
 
 export const spotById = id => SPOTS.find(s => s.id === id);
+
+// 氷の 封印を いくつ といたか (3 章)
+export const sealsSolved = g => SEALS.filter(s => g.mysteries && g.mysteries[s.id]).length;
+export const allSealsSolved = g => sealsSolved(g) >= SEALS.length;
+
+// 奥の院で 言いつたえを 読んだ (3 章)。はじめて なら true
+export function readLegend(g) {
+    if (g.story !== 'yama' || g.flags.oku) return false;
+    g.flags.oku = true;
+    return true;
+}
 
 // 駄菓子屋で 買う。1 種類 99 こ まで (2026-10-28 ユーザー指定: 何こ 買うか えらべる)
 export const MAX_ITEM = 99;

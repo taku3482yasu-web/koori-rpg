@@ -670,10 +670,23 @@ body.nopad #pad { display: none; }
     mikazukibat: W$1("ちょうおんぱ", "かぜ", "line", 0.5, "confuse", 0.6),
     lunashadow: W$1("かげうち", "ふしぎ", "line", 1.3),
     yoroinukegara: { name: "よろいがため", buff: "def" },
+    // 山と ダム (3 章)。こおり (凍る) は のろい・目つぶし・ひるみ は こんらんに 置きかえ
+    yukimidango: W$1("雪玉", "こおり", "front", 1.1, "slow", 0.4),
+    yukidarumuscle: W$1("ひえひえパンチ", "こおり", "front", 1.3, "slow", 0.2),
+    koorimodoki: W$1("コオリソード", "こおり", "front", 1.4),
+    fubukipenguin: W$1("ペンギンすべり", "こおり", "front", 1.5, "slow", 0.3),
+    tsuraracomori: W$1("つららとばし", "こおり", "line", 1.2),
+    koorinokagami: W$1("かがみのひかり", "こおり", "line", 1, "confuse", 0.5),
+    mandoragon: W$1("マンドラのさけび", "しぜん", "around", 0, "confuse", 0.8),
+    obakekabocha: W$1("かぼちゃばくだん", "しぜん", "front", 1.4, "confuse", 0.2),
+    haetorigusan: W$1("パックン", "しぜん", "front", 1.8),
+    kokemusha: W$1("こけむし斬り", "しぜん", "front", 1.8),
+    koorimodokishin: W$1("コオリハンマー", "こおり", "front", 2, "confuse", 0.3),
     // こおりくん・ボス
     koori: W$1("コオリソード", "こおり", "front", 1.4),
     nushi: W$1("百のかぞえうた", "ふしぎ", "around", 0.6, "confuse", 0.3),
-    kage: W$1("影の とりつき", "ふしぎ", "around", 0.6, "possess", 0.3)
+    kage: W$1("影の とりつき", "ふしぎ", "around", 0.6, "possess", 0.3),
+    himuro: W$1("ふぶき", "こおり", "around", 1.3, "slow", 0.3)
   };
   function wazaEffects(w) {
     if (w.heal) return [{ kind: "heal", target: "lowest", power: w.heal }];
@@ -1395,6 +1408,174 @@ body.nopad #pad { display: none; }
       title: "正体不明",
       desc: "正体不明の存在。いったい何者なのか、何が目的なのか、その一切が不明である。",
       special: sp("正体不明", [atk("all", 1.6, { magic: true })])
+    },
+    // ----- 山と ダムの 11 体 (3 章「ダムの水が消える」。2026-10-29。ダンジョンから。D 7・C 3・B 1) -----
+    //   こおり族 6 体と しょくぶつ族 (しぜん) 4 体。コケムシャ・コオリノカガミ・ユキダルマッスルは 氷の 封印を まもる (map.js の SEALS)
+    //   コオリモドキ・真は ダムの ヌシ (ボス) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+      id: "yukimidango",
+      name: "ユキミダンゴ",
+      from: "ダンジョン 035",
+      area: "yama",
+      rank: "D",
+      element: "こおり",
+      role: "defender",
+      mul: { def: 1.1, hp: 1.05 },
+      line: "おつきみ～",
+      favorite: "onigiri",
+      title: "雪で作った団子",
+      desc: "雪の団子。一番上が長男。",
+      special: sp("だんご 三兄弟", [{ kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }, { kind: "heal", target: "party", power: 0.3 }])
+    },
+    {
+      id: "yukidarumuscle",
+      name: "ユキダルマッスル",
+      from: "ダンジョン 042",
+      area: "yama",
+      rank: "D",
+      element: "こおり",
+      role: "attacker",
+      mul: { atk: 1.15, spd: 0.9 },
+      line: "冷えた筋肉も最高だ",
+      favorite: "cider",
+      title: "雪だるまのマッスル",
+      desc: "雪の力を持つ。冷えた筋肉を誇る。筋肉自慢の３男。",
+      special: sp("ひえひえ ラッシュ", [atk("one", 1, { hits: 3 })])
+    },
+    {
+      id: "koorimodoki",
+      name: "コオリモドキ",
+      from: "ダンジョン 050",
+      area: "yama",
+      rank: "C",
+      element: "こおり",
+      role: "attacker",
+      mul: { atk: 1.1, spd: 1.05 },
+      line: "ぼくが ほんものの こおりくんだよ",
+      favorite: "choco",
+      title: "こおりくんの そっくりさん",
+      desc: "こおりの力を持つ。こいつこそ、本物のこおりくんだ。",
+      special: sp("ニセ大腸炎アタック", [atk("all", 1.6), { kind: "status", target: "all", status: "poison", chance: 0.4 }])
+    },
+    {
+      id: "fubukipenguin",
+      name: "フブキペンギン",
+      from: "ダンジョン 080",
+      area: "yama",
+      rank: "D",
+      element: "こおり",
+      role: "attacker",
+      mul: { spd: 1.2 },
+      line: "ペンペン！",
+      favorite: "niboshi",
+      title: "吹雪を好むペンギン",
+      desc: "吹雪に一匹打ち勝ったペンギン。意外と気持ちがいいらしい。",
+      special: sp("ふぶきの 大すべり", [atk("all", 1.4)])
+    },
+    {
+      id: "tsuraracomori",
+      name: "ツララコウモリ",
+      from: "ダンジョン 081",
+      area: "yama",
+      rank: "D",
+      element: "こおり",
+      role: "jammer",
+      mul: { spd: 1.1, mag: 1.05 },
+      line: "キキーン",
+      favorite: "melonpan",
+      title: "つらら型の蝙蝠",
+      desc: "つららに化けた蝙蝠。たまに本物のつららが生えて、飛べなくなる個体が出る。",
+      special: sp("つららの 雨", [atk("all", 0.5, { hits: 3 })])
+    },
+    {
+      id: "koorinokagami",
+      name: "コオリノカガミ",
+      from: "ダンジョン 082",
+      area: "yama",
+      rank: "C",
+      element: "こおり",
+      role: "defender",
+      mul: { def: 1.2 },
+      line: "うつってるよ…きみが",
+      favorite: "cider",
+      title: "氷に映る人影",
+      desc: "氷でできた鏡の妖怪。映ったが最後、その鏡の中にとらわれ、1晩たつと鏡の中に氷像が一つ増えているという。",
+      special: sp("こおりの 鏡像", [{ kind: "buff", target: "party", stat: "def", amount: 0.5, time: 10 }, { kind: "status", target: "all", status: "confuse", chance: 0.4 }])
+    },
+    {
+      id: "mandoragon",
+      name: "マンドラゴン",
+      from: "ダンジョン 086",
+      area: "yama",
+      rank: "D",
+      element: "しぜん",
+      role: "jammer",
+      mul: { mag: 1.1 },
+      line: "ギャアアア！（抜かないで）",
+      favorite: "kyuuri",
+      title: "叫ぶ大根",
+      desc: "大根の突然変異体。２０代女性と同じ周波数を持つ。",
+      special: sp("ぜっきょう", [atk("all", 0.8, { magic: true }), { kind: "status", target: "all", status: "confuse", chance: 0.7 }])
+    },
+    {
+      id: "obakekabocha",
+      name: "オバケカボチャ",
+      from: "ダンジョン 087",
+      area: "yama",
+      rank: "D",
+      element: "しぜん",
+      role: "jammer",
+      mul: { hp: 1.05 },
+      line: "トリック オア トリート！",
+      favorite: "choco",
+      title: "トリックオアトリート",
+      desc: "かぼちゃのお化け。人間に友好的で、お菓子をくれる。",
+      special: sp("ハロウィン ナイト", [atk("all", 1), { kind: "status", target: "all", status: "sleep", chance: 0.4 }])
+    },
+    {
+      id: "haetorigusan",
+      name: "ハエトリグサーン",
+      from: "ダンジョン 088",
+      area: "yama",
+      rank: "D",
+      element: "しぜん",
+      role: "defender",
+      mul: { atk: 1.15 },
+      line: "パクッ",
+      favorite: "niboshi",
+      title: "はえとりの達人",
+      desc: "蠅をとって１００年のベテラン。今まで食らった蠅は数知れず。",
+      special: sp("百年の ひとのみ", [atk("one", 2.4, { drain: 0.5 })])
+    },
+    {
+      id: "kokemusha",
+      name: "コケムシャ",
+      from: "ダンジョン 089",
+      area: "yama",
+      rank: "C",
+      element: "しぜん",
+      role: "attacker",
+      mul: { hp: 1.1, atk: 1.1, spd: 0.9 },
+      line: "百年 こけむして 待っておった",
+      favorite: "onigiri",
+      title: "コケに食われた武士",
+      desc: "コケに支配された武士。もはや体はコケの思うが儘だが、宿敵と一騎打ちを果たすため、無理やり精神を保っている。",
+      special: sp("こけむす 一騎打ち", [atk("one", 3)])
+    },
+    {
+      id: "koorimodokishin",
+      name: "コオリモドキ・真",
+      from: "ダンジョン 077",
+      area: "yama",
+      rank: "B",
+      element: "こおり",
+      role: "attacker",
+      mul: { atk: 1.1, mag: 1.1 },
+      line: "ぼくこそ ほんものの こおりくんだよ",
+      favorite: "choco",
+      title: "真のコオリモドキ",
+      desc: "コオリモドキがこおりの王冠で進化した姿。ニセ四天王絶対殺す剣まで覚えてしまった。こいつこそ、本物の本物のこおりくんだ。",
+      special: sp("ニセ四天王絶対殺す剣", [atk("all", 2)])
     }
   ];
   function moves(id, element, rank, upper = false) {
@@ -1402,7 +1583,7 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
-  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校" };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
@@ -1466,6 +1647,29 @@ body.nopad #pad { display: none; }
       befriends: "lunashadow",
       lv: 13,
       place: "school"
+    },
+    // 3 章の ボス: ダムの ヌシ (コオリモドキ・真。2026-10-29)。こおりの 王冠で ダムの 水を ぜんぶ こおらせ、氷の 城に して しまった
+    //   ふだんは 氷の わざ。ときどき 王冠が かがやいて 自分を 強くする。必殺技は ニセ四天王絶対殺す剣 (予告つき・輪を 回して よける)
+    //   こおり族なので しぜん・かぜの なかまが 不利 / ほのおの なかまが 有利
+    himuro: {
+      id: "himuro",
+      name: "ダムの ヌシ・コオリモドキ・真",
+      element: "こおり",
+      role: "attacker",
+      art: "koorimodokishin",
+      scale: 2,
+      rank: "B",
+      base: { hp: 600, atk: 15, def: 14, spd: 12, mag: 15 },
+      moves: [
+        { name: "コオリソード", w: 3, effects: [atk("one", 1.2)] },
+        { name: "コオリハンマー", w: 2, effects: [atk("one", 1.8), { kind: "status", target: "one", status: "confuse", chance: 0.3 }] },
+        { name: "こおりのいき", w: 2, effects: [atk("all", 0.6, { magic: true }), { kind: "status", target: "all", status: "slow", chance: 0.3 }] },
+        { name: "王冠の かがやき", w: 1, effects: [{ kind: "buff", target: "self", stat: "atk", amount: 0.3, time: 8 }] }
+      ],
+      bigMove: { name: "ニセ四天王絶対殺す剣", every: 13, warn: 2.5, effects: [atk("all", 1.7)] },
+      befriends: "koorimodokishin",
+      lv: 17,
+      place: "dam"
     }
   };
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
@@ -1487,10 +1691,12 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 84;
+  const MAP_W = 48, MAP_H = 120;
   const TOWN_H = 36;
   const SCHOOL_Y0 = 60;
-  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X"]);
+  const YAMA_Y0 = 84;
+  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I"]);
+  const WET = /* @__PURE__ */ new Set(["D", "E", "I"]);
   function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("G"));
     const fill = (x0, y0, x1, y1, c) => {
@@ -1533,7 +1739,7 @@ body.nopad #pad { display: none; }
     [[3, 40], [8, 40], [24, 37], [37, 38], [46, 41], [2, 57], [9, 57], [37, 57]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
-    fill(0, SCHOOL_Y0, MAP_W - 1, MAP_H - 1, "X");
+    fill(0, SCHOOL_Y0, MAP_W - 1, YAMA_Y0 - 1, "X");
     fill(1, 61, 10, 67, "L");
     fill(12, 61, 21, 67, "L");
     fill(23, 61, 32, 67, "L");
@@ -1546,6 +1752,30 @@ body.nopad #pad { display: none; }
     [5, 16, 27, 40].forEach((x) => fill(x, 68, x + 1, 68, "L"));
     [5, 20, 38].forEach((x) => fill(x, 72, x + 1, 72, "L"));
     fill(23, 72, 24, 72, "M");
+    const Y = YAMA_Y0;
+    fill(0, Y, MAP_W - 1, MAP_H - 1, "T");
+    fill(3, Y + 2, 13, Y + 11, "K");
+    fill(3, Y + 20, 22, Y + 33, "G");
+    fill(5, Y + 26, 10, Y + 29, "H");
+    fill(14, Y + 30, 18, Y + 32, "F");
+    fill(20, Y + 1, 45, Y + 11, "E");
+    fill(30, Y + 1, 35, Y + 4, "I");
+    fill(20, Y + 12, 45, Y + 12, "Q");
+    fill(29, Y + 13, 29, Y + 33, "P");
+    fill(33, Y + 13, 33, Y + 33, "P");
+    fill(30, Y + 13, 32, Y + 33, "D");
+    fill(38, Y + 14, 46, Y + 20, "N");
+    fill(38, Y + 21, 46, Y + 31, "P");
+    fill(23, Y + 14, 24, Y + 33, "R");
+    fill(8, Y + 14, 37, Y + 15, "R");
+    fill(8, Y + 12, 9, Y + 13, "R");
+    fill(36, Y + 12, 37, Y + 13, "R");
+    fill(29, Y + 14, 33, Y + 15, "B");
+    fill(23, Y + 34, 24, Y + 34, "U");
+    [[6, Y + 22], [12, Y + 24], [19, Y + 21], [4, Y + 31], [21, Y + 27], [41, Y + 24], [44, Y + 28]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
+    fill(26, 0, 27, 0, "U");
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -1566,11 +1796,15 @@ body.nopad #pad { display: none; }
     { id: "denkiya", label: "電気屋", x: 15, y: 50, w: 5, h: 4, wall: "#e0e8f8", roof: "#3a6ac8", door: { x: 17, y: 53 } },
     { id: "honya", label: "本屋", x: 21, y: 50, w: 5, h: 4, wall: "#f8f0d8", roof: "#8a6a3a", door: { x: 23, y: 53 } },
     { id: "karaoke", label: "カラオケ", x: 36, y: 50, w: 4, h: 4, wall: "#f8d8e8", roof: "#d04a8a", door: { x: 37, y: 53 } },
-    { id: "sentou", label: "銭湯", x: 42, y: 50, w: 5, h: 4, wall: "#f0e8d8", roof: "#4a7ab0", door: { x: 44, y: 53 } }
+    { id: "sentou", label: "銭湯", x: 42, y: 50, w: 5, h: 4, wall: "#f0e8d8", roof: "#4a7ab0", door: { x: 44, y: 53 } },
+    // 山 (3 章)
+    { id: "okunoin", label: "奥の院", x: 6, y: YAMA_Y0 + 3, w: 4, h: 3, wall: "#c84a3a", roof: "#3a3a40", door: { x: 7, y: YAMA_Y0 + 5 } }
   ];
   const GATES = [
     { id: "gateW", x: 12, y: TOWN_H - 1, w: 2, only: "beforeClear" },
-    { id: "gateE", x: 40, y: TOWN_H - 1, w: 2, only: "beforeClear" }
+    { id: "gateE", x: 40, y: TOWN_H - 1, w: 2, only: "beforeClear" },
+    // 山道 (2 章 クリアまで 通れない。3 章)
+    { id: "gateYama", x: 26, y: 0, w: 2, only: "beforeClear2", label: "通行止め" }
   ];
   const PROPS = [
     { id: "torii-l", kind: "torii", x: 5, y: 9 },
@@ -1578,6 +1812,7 @@ body.nopad #pad { display: none; }
   ];
   const SHOUTENGAI_LV = [6, 10];
   const SCHOOL_LV = [9, 13];
+  const YAMA_LV = [12, 16];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -1591,7 +1826,10 @@ body.nopad #pad { display: none; }
     { id: "omenMae", label: "お面屋の屋根の上", x: 37, y: 41, cue: "maskEyes", lv: SHOUTENGAI_LV, kinds: [{ id: "hannyamen", w: 1 }] },
     { id: "jansouKanban", label: "雀荘の看板", x: 7, y: 53, cue: "tileFlip", lv: SHOUTENGAI_LV, kinds: [{ id: "hakupai", w: 1 }] },
     { id: "neonKanban", label: "銭湯の裏のネオン看板", x: 46, y: 49, cue: "nightEyes", lv: SHOUTENGAI_LV, kinds: [{ id: "neontanuki", w: 1, time: ["evening", "night"] }] },
-    { id: "gacha", label: "八百屋の横のガチャ", x: 27, y: 45, cue: "gachaShake", lv: [8, 11], kinds: [{ id: "gachapon", w: 1 }] }
+    { id: "gacha", label: "八百屋の横のガチャ", x: 27, y: 45, cue: "gachaShake", lv: [8, 11], kinds: [{ id: "gachapon", w: 1 }] },
+    // 山 (3 章)
+    { id: "okunoinNoki", label: "奥の院の のき下", x: 11, y: YAMA_Y0 + 4, cue: "nightEyes", lv: YAMA_LV, kinds: [{ id: "tsuraracomori", w: 1 }] },
+    { id: "hatakeDaikon", label: "山の畑の 大根", x: 9, y: YAMA_Y0 + 27, cue: "leafShake", lv: YAMA_LV, kinds: [{ id: "mandoragon", w: 1 }] }
   ];
   const ROAMS = [
     { id: "kawakami", label: "夏の川上", x0: 25, y0: 1, x1: 29, y1: 5, max: 1, kinds: [{ id: "soumennagare", w: 1 }] },
@@ -1616,7 +1854,13 @@ body.nopad #pad { display: none; }
     { id: "kouchou", label: "校長室", x0: 35, y0: 62, x1: 45, y1: 66, max: 1, lv: SCHOOL_LV, kinds: [{ id: "yoroinukegara", w: 1 }] },
     { id: "rouka", label: "学校の ろうか", x0: 2, y0: 69, x1: 44, y1: 71, max: 1, lv: SCHOOL_LV, kinds: [{ id: "fusaiyougaikotsu", w: 1, after: "clear2" }, { id: "wasurekurage", w: 1, after: "clear2" }, { id: "mikazukibat", w: 1, after: "clear2" }, { id: "lunashadow", w: 1, after: "clear2", time: ["night"] }] },
     { id: "taiikukan", label: "体育館", x0: 13, y0: 74, x1: 29, y1: 81, max: 1, lv: SCHOOL_LV, kinds: [{ id: "proteingolem", w: 1, after: "clear2" }, { id: "takaramimic", w: 1, after: "clear2" }, { id: "mirrormuscle", w: 1, after: "clear2" }] },
-    { id: "poolside", label: "プールサイド", x0: 32, y0: 73, x1: 46, y1: 74, max: 1, lv: SCHOOL_LV, kinds: [{ id: "umibozun", w: 1, after: "clear2" }] }
+    { id: "poolside", label: "プールサイド", x0: 32, y0: 73, x1: 46, y1: 74, max: 1, lv: SCHOOL_LV, kinds: [{ id: "umibozun", w: 1, after: "clear2" }] },
+    // 山と ダム (3 章)。封印を まもる キャラは 3 章 クリアの あと (clear3) から 歩きまわる。湖の 底は 3 章 クリアで 水に しずむ
+    { id: "yamaMori", label: "森の 原っぱ", x0: 3, y0: YAMA_Y0 + 20, x1: 22, y1: YAMA_Y0 + 33, max: 2, lv: YAMA_LV, kinds: [{ id: "haetorigusan", w: 2 }, { id: "obakekabocha", w: 2, time: ["evening", "night"] }, { id: "kokemusha", w: 1, after: "clear3" }] },
+    { id: "yamaHatake", label: "山の畑", x0: 5, y0: YAMA_Y0 + 26, x1: 10, y1: YAMA_Y0 + 29, max: 1, lv: YAMA_LV, kinds: [{ id: "obakekabocha", w: 1 }] },
+    { id: "sekkei", label: "雪渓", x0: 38, y0: YAMA_Y0 + 14, x1: 46, y1: YAMA_Y0 + 20, max: 2, lv: YAMA_LV, kinds: [{ id: "yukimidango", w: 2 }, { id: "fubukipenguin", w: 2 }, { id: "koorinokagami", w: 1, after: "clear3" }, { id: "koorimodokishin", w: 1, after: "clear3", time: ["night"] }] },
+    { id: "iwaba", label: "岩場", x0: 38, y0: YAMA_Y0 + 21, x1: 46, y1: YAMA_Y0 + 31, max: 1, lv: YAMA_LV, kinds: [{ id: "koorimodoki", w: 2 }, { id: "yukidarumuscle", w: 1, after: "clear3" }] },
+    { id: "kosho", label: "湖の 底", x0: 20, y0: YAMA_Y0 + 6, x1: 45, y1: YAMA_Y0 + 11, max: 1, lv: YAMA_LV, kinds: [{ id: "koorimodoki", w: 1 }] }
   ];
   const FRIENDS = [
     {
@@ -1732,7 +1976,9 @@ body.nopad #pad { display: none; }
     { id: "furukawaShrine", name: "ふるカワ", art: "furukawa", x: 7, y: 6, only: "beforeWatch" },
     { id: "nushi", name: "ヌシ", art: "hashishita", x: 31, y: 17, h: 2, only: "beforeClear", scale: 2 },
     // 2 章: 七不思議を 7 つ たしかめると、ろうかの おくに 8 つ目の ふしぎ (ボス) が 出る
-    { id: "kage", name: "ろうかの カゲ", art: "lunashadow", x: 9, y: 70, only: "kage", scale: 2 }
+    { id: "kage", name: "ろうかの カゲ", art: "lunashadow", x: 9, y: 70, only: "kage", scale: 2 },
+    // 3 章: 氷の 封印を 3 つ とくと、氷の 城の 前に ダムの ヌシ (ボス) が 出る
+    { id: "modoki", name: "ダムの ヌシ", art: "koorimodokishin", x: 32, y: YAMA_Y0 + 6, h: 2, only: "modoki", scale: 2 }
   ];
   const START = { x: 6, y: 24 };
   const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
@@ -1827,8 +2073,54 @@ body.nopad #pad { display: none; }
       done: "しずかな 水面に 月が うつっている。"
     }
   ];
+  const YAMA_IN = { x: 23.5, y: YAMA_Y0 + 32, dir: "up" };
+  const YAMA_OUT = { x: 26.5, y: 1, dir: "down" };
+  const YAMA_AFTER_BOSS = { x: 36.5, y: YAMA_Y0 + 13, dir: "up" };
+  const YAMA_PLACES = [
+    { id: "okunoin", label: "奥の院", x: 8, y: YAMA_Y0 + 2 },
+    { id: "dam", label: "ダム", x: 32.5, y: YAMA_Y0 + 9 },
+    { id: "sekkei", label: "雪渓", x: 42, y: YAMA_Y0 + 16 },
+    { id: "hatake", label: "山の畑", x: 7.5, y: YAMA_Y0 + 25 },
+    { id: "iwaba", label: "岩場", x: 42, y: YAMA_Y0 + 26 }
+  ];
+  const SEALS = [
+    {
+      id: "sealMori",
+      label: "森の 氷の柱",
+      x: 15,
+      y: YAMA_Y0 + 23,
+      prop: "icepillar",
+      nakama: "kokemusha",
+      lv: 14,
+      lines: ["原っぱの まんなかに、大きな 氷の 柱が 立っている。夏なのに とけない……。", "柱の うしろから、コケだらけの よろいが ぬっと 出てきた！"],
+      done: "氷の 柱が あった ところに、水たまりが できている。"
+    },
+    {
+      id: "sealSekkei",
+      label: "雪渓の 氷の柱",
+      x: 43,
+      y: YAMA_Y0 + 18,
+      prop: "icepillar",
+      nakama: "koorinokagami",
+      lv: 14,
+      lines: ["雪渓の おくに、鏡のように ぴかぴかの 氷の 柱が ある。", "柱に こおりくんが うつった……と 思ったら、柱が しゃべった！"],
+      done: "とけた 氷の 柱から、水が ちょろちょろ 流れている。"
+    },
+    {
+      id: "sealIwa",
+      label: "岩場の 氷の柱",
+      x: 40,
+      y: YAMA_Y0 + 29,
+      prop: "icepillar",
+      nakama: "yukidarumuscle",
+      lv: 15,
+      lines: ["岩の あいだに、ひときわ 大きな 氷の 柱が ある。", "「この 柱は 通さん！」 ムキムキの 雪だるまが 立ちふさがった！"],
+      done: "岩の すきまに 水が しみこんで いく。"
+    }
+  ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const areaAt = (x, y) => y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const regionOf = (ty) => ty >= YAMA_Y0 ? [YAMA_Y0, MAP_H] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
     melonpan: { name: "メロンパン", heal: 50, price: 50, desc: "なかま 1 体の HP を 50 回復。パンが好きな なかまの 好物" },
@@ -1861,7 +2153,7 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2"];
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3"];
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -1894,7 +2186,9 @@ body.nopad #pad { display: none; }
       gifts: {},
       // 話せる キャラから 道具を もらった 日 (1 日 1 回)
       mysteries: {},
-      // たしかめた 七不思議 (2 章)
+      // たしかめた 七不思議 (2 章)・といた 氷の 封印 (3 章)
+      flags: {},
+      // ストーリーの できごと (oku: 奥の院で 言いつたえを 読んだ。3 章)
       quests: {}
       // 町の 依頼 (logic/quests.js)
     };
@@ -1997,6 +2291,10 @@ body.nopad #pad { display: none; }
         g.story = "clear2";
         g.chapter = 3;
       }
+      if (bossId === "himuro") {
+        g.story = "clear3";
+        g.chapter = 4;
+      }
       return out;
     }
     const ids = [...new Set(battle.enemies.map((e) => e.id))];
@@ -2047,12 +2345,26 @@ body.nopad #pad { display: none; }
         const n = MYSTERIES.filter((m) => g.mysteries[m.id]).length;
         return n < MYSTERIES.length ? `学校の 七不思議を たしかめよう (${n}/${MYSTERIES.length})` : "ろうかの おくの 黒い 影を おいかけよう";
       }
+      case "clear2":
+        return "山の ダムの 水が 消えたらしい。町の 北の はしの 山道から 山へ 行ってみよう";
+      case "yama": {
+        if (!g.flags.oku) return "山の 奥の院を 調べてみよう (山道を 北へ 行って 西)";
+        const n = sealsSolved(g);
+        return n < SEALS.length ? `山の どこかに ある 氷の 封印を とこう (${n}/${SEALS.length})` : "ダムの 湖の 底の 氷の 城へ 行こう";
+      }
       default: {
         const got = (area) => idsInArea(area).filter((id) => g.zukan.friends[id]).length;
         const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}`;
+        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}`;
       }
     }
+  }
+  const sealsSolved = (g) => SEALS.filter((s) => g.mysteries && g.mysteries[s.id]).length;
+  const allSealsSolved = (g) => sealsSolved(g) >= SEALS.length;
+  function readLegend(g) {
+    if (g.story !== "yama" || g.flags.oku) return false;
+    g.flags.oku = true;
+    return true;
   }
   const MAX_ITEM = 99;
   const maxBuy = (g, id) => Math.max(0, Math.min(Math.floor(g.money / ITEMS[id].price), MAX_ITEM - (g.items[id] || 0)));
@@ -2996,6 +3308,49 @@ body.nopad #pad { display: none; }
           ".....yy..yy.....",
           "................",
           "................",
+          "................"
+        ]
+      ]
+    },
+    koorimodoki: {
+      w: 16,
+      h: 16,
+      palette: { "o": "#0a1a3a", "w": "#8a9ab0", "c": "#4a7a9a", "b": "#3a5a7a", "d": "#2a4a6a", "k": "#ff4040", "p": "#8a5a6a" },
+      frames: [
+        [
+          "................",
+          ".oooooooooooooo.",
+          ".owwwcccccccbbo.",
+          ".owwccccccccbbo.",
+          ".owcccccccccbbo.",
+          ".occckcccckccbo.",
+          ".occckcccckccbo.",
+          ".ocpcccccccpcbo.",
+          ".occccckkccccbo.",
+          ".occcccccccccbo.",
+          ".obcccccccccbbo.",
+          ".obbbbbbbbbbbdo.",
+          ".oooooooooooooo.",
+          "...odo....odo...",
+          "...ooo....ooo...",
+          "................"
+        ],
+        [
+          "................",
+          ".oooooooooooooo.",
+          ".owwwcccccccbbo.",
+          ".owwccccccccbbo.",
+          ".owcccccccccbbo.",
+          ".occckcccckccbo.",
+          ".occckcccckccbo.",
+          ".ocpcccccccpcbo.",
+          ".occccckkccccbo.",
+          ".occcccccccccbo.",
+          ".obcccccccccbbo.",
+          ".obbbbbbbbbbbdo.",
+          ".oooooooooooooo.",
+          "....odo..odo....",
+          "....ooo..ooo....",
           "................"
         ]
       ]
@@ -4590,6 +4945,436 @@ body.nopad #pad { display: none; }
           "................"
         ]
       ]
+    },
+    yukimidango: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ffffff", "b": "#f0f0ff", "c": "#c09a6a", "d": "#333333", "e": "#ffb0c0" },
+      frames: [
+        [
+          "................",
+          ".....aaaaaa.....",
+          ".....adaada.....",
+          ".....eaaaae.....",
+          ".....aaaaaa.....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          ".......cc.......",
+          ".......cc......."
+        ],
+        [
+          ".....aaaaaa.....",
+          ".....adaada.....",
+          ".....eaaaae.....",
+          ".....aaaaaa.....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          ".......cc.......",
+          ".......cc......."
+        ]
+      ]
+    },
+    yukidarumuscle: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ffffff", "b": "#c03030", "c": "#111111", "d": "#ff8a20", "e": "#f0f0ff", "f": "#c0c0d0", "g": "#a07a4a" },
+      frames: [
+        [
+          ".....bbbbbb.....",
+          ".....aaaaaa.....",
+          ".....acaaca.....",
+          ".....aaadda.....",
+          ".....aaaaaa.....",
+          "ggeeeeeeeeeeeegg",
+          "ggeeeeeeeeeeeegg",
+          "ggeeeeeeeeeeeegg",
+          "ggeeeefeefeeeegg",
+          "ggeeeeeeeeeeeegg",
+          "..eeeefeefeeee..",
+          "..eeeeeeeeeeee..",
+          "..eeeeeeeeeeee..",
+          "....eee..eee....",
+          "....eee..eee....",
+          "................"
+        ],
+        [
+          ".....bbbbbb.....",
+          ".....aaaaaa.....",
+          ".....acaaca.....",
+          ".....aaadda.....",
+          "gg...aaaaaa...gg",
+          "ggeeeeeeeeeeeegg",
+          "ggeeeeeeeeeeeegg",
+          "ggeeeeeeeeeeeegg",
+          "ggeeeefeefeeeegg",
+          "..eeeeeeeeeeee..",
+          "..eeeefeefeeee..",
+          "..eeeeeeeeeeee..",
+          "..eeeeeeeeeeee..",
+          "....eee..eee....",
+          "....eee..eee....",
+          "................"
+        ]
+      ]
+    },
+    fubukipenguin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#22304a", "b": "#f4f8ff", "c": "#ffffff", "d": "#111111", "e": "#ffa030", "f": "#e03a4a", "g": "#1a2438", "h": "#e0f8ff" },
+      frames: [
+        [
+          "................",
+          "................",
+          "......aaaaa.....",
+          ".....aaaaaaa....",
+          ".....aaaacda....",
+          ".....aaabbbbee..",
+          ".....aaabbbb....",
+          "....gfffffff....",
+          "....gfaabbbb....",
+          "....gfaabbbb....",
+          "....gfaabbbb....",
+          ".....aaabbbb....",
+          ".....aaaaaaa....",
+          "......ee.ee.....",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "..h.............",
+          ".hhh..aaaaa.....",
+          "..h..aaaaaaa....",
+          ".....aaaacda....",
+          ".....aaabbbbee..",
+          "....gaaabbbb....",
+          "....gfffffff....",
+          "....gfaabbbb....",
+          "....gfaabbbb....",
+          ".....faabbbb....",
+          ".....aaabbbb....",
+          ".....aaaaaaa....",
+          "......ee.ee.....",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    tsuraracomori: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#9adcff", "b": "#5ab0e0", "c": "#ff3a5a", "d": "#ffffff", "e": "#e0f8ff", "f": "#c8f0ff" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          ".bbbbba..abbbbb.",
+          ".bbbbbaaaabbbbb.",
+          "bbbbbbacacbbbbbb",
+          "b.e.e.aaaa.e.e.b",
+          "..e.e.adda.e.e..",
+          "..e....ff....e..",
+          ".......ff.......",
+          ".......ff.......",
+          "........f.......",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          ".bbbbb....bbbbb.",
+          ".bbbbba..abbbbb.",
+          "bbbbbbaaaabbbbbb",
+          "b.e.e.acac.e.e.b",
+          "..e.e.aaaa.e.e..",
+          "..e...adda...e..",
+          ".......ff.......",
+          ".......ff.......",
+          ".......ff.......",
+          "........f.......",
+          "................",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    koorinokagami: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#7fd3f7", "b": "#dff8ff", "c": "#ffffff", "d": "#10162a", "e": "#5a9ad0", "f": "#4aa8e0" },
+      frames: [
+        [
+          "................",
+          "....aaaaaaaa....",
+          "...abbbbbbbba...",
+          "...abccbbbbba...",
+          "...abcbbbbbba...",
+          "...abcbbbbbba...",
+          "...abbdbbdbba...",
+          "...abbbbbbbba...",
+          "...abbbeebbba...",
+          "...acbbbbbbba...",
+          "...cccbbbbbba...",
+          "...acaaaaaaaa...",
+          ".......ff.......",
+          ".......ff.......",
+          ".....ffffff.....",
+          "................"
+        ],
+        [
+          "................",
+          "....aaaaaaaa....",
+          "...abbbbbbbca...",
+          "...abccbbbccc...",
+          "...abcbbbbbca...",
+          "...abcbbbbbba...",
+          "...abbdbbdbba...",
+          "...abbbbbbbba...",
+          "...abbbeebbba...",
+          "...abbbbbbbba...",
+          "...abbbbbbbba...",
+          "...aaaaaaaaaa...",
+          ".......ff.......",
+          ".......ff.......",
+          ".....ffffff.....",
+          "................"
+        ]
+      ]
+    },
+    mandoragon: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#3aa04a", "b": "#4ac05a", "c": "#f4f0e8", "d": "#e0d8c8", "e": "#a0a0a0", "f": "#d02020", "g": "#8a8a8a", "h": "#c03030" },
+      frames: [
+        [
+          ".......bb.......",
+          "....aa.bb.aa....",
+          "....aa.bb.aa....",
+          "....aa.bb.aa....",
+          "....aa.bb.aa....",
+          "....cccccggc....",
+          "....ccccccfc....",
+          "....cccccccccce.",
+          "....ccccccccccc.",
+          "...dcccccccchhh.",
+          "...dcccccccc....",
+          "....cccccccc....",
+          "....cccccccc....",
+          ".....cccccc.....",
+          ".......dd.......",
+          "........d......."
+        ],
+        [
+          "....aa.bb.aa....",
+          "....aa.bb.aa....",
+          "....aa.bb.aa....",
+          "....aa.bb.aa....",
+          "................",
+          "....cccccggc....",
+          "....ccccccfc....",
+          "....cccccccccce.",
+          "....ccccccccccc.",
+          "...dcccccccchhh.",
+          "...dcccccccchhh.",
+          "....cccccccc....",
+          "....cccccccc....",
+          ".....cccccc.....",
+          ".......dd.......",
+          "........d......."
+        ]
+      ]
+    },
+    obakekabocha: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#4a7a2a", "b": "#ff8a1a", "c": "#e06a10", "d": "#ffd040", "e": "#e8e8ff", "f": "#fff080" },
+      frames: [
+        [
+          "................",
+          ".......aa.......",
+          ".......aa.......",
+          "...bbbcbbcbbb...",
+          "...bbbcbbcbbb...",
+          "...bbddbbcddb...",
+          "...bbddbbcddb...",
+          "...bbbcbbcbbb...",
+          "...bbdbddbdbb...",
+          "...bbbcbbcbbb...",
+          "...bbbcbbcbbb...",
+          "....eeeeeeee....",
+          "....eeeeeeee....",
+          "....eeeeeeee....",
+          "....ee.ee.ee....",
+          "................"
+        ],
+        [
+          "................",
+          ".......aa.......",
+          ".......aa.......",
+          "...bbbcbbcbbb...",
+          "...bbbcbbcbbb...",
+          "...bbffbbcffb...",
+          "...bbffbbcffb...",
+          "...bbbcbbcbbb...",
+          "...bbfbffbfbb...",
+          "...bbbcbbcbbb...",
+          "...bbbcbbcbbb...",
+          "....eeeeeeee....",
+          "....eeeeeeee....",
+          "....eeeeeeee....",
+          ".....ee.ee.ee...",
+          "................"
+        ]
+      ]
+    },
+    haetorigusan: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#3a8a3a", "b": "#4aa84a", "c": "#5ac05a", "d": "#e03a4a", "e": "#ffffff", "f": "#10162a" },
+      frames: [
+        [
+          "................",
+          "................",
+          "....ccfccfccc...",
+          "....ccccccccc...",
+          "....ccccccccc...",
+          ".....dededede...",
+          ".....ddededed...",
+          "....ccccccccc...",
+          "....ccccccccc...",
+          "....ccccccccc...",
+          "....aa..........",
+          "....aa..........",
+          ".bbbbabbbb......",
+          ".bbbbabbbb......",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "....ccfccfccc...",
+          "....ccccccccc...",
+          "....ccccccccc...",
+          ".....dededede...",
+          "................",
+          ".....ddededed...",
+          "....ccccccccc...",
+          "....ccccccccc...",
+          "....ccccccccc...",
+          "....aa..........",
+          "....aa..........",
+          ".bbbbabbbb......",
+          ".bbbbabbbb......",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    kokemusha: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#5a6a5a", "b": "#6ab04a", "c": "#ffe0a0", "d": "#3a3a3a", "e": "#ff5040", "f": "#4a5a4a", "g": "#c0c8d0", "h": "#8a6a3a" },
+      frames: [
+        [
+          "......c.........",
+          ".....bbbaaa.....",
+          ".....aaaabb.....",
+          ".....aaaaaa..g..",
+          "......ddede..g..",
+          "......ddddd..g..",
+          "....bbaaaaaa.g..",
+          "....bbaaaaaa.g..",
+          "....ffffffff.g..",
+          "....aaaaaabb.g..",
+          "....aaaaaabbhhh.",
+          ".....ff..ff.....",
+          ".....ff..ff.....",
+          ".....ff..ff.....",
+          ".....ff..ff.....",
+          "................"
+        ],
+        [
+          "......c.........",
+          ".....bbbaaa.....",
+          ".....aaaabb..g..",
+          ".....aaaaaa..g..",
+          "......ddede..g..",
+          "......ddddd..g..",
+          "....bbaaaaaa.g..",
+          "....bbaaaaaa.g..",
+          "....ffffffff.g..",
+          "....aaaaaabbhhh.",
+          "....aaaaaabb....",
+          ".....ff..ff.....",
+          ".....ff..ff.....",
+          ".....ff..ff.....",
+          ".....ff..ff.....",
+          "................"
+        ]
+      ]
+    },
+    koorimodokishin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#0a1a3a", "b": "#8a9ab0", "c": "#7aaad0", "d": "#5a8ab0", "e": "#ff4040", "f": "#8a5a6a", "g": "#2a4a6a", "h": "#ffd84a", "i": "#ff8080" },
+      frames: [
+        [
+          ".....h.h.h......",
+          ".aaaahhehhaaaaa.",
+          ".abbbcccccccdda.",
+          ".abbccccccccdda.",
+          ".abcccccccccdda.",
+          ".acccecccceccda.",
+          ".acccecccceccda.",
+          ".acfcccccccfcda.",
+          ".accccceeccccda.",
+          ".acccccccccccda.",
+          ".adcccccccccdda.",
+          ".adddddddddddga.",
+          ".aaaaaaaaaaaaaa.",
+          "...aga....aga...",
+          "...aaa....aaa...",
+          "................"
+        ],
+        [
+          ".....h.h.h......",
+          ".aaaahhehhaaaaa.",
+          ".abbbcccccccdia.",
+          ".abbcccccccciii.",
+          ".abcccccccccdia.",
+          ".acccecccceccda.",
+          ".acccecccceccda.",
+          ".acfcccccccfcda.",
+          ".accccceeccccda.",
+          ".acccccccccccda.",
+          ".adcccccccccdda.",
+          ".adddddddddddga.",
+          ".aaaaaaaaaaaaaa.",
+          "....aga..aga....",
+          "....aaa..aaa....",
+          "................"
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -5151,16 +5936,20 @@ body.nopad #pad { display: none; }
   const mysteriesSolved = (g) => MYSTERIES.filter((m) => g.mysteries && g.mysteries[m.id]).length;
   const allMysteriesSolved = (g) => mysteriesSolved(g) >= MYSTERIES.length;
   function peopleHere(g) {
-    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g));
+    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "modoki" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]));
   }
-  const gatesHere = (g) => GATES.filter((q) => q.only !== "beforeClear" || !reached(g, "clear"));
+  const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
+  const sealsHere = (g) => SEALS.filter((q) => !(g.mysteries && g.mysteries[q.id]));
   const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
   function blockedTile(g, tx, ty) {
-    if (BLOCK.has(tileAt(tx, ty))) return true;
+    const tile = tileAt(tx, ty);
+    if (BLOCK.has(tile)) return true;
+    if (WET.has(tile) && reached(g, "clear3")) return true;
     if (gatesHere(g).some((q) => inGate(q, tx, ty))) return true;
     if (BUILDINGS.some((b) => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some((p) => p.x === tx && p.y === ty)) return true;
     if (MYSTERIES.some((m) => m.x === tx && m.y === ty)) return true;
+    if (sealsHere(g).some((m) => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some((p) => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
   }
   function boxFree(g, x, y) {
@@ -5201,6 +5990,8 @@ body.nopad #pad { display: none; }
     if (gate) return { type: "gate", gate };
     const mystery = MYSTERIES.find((m) => m.x === f.x && m.y === f.y);
     if (mystery) return { type: "mystery", mystery };
+    const seal = SEALS.find((m) => m.x === f.x && m.y === f.y);
+    if (seal) return { type: "seal", seal };
     return null;
   }
   const inShrine = (g) => {
@@ -5541,6 +6332,14 @@ body.nopad #pad { display: none; }
         r(ctx, x - 4, y - 1, 2, 2, "#ffe040");
         r(ctx, x + 2, y - 1, 2, 2, "#ffe040");
       }
+    },
+    // 山の畑: 大根の 葉っぱが 1 本だけ ぶるぶる ふるえる (3 章)
+    leafShake(ctx, x, y, t) {
+      const dx = t % 2.4 < 0.5 ? Math.sin(t * 60) * 1.5 : 0;
+      r(ctx, x - 3 + dx, y - 8, 2, 7, "#3a9a3a");
+      r(ctx, x + dx, y - 10, 2, 9, "#4ab04a");
+      r(ctx, x + 3 + dx, y - 7, 2, 6, "#3a9a3a");
+      r(ctx, x - 2, y - 1, 6, 3, "#f4f0e8");
     }
   };
   function drawCue(ctx, spot, x, y, t) {
@@ -5569,9 +6368,16 @@ body.nopad #pad { display: none; }
     L: "#c89a62",
     X: "#3a3040",
     Y: "#d8eef0",
-    M: "#c03a3a"
+    M: "#c03a3a",
+    U: "#8a6a4a",
+    H: "#7a5a3a",
+    N: "#f0f6fa",
+    Q: "#9aa0a8",
+    D: "#a89a80",
+    E: "#b8a888",
+    I: "#9ad8f0"
   };
-  function drawTile(c, ch, x, y) {
+  function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
     const r2 = (dx, dy, w, h, color) => {
       c.fillStyle = color;
@@ -5667,6 +6473,66 @@ body.nopad #pad { display: none; }
         r2(2, 4, 12, 1, "#e86a5a");
         r2(2, 9, 12, 1, "#e86a5a");
         break;
+      case "U":
+        r2(0, 0, 16, 16, "#9a7a52");
+        r2(0, 3, 16, 2, "#6a4a2a");
+        r2(0, 10, 16, 2, "#6a4a2a");
+        r2(0, 5, 16, 1, "#b89a6a");
+        r2(0, 12, 16, 1, "#b89a6a");
+        break;
+      case "H":
+        r2(0, 0, 16, 16, "#7a5a3a");
+        r2(0, 3, 16, 3, "#8a6a48");
+        r2(0, 11, 16, 3, "#8a6a48");
+        if ((x + y) % 2) {
+          r2(3, 1, 2, 3, "#4aa04a");
+          r2(5, 0, 2, 3, "#5ab05a");
+        }
+        if ((x + y) % 2 === 0) {
+          r2(10, 9, 2, 3, "#4aa04a");
+          r2(12, 8, 2, 3, "#5ab05a");
+        }
+        break;
+      case "N":
+        r2(0, 0, 16, 16, "#f0f6fa");
+        for (let i = 0; i < 3; i++) r2(Math.floor(hash(x, y, i + 60) * 14), Math.floor(hash(x, y, i + 70) * 14), 2, 1, "#d0e0ea");
+        break;
+      case "Q": {
+        r2(0, 0, 16, 16, "#9aa0a8");
+        r2(0, 0, 16, 3, "#c8ccd2");
+        r2(0, 13, 16, 3, "#7a8088");
+        r2(x % 2 * 8, 3, 1, 10, "#8a9098");
+        break;
+      }
+      case "D":
+      case "E": {
+        if (wet) {
+          drawTile(c, "W", x, y, false);
+          break;
+        }
+        r2(0, 0, 16, 16, ch === "D" ? "#a89a80" : "#b8a888");
+        r2(Math.floor(hash(x, y, 80) * 10), Math.floor(hash(x, y, 81) * 12), 6, 1, "#8a7a60");
+        r2(Math.floor(hash(x, y, 82) * 12), Math.floor(hash(x, y, 83) * 10), 1, 5, "#8a7a60");
+        if (hash(x, y, 84) < 0.4) {
+          const sx = Math.floor(hash(x, y, 85) * 12);
+          r2(sx, 9, 4, 3, "#9a948a");
+          r2(sx + 1, 9, 2, 1, "#d0cac0");
+        }
+        break;
+      }
+      case "I": {
+        if (wet) {
+          drawTile(c, "W", x, y, false);
+          break;
+        }
+        r2(0, 0, 16, 16, "#9ad8f0");
+        r2(0, 0, 16, 1, "#e0f6ff");
+        r2(0, 8, 16, 1, "#7ac0e0");
+        r2(y % 2 * 8, 0, 1, 8, "#7ac0e0");
+        r2((y + 1) % 2 * 8, 8, 1, 8, "#7ac0e0");
+        r2(2, 2, 3, 2, "#ffffff");
+        break;
+      }
       default:
         r2(0, 0, 16, 16, "#ff00ff");
     }
@@ -5704,12 +6570,12 @@ body.nopad #pad { display: none; }
     c.fillStyle = "#d0402a";
     c.fillRect(px + 6, py - 6, 4, 22);
   }
-  function buildFieldCanvas() {
+  function buildFieldCanvas(wet = false) {
     const cv = document.createElement("canvas");
     cv.width = MAP_W * TILE;
     cv.height = MAP_H * TILE;
     const c = cv.getContext("2d");
-    for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) drawTile(c, TILES[y][x], x, y);
+    for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) drawTile(c, TILES[y][x], x, y, wet);
     BUILDINGS.forEach((b) => drawBuilding(c, b));
     PROPS.forEach((p) => drawProp(c, p));
     const l = PROPS.find((p) => p.id === "torii-l"), rr = PROPS.find((p) => p.id === "torii-r");
@@ -5851,13 +6717,14 @@ body.nopad #pad { display: none; }
     c.fillStyle = "#f8f0e0";
     for (let i = 0; i < 4; i++) c.fillRect(yx + 2 + i * 8, yy + 2, 6, 5);
   }
-  function buildMiniMap(scale = 3) {
+  function buildMiniMap(scale = 3, wet = false) {
     const cv = document.createElement("canvas");
     cv.width = MAP_W * scale;
     cv.height = MAP_H * scale;
     const c = cv.getContext("2d");
     for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) {
-      c.fillStyle = MINI_COLORS[TILES[y][x]] || "#000";
+      const ch = TILES[y][x];
+      c.fillStyle = MINI_COLORS[wet && WET.has(ch) ? "W" : ch] || "#000";
       c.fillRect(x * scale, y * scale, scale, scale);
     }
     BUILDINGS.forEach((b) => {
@@ -5886,19 +6753,23 @@ body.nopad #pad { display: none; }
     denkiya: "電気屋",
     honya: "本屋",
     karaoke: "カラオケ",
-    sentou: "銭湯"
+    sentou: "銭湯",
+    okunoin: "奥の院"
   };
   const BTN = {
     lens: { x: 164, y: 28, w: 148, h: 40, label: "レンズ" },
     menu: { x: 164, y: 76, w: 148, h: 40, label: "メニュー" }
   };
-  let fieldCanvas = null, miniCanvas = null;
+  let fieldCanvas = null, miniCanvas = null, fieldWet = null;
+  function ensureCanvas(wet) {
+    if (fieldWet === wet) return;
+    fieldCanvas = buildFieldCanvas(wet);
+    miniCanvas = buildMiniMap(3, wet);
+    fieldWet = wet;
+  }
   function createField(app2) {
     const g = app2.g;
-    if (!fieldCanvas) {
-      fieldCanvas = buildFieldCanvas();
-      miniCanvas = buildMiniMap(3);
-    }
+    ensureCanvas(reached(g, "clear3"));
     let t = 0, walkT = 0, moving = false;
     let lens = null;
     const trail = [];
@@ -5907,9 +6778,11 @@ body.nopad #pad { display: none; }
     const wild = createWild(g, app2.rng);
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
-    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE;
+    const inYama = () => g.pos.y >= YAMA_Y0 * TILE;
+    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && !inYama();
+    const region = () => regionOf(Math.floor(g.pos.y / TILE));
     function camera() {
-      const [top, bottom] = inSchool() ? [SCHOOL_Y0 * TILE, MAP_H * TILE] : [0, SCHOOL_Y0 * TILE];
+      const [top, bottom] = region().map((v) => v * TILE);
       cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
       cam.y = Math.max(top, Math.min(bottom - 240, Math.round(g.pos.y - 128)));
     }
@@ -5948,7 +6821,9 @@ body.nopad #pad { display: none; }
           bridge: ["石の川橋が 通れないんですって。こまったわねえ。"],
           clear: ["南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。", "そういえば、夜の 小学校に あかりが ついてるって うわさよ。七不思議が どうとか……こわいわねえ。"],
           school: ["夜の 学校に 行ってるの？ 暗いから 気を つけるのよ。", "おなかが すいたら、駄菓子屋で おやつを 買っていきなさい。"],
-          clear2: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, "学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！"]
+          clear2: ["学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！", "そういえば 石の川の 水が へってるの。山の ダムの 水が 消えたって うわさよ。町の 北の 山道から 行けるわ。"],
+          yama: ["山に 行ってるの？ 山の 上は すずしいから、かぜを ひかないようにね。", "ダムの 水が もどらないと、町の 水道も こまっちゃうわ。"],
+          clear3: ["ダムに 水が もどったんですって！ こおりくん、おてがらね。", `町の なかまは ${friendCount(g)} 人？ 山にも まだまだ いそうね。`]
         }[g.story];
         say(lines.map((text2) => ({ who: "ともいし", art: "tomoishi", text: text2 })));
       } else if (p.id === "furukawaShrine") {
@@ -5959,6 +6834,13 @@ body.nopad #pad { display: none; }
           { who: "ろうかの カゲ", art: "lunashadow", text: "…………。" },
           furu("これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("kage"), kind: "boss", place: "school" }) });
+      } else if (p.id === "modoki") {
+        say([
+          { who: "", text: "氷の 城の 前に、王冠を かぶった こおりくんが 立っている……！？" },
+          { who: "ダムの ヌシ", art: "koorimodokishin", text: "やあ、ニセモノの こおりくん。ぼくこそ ほんものの こおりくんだよ。" },
+          { who: "ダムの ヌシ", art: "koorimodokishin", text: "この 王冠で、山の 水は ぜんぶ ぼくの 氷の 城に なった。こおり族の 王さまは ぼくだ！" },
+          furu("コオリモドキ……！ 王冠の 力で 進化してる！ こおり族には ほのおの なかまが 有利だよ！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("himuro"), kind: "boss", place: "dam" }) });
       } else if (p.id === "nushi") {
         if (g.story === "bridge") {
           say([
@@ -5993,6 +6875,8 @@ body.nopad #pad { display: none; }
         shop();
       } else if (b.id === "school") {
         enterSchool();
+      } else if (b.id === "okunoin") {
+        readOkunoin();
       } else {
         const msg = {
           shrine: "おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……",
@@ -6037,6 +6921,48 @@ body.nopad #pad { display: none; }
         furu(`そのときは 輪を 回して 後ろに さげて、まんなかの「おたすけ」(${btn("help")}) で 助けてあげて！`),
         { who: "", text: "「おたすけ」が つかえるように なった！ げた箱の マットに のると 外に 出られる。" }
       ], { done: () => app2.save() });
+    }
+    function enterYama() {
+      warp(YAMA_IN);
+      if (g.story !== "clear2") return;
+      g.story = "yama";
+      say([
+        { who: "", text: "山道を のぼって、山の 上に 来た。" },
+        furu("見て、こおりくん！ 沢が からっぽだよ……。ダムの 水が ぜんぶ 消えちゃったんだ。"),
+        furu("このままじゃ 石の川の 水も なくなっちゃう。山の 上の「奥の院」には、むかしの 言いつたえが あるんだって。行ってみよう！"),
+        { who: "", text: "山の 南の はしの 入り口から 町に もどれる。" }
+      ], { done: () => app2.save() });
+    }
+    function readOkunoin() {
+      if (readLegend(g)) {
+        sfx("watch");
+        say([
+          { who: "", text: "奥の院の 中に、古い 石碑が ある……。" },
+          { who: "", text: "「むかし、この 山の 水は こおり族が まもっていた。」" },
+          { who: "", text: "「こおり族の 王冠を かぶる者は、山の 水を すべて こおらせ、思いのままに できる。ゆえに 王冠は ここに ねむらせる。」" },
+          { who: "", text: "石碑の となりの 箱は……からっぽだ！" },
+          furu("王冠が ない……！ こおり族って、こおりくんの ご先祖さまだよね？ だれかが 王冠を ぬすんで、ダムの 水を こおらせたんだ！"),
+          furu("山の あちこちに、夏なのに とけない 氷の 柱が 立ってたよね。あれが 水を とじこめる「封印」かも。ぜんぶ とかそう！"),
+          { who: "", text: "氷の 封印は 3 つ。森の 原っぱ・雪渓・岩場に ある。" }
+        ], { done: () => app2.save() });
+        return;
+      }
+      say([{ who: "", text: reached(g, "clear3") ? "石碑の となりの 箱に、こおりの 王冠が もどっている。" : "古い 石碑。むかしの こおり族の 言いつたえが 書いてある。" }]);
+    }
+    function examineSeal(m) {
+      if (g.mysteries[m.id]) {
+        say([{ who: "", text: m.done }]);
+        return;
+      }
+      if (!g.flags.oku) {
+        say([{ who: "", text: "夏なのに とけない 氷の 柱だ。さわると すごく つめたい……。" }, furu("奥の院に 行けば、なにか わかるかも。")]);
+        return;
+      }
+      const n = NAKAMA[m.nakama];
+      g.zukan.seen[m.nakama] = true;
+      say([...m.lines.map((text2) => ({ who: "", text: text2 })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: "", text: `封印を まもる ${n.name}が おそいかかってきた！` }], {
+        done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: "wild", place: "yama", mystery: m.id })
+      });
     }
     function examineMystery(m) {
       if (g.mysteries[m.id]) {
@@ -6094,7 +7020,26 @@ body.nopad #pad { display: none; }
           furu("いまの、おにおに……？ 学校の さわぎも、鬼鬼団の しわざだったんだ！"),
           { who: "", text: "２章 クリア！ 七不思議の キャラが 学校を 歩きまわるように なった。" },
           furu("そういえば、山の ほうの ダムの 水が へってるって うわさだよ。……また おにおにかな？"),
-          { who: "", text: "―― ３章は つぎの アップデートで。" }
+          { who: "", text: "町の 北の はしの 山道が 通れるように なった！" }
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "himuro") {
+        warp(YAMA_AFTER_BOSS);
+        say([
+          { who: "コオリモドキ・真", art: "koorimodokishin", text: "うう……ぼくは ほんものに なりたかった だけなのに……。" },
+          { who: "", text: "王冠が コロンと 落ちた。氷の 城が とけはじめる……！" },
+          { who: "", text: "ゴゴゴゴ……！ ダムに 水が もどってきた！" },
+          { who: "おにおに", art: "onioni", text: "ちぇっ、モドキの やつ、王冠を わたしたのに 役に たたないな。水を 止めて 町を こまらせる 作戦も しっぱいか。" },
+          { who: "おにおに", art: "onioni", text: "つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！" },
+          furu("おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。"),
+          { who: "コオリモドキ・真", art: "koorimodokishin", text: "……ぼくも、ほんものの こおりくんの なかまに なって いい？" },
+          { who: "", text: "３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。" },
+          { who: "", text: "―― ４章は つぎの アップデートで。" }
+        ], { done: () => app2.save() });
+      } else if (result2.mystery && result2.outcome === "win" && SEALS.some((x) => x.id === result2.mystery)) {
+        const m = SEALS.find((x) => x.id === result2.mystery), n = sealsSolved(g);
+        say([
+          { who: "", text: `氷の 封印「${m.label}」が とけた！ (${n}/${SEALS.length})` },
+          ...allSealsSolved(g) ? [furu("これで 封印は ぜんぶ とけた！ ……ダムの ほうから ゴゴゴって 音が する！"), { who: "", text: "ダムの 湖の 底の 氷の 城へ 行ってみよう。" }] : []
         ], { done: () => app2.save() });
       } else if (result2.mystery && result2.outcome === "win") {
         const m = MYSTERIES.find((x) => x.id === result2.mystery), n = mysteriesSolved(g);
@@ -6224,6 +7169,11 @@ body.nopad #pad { display: none; }
         warp(SCHOOL_OUT);
         return;
       }
+      if (tileAt(ht.x, ht.y) === "U") {
+        if (inYama()) warp(YAMA_OUT);
+        else enterYama();
+        return;
+      }
       if (input2.pressed.a) {
         const c = wild.facing(g.pos);
         if (c) {
@@ -6235,6 +7185,16 @@ body.nopad #pad { display: none; }
         if ((target == null ? void 0 : target.type) === "mystery") {
           sfx("ok");
           examineMystery(target.mystery);
+          return;
+        }
+        if ((target == null ? void 0 : target.type) === "seal") {
+          sfx("ok");
+          examineSeal(target.seal);
+          return;
+        }
+        if ((target == null ? void 0 : target.type) === "gate" && target.gate.id === "gateYama") {
+          sfx("ok");
+          say([{ who: "", text: "「この先 山道。落石の ため 通行止め」と 書いてある。" }, ...hasWatch(g) ? [furu("学校の さわぎが おちついたら 通れるように なるかも。")] : []]);
           return;
         }
         if ((target == null ? void 0 : target.type) === "person") {
@@ -6337,7 +7297,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inYama() ? "yama" : source.id });
         }
       });
     }
@@ -6392,9 +7352,10 @@ body.nopad #pad { display: none; }
       list.sort((a, b) => a.y - b.y).forEach((o) => o.draw());
     }
     function drawTop(ctx) {
+      ensureCanvas(reached(g, "clear3"));
       ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; !inSchool() && i < 6; i++) {
+      for (let i = 0; !inSchool() && !inYama() && i < 6; i++) {
         const wy = (i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE);
         ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
       }
@@ -6421,6 +7382,7 @@ body.nopad #pad { display: none; }
       }
       for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
       drawGates(ctx);
+      drawSeals(ctx);
       drawPeople(ctx);
       if (TINT[g.time]) {
         ctx.fillStyle = TINT[g.time];
@@ -6442,6 +7404,24 @@ body.nopad #pad { display: none; }
       if (lens) drawLens(ctx);
       app2.talk.drawTop(ctx, t);
     }
+    function drawSeals(ctx) {
+      for (const m of sealsHere(g)) {
+        const x = m.x * TILE - cam.x, y = m.y * TILE - cam.y;
+        if (x < -30 || x > 430 || y < -40 || y > 270) continue;
+        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillRect(x + 1, y + 13, 14, 3);
+        ctx.fillStyle = "#7ac8e8";
+        ctx.fillRect(x + 3, y - 10, 10, 25);
+        ctx.fillStyle = "#bfeaff";
+        ctx.fillRect(x + 4, y - 13, 8, 4);
+        ctx.fillRect(x + 5, y - 8, 3, 18);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x + 5, y - 9, 1, 6);
+        ctx.fillStyle = "#5aa8d0";
+        ctx.fillRect(x + 11, y - 8, 1, 20);
+        if (g.flags.oku) text(ctx, "？", x + 8, y - 20 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: "center", bold: true, color: "#8ae0ff" });
+      }
+    }
     function drawGates(ctx) {
       for (const q of gatesHere(g)) {
         const x = q.x * TILE - cam.x, y = q.y * TILE - cam.y, w = q.w * TILE;
@@ -6453,8 +7433,9 @@ body.nopad #pad { display: none; }
           ctx.fillStyle = i / 6 % 2 ? "#202020" : "#ffd040";
           ctx.fillRect(x + i, y + 5, 6, 5);
         }
-        panel(ctx, x + w / 2 - 18, y - 9, 36, 12, { fill: "#ffd040", edge: "#202020", r: 2, lineWidth: 1 });
-        text(ctx, "工事中", x + w / 2, y + 0.5, { size: 9, align: "center", bold: true, color: "#202020", shadow: false });
+        const label = q.label || "工事中", lw = label.length * 10 + 6;
+        panel(ctx, x + w / 2 - lw / 2, y - 9, lw, 12, { fill: "#ffd040", edge: "#202020", r: 2, lineWidth: 1 });
+        text(ctx, label, x + w / 2, y + 0.5, { size: 9, align: "center", bold: true, color: "#202020", shadow: false });
       }
     }
     function drawLens(ctx) {
@@ -6511,7 +7492,8 @@ body.nopad #pad { display: none; }
       text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}　${AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
       text(ctx, `${g.money}円`, 310, 18, { size: 12, align: "right", color: COLORS.accent });
       panel(ctx, 6, 26, 148, 112, { fill: "#000", r: 3 });
-      const [mTop, mBottom] = inSchool() ? [SCHOOL_Y0 * 3, miniCanvas.height] : [0, (SCHOOL_Y0 - 1) * 3];
+      const [rTop, rBottom] = region();
+      const [mTop, mBottom] = [rTop * 3, (rTop === 0 ? rBottom - 1 : rBottom) * 3];
       const my = Math.max(mTop, Math.min(mBottom - 108, Math.round(g.pos.y / TILE * 3 - 54)));
       ctx.drawImage(miniCanvas, 0, my, 144, 108, 8, 28, 144, 108);
       if (Math.floor(t * 4) % 2) {
@@ -6523,7 +7505,7 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -6538,7 +7520,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -6603,10 +7585,10 @@ body.nopad #pad { display: none; }
     const r2 = rows.map(row);
     return { w: W, h: r2.length, palette, frames: still ? [r2, r2] : bob(r2) };
   };
-  const faceless = (id, swap, { mirror = true, still = false } = {}) => {
+  const faceless = (id, swap, { mirror = true, still = false, rows = [0, 99] } = {}) => {
     const f = FRONT[id];
-    const r2 = f.frames[0].map((line2) => {
-      let s = [...line2].map((ch) => swap[ch] || ch).join("");
+    const r2 = f.frames[0].map((line2, y) => {
+      let s = y >= rows[0] && y < rows[1] ? [...line2].map((ch) => swap[ch] || ch).join("") : line2;
       if (mirror) s = [...s].reverse().join("");
       return s;
     });
@@ -6902,8 +7884,26 @@ body.nopad #pad { display: none; }
     wasurekurage: faceless("wasurekurage", { b: "a", c: "a" }),
     mikazukibat: faceless("mikazukibat", { b: "a" }),
     lunashadow: faceless("lunashadow", { b: "a" }),
-    yoroinukegara: faceless("yoroinukegara", { c: "b" })
+    yoroinukegara: faceless("yoroinukegara", { c: "b" }),
     // かぶとの うしろ
+    // ----- 山と ダムの 11 体 (3 章。2026-10-29): 顔を 消して 左右を 反転 -----
+    yukimidango: faceless("yukimidango", { d: "a", e: "a" }),
+    yukidarumuscle: faceless("yukidarumuscle", { c: "a", d: "a", f: "e" }),
+    // 顔と ボタン
+    koorimodoki: faceless("koorimodoki", { k: "c", p: "c" }),
+    fubukipenguin: faceless("fubukipenguin", { b: "a", c: "a", d: "a", e: "a" }, { rows: [0, 13] }),
+    // 白い おなかは 見えない・足は オレンジ
+    tsuraracomori: faceless("tsuraracomori", { c: "a", d: "a" }),
+    koorinokagami: faceless("koorinokagami", { d: "b", e: "b", c: "b" }),
+    // 鏡の うら
+    mandoragon: faceless("mandoragon", { g: "c", f: "c", h: "c" }),
+    obakekabocha: faceless("obakekabocha", { d: "b", c: "b" }),
+    // かぼちゃの うしろ
+    haetorigusan: faceless("haetorigusan", { f: "c", e: "d" }),
+    kokemusha: faceless("kokemusha", { d: "a", e: "a" }),
+    // かぶとの うしろ
+    koorimodokishin: faceless("koorimodokishin", { e: "c", f: "c" }, { rows: [2, 99] })
+    // 王冠は そのまま
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -6958,6 +7958,18 @@ body.nopad #pad { display: none; }
     mikazukibat: { motion: "cloud", color: "#ffe040", glyph: ")))" },
     yoroinukegara: { motion: "aura", color: "#8a8a9a", glyph: "◆" },
     lunashadow: { motion: "beam", color: "#8a6ad0" },
+    // 山と ダムの 11 体 (3 章。仮の 必殺技に 合わせた 動き)
+    yukimidango: { motion: "aura", color: "#f0f0ff", glyph: "●" },
+    yukidarumuscle: { motion: "multi", color: "#bff0ff", glyph: "ドン", hits: 3 },
+    koorimodoki: { motion: "cloud", color: "#8a9ab0", glyph: "@" },
+    fubukipenguin: { motion: "dash", color: "#e0f8ff" },
+    tsuraracomori: { motion: "rain", color: "#9adcff", glyph: "▼" },
+    koorinokagami: { motion: "aura", color: "#dff8ff", glyph: "✦" },
+    mandoragon: { motion: "cloud", color: "#4ac05a", glyph: "！" },
+    obakekabocha: { motion: "cloud", color: "#ff8a1a", glyph: "★" },
+    haetorigusan: { motion: "dash", color: "#5ac05a", drain: true },
+    kokemusha: { motion: "dash", color: "#6ab04a" },
+    koorimodokishin: { motion: "spin", color: "#7aaad0" },
     // こおりくん: 大腸炎アタック
     koori: { motion: "cloud", color: "#c8a060", glyph: "@" }
   };
@@ -8471,9 +9483,28 @@ body.nopad #pad { display: none; }
       grad.addColorStop(1, sky[1]);
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 400, HORIZON);
-      ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
-      [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : ["#4a9a3a", "#7ad05a"];
+      const yama = place === "yama" || place === "dam";
+      if (yama) {
+        for (const [x, w, h] of [[-20, 160, 62], [90, 200, 80], [250, 190, 66], [340, 140, 50]]) {
+          const top = HORIZON - h;
+          ctx.fillStyle = "rgba(50, 80, 110, 0.55)";
+          ctx.beginPath();
+          ctx.moveTo(x, HORIZON);
+          ctx.lineTo(x + w / 2, top);
+          ctx.lineTo(x + w, HORIZON);
+          ctx.fill();
+          ctx.fillStyle = "rgba(240, 248, 255, 0.85)";
+          ctx.beginPath();
+          ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18);
+          ctx.lineTo(x + w / 2, top);
+          ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
+          ctx.fill();
+        }
+      } else {
+        ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
+        [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
+      }
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);

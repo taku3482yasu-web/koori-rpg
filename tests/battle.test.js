@@ -154,6 +154,21 @@ test('ボス (Lv8) は 6 体 (Lv7〜8) なら 勝てるが、1 体では 勝て�
     assert.ok(wins1 <= 5, `1 体で 勝った ${wins1}/40`);
 });
 
+test('3 章の ボス ダムの ヌシ (Lv17) は 6 体 Lv15 なら だいたい 勝てるが、1 体では 勝てない (2026-10-29)', () => {
+    let wins6 = 0, wins1 = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+        const six = ['koori', 'lunashadow', 'yataiman', 'kogame', 'kozarappa', 'proteingolem'].map(id => ({ id, lv: 15 }));
+        const b6 = createBattle({ allies: six, enemies: [{ id: 'himuro', lv: 17 }], rng: createRng(seed), kind: 'boss' });
+        run(b6, 400);
+        if (b6.outcome === 'win') wins6++;
+        const b1 = createBattle({ allies: [{ id: 'koori', lv: 15 }], enemies: [{ id: 'himuro', lv: 17 }], rng: createRng(seed), kind: 'boss' });
+        run(b1, 400);
+        if (b1.outcome === 'win') wins1++;
+    }
+    assert.ok(wins6 >= 15, `6 体で 勝った ${wins6}/30`);
+    assert.ok(wins1 <= 2, `1 体で 勝った ${wins1}/30`);
+});
+
 test('とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おたすけ できて、成功で 治る (2 章)', () => {
     const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 8 }));
     const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(2) });

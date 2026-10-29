@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // 1 ドット = 1 ピクセルの 絵 (768 × 960) を 作り、上画面に 写す (ぼやけない)
 // =====================================================================
-import { TILE, MAP_W, MAP_H, TILES, BUILDINGS, PROPS, MYSTERIES, tileAt } from '../data/map.js';
+import { TILE, MAP_W, MAP_H, TILES, BUILDINGS, PROPS, MYSTERIES, WET, tileAt } from '../data/map.js';
 
 // マスの 場所で 決まる 乱数 (毎回 同じ 絵に なる)
 const hash = (x, y, k = 0) => {
@@ -13,9 +13,10 @@ const hash = (x, y, k = 0) => {
 };
 
 export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72',
-    L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a' };
+    L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a',
+    U: '#8a6a4a', H: '#7a5a3a', N: '#f0f6fa', Q: '#9aa0a8', D: '#a89a80', E: '#b8a888', I: '#9ad8f0' };
 
-function drawTile(c, ch, x, y) {
+function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
     const r = (dx, dy, w, h, color) => { c.fillStyle = color; c.fillRect(px + dx, py + dy, w, h); };
     const grass = () => {
@@ -94,6 +95,44 @@ function drawTile(c, ch, x, y) {
             r(0, 0, 16, 16, '#c89a62');
             r(1, 2, 14, 12, '#c03a3a'); r(2, 4, 12, 1, '#e86a5a'); r(2, 9, 12, 1, '#e86a5a');
             break;
+        // ----- 山と ダム (3 章) -----
+        case 'U':   // 山道の 入り口 (土の 道と 丸太の 段)
+            r(0, 0, 16, 16, '#9a7a52');
+            r(0, 3, 16, 2, '#6a4a2a'); r(0, 10, 16, 2, '#6a4a2a');
+            r(0, 5, 16, 1, '#b89a6a'); r(0, 12, 16, 1, '#b89a6a');
+            break;
+        case 'H':   // 畑 (うねと 葉っぱ)
+            r(0, 0, 16, 16, '#7a5a3a');
+            r(0, 3, 16, 3, '#8a6a48'); r(0, 11, 16, 3, '#8a6a48');
+            if ((x + y) % 2) { r(3, 1, 2, 3, '#4aa04a'); r(5, 0, 2, 3, '#5ab05a'); }
+            if ((x + y) % 2 === 0) { r(10, 9, 2, 3, '#4aa04a'); r(12, 8, 2, 3, '#5ab05a'); }
+            break;
+        case 'N':   // 雪
+            r(0, 0, 16, 16, '#f0f6fa');
+            for (let i = 0; i < 3; i++) r(Math.floor(hash(x, y, i + 60) * 14), Math.floor(hash(x, y, i + 70) * 14), 2, 1, '#d0e0ea');
+            break;
+        case 'Q': { // ダムの かべ (コンクリート)
+            r(0, 0, 16, 16, '#9aa0a8');
+            r(0, 0, 16, 3, '#c8ccd2'); r(0, 13, 16, 3, '#7a8088');
+            r((x % 2) * 8, 3, 1, 10, '#8a9098');
+            break;
+        }
+        case 'D': case 'E': {
+            // かれた 沢・水が 消えた 湖の 底 (ひびわれ と 石)。3 章 クリアで 水 (wet)
+            if (wet) { drawTile(c, 'W', x, y, false); break; }
+            r(0, 0, 16, 16, ch === 'D' ? '#a89a80' : '#b8a888');
+            r(Math.floor(hash(x, y, 80) * 10), Math.floor(hash(x, y, 81) * 12), 6, 1, '#8a7a60');
+            r(Math.floor(hash(x, y, 82) * 12), Math.floor(hash(x, y, 83) * 10), 1, 5, '#8a7a60');
+            if (hash(x, y, 84) < 0.4) { const sx = Math.floor(hash(x, y, 85) * 12); r(sx, 9, 4, 3, '#9a948a'); r(sx + 1, 9, 2, 1, '#d0cac0'); }
+            break;
+        }
+        case 'I': { // 氷の 城 (氷の ブロック)
+            if (wet) { drawTile(c, 'W', x, y, false); break; }
+            r(0, 0, 16, 16, '#9ad8f0');
+            r(0, 0, 16, 1, '#e0f6ff'); r(0, 8, 16, 1, '#7ac0e0'); r((y % 2) * 8, 0, 1, 8, '#7ac0e0'); r(((y + 1) % 2) * 8, 8, 1, 8, '#7ac0e0');
+            r(2, 2, 3, 2, '#ffffff');
+            break;
+        }
         default:
             r(0, 0, 16, 16, '#ff00ff');
     }
@@ -138,12 +177,13 @@ function drawProp(c, p) {
     c.fillRect(px + 6, py - 6, 4, 22);
 }
 
-export function buildFieldCanvas() {
+// wet: 3 章 クリアの あと (かれた 沢・湖の 底・氷の 城が 水に もどる)
+export function buildFieldCanvas(wet = false) {
     const cv = document.createElement('canvas');
     cv.width = MAP_W * TILE;
     cv.height = MAP_H * TILE;
     const c = cv.getContext('2d');
-    for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) drawTile(c, TILES[y][x], x, y);
+    for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) drawTile(c, TILES[y][x], x, y, wet);
     BUILDINGS.forEach(b => drawBuilding(c, b));
     PROPS.forEach(p => drawProp(c, p));
     // 鳥居の 上の 横木 (左右の 柱を つなぐ)
@@ -243,13 +283,14 @@ function drawLandmarks(c) {
     c.fillStyle = '#f8f0e0'; for (let i = 0; i < 4; i++) c.fillRect(yx + 2 + i * 8, yy + 2, 6, 5);
 }
 
-export function buildMiniMap(scale = 3) {
+export function buildMiniMap(scale = 3, wet = false) {
     const cv = document.createElement('canvas');
     cv.width = MAP_W * scale;
     cv.height = MAP_H * scale;
     const c = cv.getContext('2d');
     for (let y = 0; y < MAP_H; y++) for (let x = 0; x < MAP_W; x++) {
-        c.fillStyle = MINI_COLORS[TILES[y][x]] || '#000';
+        const ch = TILES[y][x];
+        c.fillStyle = MINI_COLORS[wet && WET.has(ch) ? 'W' : ch] || '#000';
         c.fillRect(x * scale, y * scale, scale, scale);
     }
     BUILDINGS.forEach(b => {

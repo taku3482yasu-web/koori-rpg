@@ -1,18 +1,20 @@
 // =====================================================================
 // 町の 場面: 上画面で 歩く・調べる・レンズで さがす、下画面に 地図と ボタン (設計書 5 章・7 章)
 // 2 章: 小学校の 入り口 (夕方・夜) から 校舎の 中へ。七不思議を 調べると バトル。げた箱の マットで 外へ
+// 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → 氷の 封印 3 つ → ダムの ヌシ
 // =====================================================================
 import { ART } from '../art/index.js';
-import { TILE, MAP_W, MAP_H, SPOTS, BUILDINGS, TOWN_H, areaAt, tileAt, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES } from '../data/map.js';
+import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
+    YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA, AREAS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
-import { moveHero, lookAt, peopleHere, inShrine, gatesHere, heroTile, mysteriesSolved, allMysteriesSolved } from '../logic/world.js';
+import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved } from '../logic/world.js';
 import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
-import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM } from '../logic/game.js';
+import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -26,7 +28,7 @@ const TINT = ['rgba(255, 220, 160, 0.10)', null, 'rgba(255, 120, 40, 0.20)', 'rg
 const MINI_NAMES = {
     home: 'いえ', dagashi: '駄菓子屋', school: '学校', shrine: '神社', toilet: 'トイレ', temple: 'お寺',
     gamecenter: 'ゲーセン', pachinkoAto: 'パチ跡', yaoya: '八百屋', omenya: 'お面屋', kouban: '交番',
-    jansou: '雀荘', denkiya: '電気屋', honya: '本屋', karaoke: 'カラオケ', sentou: '銭湯'
+    jansou: '雀荘', denkiya: '電気屋', honya: '本屋', karaoke: 'カラオケ', sentou: '銭湯', okunoin: '奥の院'
 };
 
 const BTN = {
@@ -34,11 +36,18 @@ const BTN = {
     menu: { x: 164, y: 76, w: 148, h: 40, label: 'メニュー' }
 };
 
-let fieldCanvas = null, miniCanvas = null;
+let fieldCanvas = null, miniCanvas = null, fieldWet = null;
+// 町の 絵を 作る。3 章 クリアで ダムに 水が もどるので 作りなおす
+function ensureCanvas(wet) {
+    if (fieldWet === wet) return;
+    fieldCanvas = buildFieldCanvas(wet);
+    miniCanvas = buildMiniMap(3, wet);
+    fieldWet = wet;
+}
 
 export function createField(app) {
     const g = app.g;
-    if (!fieldCanvas) { fieldCanvas = buildFieldCanvas(); miniCanvas = buildMiniMap(3); }
+    ensureCanvas(reached(g, 'clear3'));
     let t = 0, walkT = 0, moving = false;
     let lens = null;     // { x, y, charge, spot, drag }
     const trail = [];    // こおりくんの 歩いた 道すじ (ふるカワが なぞって ついてくる)
@@ -49,10 +58,12 @@ export function createField(app) {
     // かくれている 場所に いて、まだ 見つけていない (違和感を 出す・レンズに 反応する)
     const hiding = s => spotActive(g, s, g.playTime) && !wild.list.some(c => c.spot === s.id);
 
-    // 学校の 中に いるか (町と 学校は つながって いないので、カメラも 地図も べつに する)
-    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE;
+    // 学校の 中・山に いるか (町と 学校と 山は つながって いないので、カメラも 地図も べつに する)
+    const inYama = () => g.pos.y >= YAMA_Y0 * TILE;
+    const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && !inYama();
+    const region = () => regionOf(Math.floor(g.pos.y / TILE));
     function camera() {
-        const [top, bottom] = inSchool() ? [SCHOOL_Y0 * TILE, MAP_H * TILE] : [0, SCHOOL_Y0 * TILE];
+        const [top, bottom] = region().map(v => v * TILE);
         cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
         cam.y = Math.max(top, Math.min(bottom - 240, Math.round(g.pos.y - 128)));
     }
@@ -96,7 +107,9 @@ export function createField(app) {
                 bridge: ['石の川橋が 通れないんですって。こまったわねえ。'],
                 clear: ['南の 商店街の 工事も 終わったんですって。夕方や 夜は にぎやかよ。', 'そういえば、夜の 小学校に あかりが ついてるって うわさよ。七不思議が どうとか……こわいわねえ。'],
                 school: ['夜の 学校に 行ってるの？ 暗いから 気を つけるのよ。', 'おなかが すいたら、駄菓子屋で おやつを 買っていきなさい。'],
-                clear2: [`町の なかまは ${friendCount(g)} 人？ まだまだ いそうね。夜に しか 出ない 子も いるらしいわよ。`, '学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！']
+                clear2: ['学校の 七不思議、こおりくんが 解決したんですって？ すごいじゃない！', 'そういえば 石の川の 水が へってるの。山の ダムの 水が 消えたって うわさよ。町の 北の 山道から 行けるわ。'],
+                yama: ['山に 行ってるの？ 山の 上は すずしいから、かぜを ひかないようにね。', 'ダムの 水が もどらないと、町の 水道も こまっちゃうわ。'],
+                clear3: ['ダムに 水が もどったんですって！ こおりくん、おてがらね。', `町の なかまは ${friendCount(g)} 人？ 山にも まだまだ いそうね。`]
             }[g.story];
             say(lines.map(text => ({ who: 'ともいし', art: 'tomoishi', text })));
         } else if (p.id === 'furukawaShrine') {
@@ -108,6 +121,14 @@ export function createField(app) {
                 { who: 'ろうかの カゲ', art: 'lunashadow', text: '…………。' },
                 furu('これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('kage'), kind: 'boss', place: 'school' }) });
+        } else if (p.id === 'modoki') {
+            // 3 章の ボス: ダムの ヌシ (コオリモドキ・真)
+            say([
+                { who: '', text: '氷の 城の 前に、王冠を かぶった こおりくんが 立っている……！？' },
+                { who: 'ダムの ヌシ', art: 'koorimodokishin', text: 'やあ、ニセモノの こおりくん。ぼくこそ ほんものの こおりくんだよ。' },
+                { who: 'ダムの ヌシ', art: 'koorimodokishin', text: 'この 王冠で、山の 水は ぜんぶ ぼくの 氷の 城に なった。こおり族の 王さまは ぼくだ！' },
+                furu('コオリモドキ……！ 王冠の 力で 進化してる！ こおり族には ほのおの なかまが 有利だよ！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('himuro'), kind: 'boss', place: 'dam' }) });
         } else if (p.id === 'nushi') {
             if (g.story === 'bridge') {
                 say([
@@ -141,6 +162,8 @@ export function createField(app) {
             shop();
         } else if (b.id === 'school') {
             enterSchool();
+        } else if (b.id === 'okunoin') {
+            readOkunoin();
         } else {
             const msg = {
                 shrine: 'おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……',
@@ -182,6 +205,51 @@ export function createField(app) {
             furu(`そのときは 輪を 回して 後ろに さげて、まんなかの「おたすけ」(${btn('help')}) で 助けてあげて！`),
             { who: '', text: '「おたすけ」が つかえるように なった！ げた箱の マットに のると 外に 出られる。' }
         ], { done: () => app.save() });
+    }
+
+    // 山 (3 章): 町の 北の 山道から 入る。はじめて 入ると 3 章が 始まる
+    function enterYama() {
+        warp(YAMA_IN);
+        if (g.story !== 'clear2') return;
+        g.story = 'yama';
+        say([
+            { who: '', text: '山道を のぼって、山の 上に 来た。' },
+            furu('見て、こおりくん！ 沢が からっぽだよ……。ダムの 水が ぜんぶ 消えちゃったんだ。'),
+            furu('このままじゃ 石の川の 水も なくなっちゃう。山の 上の「奥の院」には、むかしの 言いつたえが あるんだって。行ってみよう！'),
+            { who: '', text: '山の 南の はしの 入り口から 町に もどれる。' }
+        ], { done: () => app.save() });
+    }
+
+    // 奥の院の 石碑 (3 章): こおり族の 言いつたえ。読むと 氷の 封印を 調べられる
+    function readOkunoin() {
+        if (readLegend(g)) {
+            sfx('watch');
+            say([
+                { who: '', text: '奥の院の 中に、古い 石碑が ある……。' },
+                { who: '', text: '「むかし、この 山の 水は こおり族が まもっていた。」' },
+                { who: '', text: '「こおり族の 王冠を かぶる者は、山の 水を すべて こおらせ、思いのままに できる。ゆえに 王冠は ここに ねむらせる。」' },
+                { who: '', text: '石碑の となりの 箱は……からっぽだ！' },
+                furu('王冠が ない……！ こおり族って、こおりくんの ご先祖さまだよね？ だれかが 王冠を ぬすんで、ダムの 水を こおらせたんだ！'),
+                furu('山の あちこちに、夏なのに とけない 氷の 柱が 立ってたよね。あれが 水を とじこめる「封印」かも。ぜんぶ とかそう！'),
+                { who: '', text: '氷の 封印は 3 つ。森の 原っぱ・雪渓・岩場に ある。' }
+            ], { done: () => app.save() });
+            return;
+        }
+        say([{ who: '', text: reached(g, 'clear3') ? '石碑の となりの 箱に、こおりの 王冠が もどっている。' : '古い 石碑。むかしの こおり族の 言いつたえが 書いてある。' }]);
+    }
+
+    // 氷の 封印を 調べる (3 章) → 封印を まもる キャラと バトル (勝つと とける)
+    function examineSeal(m) {
+        if (g.mysteries[m.id]) { say([{ who: '', text: m.done }]); return; }
+        if (!g.flags.oku) {
+            say([{ who: '', text: '夏なのに とけない 氷の 柱だ。さわると すごく つめたい……。' }, furu('奥の院に 行けば、なにか わかるかも。')]);
+            return;
+        }
+        const n = NAKAMA[m.nakama];
+        g.zukan.seen[m.nakama] = true;
+        say([...m.lines.map(text => ({ who: '', text })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `封印を まもる ${n.name}が おそいかかってきた！` }], {
+            done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: 'wild', place: 'yama', mystery: m.id })
+        });
     }
 
     // 七不思議を 調べる → 正体と バトル (勝つと たしかめた ことに なる)
@@ -239,7 +307,26 @@ export function createField(app) {
                 furu('いまの、おにおに……？ 学校の さわぎも、鬼鬼団の しわざだったんだ！'),
                 { who: '', text: '２章 クリア！ 七不思議の キャラが 学校を 歩きまわるように なった。' },
                 furu('そういえば、山の ほうの ダムの 水が へってるって うわさだよ。……また おにおにかな？'),
-                { who: '', text: '―― ３章は つぎの アップデートで。' }
+                { who: '', text: '町の 北の はしの 山道が 通れるように なった！' }
+            ], { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'himuro') {
+            warp(YAMA_AFTER_BOSS);
+            say([
+                { who: 'コオリモドキ・真', art: 'koorimodokishin', text: 'うう……ぼくは ほんものに なりたかった だけなのに……。' },
+                { who: '', text: '王冠が コロンと 落ちた。氷の 城が とけはじめる……！' },
+                { who: '', text: 'ゴゴゴゴ……！ ダムに 水が もどってきた！' },
+                { who: 'おにおに', art: 'onioni', text: 'ちぇっ、モドキの やつ、王冠を わたしたのに 役に たたないな。水を 止めて 町を こまらせる 作戦も しっぱいか。' },
+                { who: 'おにおに', art: 'onioni', text: 'つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！' },
+                furu('おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。'),
+                { who: 'コオリモドキ・真', art: 'koorimodokishin', text: '……ぼくも、ほんものの こおりくんの なかまに なって いい？' },
+                { who: '', text: '３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。' },
+                { who: '', text: '―― ４章は つぎの アップデートで。' }
+            ], { done: () => app.save() });
+        } else if (result.mystery && result.outcome === 'win' && SEALS.some(x => x.id === result.mystery)) {
+            const m = SEALS.find(x => x.id === result.mystery), n = sealsSolved(g);
+            say([
+                { who: '', text: `氷の 封印「${m.label}」が とけた！ (${n}/${SEALS.length})` },
+                ...(allSealsSolved(g) ? [furu('これで 封印は ぜんぶ とけた！ ……ダムの ほうから ゴゴゴって 音が する！'), { who: '', text: 'ダムの 湖の 底の 氷の 城へ 行ってみよう。' }] : [])
             ], { done: () => app.save() });
         } else if (result.mystery && result.outcome === 'win') {
             const m = MYSTERIES.find(x => x.id === result.mystery), n = mysteriesSolved(g);
@@ -343,11 +430,19 @@ export function createField(app) {
         // げた箱の マットに のったら 学校の 外へ
         const ht = heroTile(g);
         if (tileAt(ht.x, ht.y) === 'M') { warp(SCHOOL_OUT); return; }
+        // 山道の 入り口 (町の 北の はし → 山 / 山の 南の はし → 町)
+        if (tileAt(ht.x, ht.y) === 'U') { if (inYama()) warp(YAMA_OUT); else enterYama(); return; }
         if (input.pressed.a) {
             const c = wild.facing(g.pos);
             if (c) { sfx('ok'); talkToWild(c); return; }
             const target = lookAt(g);
             if (target?.type === 'mystery') { sfx('ok'); examineMystery(target.mystery); return; }
+            if (target?.type === 'seal') { sfx('ok'); examineSeal(target.seal); return; }
+            if (target?.type === 'gate' && target.gate.id === 'gateYama') {
+                sfx('ok');
+                say([{ who: '', text: '「この先 山道。落石の ため 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('学校の さわぎが おちついたら 通れるように なるかも。')] : [])]);
+                return;
+            }
             if (target?.type === 'person') { sfx('ok'); talkToPerson(target.person); } else if (target?.type === 'door') { sfx('ok'); openDoor(target.building); } else if (target?.type === 'gate') { sfx('ok'); say([{ who: '', text: '「この先 商店街。工事中に つき 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('石の川橋の ヌシの 件が かたづいたら 通れるって。')] : [])]); }
         }
     }
@@ -432,7 +527,7 @@ export function createField(app) {
             done: () => {
                 fighting = c;
                 const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: source.id });
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inYama() ? 'yama' : source.id });
             }
         });
     }
@@ -493,10 +588,11 @@ export function createField(app) {
     }
 
     function drawTop(ctx) {
+        ensureCanvas(reached(g, 'clear3'));
         ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
-        // 川の きらきら (学校の 中は なし)
+        // 川の きらきら (町だけ)
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        for (let i = 0; !inSchool() && i < 6; i++) {
+        for (let i = 0; !inSchool() && !inYama() && i < 6; i++) {
             const wy = ((i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE));
             ctx.fillRect(30 * TILE + ((i * 23) % 60) - cam.x, wy - cam.y, 4, 1);
         }
@@ -525,6 +621,7 @@ export function createField(app) {
         }
         for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
         drawGates(ctx);
+        drawSeals(ctx);
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
@@ -545,6 +642,20 @@ export function createField(app) {
         app.talk.drawTop(ctx, t);
     }
 
+    // 氷の 封印 (3 章): まだ とけて いない 氷の 柱。言いつたえを 読んだ あとは「？」
+    function drawSeals(ctx) {
+        for (const m of sealsHere(g)) {
+            const x = m.x * TILE - cam.x, y = m.y * TILE - cam.y;
+            if (x < -30 || x > 430 || y < -40 || y > 270) continue;
+            ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(x + 1, y + 13, 14, 3);
+            ctx.fillStyle = '#7ac8e8'; ctx.fillRect(x + 3, y - 10, 10, 25);
+            ctx.fillStyle = '#bfeaff'; ctx.fillRect(x + 4, y - 13, 8, 4); ctx.fillRect(x + 5, y - 8, 3, 18);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 5, y - 9, 1, 6);
+            ctx.fillStyle = '#5aa8d0'; ctx.fillRect(x + 11, y - 8, 1, 20);
+            if (g.flags.oku) text(ctx, '？', x + 8, y - 20 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: 'center', bold: true, color: '#8ae0ff' });
+        }
+    }
+
     // 工事中の さく (黄色と 黒の しましま)
     function drawGates(ctx) {
         for (const q of gatesHere(g)) {
@@ -557,8 +668,9 @@ export function createField(app) {
                 ctx.fillStyle = (i / 6) % 2 ? '#202020' : '#ffd040';
                 ctx.fillRect(x + i, y + 5, 6, 5);
             }
-            panel(ctx, x + w / 2 - 18, y - 9, 36, 12, { fill: '#ffd040', edge: '#202020', r: 2, lineWidth: 1 });
-            text(ctx, '工事中', x + w / 2, y + 0.5, { size: 9, align: 'center', bold: true, color: '#202020', shadow: false });
+            const label = q.label || '工事中', lw = label.length * 10 + 6;
+            panel(ctx, x + w / 2 - lw / 2, y - 9, lw, 12, { fill: '#ffd040', edge: '#202020', r: 2, lineWidth: 1 });
+            text(ctx, label, x + w / 2, y + 0.5, { size: 9, align: 'center', bold: true, color: '#202020', shadow: false });
         }
     }
 
@@ -620,7 +732,8 @@ export function createField(app) {
         text(ctx, `${g.money}円`, 310, 18, { size: 12, align: 'right', color: COLORS.accent });
         // 地図 (商店街が ふえて 縦に 長いので、こおりくんの まわりを 切りだす)
         panel(ctx, 6, 26, 148, 112, { fill: '#000', r: 3 });
-        const [mTop, mBottom] = inSchool() ? [SCHOOL_Y0 * 3, miniCanvas.height] : [0, (SCHOOL_Y0 - 1) * 3];
+        const [rTop, rBottom] = region();
+        const [mTop, mBottom] = [rTop * 3, (rTop === 0 ? rBottom - 1 : rBottom) * 3];
         const my = Math.max(mTop, Math.min(mBottom - 108, Math.round(g.pos.y / TILE * 3 - 54)));
         ctx.drawImage(miniCanvas, 0, my, 144, 108, 8, 28, 144, 108);
         if (Math.floor(t * 4) % 2) {
@@ -633,7 +746,9 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        const labels = inSchool()
+        const labels = inYama()
+            ? YAMA_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
+            : inSchool()
             ? SCHOOL_ROOMS.filter(r => r.id !== 'getabako').map(r => ({ id: r.id, name: r.label, cx: r.x + 0.5, cy: r.y + 3 }))
             : BUILDINGS.map(b => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
         for (const b of labels) {
@@ -652,7 +767,9 @@ export function createField(app) {
         ctx.restore();
         // 目的地の しるし
         const goal = g.story === 'intro' ? { x: 6, y: 5 } : g.story === 'bridge' ? { x: 31, y: 17 }
-            : g.story === 'clear' ? { x: 19, y: 6 } : g.story === 'school' && allMysteriesSolved(g) ? { x: 9, y: 70 } : null;
+            : g.story === 'clear' ? { x: 19, y: 6 } : g.story === 'school' && allMysteriesSolved(g) ? { x: 9, y: 70 }
+            : g.story === 'clear2' ? { x: 26.5, y: 0 } : g.story === 'yama' && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 }
+            : g.story === 'yama' && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : null;
         const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
         if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });

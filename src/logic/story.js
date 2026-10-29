@@ -3,7 +3,8 @@
 // ---------------------------------------------------------------------
 // 1 章: intro → friends → bridge → clear (ヌシを たおした。ここから 2 章)
 // 2 章「学校の七不思議」: clear → school (夜の 学校に 入った) → clear2 (8 つ目の ふしぎを たおした)
+// 3 章「ダムの水が消える」: clear2 → yama (山に 入った) → clear3 (ダムの ヌシを たおした)
 // reached(g, 'clear') は「1 章 クリアの あと」(2 章の あいだも ふくむ)
 // =====================================================================
-export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2'];
+export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2', 'yama', 'clear3'];
 export const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);

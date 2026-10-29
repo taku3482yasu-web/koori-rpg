@@ -351,6 +351,62 @@ try {
     await key('KeyS', 400);
     check(await evaluate('window.__app.g.pos.y < 60 * 16'), 'げた箱の マットで 学校の 外へ');
 
+    // ----- 3 章: 町の 北の 山道から 山へ → 奥の院 → 氷の 封印 → ダムの ヌシ (2026-10-29) -----
+    const at = (x, y, dir = 'up') => evaluate(`(() => { const g = window.__app.g; g.pos.x = ${x} * 16 + 8; g.pos.y = ${y} * 16 + 12; g.pos.dir = "${dir}"; window.__app.field.debug.wild.list.length = 0; return true; })()`);
+    const winNow = async () => {
+        await key('KeyJ');
+        await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
+        for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
+        for (let i = 0; i < 10 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
+    };
+    await evaluate('window.__app.g.story = "school"; window.__app.g.time = 1; true');
+    await at(26.5, 1);
+    await key('KeyW', 500);
+    check(await evaluate('window.__app.g.pos.y < 60 * 16'), '2 章 クリアまで 山道は 通行止め');
+    await evaluate('window.__app.g.story = "clear2"; true');
+    await at(26.5, 1);
+    await key('KeyW', 500);
+    await sleep(200);
+    await shot('yama-enter');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "yama" && window.__app.g.pos.y > 84 * 16'), '2 章 クリアの あと 山道から 山へ 入れる (3 章が 始まる)');
+    await at(15, 108);
+    await key('KeyJ');
+    await skipTalk();
+    check(await sceneIs('field') && await evaluate('!window.__app.g.mysteries.sealMori'), '言いつたえを 読む 前は 氷の 柱を 調べても バトルに ならない');
+    await at(7, 90);
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.flags.oku === true'), '奥の院で 言いつたえを 読む');
+    await at(15, 108);
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.mystery === "sealMori"'), '氷の 封印を 調べると まもる キャラと バトル');
+    await winNow();
+    await skipTalk();
+    check(await evaluate('window.__app.g.mysteries.sealMori === true'), '勝つと 封印が とける');
+    await evaluate('(() => { const g = window.__app.g; g.mysteries.sealSekkei = true; g.mysteries.sealIwa = true; return true; })()');
+    await at(32, 92);
+    await shot('yama-dam');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "himuro"'), '封印を ぜんぶ とくと 氷の 城の 前で ダムの ヌシと バトル');
+    await key('KeyJ');
+    await sleep(1200);
+    await shot('yama-boss');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
+    for (let i = 0; i < 10 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
+    await skipTalk(30);
+    await shot('yama-clear');
+    check(await evaluate('window.__app.g.story === "clear3" && window.__app.g.medals.some(m => m.id === "koorimodokishin")'), 'ダムの ヌシを たおすと 3 章 クリア (コオリモドキ・真が なかまに)');
+    check(await evaluate('(() => { const g = window.__app.g; const y = Math.floor((g.pos.y - 3) / 16); return y >= 96; })()'), 'クリアの あと 湖の 外に 立っている');
+    await at(23.5, 117, 'down');
+    await key('KeyS', 400);
+    check(await evaluate('window.__app.g.pos.y < 60 * 16'), '山の 入り口から 町に もどる');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

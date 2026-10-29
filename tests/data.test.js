@@ -6,7 +6,8 @@ import { ITEMS } from '../src/data/items.js';
 import { LEGACY_ART } from '../src/art/legacy-art.js';
 import { NEW_ART } from '../src/art/new-art.js';
 import { BACK_ART } from '../src/art/back-art.js';
-import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS, MYSTERIES, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT } from '../src/data/map.js';
+import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS, MYSTERIES, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT,
+    SEALS, YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, BLOCK, regionOf } from '../src/data/map.js';
 
 const ART = { ...LEGACY_ART, ...NEW_ART };
 
@@ -71,7 +72,7 @@ test('なかま・ボス・人の 絵が そろっていて、行の 長さが �
 test('地図: 商店街は 石の川タウンの 南。さかいめは 木の 列で、道 (工事中の さく) と 川だけ', () => {
     const row = TILES[TOWN_H - 1];
     const open = [...row].map((c, x) => (['T', 'W'].includes(c) ? null : x)).filter(x => x !== null);
-    assert.deepEqual(open, GATES.flatMap(q => Array.from({ length: q.w }, (_, i) => q.x + i)));
+    assert.deepEqual(open, GATES.filter(q => q.y === TOWN_H - 1).flatMap(q => Array.from({ length: q.w }, (_, i) => q.x + i)));
     for (const id of SHOP) assert.ok([...SPOTS, ...ROAMS].some(s => (s.y ?? s.y0) >= TOWN_H && s.kinds.some(k => k.id === id)), `${id} は 商店街に 出る`);
 });
 
@@ -87,6 +88,21 @@ test('地図: 小学校の 中は 町と つながって いない。七不思�
     assert.ok(SCHOOL_OUT.y < SCHOOL_Y0);
 });
 
+test('地図: 山と ダムは 町・学校と つながって いない。封印は 通れる マスの 上、入り口と 出口は 山道 (3 章)', () => {
+    assert.ok([...TILES[YAMA_Y0 - 1]].every(c => c === 'X'), '学校の いちばん 下は かべ');
+    assert.ok([...TILES[YAMA_Y0]].every(c => c === 'T'), '山の いちばん 上は 木');
+    assert.deepEqual(regionOf(YAMA_IN.y), [YAMA_Y0, MAP_H]);
+    assert.deepEqual(regionOf(YAMA_OUT.y), [0, SCHOOL_Y0]);
+    assert.equal(TILES[YAMA_IN.y][Math.floor(YAMA_IN.x)], 'R');
+    assert.equal(TILES[YAMA_OUT.y][Math.floor(YAMA_OUT.x)], 'G');
+    assert.equal(TILES[YAMA_AFTER_BOSS.y][Math.floor(YAMA_AFTER_BOSS.x)], 'R');
+    assert.equal(TILES[0].slice(26, 28), 'UU', '町の 北の はしの 山道');
+    for (const m of SEALS) {
+        assert.ok(!BLOCK.has(TILES[m.y][m.x]) && TILES[m.y][m.x] !== 'W', `${m.id} は 通れる マスの 上`);
+        assert.ok(NAKAMA[m.nakama] && NAKAMA[m.nakama].area === 'yama', `${m.id} を まもる キャラ`);
+    }
+});
+
 test('地図: 大きさ・レンズの 場所は 通れる マス・建物の 入り口は 建物の 下の 列', () => {
     assert.equal(TILES.length, MAP_H);
     TILES.forEach(row => assert.equal(row.length, MAP_W));
@@ -98,7 +114,7 @@ test('地図: 大きさ・レンズの 場所は 通れる マス・建物の �
 });
 
 test('全員が どこかに 出る。見えている キャラが 大多数・かくれている キャラは 少し', () => {
-    const hidden = new Set([...SPOTS.flatMap(s => s.kinds.map(k => k.id)), ...MYSTERIES.map(m => m.nakama)]);
+    const hidden = new Set([...SPOTS.flatMap(s => s.kinds.map(k => k.id)), ...MYSTERIES.map(m => m.nakama), ...SEALS.map(m => m.nakama)]);
     const roam = new Set(ROAMS.flatMap(s => s.kinds.map(k => k.id)));
     for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);

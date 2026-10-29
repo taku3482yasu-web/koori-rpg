@@ -1,5 +1,5 @@
 // =====================================================================
-// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体)
+// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体。3 章で 山と ダムの 11 体)
 // ---------------------------------------------------------------------
 // 前作 (koori-dungeon) から来た 15 体は、名前・属性・役割・説明・口ぐせを ダンジョンの データから写した。
 // 新キャラ 5 体 (イシコロン〜ハシシタボウズ) は 設計書 4.6 の案。
@@ -131,10 +131,23 @@ export const WAZA = {
     mikazukibat: W('ちょうおんぱ', 'かぜ', 'line', 0.5, 'confuse', 0.6),
     lunashadow: W('かげうち', 'ふしぎ', 'line', 1.3),
     yoroinukegara: { name: 'よろいがため', buff: 'def' },
+    // 山と ダム (3 章)。こおり (凍る) は のろい・目つぶし・ひるみ は こんらんに 置きかえ
+    yukimidango: W('雪玉', 'こおり', 'front', 1.1, 'slow', 0.4),
+    yukidarumuscle: W('ひえひえパンチ', 'こおり', 'front', 1.3, 'slow', 0.2),
+    koorimodoki: W('コオリソード', 'こおり', 'front', 1.4),
+    fubukipenguin: W('ペンギンすべり', 'こおり', 'front', 1.5, 'slow', 0.3),
+    tsuraracomori: W('つららとばし', 'こおり', 'line', 1.2),
+    koorinokagami: W('かがみのひかり', 'こおり', 'line', 1.0, 'confuse', 0.5),
+    mandoragon: W('マンドラのさけび', 'しぜん', 'around', 0, 'confuse', 0.8),
+    obakekabocha: W('かぼちゃばくだん', 'しぜん', 'front', 1.4, 'confuse', 0.2),
+    haetorigusan: W('パックン', 'しぜん', 'front', 1.8),
+    kokemusha: W('こけむし斬り', 'しぜん', 'front', 1.8),
+    koorimodokishin: W('コオリハンマー', 'こおり', 'front', 2.0, 'confuse', 0.3),
     // こおりくん・ボス
     koori: W('コオリソード', 'こおり', 'front', 1.4),
     nushi: W('百のかぞえうた', 'ふしぎ', 'around', 0.6, 'confuse', 0.3),
-    kage: W('影の とりつき', 'ふしぎ', 'around', 0.6, 'possess', 0.3)
+    kage: W('影の とりつき', 'ふしぎ', 'around', 0.6, 'possess', 0.3),
+    himuro: W('ふぶき', 'こおり', 'around', 1.3, 'slow', 0.3)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
@@ -461,6 +474,75 @@ const LIST = [
         line: '…………', favorite: 'melonpan',
         title: '正体不明', desc: '正体不明の存在。いったい何者なのか、何が目的なのか、その一切が不明である。',
         special: sp('正体不明', [atk('all', 1.6, { magic: true })])
+    },
+    // ----- 山と ダムの 11 体 (3 章「ダムの水が消える」。2026-10-29。ダンジョンから。D 7・C 3・B 1) -----
+    //   こおり族 6 体と しょくぶつ族 (しぜん) 4 体。コケムシャ・コオリノカガミ・ユキダルマッスルは 氷の 封印を まもる (map.js の SEALS)
+    //   コオリモドキ・真は ダムの ヌシ (ボス) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'yukimidango', name: 'ユキミダンゴ', from: 'ダンジョン 035', area: 'yama', rank: 'D', element: 'こおり', role: 'defender', mul: { def: 1.1, hp: 1.05 },
+        line: 'おつきみ～', favorite: 'onigiri',
+        title: '雪で作った団子', desc: '雪の団子。一番上が長男。',
+        special: sp('だんご 三兄弟', [{ kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }, { kind: 'heal', target: 'party', power: 0.3 }])
+    },
+    {
+        id: 'yukidarumuscle', name: 'ユキダルマッスル', from: 'ダンジョン 042', area: 'yama', rank: 'D', element: 'こおり', role: 'attacker', mul: { atk: 1.15, spd: 0.9 },
+        line: '冷えた筋肉も最高だ', favorite: 'cider',
+        title: '雪だるまのマッスル', desc: '雪の力を持つ。冷えた筋肉を誇る。筋肉自慢の３男。',
+        special: sp('ひえひえ ラッシュ', [atk('one', 1.0, { hits: 3 })])
+    },
+    {
+        id: 'koorimodoki', name: 'コオリモドキ', from: 'ダンジョン 050', area: 'yama', rank: 'C', element: 'こおり', role: 'attacker', mul: { atk: 1.1, spd: 1.05 },
+        line: 'ぼくが ほんものの こおりくんだよ', favorite: 'choco',
+        title: 'こおりくんの そっくりさん', desc: 'こおりの力を持つ。こいつこそ、本物のこおりくんだ。',
+        special: sp('ニセ大腸炎アタック', [atk('all', 1.6), { kind: 'status', target: 'all', status: 'poison', chance: 0.4 }])
+    },
+    {
+        id: 'fubukipenguin', name: 'フブキペンギン', from: 'ダンジョン 080', area: 'yama', rank: 'D', element: 'こおり', role: 'attacker', mul: { spd: 1.2 },
+        line: 'ペンペン！', favorite: 'niboshi',
+        title: '吹雪を好むペンギン', desc: '吹雪に一匹打ち勝ったペンギン。意外と気持ちがいいらしい。',
+        special: sp('ふぶきの 大すべり', [atk('all', 1.4)])
+    },
+    {
+        id: 'tsuraracomori', name: 'ツララコウモリ', from: 'ダンジョン 081', area: 'yama', rank: 'D', element: 'こおり', role: 'jammer', mul: { spd: 1.1, mag: 1.05 },
+        line: 'キキーン', favorite: 'melonpan',
+        title: 'つらら型の蝙蝠', desc: 'つららに化けた蝙蝠。たまに本物のつららが生えて、飛べなくなる個体が出る。',
+        special: sp('つららの 雨', [atk('all', 0.5, { hits: 3 })])
+    },
+    {
+        id: 'koorinokagami', name: 'コオリノカガミ', from: 'ダンジョン 082', area: 'yama', rank: 'C', element: 'こおり', role: 'defender', mul: { def: 1.2 },
+        line: 'うつってるよ…きみが', favorite: 'cider',
+        title: '氷に映る人影', desc: '氷でできた鏡の妖怪。映ったが最後、その鏡の中にとらわれ、1晩たつと鏡の中に氷像が一つ増えているという。',
+        special: sp('こおりの 鏡像', [{ kind: 'buff', target: 'party', stat: 'def', amount: 0.5, time: 10 }, { kind: 'status', target: 'all', status: 'confuse', chance: 0.4 }])
+    },
+    {
+        id: 'mandoragon', name: 'マンドラゴン', from: 'ダンジョン 086', area: 'yama', rank: 'D', element: 'しぜん', role: 'jammer', mul: { mag: 1.1 },
+        line: 'ギャアアア！（抜かないで）', favorite: 'kyuuri',
+        title: '叫ぶ大根', desc: '大根の突然変異体。２０代女性と同じ周波数を持つ。',
+        special: sp('ぜっきょう', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.7 }])
+    },
+    {
+        id: 'obakekabocha', name: 'オバケカボチャ', from: 'ダンジョン 087', area: 'yama', rank: 'D', element: 'しぜん', role: 'jammer', mul: { hp: 1.05 },
+        line: 'トリック オア トリート！', favorite: 'choco',
+        title: 'トリックオアトリート', desc: 'かぼちゃのお化け。人間に友好的で、お菓子をくれる。',
+        special: sp('ハロウィン ナイト', [atk('all', 1.0), { kind: 'status', target: 'all', status: 'sleep', chance: 0.4 }])
+    },
+    {
+        id: 'haetorigusan', name: 'ハエトリグサーン', from: 'ダンジョン 088', area: 'yama', rank: 'D', element: 'しぜん', role: 'defender', mul: { atk: 1.15 },
+        line: 'パクッ', favorite: 'niboshi',
+        title: 'はえとりの達人', desc: '蠅をとって１００年のベテラン。今まで食らった蠅は数知れず。',
+        special: sp('百年の ひとのみ', [atk('one', 2.4, { drain: 0.5 })])
+    },
+    {
+        id: 'kokemusha', name: 'コケムシャ', from: 'ダンジョン 089', area: 'yama', rank: 'C', element: 'しぜん', role: 'attacker', mul: { hp: 1.1, atk: 1.1, spd: 0.9 },
+        line: '百年 こけむして 待っておった', favorite: 'onigiri',
+        title: 'コケに食われた武士', desc: 'コケに支配された武士。もはや体はコケの思うが儘だが、宿敵と一騎打ちを果たすため、無理やり精神を保っている。',
+        special: sp('こけむす 一騎打ち', [atk('one', 3.0)])
+    },
+    {
+        id: 'koorimodokishin', name: 'コオリモドキ・真', from: 'ダンジョン 077', area: 'yama', rank: 'B', element: 'こおり', role: 'attacker', mul: { atk: 1.1, mag: 1.1 },
+        line: 'ぼくこそ ほんものの こおりくんだよ', favorite: 'choco',
+        title: '真のコオリモドキ', desc: 'コオリモドキがこおりの王冠で進化した姿。ニセ四天王絶対殺す剣まで覚えてしまった。こいつこそ、本物の本物のこおりくんだ。',
+        special: sp('ニセ四天王絶対殺す剣', [atk('all', 2.0)])
     }
 ];
 
@@ -473,7 +555,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -520,6 +602,21 @@ export const BOSSES = {
         // 必殺技 アンノウン: 敵全体に ふしぎ (中級) の 術の ダメージ × 3
         bigMove: { name: 'アンノウン', every: 14, warn: 2.5, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ', hits: 3 })] },
         befriends: 'lunashadow', lv: 13, place: 'school'
+    },
+    // 3 章の ボス: ダムの ヌシ (コオリモドキ・真。2026-10-29)。こおりの 王冠で ダムの 水を ぜんぶ こおらせ、氷の 城に して しまった
+    //   ふだんは 氷の わざ。ときどき 王冠が かがやいて 自分を 強くする。必殺技は ニセ四天王絶対殺す剣 (予告つき・輪を 回して よける)
+    //   こおり族なので しぜん・かぜの なかまが 不利 / ほのおの なかまが 有利
+    himuro: {
+        id: 'himuro', name: 'ダムの ヌシ・コオリモドキ・真', element: 'こおり', role: 'attacker', art: 'koorimodokishin', scale: 2, rank: 'B',
+        base: { hp: 600, atk: 15, def: 14, spd: 12, mag: 15 },
+        moves: [
+            { name: 'コオリソード', w: 3, effects: [atk('one', 1.2)] },
+            { name: 'コオリハンマー', w: 2, effects: [atk('one', 1.8), { kind: 'status', target: 'one', status: 'confuse', chance: 0.3 }] },
+            { name: 'こおりのいき', w: 2, effects: [atk('all', 0.6, { magic: true }), { kind: 'status', target: 'all', status: 'slow', chance: 0.3 }] },
+            { name: '王冠の かがやき', w: 1, effects: [{ kind: 'buff', target: 'self', stat: 'atk', amount: 0.3, time: 8 }] }
+        ],
+        bigMove: { name: 'ニセ四天王絶対殺す剣', every: 13, warn: 2.5, effects: [atk('all', 1.7)] },
+        befriends: 'koorimodokishin', lv: 17, place: 'dam'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

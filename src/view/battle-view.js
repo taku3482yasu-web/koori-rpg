@@ -675,11 +675,23 @@ export function createBattleView(app, battle, place) {
         grad.addColorStop(1, sky[1]);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 400, HORIZON);
-        // 遠くの 町
-        ctx.fillStyle = 'rgba(40, 60, 90, 0.25)';
-        [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
-        // 地面 (手前ほど 明るく)
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : ['#4a9a3a', '#7ad05a'];
+        const yama = place === 'yama' || place === 'dam';
+        if (yama) {
+            // 遠くの 山 (てっぺんに 雪)。3 章
+            for (const [x, w, h] of [[-20, 160, 62], [90, 200, 80], [250, 190, 66], [340, 140, 50]]) {
+                const top = HORIZON - h;
+                ctx.fillStyle = 'rgba(50, 80, 110, 0.55)';
+                ctx.beginPath(); ctx.moveTo(x, HORIZON); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w, HORIZON); ctx.fill();
+                ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
+                ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
+            }
+        } else {
+            // 遠くの 町
+            ctx.fillStyle = 'rgba(40, 60, 90, 0.25)';
+            [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
+        }
+        // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);

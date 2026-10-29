@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { TILE, BLOCK, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, tileAt } from '../data/map.js';
+import { TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, tileAt } from '../data/map.js';
 import { reached } from './story.js';
 
 const HALF_W = 5, BOX_H = 6;
@@ -17,20 +17,26 @@ export function peopleHere(g) {
         !p.only ||
         (p.only === 'beforeWatch' && g.story === 'intro') ||
         (p.only === 'beforeClear' && !reached(g, 'clear')) ||
-        (p.only === 'kage' && g.story === 'school' && allMysteriesSolved(g)));
+        (p.only === 'kage' && g.story === 'school' && allMysteriesSolved(g)) ||
+        (p.only === 'modoki' && g.story === 'yama' && g.flags.oku && SEALS.every(q => g.mysteries[q.id])));
 }
 
-// 工事中の さく (1 章 クリアまで 商店街へ 行けない)
-export const gatesHere = g => GATES.filter(q => q.only !== 'beforeClear' || !reached(g, 'clear'));
+// 工事中の さく (1 章 クリアまで 商店街へ 行けない・2 章 クリアまで 山へ 行けない)
+export const gatesHere = g => GATES.filter(q => (q.only === 'beforeClear2' ? !reached(g, 'clear2') : !reached(g, 'clear')));
+// まだ とけて いない 氷の 封印 (3 章)
+export const sealsHere = g => SEALS.filter(q => !(g.mysteries && g.mysteries[q.id]));
 const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
 
 // そのマスに 入れないか
 export function blockedTile(g, tx, ty) {
-    if (BLOCK.has(tileAt(tx, ty))) return true;
+    const tile = tileAt(tx, ty);
+    if (BLOCK.has(tile)) return true;
+    if (WET.has(tile) && reached(g, 'clear3')) return true;   // 3 章 クリアで ダムに 水が もどる
     if (gatesHere(g).some(q => inGate(q, tx, ty))) return true;
     if (BUILDINGS.some(b => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some(p => p.x === tx && p.y === ty)) return true;
     if (MYSTERIES.some(m => m.x === tx && m.y === ty)) return true;
+    if (sealsHere(g).some(m => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some(p => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
 }
 
@@ -81,6 +87,8 @@ export function lookAt(g) {
     if (gate) return { type: 'gate', gate };
     const mystery = MYSTERIES.find(m => m.x === f.x && m.y === f.y);
     if (mystery) return { type: 'mystery', mystery };
+    const seal = SEALS.find(m => m.x === f.x && m.y === f.y);
+    if (seal) return { type: 'seal', seal };
     return null;
 }
 

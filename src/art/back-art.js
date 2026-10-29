@@ -1,5 +1,5 @@
 // =====================================================================
-// なかま 49 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
+// なかま 60 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
 // ---------------------------------------------------------------------
 // 前向きの 絵 (legacy-art.js・new-art.js) と 同じ 形・同じ 色。1 文字 = 1 ドット・'.' は 透明・16 × 16。
 //   描いた もの: 体の うしろが 前と ちがう キャラ (トゲ・羽・しっぽ・甲羅・はちまきの むすび目 など)
@@ -23,11 +23,11 @@ const drawn = (palette, rows, { still = false } = {}) => {
     const r = rows.map(row);
     return { w: W, h: r.length, palette, frames: still ? [r, r] : bob(r) };
 };
-// 前向きの 絵から 顔を 消す。swap: { 顔の 文字: 体の 文字 }
-const faceless = (id, swap, { mirror = true, still = false } = {}) => {
+// 前向きの 絵から 顔を 消す。swap: { 顔の 文字: 体の 文字 }。rows: [から, まで) の 行だけ 置きかえる (足や 王冠は そのまま)
+const faceless = (id, swap, { mirror = true, still = false, rows = [0, 99] } = {}) => {
     const f = FRONT[id];
-    const r = f.frames[0].map(line => {
-        let s = [...line].map(ch => swap[ch] || ch).join('');
+    const r = f.frames[0].map((line, y) => {
+        let s = y >= rows[0] && y < rows[1] ? [...line].map(ch => swap[ch] || ch).join('') : line;
         if (mirror) s = [...s].reverse().join('');
         return s;
     });
@@ -283,5 +283,18 @@ export const BACK_ART = {
     wasurekurage: faceless('wasurekurage', { b: 'a', c: 'a' }),
     mikazukibat: faceless('mikazukibat', { b: 'a' }),
     lunashadow: faceless('lunashadow', { b: 'a' }),
-    yoroinukegara: faceless('yoroinukegara', { c: 'b' })                          // かぶとの うしろ
+    yoroinukegara: faceless('yoroinukegara', { c: 'b' }),                         // かぶとの うしろ
+
+    // ----- 山と ダムの 11 体 (3 章。2026-10-29): 顔を 消して 左右を 反転 -----
+    yukimidango: faceless('yukimidango', { d: 'a', e: 'a' }),
+    yukidarumuscle: faceless('yukidarumuscle', { c: 'a', d: 'a', f: 'e' }),       // 顔と ボタン
+    koorimodoki: faceless('koorimodoki', { k: 'c', p: 'c' }),
+    fubukipenguin: faceless('fubukipenguin', { b: 'a', c: 'a', d: 'a', e: 'a' }, { rows: [0, 13] }),   // 白い おなかは 見えない・足は オレンジ
+    tsuraracomori: faceless('tsuraracomori', { c: 'a', d: 'a' }),
+    koorinokagami: faceless('koorinokagami', { d: 'b', e: 'b', c: 'b' }),         // 鏡の うら
+    mandoragon: faceless('mandoragon', { g: 'c', f: 'c', h: 'c' }),
+    obakekabocha: faceless('obakekabocha', { d: 'b', c: 'b' }),                   // かぼちゃの うしろ
+    haetorigusan: faceless('haetorigusan', { f: 'c', e: 'd' }),
+    kokemusha: faceless('kokemusha', { d: 'a', e: 'a' }),                         // かぶとの うしろ
+    koorimodokishin: faceless('koorimodokishin', { e: 'c', f: 'c' }, { rows: [2, 99] })   // 王冠は そのまま
 };

@@ -2,10 +2,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM, bossEnemies } from '../src/logic/game.js';
+import { newGame, receiveWatch, encounter, applyBattleResult, acceptBefriend, befriendRate, advanceTime, spotKinds, objective, migrate, PITY_WINS, watchMedals, takeGift, buyItem, maxBuy, MAX_ITEM, bossEnemies, readLegend, sealsSolved } from '../src/logic/game.js';
 import { createBattle } from '../src/logic/battle.js';
-import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS, MYSTERIES } from '../src/data/map.js';
-import { blockedTile, moveHero, lookAt, peopleHere, mysteriesSolved } from '../src/logic/world.js';
+import { SPOTS, ROAMS, BUILDINGS, TILE, START, FRIENDS, MYSTERIES, SEALS, YAMA_Y0 } from '../src/data/map.js';
+import { blockedTile, moveHero, lookAt, peopleHere, mysteriesSolved, gatesHere } from '../src/logic/world.js';
 
 const spot = id => SPOTS.find(s => s.id === id) || ROAMS.find(s => s.id === id);
 const winBattle = (g, enemies, kind = 'wild') => {
@@ -54,7 +54,46 @@ test('2 章: 七不思議を 7 つ たしかめると 8 つ目の 影が 出て�
     assert.equal(out.befriend.id, 'lunashadow');
     assert.equal(g.story, 'clear2');
     assert.ok(!peopleHere(g).some(p => p.id === 'kage'), 'たおすと いなくなる');
-    assert.match(objective(g), /学校 1\/9/);
+    assert.match(objective(g), /山道/);
+});
+
+test('3 章: 山に 入り、奥の院で 言いつたえを 読み、封印を 3 つ とくと ダムの ヌシが 出て、たおすと 3 章 クリア (2026-10-29)', () => {
+    const g = newGame('naitei');
+    receiveWatch(g);
+    g.story = 'clear2';
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    assert.ok(!gatesHere(g).some(q => q.id === 'gateYama'), '2 章 クリアで 山道が 通れる');
+    g.story = 'yama';
+    assert.match(objective(g), /奥の院/);
+    assert.ok(readLegend(g), 'はじめて 読む');
+    assert.ok(!readLegend(g), '2 回目は なにも おきない');
+    assert.match(objective(g), /封印.*0\/3/);
+    for (const m of SEALS) {
+        assert.ok(!peopleHere(g).some(p => p.id === 'modoki'), '封印が のこって いると ヌシは いない');
+        const b = winBattle(g, [{ id: m.nakama, lv: m.lv }]);
+        b.mystery = m.id;
+        applyBattleResult(g, b, rng);
+    }
+    assert.equal(sealsSolved(g), 3);
+    assert.equal(mysteriesSolved(g), 0, '七不思議の 数には 入らない');
+    assert.ok(peopleHere(g).some(p => p.id === 'modoki'), '封印を ぜんぶ とくと ダムの ヌシ');
+    const lake = { x: 25, y: YAMA_Y0 + 8 };
+    assert.ok(!blockedTile(g, lake.x, lake.y), 'クリア前は 湖の 底を 歩ける');
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('himuro'), 'boss'), rng);
+    assert.equal(out.bossId, 'himuro');
+    assert.equal(out.befriend.id, 'koorimodokishin');
+    assert.equal(g.story, 'clear3');
+    assert.ok(!peopleHere(g).some(p => p.id === 'modoki'), 'たおすと いなくなる');
+    assert.ok(blockedTile(g, lake.x, lake.y), 'クリアで 湖に 水が もどる');
+    assert.match(objective(g), /山 1\/11/);
+});
+
+test('3 章: 山道は 2 章 クリアまで 通行止め', () => {
+    const g = newGame('naitei');
+    receiveWatch(g);
+    g.story = 'school';
+    assert.ok(gatesHere(g).some(q => q.id === 'gateYama'));
+    assert.ok(blockedTile(g, 26, 0));
 });
 
 test('2 章: 負けた 七不思議は たしかめた ことに ならない', () => {

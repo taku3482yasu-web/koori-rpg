@@ -106,6 +106,14 @@ const CUES = {
             r(ctx, x - 4, y - 1, 2, 2, '#ffe040');
             r(ctx, x + 2, y - 1, 2, 2, '#ffe040');
         }
+    },
+    // 山の畑: 大根の 葉っぱが 1 本だけ ぶるぶる ふるえる (3 章)
+    leafShake(ctx, x, y, t) {
+        const dx = (t % 2.4) < 0.5 ? Math.sin(t * 60) * 1.5 : 0;
+        r(ctx, x - 3 + dx, y - 8, 2, 7, '#3a9a3a');
+        r(ctx, x + dx, y - 10, 2, 9, '#4ab04a');
+        r(ctx, x + 3 + dx, y - 7, 2, 6, '#3a9a3a');
+        r(ctx, x - 2, y - 1, 6, 3, '#f4f0e8');
     }
 };
 

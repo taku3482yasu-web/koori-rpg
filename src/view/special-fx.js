@@ -69,6 +69,18 @@ export const SPECIALS = {
     mikazukibat: { motion: 'cloud', color: '#ffe040', glyph: ')))' },
     yoroinukegara: { motion: 'aura', color: '#8a8a9a', glyph: '◆' },
     lunashadow: { motion: 'beam', color: '#8a6ad0' },
+    // 山と ダムの 11 体 (3 章。仮の 必殺技に 合わせた 動き)
+    yukimidango: { motion: 'aura', color: '#f0f0ff', glyph: '●' },
+    yukidarumuscle: { motion: 'multi', color: '#bff0ff', glyph: 'ドン', hits: 3 },
+    koorimodoki: { motion: 'cloud', color: '#8a9ab0', glyph: '@' },
+    fubukipenguin: { motion: 'dash', color: '#e0f8ff' },
+    tsuraracomori: { motion: 'rain', color: '#9adcff', glyph: '▼' },
+    koorinokagami: { motion: 'aura', color: '#dff8ff', glyph: '✦' },
+    mandoragon: { motion: 'cloud', color: '#4ac05a', glyph: '！' },
+    obakekabocha: { motion: 'cloud', color: '#ff8a1a', glyph: '★' },
+    haetorigusan: { motion: 'dash', color: '#5ac05a', drain: true },
+    kokemusha: { motion: 'dash', color: '#6ab04a' },
+    koorimodokishin: { motion: 'spin', color: '#7aaad0' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };
