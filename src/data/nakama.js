@@ -930,44 +930,62 @@ export const BOSSES = {
         befriends: 'hyougaryu', lv: 17, place: 'dam'
     },
     // 4 章の ボス: 黒い 紋に とりつかれた 浦の島重蔵 (浦の島の海岸どうくつの いちばん 奥)。たおすと 紋が 消えて なかまに なる
-    //   わざ: 玉手箱 (全体に ふしぎ 小 + こんらん)・つりざお (1 体に 中)・こうらガード (自分の ぼうぎょ アップ)・
-    //     「……なんじゃったかの」(もの忘れで なにも しない)
-    //   必殺技: 黒い紋の 玉手箱 (全体に みず 大 + ときどき とりつき。紋に あやつられている)
+    //   わざ: 玉手箱 (全体に ふしぎ 小 + こんらん)・つりざお (1 体に 中)・こうらに こもる・「……なんじゃったかの」(もの忘れ)
+    //   必殺技: 黒い紋の 玉手箱 (予告つき。全体に みず 大 + ときどき とりつき)
+    //   しかけ (2026-10-29 ユーザー指定。battle.js の gims):
+    //     玉手箱: いつも ねらえる。こわすと 玉手箱の わざと 必殺技が 使えなくなるが、けむりが 出て 10 秒 味方の 攻撃が 当たりにくい
+    //     頭: こうらに こもって いる (7 秒) あいだ だけ ねらえる。こもって いる あいだは 体への ダメージが へる。
+    //       頭を こわすと ひっくり返って チャンスタイム
+    //   gims の pos: 絵の どこに 出すか [横 (絵の 半分の はばで), たて (絵の 高さで。足元が 0)]
     urashima4: {
         id: 'urashima4', name: '浦の島重蔵 (黒い紋)', element: 'みず', role: 'defender', art: 'urashima', scale: 1.5, rank: 'B',
         base: { hp: 700, atk: 14, def: 15, spd: 10, mag: 14 },
         moves: [
-            { name: '玉手箱', w: 3, effects: [atk('all', 0.7, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.35 }] },
+            { name: '玉手箱', w: 3, box: true, effects: [atk('all', 0.7, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.35 }] },
             { name: 'つりざお', w: 3, effects: [atk('one', 1.3)] },
-            { name: 'こうらガード', w: 2, effects: [{ kind: 'buff', target: 'self', stat: 'def', amount: 0.6, time: 8 }] },
+            { name: 'こうらに こもる', w: 1.5, shell: 7 },
             { name: '……なんじゃったかの', w: 1.2, effects: [] }
         ],
-        bigMove: { name: '黒い紋の 玉手箱', every: 13, warn: 2.5, effects: [atk('all', 1.4, { magic: true, element: 'みず' }), { kind: 'status', target: 'all', status: 'possess', chance: 0.25 }] },
+        bigMove: { name: '黒い紋の 玉手箱', box: true, every: 13, warn: 2.5, effects: [atk('all', 1.4, { magic: true, element: 'みず' }), { kind: 'status', target: 'all', status: 'possess', chance: 0.25 }] },
+        gims: {
+            box: { name: '玉手箱', hp: 0.08, when: 'always', pos: [-0.55, -0.25], move: '玉手箱', smoke: 10, miss: 0.45 },
+            head: { name: '頭', hp: 0.05, when: 'shell', pos: [0, -0.82], reset: true }
+        },
+        shellCut: 0.3,   // こもっている あいだの 体への ダメージ (30%)
+        chanceTurns: 3,
         befriends: 'urashima', lv: 20, place: 'cave'
     },
     // 5 章の ボス: 黒い 紋に のまれた ダイシ (ネット寺の 本堂の 前)。たおすと 紋が 消えて なかまに なる
     //   仏の顔: 説法 (全体 ねむり)・錫杖 (1 体に 中)・数珠まわし (全体に 小)・配信の お経 (全体 こんらん)
-    //   HP が 半分に なると 鬼の顔 (phase2) に かわる (前作の「鬼になると戦闘力は計り知れない」): こうげきが 上がり、わざが かわる
-    //   必殺技: 鬼神 ネット念仏 (予告つき。鬼の顔の あいだは 間かくが みじかい)
+    //   しかけ (2026-10-29 ユーザー指定。battle.js の gims・oni・chant):
+    //     鬼の顔: 攻撃を うけつづける (最大HP の 22% ぶん) と 鬼の顔に なり、こうげきが 上がって わざが かわる (前作の「鬼になると
+    //       戦闘力は計り知れない」)。鬼の顔の あいだ だけ 顔の 鬼の面を ねらえ、こわすと 仏の顔に もどる (また 怒れば 鬼に なる)
+    //     お経: 仏の顔でも 鬼の顔でも、13 秒ごとに お経を 6 秒 となえ、となえきると 必殺技 (鬼の顔なら もっと 強い)。
+    //       となえている あいだ だけ うしろの 鐘を ねらえる。だれかが 当てると 鐘が 鳴り、おどろいて チャンスタイム (お経も 止まる)
     daishi5: {
         id: 'daishi5', name: 'ダイシ (黒い紋)', element: 'ふしぎ', role: 'jammer', art: 'daishi', scale: 1.5, rank: 'B',
-        base: { hp: 740, atk: 14, def: 14, spd: 10, mag: 15 },
+        base: { hp: 820, atk: 15, def: 14, spd: 10, mag: 16 },
         moves: [
             { name: '説法', w: 2, effects: [{ kind: 'status', target: 'all', status: 'sleep', chance: 0.35 }] },
             { name: '錫杖', w: 3, effects: [atk('one', 1.3)] },
             { name: '数珠まわし', w: 2, effects: [atk('all', 0.6)] },
             { name: '配信の お経', w: 1.5, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.4 }] }
         ],
-        bigMove: { name: 'ネット念仏', every: 14, warn: 2.5, effects: [atk('all', 1.2, { magic: true, element: 'ふしぎ' })] },
-        phase2: {
-            at: 0.5, name: '鬼の顔', atk: 0.3,
+        bigMove: { name: 'ネット念仏', trigger: 'chant', every: 13, chant: 6, effects: [atk('all', 1.4, { magic: true, element: 'ふしぎ' })],
+            oni: { name: '鬼神 ネット念仏', effects: [atk('all', 1.75, { magic: true, element: 'ふしぎ' })] } },
+        oni: {
+            at: 0.22, name: '鬼の顔', atk: 0.35,
             moves: [
                 { name: '鬼の 錫杖', w: 3, effects: [atk('one', 1.6)] },
                 { name: '鬼の にらみ', w: 2, effects: [{ kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }] },
                 { name: '鬼の 数珠ぜめ', w: 2, effects: [atk('all', 0.85)] }
-            ],
-            bigMove: { name: '鬼神 ネット念仏', every: 12, warn: 2.5, effects: [atk('all', 1.35, { magic: true, element: 'ふしぎ' })] }
+            ]
         },
+        gims: {
+            mask: { name: '鬼の面', hp: 0.08, when: 'oni', pos: [0, -0.8] },
+            bell: { name: '鐘', hp: 0.01, when: 'chant', pos: [-1.9, -0.55], noBody: true, reset: true }
+        },
+        chanceTurns: 3,
         befriends: 'daishi', lv: 23, place: 'tera'
     }
 };

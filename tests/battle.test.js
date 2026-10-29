@@ -336,17 +336,71 @@ test('にげる: ふつうの バトルは にげられる・ボスと 七不思
     assert.ok(!flee(boss) && begin(boss) && !flee(boss), '始まってからは にげられない');
 });
 
-test('5 章の ダイシ: HP が 半分を 下まわると 鬼の顔 (わざと 必殺技が かわり こうげきが 上がる)', async () => {
-    const { BOSSES } = await import('../src/data/nakama.js');
-    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 30 }], enemies: [{ id: 'daishi5', lv: 23 }], rng: createRng(3), kind: 'boss' });
+// 4 章・5 章の ボスの しかけ (2026-10-29 ユーザー指定)。lock + lockPart で しかけを ねらって 味方の 攻撃を 当てる
+async function bossBattle(id, seed = 3) {
+    const { lockOn, gimOpen } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 40 }, { uid: 'b', id: 'kogame', lv: 40 }, { uid: 'c', id: 'haribaby', lv: 40 }], enemies: [{ id, lv: 23 }], rng: createRng(seed), kind: 'boss' });
     const boss = b.enemies[0];
+    // 味方を すぐ 動かす (攻撃が 当たるまで)
+    const hitUntil = (cond, max = 400) => { for (let i = 0; i < max && !cond() && !b.outcome; i++) { b.wheel.forEach(u => { if (u) u.timer = 99; }); boss.hp = Math.max(boss.hp, boss.max * 0.6); step(b, 0.05); } };
+    return { b, boss, lockOn, gimOpen, hitUntil };
+}
+
+test('4 章の 浦の島重蔵: 玉手箱を こわすと 玉手箱の わざと 必殺技が 消え、けむりで 当たりにくくなる (時間で 消える)', async () => {
+    const { b, boss, lockOn, hitUntil } = await bossBattle('urashima4');
+    assert.ok(lockOn(b, boss.uid, 'box'), '玉手箱は いつも ねらえる');
+    assert.ok(!lockOn(b, boss.uid, 'head'), '頭は こもって いないと ねらえない');
+    hitUntil(() => boss.gims.box.broken);
+    assert.ok(boss.gims.box.broken);
+    assert.ok(!boss.bossMoves.some(m => m.box), '玉手箱の わざが 消える');
+    assert.equal(boss.bigMove, null, '玉手箱の 必殺技も 消える');
+    assert.ok(b.smoke, 'けむり');
+    for (let i = 0; i < 300 && b.smoke; i++) step(b, 0.05);
+    assert.equal(b.smoke, null, 'けむりは 時間で 消える');
+});
+
+test('4 章の 浦の島重蔵: こうらに こもると 体への ダメージが へり、頭を こわすと ひっくり返って チャンスタイム', async () => {
+    const { b, boss, lockOn, gimOpen, hitUntil } = await bossBattle('urashima4');
+    boss.shell = 7;
+    assert.ok(gimOpen(b, boss, 'head'));
+    assert.ok(lockOn(b, boss.uid, 'head'));
+    hitUntil(() => Boolean(b.chance));
+    assert.ok(b.chance && b.chance.uid === boss.uid, 'チャンスタイム');
+    assert.equal(boss.shell, 0, 'ひっくり返って こうらから 出る');
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'flip'));
+});
+
+test('5 章の ダイシ: 攻撃を うけつづけると 鬼の顔。鬼の面を こわすと 仏の顔に もどる', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const { b, boss, lockOn, hitUntil } = await bossBattle('daishi5');
+    assert.ok(!lockOn(b, boss.uid, 'mask'), '鬼の顔に なるまで 面は ねらえない');
+    hitUntil(() => boss.oni);
+    assert.ok(boss.oni, '鬼の顔');
+    assert.equal(boss.bossMoves, BOSSES.daishi5.oni.moves);
+    assert.ok(boss.buffs.atk.amount > 0);
+    assert.ok(lockOn(b, boss.uid, 'mask'));
+    hitUntil(() => !boss.oni);
+    assert.ok(!boss.oni, '面を こわすと もどる');
+    assert.equal(boss.bossMoves, BOSSES.daishi5.moves);
+    assert.ok(!boss.buffs.atk);
+});
+
+test('5 章の ダイシ: お経を となえきると 必殺技。となえている あいだに 鐘を 鳴らすと チャンスタイム (鐘は ボスに ダメージなし)', async () => {
+    const { b, boss, lockOn, hitUntil } = await bossBattle('daishi5', 5);
+    assert.ok(!lockOn(b, boss.uid, 'bell'), 'お経の 前は 鐘を ねらえない');
+    b.bossTimer = 99;
     step(b, 0.05);
-    assert.ok(!boss.phased);
-    boss.hp = Math.floor(boss.max * 0.45);
-    step(b, 0.05);
-    assert.ok(boss.phased, '鬼の顔に なった');
-    assert.equal(boss.bossMoves, BOSSES.daishi5.phase2.moves);
-    assert.equal(boss.bigMove.name, '鬼神 ネット念仏');
-    assert.ok(boss.buffs.atk && boss.buffs.atk.amount > 0);
-    assert.ok(b.events.some(e => e.type === 'phase'));
+    assert.ok(b.chant, 'お経を となえはじめた');
+    assert.ok(lockOn(b, boss.uid, 'bell'));
+    const hp = boss.hp;
+    hitUntil(() => Boolean(b.chance), 200);
+    assert.ok(b.chance && !b.chant, '鐘が 鳴って チャンスタイム・お経が 止まる');
+    assert.ok(b.events.some(e => e.type === 'bell'));
+    // となえきると 必殺技
+    const b2 = (await bossBattle('daishi5', 7)).b;
+    b2.bossTimer = 99;
+    step(b2, 0.05);
+    for (let i = 0; i < 200 && b2.chant; i++) step(b2, 0.05);
+    assert.ok(b2.events.some(e => e.type === 'special' && e.big && e.name === 'ネット念仏'), 'となえきると ネット念仏');
+    void hp;
 });

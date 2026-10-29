@@ -461,6 +461,20 @@ try {
     await key('KeyJ');
     await sleep(1500);
     await shot('umi-boss');
+    const hurry = 'window.__app.scene.battle.wheel.forEach(u => { if (u) u.timer = 99; })';
+    const waitFor = async (cond, ms = 6000) => { for (let i = 0; i < ms / 150 && !(await evaluate(cond)); i++) { await evaluate(hurry + '; true'); await sleep(150); } return evaluate(cond); };
+    // 玉手箱を ねらって こわすと けむり (2026-10-29 ユーザー指定)
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.gims.box.hp = 1; b.lock = e.uid; b.lockPart = "box"; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].gims.box.broken && Boolean(window.__app.scene.battle.smoke) && !window.__app.scene.battle.enemies[0].bigMove'), '浦の島重蔵: 玉手箱を こわすと 玉手箱の わざが 止まり、けむりが 出る');
+    await sleep(400);
+    await shot('umi-smoke');
+    // こうらに こもったら 頭を ねらって ひっくり返す → チャンスタイム
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.smoke = null; e.shell = 7; e.gims.head.hp = 1; b.lock = e.uid; b.lockPart = "head"; return true; })()');
+    await sleep(300);
+    await shot('umi-shell');
+    check(await waitFor('Boolean(window.__app.scene.battle.chance)'), '浦の島重蔵: こうらの 頭を こわすと ひっくり返って チャンスタイム');
+    await sleep(400);
+    await shot('umi-flip');
     await winNow();
     await skipTalk(30);
     await shot('umi-clear');
@@ -502,10 +516,22 @@ try {
     check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "daishi5"'), '3 体 助けると 紋に のまれた ダイシと バトル');
     await key('KeyJ');
     await sleep(800);
-    await evaluate('(() => { const e = window.__app.scene.battle.enemies[0]; e.hp = Math.floor(e.max * 0.4); return true; })()');
-    await sleep(600);
-    await shot('tera-boss');
-    check(await evaluate('window.__app.scene.battle.enemies[0].phased === true'), 'ダイシ: HP が 半分を 下まわると 鬼の顔');
+    // 攻撃を うけつづけると 鬼の顔 → 鬼の面を こわすと もどる (2026-10-29 ユーザー指定)
+    await evaluate('(() => { const e = window.__app.scene.battle.enemies[0]; e.rage = e.max; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].oni === true'), 'ダイシ: 攻撃を うけつづけると 鬼の顔');
+    await sleep(500);
+    await shot('tera-oni');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.gims.mask.hp = 1; b.lock = e.uid; b.lockPart = "mask"; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].oni === false'), 'ダイシ: 鬼の面を こわすと 仏の顔に もどる');
+    // お経の あいだに 鐘を 鳴らすと チャンスタイム
+    await evaluate('(() => { const b = window.__app.scene.battle; b.bossTimer = 99; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.chant)'), 'ダイシ: お経を となえはじめる');
+    await sleep(300);
+    await shot('tera-chant');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.lock = e.uid; b.lockPart = "bell"; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.chance) && !window.__app.scene.battle.chant'), 'ダイシ: 鐘を 鳴らすと お経が 止まって チャンスタイム');
+    await sleep(400);
+    await shot('tera-bell');
     await winNow();
     await skipTalk(30);
     await shot('tera-clear');

@@ -18,7 +18,13 @@
 //     (ボスが 決まった 回数 うごけない)。おわると 部位が もとに もどる
 //   氷の 偶像 (3 章の ダムの主。2026-10-29 ユーザー指定): ボスの わざ「氷の偶像」で 左右 どちらかに 偶像を 1 体 作る。
 //     2 体 そろうと 必殺技の ため (charge) に 入る。ためて いる あいだに 偶像を こわすと 必殺技は 止まる。チャンスタイムは なし
-//   2 つめの すがた (5 章の ダイシ): HP が phase2.at を 下まわると 鬼の顔に。わざ・必殺技が かわり こうげきが 上がる
+//   しかけの 部位 (gims。4 章・5 章。2026-10-29 ユーザー指定): 出ている ときだけ ロックオンできる 部位。こわすと しかけが うごく
+//     4 章 浦の島重蔵: 玉手箱 (いつも) をこわすと 玉手箱の わざと 必殺技が 使えなくなるが、けむり (smoke) で 味方の 攻撃が
+//       当たりにくくなる (時間で 消える)。こうらに こもる (shell) と 体への ダメージが へるが、そのあいだ だけ 出る 頭を こわすと
+//       ひっくり返って チャンスタイム
+//     5 章 ダイシ: 攻撃を うけつづける (rage) と 鬼の顔 (oni。こうげきが 上がり わざが かわる)。鬼の顔の あいだ だけ 出る 鬼の面を
+//       こわすと 仏の顔に もどる。必殺技は お経を となえきると 打つ (chant)。となえている あいだ だけ うしろの 鐘を ねらえて、
+//       だれかが 当てると 鐘が 鳴り、おどろいた ダイシが チャンスタイム (鐘は ボスに ダメージを あたえない)
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -46,7 +52,10 @@ function makeUnit({ uid, id, lv, bond = 0 }, side) {
         waza: sp.waza, jutsu: sp.jutsu, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
-        bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3, phase2: sp.phase2 || null, phased: false,
+        bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
+        // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
+        gims: sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
+        oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
 }
@@ -71,9 +80,77 @@ function hitPart(b, u, key, dmg) {
 }
 function endChance(b, u) {
     b.chance = null;
-    for (const p of Object.values(u.parts)) { p.hp = p.max; p.broken = false; }
-    if (b.lock === u.uid) b.lockPart = 'rhand';
-    emit(b, 'chanceEnd', { target: u.uid });
+    if (u.parts) {
+        for (const p of Object.values(u.parts)) { p.hp = p.max; p.broken = false; }
+        if (b.lock === u.uid) b.lockPart = 'rhand';
+    }
+    if (u.gims) for (const p of Object.values(u.gims)) if (p.reset) { p.hp = p.max; p.broken = false; }
+    emit(b, 'chanceEnd', { target: u.uid, gims: Boolean(u.gims) });
+}
+
+// ----- しかけの 部位 (4 章・5 章) -----
+// いま 出ているか: always いつも / shell こうらに こもっている あいだ / oni 鬼の顔の あいだ / chant お経を となえている あいだ
+export function gimOpen(b, u, key) {
+    const p = u.gims && u.gims[key];
+    if (!p || p.broken || u.ko) return false;
+    if (p.when === 'shell') return u.shell > 0 && !(b.chance && b.chance.uid === u.uid);
+    if (p.when === 'oni') return u.oni;
+    if (p.when === 'chant') return Boolean(b.chant && b.chant.uid === u.uid);
+    return true;
+}
+export const openGims = (b, u) => (u.gims ? Object.keys(u.gims).filter(k => gimOpen(b, u, k)) : []);
+function hitGim(b, u, key, dmg) {
+    const part = u.gims[key];
+    part.hp = Math.max(0, part.hp - dmg);
+    if (part.hp > 0) return;
+    part.broken = true;
+    if (!part.noBody) emit(b, 'partBreak', { target: u.uid, part: key, name: part.name, move: part.move || null, gim: true });
+    if (b.lock === u.uid && b.lockPart === key) b.lockPart = null;
+    if (key === 'box') {
+        // 玉手箱が こわれた: 玉手箱の わざと 必殺技が 使えない。けむりが 出て 味方の 攻撃が 当たりにくい
+        u.bossMoves = u.bossMoves.filter(m => !m.box);
+        if (u.bigMove && u.bigMove.box) u.bigMove = null;
+        b.smoke = { left: part.smoke || 10, miss: part.miss || 0.45 };
+        emit(b, 'smoke', { target: u.uid, time: b.smoke.left });
+    } else if (key === 'head') {
+        // こもった 頭を こわした: ひっくり返って チャンスタイム
+        u.shell = 0;
+        startChance(b, u, 'flip');
+    } else if (key === 'mask') {
+        // 鬼の面を こわした: 仏の顔に もどる
+        leaveOni(b, u);
+    } else if (key === 'bell') {
+        // 鐘が 鳴った: お経が 止まり、おどろいて チャンスタイム
+        b.chant = null;
+        b.bossTimer = 0;
+        b.warned = false;
+        emit(b, 'bell', { target: u.uid });
+        startChance(b, u, 'bell');
+    }
+}
+function startChance(b, u, why) {
+    b.chance = { uid: u.uid, left: u.chanceTurns };
+    u.timer = 0;
+    emit(b, 'chance', { target: u.uid, turns: u.chanceTurns, why });
+}
+// 鬼の顔 (5 章の ダイシ): 攻撃を うけつづけると なる。こうげきが 上がり わざが かわる
+function enterOni(b, u) {
+    const o = u.oniDef;
+    u.oni = true;
+    u.rage = 0;
+    u.baseMoves = u.bossMoves;
+    u.bossMoves = o.moves;
+    u.buffs.atk = { amount: o.atk, t: 9999 };
+    if (u.gims && u.gims.mask) { u.gims.mask.hp = u.gims.mask.max; u.gims.mask.broken = false; }
+    emit(b, 'phase', { actor: u.uid, name: o.name });
+    emit(b, 'skill', { actor: u.uid, name: o.name, cmd: 'boss' });
+}
+function leaveOni(b, u) {
+    u.oni = false;
+    u.rage = 0;
+    if (u.baseMoves) u.bossMoves = u.baseMoves;
+    delete u.buffs.atk;
+    emit(b, 'phaseEnd', { actor: u.uid, name: u.oniDef.name });
 }
 
 export function createBattle({ allies, enemies, rng, kind = 'wild', intro = false }) {
@@ -83,7 +160,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -136,6 +213,18 @@ const effectOf = (element, target) => (CHART[element] && CHART[element][target])
 // element: わざの 属性 (なければ 術は 自分の 属性・ふつうの 攻撃は ふつう)
 function damage(b, from, to, power, { magic = false, mult = 1, element = null } = {}) {
     if (to.ko) return 0;
+    // けむり (4 章の 玉手箱を こわした あと): 味方の 攻撃が ときどき 当たらない
+    if (from.side === 'ally' && to.side === 'enemy' && b.smoke && b.rng.chance(b.smoke.miss)) {
+        emit(b, 'miss', { actor: from.uid, target: to.uid });
+        return 0;
+    }
+    // しかけの 部位を ねらっている
+    const gim = from.side === 'ally' && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
+    if (gim && to.gims[gim].noBody) {
+        // 鐘: ボスには ダメージなし。当たれば 鳴る
+        hitGim(b, to, gim, to.gims[gim].hp);
+        return 0;
+    }
     const A = (magic ? from.s.mag : from.s.atk) * (1 + buffOf(from, 'atk'));
     const D = to.s.def * (1 + buffOf(to, 'def'));
     const el = element || (magic ? from.element : 'ふつう');
@@ -145,12 +234,20 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null } 
     const guard = to.guarding ? 0.5 : 1;
     const weak = from.side === 'ally' && to.uid === b.lock && weakActive(b);
     const headGuard = from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart === 'head' && !handsBroken(to) && !b.chance;
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1);
+    // こうらに こもっている あいだは 体への ダメージが ぐっと へる (頭を ねらえば ふつう)
+    const shell = to.shell > 0 && !gim ? (to.shellCut ?? 0.15) : 1;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell;
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard, weak: weak && !headGuard, headGuard });
+    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1, weak: weak && !headGuard, headGuard, part: gim });
+    if (gim && to.hp > 0) hitGim(b, to, gim, dmg);
+    // 鬼の顔に なる いかり (5 章の ダイシ)
+    if (from.side === 'ally' && to.oniDef && !to.oni && to.hp > 0) {
+        to.rage += dmg;
+        if (to.rage >= to.max * to.oniDef.at) enterOni(b, to);
+    }
     if (from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
     if (to.hp <= 0) {
         to.ko = true;
@@ -287,11 +384,13 @@ function act(b, u) {
     // 部位の ある ボス: ボスの わざから えらぶ (こわれた 部位の わざは 使えない)
     // 偶像を 作る わざは 偶像が 2 体 そろって いない あいだだけ
     if (u.bossMoves) {
-        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)));
+        if (b.chant && b.chant.uid === u.uid) { emit(b, 'chanting', { actor: u.uid }); return; }   // お経を となえている あいだは ほかの ことを しない
+        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)));
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
         if (move.summon) summonIdol(b, u);
-        else applyEffects(b, u, move.effects);
+        else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
+        else applyEffects(b, u, move.effects || []);
         return;
     }
     const cmd = chooseCommand(b, u);
@@ -368,10 +467,22 @@ export function step(b, dt) {
     for (const e of b.enemies) {
         if (e.ko) continue;
         tickUnit(b, e, dt, !e.idol);   // 偶像は 動かない
-        if (e.phase2 && !e.phased && !e.ko && e.hp <= e.max * e.phase2.at) enterPhase(b, e);
+        if (e.shell > 0) {
+            e.shell -= dt;
+            if (e.shell <= 0) {
+                e.shell = 0;
+                if (e.gims && e.gims.head && !e.gims.head.broken) e.gims.head.hp = e.gims.head.max;
+                emit(b, 'shellEnd', { actor: e.uid });
+            }
+        }
+        if (b.lock === e.uid && b.lockPart && e.gims && !gimOpen(b, e, b.lockPart)) b.lockPart = null;
         if (e.bigMove) bossTick(b, e, dt);
         checkOutcome(b);
         if (b.outcome) return;
+    }
+    if (b.smoke) {
+        b.smoke.left -= dt;
+        if (b.smoke.left <= 0) { b.smoke = null; emit(b, 'smokeEnd'); }
     }
     // 前の 3 体が 全員 たおれたら、少し 待って 半分 回す
     if (!b.frontAlive().length && b.wheel.some(u => u && !u.ko)) {
@@ -385,18 +496,6 @@ export function step(b, dt) {
     checkOutcome(b);
 }
 
-// 2 つめの すがた (5 章の ダイシの 鬼の顔。2026-10-29): HP が へると わざと 必殺技が かわり、こうげきが 上がる
-function enterPhase(b, e) {
-    const ph = e.phase2;
-    e.phased = true;
-    e.bossMoves = ph.moves;
-    if (ph.bigMove) e.bigMove = ph.bigMove;
-    b.bossTimer = 0;
-    b.warned = false;
-    if (ph.atk) e.buffs.atk = { amount: ph.atk, t: 9999 };
-    emit(b, 'phase', { actor: e.uid, name: ph.name });
-    emit(b, 'skill', { actor: e.uid, name: ph.name, cmd: 'boss' });
-}
 
 function bossTick(b, e, dt) {
     if (b.chance && b.chance.uid === e.uid) return;   // チャンスタイムの あいだは 大技も 止まる
@@ -410,6 +509,24 @@ function bossTick(b, e, dt) {
         emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
         applyEffects(b, e, m.effects);
         for (const idol of idolsOf(b, e)) { idol.hp = 0; idol.ko = true; emit(b, 'ko', { target: idol.uid, side: 'enemy' }); }
+        return;
+    }
+    // お経を となえきると 必殺技 (5 章の ダイシ)。となえている あいだ だけ 鐘を ねらえる
+    if (m.trigger === 'chant') {
+        if (b.chant && b.chant.uid === e.uid) {
+            b.chant.left -= dt;
+            if (b.chant.left > 0) return;
+            b.chant = null;
+            b.bossTimer = 0;
+            const oni = e.oni && m.oni;
+            emit(b, 'special', { actor: e.uid, name: oni ? m.oni.name : m.name, side: 'enemy', big: true });
+            applyEffects(b, e, oni ? m.oni.effects : m.effects);
+            return;
+        }
+        b.bossTimer += dt;
+        if (b.bossTimer < m.every) return;
+        b.chant = { uid: e.uid, left: m.chant };
+        emit(b, 'telegraph', { actor: e.uid, name: e.oni && m.oni ? m.oni.name : m.name, warn: m.chant, chant: true });
         return;
     }
     b.bossTimer += dt;
@@ -463,6 +580,7 @@ export function lockOn(b, uid, part = null) {
     const e = b.enemiesAlive().find(x => x.uid === uid);
     if (b.outcome || !e) return false;
     if (e.parts && !part) part = nextPart(e) || 'head';
+    if (e.gims && part && !gimOpen(b, e, part)) return false;   // 出て いない しかけは ねらえない
     const same = b.lock === uid && b.lockPart === part;
     b.lock = same ? null : uid;
     b.lockPart = same ? null : part;

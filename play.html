@@ -2327,9 +2327,13 @@ body.nopad #pad { display: none; }
       place: "dam"
     },
     // 4 章の ボス: 黒い 紋に とりつかれた 浦の島重蔵 (浦の島の海岸どうくつの いちばん 奥)。たおすと 紋が 消えて なかまに なる
-    //   わざ: 玉手箱 (全体に ふしぎ 小 + こんらん)・つりざお (1 体に 中)・こうらガード (自分の ぼうぎょ アップ)・
-    //     「……なんじゃったかの」(もの忘れで なにも しない)
-    //   必殺技: 黒い紋の 玉手箱 (全体に みず 大 + ときどき とりつき。紋に あやつられている)
+    //   わざ: 玉手箱 (全体に ふしぎ 小 + こんらん)・つりざお (1 体に 中)・こうらに こもる・「……なんじゃったかの」(もの忘れ)
+    //   必殺技: 黒い紋の 玉手箱 (予告つき。全体に みず 大 + ときどき とりつき)
+    //   しかけ (2026-10-29 ユーザー指定。battle.js の gims):
+    //     玉手箱: いつも ねらえる。こわすと 玉手箱の わざと 必殺技が 使えなくなるが、けむりが 出て 10 秒 味方の 攻撃が 当たりにくい
+    //     頭: こうらに こもって いる (7 秒) あいだ だけ ねらえる。こもって いる あいだは 体への ダメージが へる。
+    //       頭を こわすと ひっくり返って チャンスタイム
+    //   gims の pos: 絵の どこに 出すか [横 (絵の 半分の はばで), たて (絵の 高さで。足元が 0)]
     urashima4: {
       id: "urashima4",
       name: "浦の島重蔵 (黒い紋)",
@@ -2340,20 +2344,30 @@ body.nopad #pad { display: none; }
       rank: "B",
       base: { hp: 700, atk: 14, def: 15, spd: 10, mag: 14 },
       moves: [
-        { name: "玉手箱", w: 3, effects: [atk("all", 0.7, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "confuse", chance: 0.35 }] },
+        { name: "玉手箱", w: 3, box: true, effects: [atk("all", 0.7, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "confuse", chance: 0.35 }] },
         { name: "つりざお", w: 3, effects: [atk("one", 1.3)] },
-        { name: "こうらガード", w: 2, effects: [{ kind: "buff", target: "self", stat: "def", amount: 0.6, time: 8 }] },
+        { name: "こうらに こもる", w: 1.5, shell: 7 },
         { name: "……なんじゃったかの", w: 1.2, effects: [] }
       ],
-      bigMove: { name: "黒い紋の 玉手箱", every: 13, warn: 2.5, effects: [atk("all", 1.4, { magic: true, element: "みず" }), { kind: "status", target: "all", status: "possess", chance: 0.25 }] },
+      bigMove: { name: "黒い紋の 玉手箱", box: true, every: 13, warn: 2.5, effects: [atk("all", 1.4, { magic: true, element: "みず" }), { kind: "status", target: "all", status: "possess", chance: 0.25 }] },
+      gims: {
+        box: { name: "玉手箱", hp: 0.08, when: "always", pos: [-0.55, -0.25], move: "玉手箱", smoke: 10, miss: 0.45 },
+        head: { name: "頭", hp: 0.05, when: "shell", pos: [0, -0.82], reset: true }
+      },
+      shellCut: 0.3,
+      // こもっている あいだの 体への ダメージ (30%)
+      chanceTurns: 3,
       befriends: "urashima",
       lv: 20,
       place: "cave"
     },
     // 5 章の ボス: 黒い 紋に のまれた ダイシ (ネット寺の 本堂の 前)。たおすと 紋が 消えて なかまに なる
     //   仏の顔: 説法 (全体 ねむり)・錫杖 (1 体に 中)・数珠まわし (全体に 小)・配信の お経 (全体 こんらん)
-    //   HP が 半分に なると 鬼の顔 (phase2) に かわる (前作の「鬼になると戦闘力は計り知れない」): こうげきが 上がり、わざが かわる
-    //   必殺技: 鬼神 ネット念仏 (予告つき。鬼の顔の あいだは 間かくが みじかい)
+    //   しかけ (2026-10-29 ユーザー指定。battle.js の gims・oni・chant):
+    //     鬼の顔: 攻撃を うけつづける (最大HP の 22% ぶん) と 鬼の顔に なり、こうげきが 上がって わざが かわる (前作の「鬼になると
+    //       戦闘力は計り知れない」)。鬼の顔の あいだ だけ 顔の 鬼の面を ねらえ、こわすと 仏の顔に もどる (また 怒れば 鬼に なる)
+    //     お経: 仏の顔でも 鬼の顔でも、13 秒ごとに お経を 6 秒 となえ、となえきると 必殺技 (鬼の顔なら もっと 強い)。
+    //       となえている あいだ だけ うしろの 鐘を ねらえる。だれかが 当てると 鐘が 鳴り、おどろいて チャンスタイム (お経も 止まる)
     daishi5: {
       id: "daishi5",
       name: "ダイシ (黒い紋)",
@@ -2362,25 +2376,36 @@ body.nopad #pad { display: none; }
       art: "daishi",
       scale: 1.5,
       rank: "B",
-      base: { hp: 740, atk: 14, def: 14, spd: 10, mag: 15 },
+      base: { hp: 820, atk: 15, def: 14, spd: 10, mag: 16 },
       moves: [
         { name: "説法", w: 2, effects: [{ kind: "status", target: "all", status: "sleep", chance: 0.35 }] },
         { name: "錫杖", w: 3, effects: [atk("one", 1.3)] },
         { name: "数珠まわし", w: 2, effects: [atk("all", 0.6)] },
         { name: "配信の お経", w: 1.5, effects: [atk("all", 0.5, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "confuse", chance: 0.4 }] }
       ],
-      bigMove: { name: "ネット念仏", every: 14, warn: 2.5, effects: [atk("all", 1.2, { magic: true, element: "ふしぎ" })] },
-      phase2: {
-        at: 0.5,
+      bigMove: {
+        name: "ネット念仏",
+        trigger: "chant",
+        every: 13,
+        chant: 6,
+        effects: [atk("all", 1.4, { magic: true, element: "ふしぎ" })],
+        oni: { name: "鬼神 ネット念仏", effects: [atk("all", 1.75, { magic: true, element: "ふしぎ" })] }
+      },
+      oni: {
+        at: 0.22,
         name: "鬼の顔",
-        atk: 0.3,
+        atk: 0.35,
         moves: [
           { name: "鬼の 錫杖", w: 3, effects: [atk("one", 1.6)] },
           { name: "鬼の にらみ", w: 2, effects: [{ kind: "status", target: "all", status: "confuse", chance: 0.6 }] },
           { name: "鬼の 数珠ぜめ", w: 2, effects: [atk("all", 0.85)] }
-        ],
-        bigMove: { name: "鬼神 ネット念仏", every: 12, warn: 2.5, effects: [atk("all", 1.35, { magic: true, element: "ふしぎ" })] }
+        ]
       },
+      gims: {
+        mask: { name: "鬼の面", hp: 0.08, when: "oni", pos: [0, -0.8] },
+        bell: { name: "鐘", hp: 0.01, when: "chant", pos: [-1.9, -0.55], noBody: true, reset: true }
+      },
+      chanceTurns: 3,
       befriends: "daishi",
       lv: 23,
       place: "tera"
@@ -3394,8 +3419,14 @@ body.nopad #pad { display: none; }
       guarding: false,
       bossMoves: sp2.moves || null,
       chanceTurns: sp2.chanceTurns || 3,
-      phase2: sp2.phase2 || null,
-      phased: false,
+      // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
+      gims: sp2.gims ? Object.fromEntries(Object.entries(sp2.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
+      oniDef: sp2.oni || null,
+      oni: false,
+      rage: 0,
+      shell: 0,
+      baseMoves: null,
+      shellCut: sp2.shellCut ?? 0.15,
       parts: sp2.parts ? Object.fromEntries(Object.entries(sp2.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
   }
@@ -3420,12 +3451,80 @@ body.nopad #pad { display: none; }
   }
   function endChance(b, u) {
     b.chance = null;
-    for (const p of Object.values(u.parts)) {
-      p.hp = p.max;
-      p.broken = false;
+    if (u.parts) {
+      for (const p of Object.values(u.parts)) {
+        p.hp = p.max;
+        p.broken = false;
+      }
+      if (b.lock === u.uid) b.lockPart = "rhand";
     }
-    if (b.lock === u.uid) b.lockPart = "rhand";
-    emit(b, "chanceEnd", { target: u.uid });
+    if (u.gims) {
+      for (const p of Object.values(u.gims)) if (p.reset) {
+        p.hp = p.max;
+        p.broken = false;
+      }
+    }
+    emit(b, "chanceEnd", { target: u.uid, gims: Boolean(u.gims) });
+  }
+  function gimOpen(b, u, key2) {
+    const p = u.gims && u.gims[key2];
+    if (!p || p.broken || u.ko) return false;
+    if (p.when === "shell") return u.shell > 0 && !(b.chance && b.chance.uid === u.uid);
+    if (p.when === "oni") return u.oni;
+    if (p.when === "chant") return Boolean(b.chant && b.chant.uid === u.uid);
+    return true;
+  }
+  const openGims = (b, u) => u.gims ? Object.keys(u.gims).filter((k) => gimOpen(b, u, k)) : [];
+  function hitGim(b, u, key2, dmg) {
+    const part = u.gims[key2];
+    part.hp = Math.max(0, part.hp - dmg);
+    if (part.hp > 0) return;
+    part.broken = true;
+    if (!part.noBody) emit(b, "partBreak", { target: u.uid, part: key2, name: part.name, move: part.move || null, gim: true });
+    if (b.lock === u.uid && b.lockPart === key2) b.lockPart = null;
+    if (key2 === "box") {
+      u.bossMoves = u.bossMoves.filter((m) => !m.box);
+      if (u.bigMove && u.bigMove.box) u.bigMove = null;
+      b.smoke = { left: part.smoke || 10, miss: part.miss || 0.45 };
+      emit(b, "smoke", { target: u.uid, time: b.smoke.left });
+    } else if (key2 === "head") {
+      u.shell = 0;
+      startChance(b, u, "flip");
+    } else if (key2 === "mask") {
+      leaveOni(b, u);
+    } else if (key2 === "bell") {
+      b.chant = null;
+      b.bossTimer = 0;
+      b.warned = false;
+      emit(b, "bell", { target: u.uid });
+      startChance(b, u, "bell");
+    }
+  }
+  function startChance(b, u, why) {
+    b.chance = { uid: u.uid, left: u.chanceTurns };
+    u.timer = 0;
+    emit(b, "chance", { target: u.uid, turns: u.chanceTurns, why });
+  }
+  function enterOni(b, u) {
+    const o = u.oniDef;
+    u.oni = true;
+    u.rage = 0;
+    u.baseMoves = u.bossMoves;
+    u.bossMoves = o.moves;
+    u.buffs.atk = { amount: o.atk, t: 9999 };
+    if (u.gims && u.gims.mask) {
+      u.gims.mask.hp = u.gims.mask.max;
+      u.gims.mask.broken = false;
+    }
+    emit(b, "phase", { actor: u.uid, name: o.name });
+    emit(b, "skill", { actor: u.uid, name: o.name, cmd: "boss" });
+  }
+  function leaveOni(b, u) {
+    u.oni = false;
+    u.rage = 0;
+    if (u.baseMoves) u.bossMoves = u.baseMoves;
+    delete u.buffs.atk;
+    emit(b, "phaseEnd", { actor: u.uid, name: u.oniDef.name });
   }
   function createBattle({ allies, enemies, rng, kind = "wild", intro = false }) {
     const b = {
@@ -3450,7 +3549,9 @@ body.nopad #pad { display: none; }
       lockPart: null,
       weakT: 0,
       chance: null,
-      charge: null
+      charge: null,
+      smoke: null,
+      chant: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -3501,6 +3602,15 @@ body.nopad #pad { display: none; }
   const effectOf = (element, target) => CHART[element] && CHART[element][target] || 1;
   function damage(b, from, to, power, { magic = false, mult = 1, element = null } = {}) {
     if (to.ko) return 0;
+    if (from.side === "ally" && to.side === "enemy" && b.smoke && b.rng.chance(b.smoke.miss)) {
+      emit(b, "miss", { actor: from.uid, target: to.uid });
+      return 0;
+    }
+    const gim = from.side === "ally" && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
+    if (gim && to.gims[gim].noBody) {
+      hitGim(b, to, gim, to.gims[gim].hp);
+      return 0;
+    }
     const A = (magic ? from.s.mag : from.s.atk) * (1 + buffOf(from, "atk"));
     const D = to.s.def * (1 + buffOf(to, "def"));
     const el = element || (magic ? from.element : "ふつう");
@@ -3510,12 +3620,18 @@ body.nopad #pad { display: none; }
     const guard = to.guarding ? 0.5 : 1;
     const weak = from.side === "ally" && to.uid === b.lock && weakActive(b);
     const headGuard = from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart === "head" && !handsBroken(to) && !b.chance;
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1);
+    const shell = to.shell > 0 && !gim ? to.shellCut ?? 0.15 : 1;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell;
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;
     if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard, weak: weak && !headGuard, headGuard });
+    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1, weak: weak && !headGuard, headGuard, part: gim });
+    if (gim && to.hp > 0) hitGim(b, to, gim, dmg);
+    if (from.side === "ally" && to.oniDef && !to.oni && to.hp > 0) {
+      to.rage += dmg;
+      if (to.rage >= to.max * to.oniDef.at) enterOni(b, to);
+    }
     if (from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
     if (to.hp <= 0) {
       to.ko = true;
@@ -3635,11 +3751,18 @@ body.nopad #pad { display: none; }
       return;
     }
     if (u.bossMoves) {
-      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length));
+      if (b.chant && b.chant.uid === u.uid) {
+        emit(b, "chanting", { actor: u.uid });
+        return;
+      }
+      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)));
       const move = b.rng.weighted(list.map((m) => ({ m, w: m.w }))).m;
       emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss" });
       if (move.summon) summonIdol(b, u);
-      else applyEffects(b, u, move.effects);
+      else if (move.shell) {
+        u.shell = move.shell;
+        emit(b, "shell", { actor: u.uid, time: move.shell });
+      } else applyEffects(b, u, move.effects || []);
       return;
     }
     const cmd = chooseCommand(b, u);
@@ -3717,10 +3840,25 @@ body.nopad #pad { display: none; }
     for (const e of b.enemies) {
       if (e.ko) continue;
       tickUnit(b, e, dt, !e.idol);
-      if (e.phase2 && !e.phased && !e.ko && e.hp <= e.max * e.phase2.at) enterPhase(b, e);
+      if (e.shell > 0) {
+        e.shell -= dt;
+        if (e.shell <= 0) {
+          e.shell = 0;
+          if (e.gims && e.gims.head && !e.gims.head.broken) e.gims.head.hp = e.gims.head.max;
+          emit(b, "shellEnd", { actor: e.uid });
+        }
+      }
+      if (b.lock === e.uid && b.lockPart && e.gims && !gimOpen(b, e, b.lockPart)) b.lockPart = null;
       if (e.bigMove) bossTick(b, e, dt);
       checkOutcome(b);
       if (b.outcome) return;
+    }
+    if (b.smoke) {
+      b.smoke.left -= dt;
+      if (b.smoke.left <= 0) {
+        b.smoke = null;
+        emit(b, "smokeEnd");
+      }
     }
     if (!b.frontAlive().length && b.wheel.some((u) => u && !u.ko)) {
       b.frontDownTime += dt;
@@ -3731,17 +3869,6 @@ body.nopad #pad { display: none; }
       }
     } else b.frontDownTime = 0;
     checkOutcome(b);
-  }
-  function enterPhase(b, e) {
-    const ph = e.phase2;
-    e.phased = true;
-    e.bossMoves = ph.moves;
-    if (ph.bigMove) e.bigMove = ph.bigMove;
-    b.bossTimer = 0;
-    b.warned = false;
-    if (ph.atk) e.buffs.atk = { amount: ph.atk, t: 9999 };
-    emit(b, "phase", { actor: e.uid, name: ph.name });
-    emit(b, "skill", { actor: e.uid, name: ph.name, cmd: "boss" });
   }
   function bossTick(b, e, dt) {
     if (b.chance && b.chance.uid === e.uid) return;
@@ -3758,6 +3885,23 @@ body.nopad #pad { display: none; }
         idol.ko = true;
         emit(b, "ko", { target: idol.uid, side: "enemy" });
       }
+      return;
+    }
+    if (m.trigger === "chant") {
+      if (b.chant && b.chant.uid === e.uid) {
+        b.chant.left -= dt;
+        if (b.chant.left > 0) return;
+        b.chant = null;
+        b.bossTimer = 0;
+        const oni = e.oni && m.oni;
+        emit(b, "special", { actor: e.uid, name: oni ? m.oni.name : m.name, side: "enemy", big: true });
+        applyEffects(b, e, oni ? m.oni.effects : m.effects);
+        return;
+      }
+      b.bossTimer += dt;
+      if (b.bossTimer < m.every) return;
+      b.chant = { uid: e.uid, left: m.chant };
+      emit(b, "telegraph", { actor: e.uid, name: e.oni && m.oni ? m.oni.name : m.name, warn: m.chant, chant: true });
       return;
     }
     b.bossTimer += dt;
@@ -3800,6 +3944,7 @@ body.nopad #pad { display: none; }
     const e = b.enemiesAlive().find((x) => x.uid === uid);
     if (b.outcome || !e) return false;
     if (e.parts && !part) part = nextPart(e) || "head";
+    if (e.gims && part && !gimOpen(b, e, part)) return false;
     const same = b.lock === uid && b.lockPart === part;
     b.lock = same ? null : uid;
     b.lockPart = same ? null : part;
@@ -10243,7 +10388,8 @@ body.nopad #pad { display: none; }
           nar("どうくつの 主の 体に、ドクドクと 動く 黒い 紋が うかんでいる……。"),
           by("urashima", "わしは……えーと……なんじゃったかの……。体が かってに……うごくんじゃ……！ ……つり？"),
           furu("あの 紋、王冠の 箱に のこってた 黒い すすと 同じだ！"),
-          furu("紋が 光ったら 大技が くるよ！ 輪を 回して、守りの 強い なかまを 前に 出して！")
+          furu("かかえてる 玉手箱を ねらって こわせば、玉手箱の わざを 止められるよ！ でも けむりが 出るかも……！"),
+          furu("こうらに こもったら、すきまから 出てる 頭を ねらって！ ひっくり返せるかも！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("urashima4"), kind: "boss", place: "cave" }) });
       } else if (p.id === "daishiNpc") {
         say([by("daishi", `紋つきの 者たちを、どうか 救って くだされ。……紋を はらえば、きっと 正気に もどりますぞ。(${monsSaved(g)}/${MONS.length})`)]);
@@ -10251,7 +10397,8 @@ body.nopad #pad { display: none; }
         say([
           nar("ダイシの 体に、黒い 紋が どくどくと 脈うっている……。"),
           by("daishi", "……ぐ……拙僧は……鬼に……なっては……ならぬ……！"),
-          furu("ダイシさんまで 紋に のまれちゃった！ 気を つけて、こおりくん！ 鬼の 顔に なったら もっと 強く なるよ！")
+          furu("ダイシさんまで 紋に のまれちゃった！ 攻撃しつづけると 鬼の 顔に なって 強く なるよ。そしたら 顔の 鬼の面を ねらって！"),
+          furu("お経が 聞こえたら、うしろの 鐘を ねらって 鳴らして！ びっくりして すきが できるはず！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("daishi5"), kind: "boss", place: "tera" }) });
       } else if (p.id === "furukawaShrine") {
         meetFurukawa();
@@ -12617,7 +12764,32 @@ body.nopad #pad { display: none; }
           const k = battle.enemies.findIndex((x) => x.uid === e.target), pp = k >= 0 ? partPos(k, e.part) : null;
           if (pp) effects.push({ kind: "wave", x: pp.x, y: pp.y + 10, start: t, dur: 0.5, color: "#ffe85a" });
         } else if (e.type === "chance") {
+          if (e.why === "flip") banner = { text: "ひっくり返った！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           sfx("special");
+        } else if (e.type === "smoke") {
+          banner = { text: "けむりが もくもく……！ 攻撃が 当たりにくい！", color: "#d0d0d8", until: t + 1.8 };
+          sfx("cancel");
+        } else if (e.type === "smokeEnd") {
+          banner = { text: "けむりが 晴れた！", color: COLORS.accent, until: t + 1.2 };
+        } else if (e.type === "miss") {
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
+        } else if (e.type === "shell") {
+          banner = { text: "こうらに こもった！ 頭を ねらえ！", color: "#9ae08a", until: t + 1.8 };
+          sfx("cancel");
+        } else if (e.type === "shellEnd") {
+          const p = posOf(e.actor);
+          if (p) pops.push({ x: p.x, y: p.y - 112, text: "こうらから 出てきた", color: "#9ae08a", small: true, until: t + 1 });
+        } else if (e.type === "phase") {
+          banner = { text: `${nameOf(e.actor)}が ${e.name}に なった！ 顔の 鬼の面を ねらえ！`, color: "#ff6a6a", until: t + 2 };
+          sfx("big");
+        } else if (e.type === "phaseEnd") {
+          banner = { text: "鬼の面を こわした！ 仏の顔に もどった！", color: COLORS.accent, until: t + 2 };
+        } else if (e.type === "bell") {
+          banner = { text: "ゴーーン！ 鐘が 鳴った！ ダイシが おどろいた！", color: "#ffe85a", until: t + 2 };
+          sfx("big");
+          const k = battle.enemies.findIndex((x) => x.uid === e.target), pp = k >= 0 ? partPos(k, "bell") : null;
+          if (pp) for (let i = 0; i < 3; i++) effects.push({ kind: "wave", x: pp.x, y: pp.y + 10, start: t + i * 0.15, dur: 0.6, color: "#ffe85a" });
         } else if (e.type === "stunned") {
           const p = posOf(e.actor);
           if (p) pops.push({ x: p.x, y: p.y - 112, text: "うごけない！", color: "#ffe85a", until: t + 1 });
@@ -12637,7 +12809,7 @@ body.nopad #pad { display: none; }
           banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
-          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols) };
+          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant) };
           sfx("cancel");
         } else if (e.type === "summon") {
           banner = { text: `${nameOf(e.target)}が あらわれた！`, color: "#bfeaff", until: t + 1.4 };
@@ -12696,7 +12868,7 @@ body.nopad #pad { display: none; }
     }
     let guardTold = -9;
     function cycleLock(dir) {
-      const list = [null, ...battle.enemiesAlive().flatMap((e) => e.parts ? PART_ORDER.filter((k) => !e.parts[k].broken).map((part) => ({ uid: e.uid, part })) : [{ uid: e.uid, part: null }])];
+      const list = [null, ...battle.enemiesAlive().flatMap((e) => e.parts ? PART_ORDER.filter((k) => !e.parts[k].broken).map((part) => ({ uid: e.uid, part })) : e.gims ? [{ uid: e.uid, part: null }, ...openGims(battle, e).map((part) => ({ uid: e.uid, part }))] : [{ uid: e.uid, part: null }])];
       const i = list.findIndex((x) => x ? x.uid === battle.lock && x.part === battle.lockPart : !battle.lock);
       const next = list[(i + dir + list.length) % list.length];
       if (next) lockOn(battle, next.uid, next.part);
@@ -12706,6 +12878,10 @@ body.nopad #pad { display: none; }
     function partPos(k, key2) {
       const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
       const fk = p.scale * artFit(art), h = art.h * fk, side = art.w * fk / 2 + 26;
+      if (e.gims && e.gims[key2]) {
+        const [fx, fy] = e.gims[key2].pos;
+        return { x: p.x + fx * art.w * fk / 2, y: p.y + fy * h };
+      }
       const bob2 = Math.sin(t * 3 + (key2 === "lhand" ? 1.5 : 0)) * 3;
       if (key2 === "rhand") return { x: p.x - side, y: p.y - h * 0.42 + bob2 };
       if (key2 === "lhand") return { x: p.x + side, y: p.y - h * 0.42 + bob2 };
@@ -12713,6 +12889,7 @@ body.nopad #pad { display: none; }
     }
     function hitPartAt(k, x, y) {
       const e = battle.enemies[k];
+      if (e.gims) return openGims(battle, e).find((key2) => Math.hypot(partPos(k, key2).x - x, partPos(k, key2).y - y) < 26) || null;
       if (!e.parts) return null;
       return PART_ORDER.find((key2) => !e.parts[key2].broken && Math.hypot(partPos(k, key2).x - x, partPos(k, key2).y - y) < 24) || null;
     }
@@ -13326,6 +13503,105 @@ body.nopad #pad { display: none; }
         text(ctx, e.parts.rhand.broken && e.parts.lhand.broken ? "頭" : "頭 (手で ガード)", hx, q.y - 10, { size: 9, bold: true, color: "#ffe0b0" });
       }
     }
+    function drawGims(ctx, e, k) {
+      const p = enemyPos(k), art = ART[e.art], fk = p.scale * artFit(art), h = art.h * fk, w = art.w * fk;
+      const label = (key2, q, dy = 22) => {
+        const pt = e.gims[key2];
+        if (!gimOpen(battle, e, key2)) return;
+        if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, "#ffb84a");
+        text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
+      };
+      if (e.shell > 0) {
+        ctx.fillStyle = "rgba(40, 110, 50, 0.92)";
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y - h * 0.38, w * 0.62, h * 0.42, 0, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(p.x - w * 0.62, p.y - h * 0.38, w * 1.24, h * 0.36);
+        ctx.strokeStyle = "#9ae08a";
+        ctx.lineWidth = 2;
+        for (let i = -2; i <= 2; i++) {
+          ctx.beginPath();
+          ctx.moveTo(p.x + i * w * 0.22, p.y - h * 0.72);
+          ctx.lineTo(p.x + i * w * 0.26, p.y - h * 0.05);
+          ctx.stroke();
+        }
+        text(ctx, `こうら ${Math.ceil(e.shell)}`, p.x, p.y - h * 0.3, { size: 11, align: "center", bold: true, color: "#e0ffd0" });
+      }
+      if (e.oni) {
+        ctx.strokeStyle = `rgba(255, 60, 60, ${0.4 + 0.25 * Math.sin(t * 6)})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y - h / 2, w * 0.6, h * 0.58, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      for (const key2 of Object.keys(e.gims)) {
+        const pt = e.gims[key2], q = partPos(k, key2), open = gimOpen(battle, e, key2);
+        if (key2 === "box" && !pt.broken) {
+          ctx.fillStyle = "#c02030";
+          ctx.fillRect(q.x - 11, q.y - 9, 22, 16);
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(q.x - 11, q.y - 9, 22, 3);
+          ctx.fillRect(q.x - 2, q.y - 9, 4, 16);
+          label(key2, q, 12);
+        } else if (key2 === "head" && open) {
+          ctx.fillStyle = "#f0c8a0";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#111";
+          ctx.fillRect(q.x - 4, q.y - 2, 2, 2);
+          ctx.fillRect(q.x + 2, q.y - 2, 2, 2);
+          label(key2, q, 12);
+        } else if (key2 === "mask" && open) {
+          ctx.fillStyle = "rgba(200, 30, 40, 0.9)";
+          ctx.beginPath();
+          ctx.ellipse(q.x, q.y, 14, 15, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#ffe080";
+          ctx.beginPath();
+          ctx.moveTo(q.x - 11, q.y - 9);
+          ctx.lineTo(q.x - 7, q.y - 22);
+          ctx.lineTo(q.x - 4, q.y - 11);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(q.x + 11, q.y - 9);
+          ctx.lineTo(q.x + 7, q.y - 22);
+          ctx.lineTo(q.x + 4, q.y - 11);
+          ctx.fill();
+          ctx.fillStyle = "#ffe85a";
+          ctx.fillRect(q.x - 7, q.y - 3, 4, 3);
+          ctx.fillRect(q.x + 3, q.y - 3, 4, 3);
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(q.x - 6, q.y + 6, 12, 2);
+          label(key2, q, 16);
+        } else if (key2 === "bell") {
+          const swing = open ? Math.sin(t * 5) * 0.08 : 0;
+          ctx.save();
+          ctx.translate(q.x, q.y - 26);
+          ctx.rotate(swing);
+          ctx.fillStyle = "#5a4020";
+          ctx.fillRect(-20, -6, 40, 4);
+          ctx.fillStyle = open ? "#d8a840" : "#7a6a4a";
+          ctx.beginPath();
+          ctx.moveTo(-10, -2);
+          ctx.lineTo(10, -2);
+          ctx.lineTo(14, 26);
+          ctx.lineTo(-14, 26);
+          ctx.fill();
+          ctx.fillStyle = open ? "#ffe080" : "#9a8a6a";
+          ctx.fillRect(-14, 22, 28, 4);
+          ctx.restore();
+          if (open) {
+            ctx.strokeStyle = `rgba(255, 232, 90, ${0.5 + 0.3 * Math.sin(t * 8)})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(q.x, q.y - 12, 24, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          label(key2, q, 10);
+        }
+      }
+    }
     function drawShield(ctx, x, y, s = 1) {
       ctx.fillStyle = "rgba(138, 208, 255, 0.55)";
       ctx.strokeStyle = "#ffffff";
@@ -13345,7 +13621,17 @@ body.nopad #pad { display: none; }
       battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
       battle.enemies.forEach((e, i) => {
         if (e.parts && !e.ko) drawParts(ctx, e, i);
+        if (e.gims && !e.ko) drawGims(ctx, e, i);
       });
+      if (battle.smoke) {
+        for (let i = 0; i < 9; i++) {
+          const x = (i * 53 + t * 18) % 460 - 30, y = 50 + i % 3 * 30 + Math.sin(t + i) * 6;
+          ctx.fillStyle = `rgba(220, 220, 228, ${0.35 + 0.1 * Math.sin(t * 2 + i)})`;
+          ctx.beginPath();
+          ctx.ellipse(x, y, 46, 20, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
       if (enterT !== null) battle.front().forEach((u, i) => {
         if (mg && mg.phase === "act" && u === mg.unit) return;
         const k = Math.min(1, Math.max(0, (t - enterT - i * 0.1) / ENTER_TIME));
@@ -13370,11 +13656,18 @@ body.nopad #pad { display: none; }
         panel(ctx, 90, 6, 220, 46, { fill: "rgba(90, 40, 0, 0.88)", edge: "#ffe85a" });
         text(ctx, "チャンスタイム！", 200, 32, { size: 24, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
         text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: "center", bold: true });
+      } else if (battle.chant && !battle.outcome) {
+        panel(ctx, 30, 8, 340, 40, { fill: "rgba(90, 20, 90, 0.9)", edge: "#ffe85a" });
+        text(ctx, `お経を となえている……「${warn ? warn.name : ""}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffe0a0" });
+      } else if (battle.smoke && !battle.outcome && !(warn && warn.until > t)) {
+        panel(ctx, 90, 8, 220, 24, { fill: "rgba(60, 60, 70, 0.85)", edge: "#d0d0d8" });
+        text(ctx, `けむりで 攻撃が 当たりにくい (${Math.ceil(battle.smoke.left)})`, 200, 25, { size: 11, align: "center", bold: true });
       } else if (warn && warn.idols && battle.charge && !battle.outcome) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
-      } else if (warn && !warn.idols && warn.until > t) {
+      } else if (warn && !warn.idols && !warn.chant && warn.until > t) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
@@ -13583,7 +13876,8 @@ body.nopad #pad { display: none; }
       drawWheel(ctx);
       drawSpecialButtons(ctx);
       button(ctx, { ...FAST_BTN, label: g.fastBattle ? "倍速 ON" : "倍速" }, { active: Boolean(g.fastBattle), size: 10.5 });
-      const lockedPart = battle.lock && battle.lockPart ? (_b = (_a = battle.enemies.find((e) => e.uid === battle.lock)) == null ? void 0 : _a.parts) == null ? void 0 : _b[battle.lockPart] : null;
+      const lockedE = battle.lock && battle.lockPart ? battle.enemies.find((e) => e.uid === battle.lock) : null;
+      const lockedPart = lockedE ? ((_a = lockedE.parts) == null ? void 0 : _a[battle.lockPart]) || ((_b = lockedE.gims) == null ? void 0 : _b[battle.lockPart]) : null;
       text(ctx, lockedPart ? `ねらい: ${lockedPart.name} (↑↓で かえる)` : battle.lock ? "ねらい中 (もう いちどで はずす)" : "ねらう: ↑↓・上の 敵を タップ", 66, 17, { size: 9, color: battle.lock ? "#ff9a9a" : COLORS.dim, maxWidth: 134 });
       text(ctx, btn("fast"), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: "center", color: COLORS.dim });
       if (menu) drawMenu(ctx);

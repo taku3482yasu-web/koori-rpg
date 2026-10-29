@@ -176,7 +176,8 @@ export function createField(app) {
                 nar('どうくつの 主の 体に、ドクドクと 動く 黒い 紋が うかんでいる……。'),
                 by('urashima', 'わしは……えーと……なんじゃったかの……。体が かってに……うごくんじゃ……！ ……つり？'),
                 furu('あの 紋、王冠の 箱に のこってた 黒い すすと 同じだ！'),
-                furu('紋が 光ったら 大技が くるよ！ 輪を 回して、守りの 強い なかまを 前に 出して！')
+                furu('かかえてる 玉手箱を ねらって こわせば、玉手箱の わざを 止められるよ！ でも けむりが 出るかも……！'),
+                furu('こうらに こもったら、すきまから 出てる 頭を ねらって！ ひっくり返せるかも！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('urashima4'), kind: 'boss', place: 'cave' }) });
         } else if (p.id === 'daishiNpc') {
             say([by('daishi', `紋つきの 者たちを、どうか 救って くだされ。……紋を はらえば、きっと 正気に もどりますぞ。(${monsSaved(g)}/${MONS.length})`)]);
@@ -185,7 +186,8 @@ export function createField(app) {
             say([
                 nar('ダイシの 体に、黒い 紋が どくどくと 脈うっている……。'),
                 by('daishi', '……ぐ……拙僧は……鬼に……なっては……ならぬ……！'),
-                furu('ダイシさんまで 紋に のまれちゃった！ 気を つけて、こおりくん！ 鬼の 顔に なったら もっと 強く なるよ！')
+                furu('ダイシさんまで 紋に のまれちゃった！ 攻撃しつづけると 鬼の 顔に なって 強く なるよ。そしたら 顔の 鬼の面を ねらって！'),
+                furu('お経が 聞こえたら、うしろの 鐘を ねらって 鳴らして！ びっくりして すきが できるはず！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('daishi5'), kind: 'boss', place: 'tera' }) });
         } else if (p.id === 'furukawaShrine') {
             meetFurukawa();

@@ -18,7 +18,7 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, artFit, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, begin, flee, canFlee } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, begin, flee, canFlee, gimOpen, openGims } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -251,7 +251,34 @@ export function createBattleView(app, battle, place) {
                 const k = battle.enemies.findIndex(x => x.uid === e.target), pp = k >= 0 ? partPos(k, e.part) : null;
                 if (pp) effects.push({ kind: 'wave', x: pp.x, y: pp.y + 10, start: t, dur: 0.5, color: '#ffe85a' });
             } else if (e.type === 'chance') {
+                if (e.why === 'flip') banner = { text: 'ひっくり返った！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
+            } else if (e.type === 'smoke') {
+                // 4 章: 玉手箱が こわれて けむり
+                banner = { text: 'けむりが もくもく……！ 攻撃が 当たりにくい！', color: '#d0d0d8', until: t + 1.8 };
+                sfx('cancel');
+            } else if (e.type === 'smokeEnd') {
+                banner = { text: 'けむりが 晴れた！', color: COLORS.accent, until: t + 1.2 };
+            } else if (e.type === 'miss') {
+                const p = posOf(e.target);
+                if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: 'ミス', color: '#c0c8e0', small: true, until: t + 0.8 });
+            } else if (e.type === 'shell') {
+                banner = { text: 'こうらに こもった！ 頭を ねらえ！', color: '#9ae08a', until: t + 1.8 };
+                sfx('cancel');
+            } else if (e.type === 'shellEnd') {
+                const p = posOf(e.actor);
+                if (p) pops.push({ x: p.x, y: p.y - 112, text: 'こうらから 出てきた', color: '#9ae08a', small: true, until: t + 1 });
+            } else if (e.type === 'phase') {
+                // 5 章: 鬼の顔
+                banner = { text: `${nameOf(e.actor)}が ${e.name}に なった！ 顔の 鬼の面を ねらえ！`, color: '#ff6a6a', until: t + 2 };
+                sfx('big');
+            } else if (e.type === 'phaseEnd') {
+                banner = { text: '鬼の面を こわした！ 仏の顔に もどった！', color: COLORS.accent, until: t + 2 };
+            } else if (e.type === 'bell') {
+                banner = { text: 'ゴーーン！ 鐘が 鳴った！ ダイシが おどろいた！', color: '#ffe85a', until: t + 2 };
+                sfx('big');
+                const k = battle.enemies.findIndex(x => x.uid === e.target), pp = k >= 0 ? partPos(k, 'bell') : null;
+                if (pp) for (let i = 0; i < 3; i++) effects.push({ kind: 'wave', x: pp.x, y: pp.y + 10, start: t + i * 0.15, dur: 0.6, color: '#ffe85a' });
             } else if (e.type === 'stunned') {
                 const p = posOf(e.actor);
                 if (p) pops.push({ x: p.x, y: p.y - 112, text: 'うごけない！', color: '#ffe85a', until: t + 1 });
@@ -273,7 +300,7 @@ export function createBattleView(app, battle, place) {
                 banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
-                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols) };
+                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant) };
                 sfx('cancel');
             } else if (e.type === 'summon') {
                 // 氷の 偶像が できた (3 章の ダムの主)
@@ -331,6 +358,7 @@ export function createBattleView(app, battle, place) {
     function cycleLock(dir) {
         const list = [null, ...battle.enemiesAlive().flatMap(e => (e.parts
             ? PART_ORDER.filter(k => !e.parts[k].broken).map(part => ({ uid: e.uid, part }))
+            : e.gims ? [{ uid: e.uid, part: null }, ...openGims(battle, e).map(part => ({ uid: e.uid, part }))]
             : [{ uid: e.uid, part: null }]))];
         const i = list.findIndex(x => (x ? x.uid === battle.lock && x.part === battle.lockPart : !battle.lock));
         const next = list[(i + dir + list.length) % list.length];
@@ -342,6 +370,11 @@ export function createBattleView(app, battle, place) {
     function partPos(k, key) {
         const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
         const fk = p.scale * artFit(art), h = art.h * fk, side = art.w * fk / 2 + 26;
+        // しかけの 部位 (4 章・5 章): pos = [横 (絵の 半分の はばで), たて (絵の 高さで)]
+        if (e.gims && e.gims[key]) {
+            const [fx, fy] = e.gims[key].pos;
+            return { x: p.x + fx * art.w * fk / 2, y: p.y + fy * h };
+        }
         const bob = Math.sin(t * 3 + (key === 'lhand' ? 1.5 : 0)) * 3;
         if (key === 'rhand') return { x: p.x - side, y: p.y - h * 0.42 + bob };
         if (key === 'lhand') return { x: p.x + side, y: p.y - h * 0.42 + bob };
@@ -349,6 +382,7 @@ export function createBattleView(app, battle, place) {
     }
     function hitPartAt(k, x, y) {
         const e = battle.enemies[k];
+        if (e.gims) return openGims(battle, e).find(key => Math.hypot(partPos(k, key).x - x, partPos(k, key).y - y) < 26) || null;
         if (!e.parts) return null;
         return PART_ORDER.find(key => !e.parts[key].broken && Math.hypot(partPos(k, key).x - x, partPos(k, key).y - y) < 24) || null;
     }
@@ -860,6 +894,66 @@ export function createBattleView(app, battle, place) {
         }
     }
 
+    // しかけの 部位 (4 章・5 章): 玉手箱・こうら・頭・鬼の面・鐘。ねらえる ときは 名前と HP
+    function drawGims(ctx, e, k) {
+        const p = enemyPos(k), art = ART[e.art], fk = p.scale * artFit(art), h = art.h * fk, w = art.w * fk;
+        const label = (key, q, dy = 22) => {
+            const pt = e.gims[key];
+            if (!gimOpen(battle, e, key)) return;
+            if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, '#ffb84a');
+            text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+        };
+        // こうら (こもっている あいだ): 緑の ドームと 頭の すきま
+        if (e.shell > 0) {
+            ctx.fillStyle = 'rgba(40, 110, 50, 0.92)';
+            ctx.beginPath(); ctx.ellipse(p.x, p.y - h * 0.38, w * 0.62, h * 0.42, 0, Math.PI, 0); ctx.fill();
+            ctx.fillRect(p.x - w * 0.62, p.y - h * 0.38, w * 1.24, h * 0.36);
+            ctx.strokeStyle = '#9ae08a'; ctx.lineWidth = 2;
+            for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(p.x + i * w * 0.22, p.y - h * 0.72); ctx.lineTo(p.x + i * w * 0.26, p.y - h * 0.05); ctx.stroke(); }
+            text(ctx, `こうら ${Math.ceil(e.shell)}`, p.x, p.y - h * 0.3, { size: 11, align: 'center', bold: true, color: '#e0ffd0' });
+        }
+        // 鬼の顔: 赤い オーラ
+        if (e.oni) {
+            ctx.strokeStyle = `rgba(255, 60, 60, ${0.4 + 0.25 * Math.sin(t * 6)})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y - h / 2, w * 0.6, h * 0.58, 0, 0, Math.PI * 2); ctx.stroke();
+        }
+        for (const key of Object.keys(e.gims)) {
+            const pt = e.gims[key], q = partPos(k, key), open = gimOpen(battle, e, key);
+            if (key === 'box' && !pt.broken) {
+                // 玉手箱 (赤い 箱に 金の ふち)
+                ctx.fillStyle = '#c02030'; ctx.fillRect(q.x - 11, q.y - 9, 22, 16);
+                ctx.fillStyle = '#ffd700'; ctx.fillRect(q.x - 11, q.y - 9, 22, 3); ctx.fillRect(q.x - 2, q.y - 9, 4, 16);
+                label(key, q, 12);
+            } else if (key === 'head' && open) {
+                // こうらの すきまから 出ている 頭
+                ctx.fillStyle = '#f0c8a0'; ctx.beginPath(); ctx.arc(q.x, q.y, 9, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#111'; ctx.fillRect(q.x - 4, q.y - 2, 2, 2); ctx.fillRect(q.x + 2, q.y - 2, 2, 2);
+                label(key, q, 12);
+            } else if (key === 'mask' && open) {
+                // 鬼の面 (赤い 顔に 角)
+                ctx.fillStyle = 'rgba(200, 30, 40, 0.9)'; ctx.beginPath(); ctx.ellipse(q.x, q.y, 14, 15, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffe080';
+                ctx.beginPath(); ctx.moveTo(q.x - 11, q.y - 9); ctx.lineTo(q.x - 7, q.y - 22); ctx.lineTo(q.x - 4, q.y - 11); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(q.x + 11, q.y - 9); ctx.lineTo(q.x + 7, q.y - 22); ctx.lineTo(q.x + 4, q.y - 11); ctx.fill();
+                ctx.fillStyle = '#ffe85a'; ctx.fillRect(q.x - 7, q.y - 3, 4, 3); ctx.fillRect(q.x + 3, q.y - 3, 4, 3);
+                ctx.fillStyle = '#fff'; ctx.fillRect(q.x - 6, q.y + 6, 12, 2);
+                label(key, q, 16);
+            } else if (key === 'bell') {
+                // 鐘 (いつも うしろに ある。お経の あいだ だけ 光って ねらえる)
+                const swing = open ? Math.sin(t * 5) * 0.08 : 0;
+                ctx.save(); ctx.translate(q.x, q.y - 26); ctx.rotate(swing);
+                ctx.fillStyle = '#5a4020'; ctx.fillRect(-20, -6, 40, 4);
+                ctx.fillStyle = open ? '#d8a840' : '#7a6a4a';
+                ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(10, -2); ctx.lineTo(14, 26); ctx.lineTo(-14, 26); ctx.fill();
+                ctx.fillStyle = open ? '#ffe080' : '#9a8a6a'; ctx.fillRect(-14, 22, 28, 4);
+                ctx.restore();
+                if (open) { ctx.strokeStyle = `rgba(255, 232, 90, ${0.5 + 0.3 * Math.sin(t * 8)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y - 12, 24, 0, Math.PI * 2); ctx.stroke(); }
+                label(key, q, 10);
+            }
+        }
+    }
+
     // 盾 (まもり)。(x, y) は まんなか
     function drawShield(ctx, x, y, s = 1) {
         ctx.fillStyle = 'rgba(138, 208, 255, 0.55)';
@@ -879,7 +973,15 @@ export function createBattleView(app, battle, place) {
     function drawTop(ctx) {
         drawBackground(ctx);
         battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
-        battle.enemies.forEach((e, i) => { if (e.parts && !e.ko) drawParts(ctx, e, i); });
+        battle.enemies.forEach((e, i) => { if (e.parts && !e.ko) drawParts(ctx, e, i); if (e.gims && !e.ko) drawGims(ctx, e, i); });
+        // けむり (4 章): 敵の まわりを 白い もやが ただよう
+        if (battle.smoke) {
+            for (let i = 0; i < 9; i++) {
+                const x = (i * 53 + t * 18) % 460 - 30, y = 50 + (i % 3) * 30 + Math.sin(t + i) * 6;
+                ctx.fillStyle = `rgba(220, 220, 228, ${0.35 + 0.1 * Math.sin(t * 2 + i)})`;
+                ctx.beginPath(); ctx.ellipse(x, y, 46, 20, 0, 0, Math.PI * 2); ctx.fill();
+            }
+        }
         // 必殺技の 動きの あいだは、その キャラは 動きの ほうで 描く
         // なかまは「たたかう」まで 出てこない。出てくる ときは 下から とびだす
         if (enterT !== null) battle.front().forEach((u, i) => {
@@ -904,12 +1006,20 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 90, 6, 220, 46, { fill: 'rgba(90, 40, 0, 0.88)', edge: '#ffe85a' });
             text(ctx, 'チャンスタイム！', 200, 32, { size: 24, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
             text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: 'center', bold: true });
+        } else if (battle.chant && !battle.outcome) {
+            // お経 (5 章): となえきると 必殺技。鐘を 鳴らせば 止まる
+            panel(ctx, 30, 8, 340, 40, { fill: 'rgba(90, 20, 90, 0.9)', edge: '#ffe85a' });
+            text(ctx, `お経を となえている……「${warn ? warn.name : ''}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
+            text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffe0a0' });
+        } else if (battle.smoke && !battle.outcome && !(warn && warn.until > t)) {
+            panel(ctx, 90, 8, 220, 24, { fill: 'rgba(60, 60, 70, 0.85)', edge: '#d0d0d8' });
+            text(ctx, `けむりで 攻撃が 当たりにくい (${Math.ceil(battle.smoke.left)})`, 200, 25, { size: 11, align: 'center', bold: true });
         } else if (warn && warn.idols && battle.charge && !battle.outcome) {
             // 偶像で ためる 必殺技: こわせば 止まる
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
-        } else if (warn && !warn.idols && warn.until > t) {
+        } else if (warn && !warn.idols && !warn.chant && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
@@ -1119,7 +1229,8 @@ export function createBattleView(app, battle, place) {
         drawWheel(ctx);
         drawSpecialButtons(ctx);
         button(ctx, { ...FAST_BTN, label: g.fastBattle ? '倍速 ON' : '倍速' }, { active: Boolean(g.fastBattle), size: 10.5 });
-        const lockedPart = battle.lock && battle.lockPart ? battle.enemies.find(e => e.uid === battle.lock)?.parts?.[battle.lockPart] : null;
+        const lockedE = battle.lock && battle.lockPart ? battle.enemies.find(e => e.uid === battle.lock) : null;
+        const lockedPart = lockedE ? lockedE.parts?.[battle.lockPart] || lockedE.gims?.[battle.lockPart] : null;
         text(ctx, lockedPart ? `ねらい: ${lockedPart.name} (↑↓で かえる)` : battle.lock ? 'ねらい中 (もう いちどで はずす)' : 'ねらう: ↑↓・上の 敵を タップ', 66, 17, { size: 9, color: battle.lock ? '#ff9a9a' : COLORS.dim, maxWidth: 134 });
         text(ctx, btn('fast'), FAST_BTN.x + FAST_BTN.w / 2, FAST_BTN.y + FAST_BTN.h + 10, { size: 9, align: 'center', color: COLORS.dim });
         if (menu) drawMenu(ctx);
