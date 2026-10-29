@@ -28,7 +28,8 @@ export function peopleHere(g) {
         // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
         (p.only === 'zumitani6' && g.story === 'yashiki' && !g.flags.zumi6) ||
         (p.only === 'onioni6' && g.story === 'yashiki' && g.flags.zumi6 && !g.flags.oni6) ||
-        (p.only === 'tomooka6' && g.story === 'yashiki' && g.flags.oni6));
+        (p.only === 'tomooka6' && g.story === 'yashiki' && g.flags.oni6) ||
+        (p.only === 'runaya7' && g.story === 'meikyu'));
 }
 // 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)
 export const personName = (g, p) => (p.nameBy ? p.nameBy[g.version] || p.name : p.name);

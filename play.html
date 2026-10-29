@@ -719,6 +719,19 @@ body.nopad #pad { display: none; }
     jouninman: W$1("かげぎり", "かぜ", "front", 1.6, "confuse", 0.2),
     daibakudanjirou: W$1("大ばくはつ", "ほのお", "around", 2.4),
     zumitani: W$1("クナイ乱れうち", "かぜ", "line", 1.3),
+    // 月の迷宮 (7 章)
+    tsukiusagi: W$1("もちつき", "ふしぎ", "front", 1.1),
+    nandomoslime: W$1("言ったっけ アタック", "みず", "front", 1.1, "confuse", 0.3),
+    mangetsuwolf: W$1("まんげつ かみつき", "ふつう", "front", 1.4),
+    watageboushi: W$1("わたげふわり", "かぜ", "line", 0.8, "sleep", 0.4),
+    tatsumakitsune: W$1("たつまき", "かぜ", "around", 1),
+    shakkinbourei: W$1("かえせ…", "ふしぎ", "front", 0.9, "slow", 0.5),
+    tsubomajin: W$1("ツボの けむり", "ふしぎ", "around", 0.7, "confuse", 0.3),
+    kaminarigumo: W$1("かみなり", "かぜ", "line", 1.4, "slow", 0.5),
+    kaguyausagi: W$1("月がえりの光", "ふしぎ", "line", 1.2, "confuse", 0.4),
+    shingetsuwolf: W$1("しんげつのきば", "ふつう", "front", 1.8, "confuse", 0.3),
+    rishitoribourei: W$1("利子とりたて", "ふしぎ", "front", 1.2),
+    runaya: W$1("ムーンビーム", "ふしぎ", "line", 1.3),
     // 進化で なる キャラ (ダンジョンの 進化先)
     harigeneral: W$1("針とばし", "ふつう", "line", 1.2),
     joubachi: W$1("じょおうばり", "かぜ", "front", 1.5, "poison", 0.4),
@@ -752,7 +765,8 @@ body.nopad #pad { display: none; }
     daishi5: W$1("説法", "ふしぎ", "around", 0.6, "sleep", 0.4),
     zumitani6: W$1("クナイ乱れうち", "かぜ", "line", 1.3),
     onioni6: W$1("金棒 たたき", "ほのお", "front", 1.4),
-    tomooka6: W$1("右ストレート", "ふつう", "front", 1.3)
+    tomooka6: W$1("右ストレート", "ふつう", "front", 1.3),
+    runaya7: W$1("ムーンビーム", "ふしぎ", "line", 1.3)
   };
   function wazaEffects(w) {
     if (w.heal) return [{ kind: "heal", target: "lowest", power: w.heal }];
@@ -2116,6 +2130,192 @@ body.nopad #pad { display: none; }
       desc: "ASO四天王の1人。古くから続くズミタニ家の忍者で、77代目。すばやい動きで敵を翻弄する。口調は明るいが、言葉のふしぶしにとげがある。",
       special: sp("影分身の術", [atk("all", 0.7, { hits: 3 })])
     },
+    // ----- 月の迷宮の 9 体 (7 章「月の迷宮と 喰らう 者の 伝説」。2026-10-29。ダンジョンの 月の迷宮と 夜・ふしぎの キャラ。D 5・C 4) -----
+    //   ルナヤは 迷宮の いちばん 奥の ボス (満ちていく 月) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+      id: "tsukiusagi",
+      name: "ツキウサギ",
+      from: "ダンジョン 029",
+      area: "moon",
+      rank: "D",
+      element: "ふしぎ",
+      role: "healer",
+      mul: {},
+      line: "ぺったん！",
+      favorite: "melonpan",
+      title: "ぺったんこ",
+      desc: "月で餅つきをしている。もちはとてもおいしい。",
+      special: sp("月の もちつき", [{ kind: "heal", target: "party", power: 0.5 }])
+    },
+    {
+      id: "nandomoslime",
+      name: "ナンドモスライム",
+      from: "ダンジョン 033",
+      area: "moon",
+      rank: "D",
+      element: "みず",
+      role: "defender",
+      mul: {},
+      line: "言ったっけ？言ったっけ？",
+      favorite: "niboshi",
+      title: "心配性のスライム",
+      desc: "生まれる際に、ルナヤの魔法を受けたため、心配性が映ってしまった。",
+      special: sp("言ったっけ 言ったっけ", [atk("one", 2), { kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }])
+    },
+    {
+      id: "mangetsuwolf",
+      name: "マンゲツウルフ",
+      from: "ダンジョン 031",
+      area: "moon",
+      rank: "D",
+      element: "ふつう",
+      role: "attacker",
+      mul: {},
+      line: "ワォーン！",
+      favorite: "onigiri",
+      title: "満月にあこがれる狼",
+      desc: "満月を型取ったカツラをかぶっている狼。カツラは常時発行している。",
+      special: sp("満月の 遠ぼえ", [atk("all", 1.7)])
+    },
+    {
+      id: "watageboushi",
+      name: "ワタゲボウシ",
+      from: "ダンジョン 092",
+      area: "moon",
+      rank: "D",
+      element: "かぜ",
+      role: "supporter",
+      mul: {},
+      line: "ふわふわ～",
+      favorite: "choco",
+      title: "正体不明の綿毛",
+      desc: "いつか見たあの景色に向かうため、今日も風に乗る。",
+      special: sp("わたげ ふぶき", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, atk("all", 0.8)])
+    },
+    {
+      id: "tatsumakitsune",
+      name: "タツマキツネ",
+      from: "ダンジョン 090",
+      area: "moon",
+      rank: "D",
+      element: "かぜ",
+      role: "jammer",
+      mul: {},
+      line: "コーン！（ぐるぐる）",
+      favorite: "choco",
+      title: "竜巻の卵",
+      desc: "しっぽで竜巻を育てている狐。この竜巻はやがて独り立ちし、災害として、地球を練り歩く。",
+      special: sp("大たつまき", [atk("all", 0.8, { magic: true }), { kind: "status", target: "all", status: "confuse", chance: 0.6 }])
+    },
+    {
+      id: "shakkinbourei",
+      name: "シャッキンボウレイ",
+      from: "ダンジョン 046",
+      area: "moon",
+      rank: "C",
+      element: "ふしぎ",
+      role: "supporter",
+      mul: {},
+      line: "…かえせ…かえせ…",
+      favorite: "melonpan",
+      title: "借金返せ",
+      desc: "借金を返してもらえないものの恨みが具現化したもの。",
+      special: sp("かえせ かえせ", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, atk("all", 0.8)])
+    },
+    {
+      id: "tsubomajin",
+      name: "ツボマジン",
+      from: "ダンジョン 043",
+      area: "moon",
+      rank: "C",
+      element: "ふしぎ",
+      role: "supporter",
+      mul: {},
+      line: "出でよ！",
+      favorite: "melonpan",
+      title: "壺のマジン",
+      desc: "ジーニーをリスペクトしている。願いを１つかなえることができなくもない。",
+      special: sp("出でよ 大魔神", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, atk("all", 0.8)])
+    },
+    {
+      id: "kaminarigumo",
+      name: "カミナリグモ",
+      from: "ダンジョン 091",
+      area: "moon",
+      rank: "C",
+      element: "かぜ",
+      role: "jammer",
+      mul: {},
+      line: "ゴロゴロ…ピシャーン！",
+      favorite: "choco",
+      title: "カミナリグモもどき",
+      desc: "雷雲を模した蜘蛛。しかし雷の力は本物。",
+      special: sp("いなずま 乱れうち", [atk("all", 0.8, { magic: true }), { kind: "status", target: "all", status: "slow", chance: 0.6 }])
+    },
+    {
+      id: "runaya",
+      name: "ルナヤ",
+      from: "アソ・ダンジョン",
+      area: "moon",
+      rank: "C",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { mag: 1.25, hp: 0.95 },
+      line: "よく来たわね。…よく来たわね。あら、もう言ったかしら？",
+      favorite: "melonpan",
+      title: "月の迷宮の大魔法使い",
+      desc: "ASO四天王の1人。前は摩天楼を作り、今は 月の迷宮を作った大魔法使い。迷宮の形を自由自在に変えられる。月の魔術を使い、月の力をこめたビームを放つ。心配性なのか、同じことを何度も話そうとする癖がある。",
+      special: sp("満月の ムーンビーム", [atk("all", 1.6, { magic: true, element: "ふしぎ" })])
+    },
+    // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
+    {
+      id: "kaguyausagi",
+      name: "カグヤウサギ",
+      from: "ダンジョン 069",
+      area: "moon",
+      evo: "tsukiusagi",
+      rank: "C",
+      element: "ふしぎ",
+      role: "healer",
+      mul: {},
+      line: "月に 帰りますね",
+      favorite: "melonpan",
+      title: "月に帰る兎",
+      desc: "ツキウサギが月のしずくで進化した姿。餅つきの腕を見こまれて、月のお姫様のおともになった。ときどき「月に帰ります」と言っていなくなる。もちは相変わらずおいしい。",
+      special: sp("月への 帰り道", [{ kind: "heal", target: "party", power: 0.5 }])
+    },
+    {
+      id: "shingetsuwolf",
+      name: "シンゲツウルフ",
+      from: "ダンジョン 070",
+      area: "moon",
+      evo: "mangetsuwolf",
+      rank: "C",
+      element: "かぜ",
+      role: "attacker",
+      mul: {},
+      line: "アオーーン！",
+      favorite: "choco",
+      title: "新月の狼",
+      desc: "マンゲツウルフが満月をあきらめて進化した姿。カツラを外したら、新月の夜にいちばん強くなれることに気づいた。カツラは今も大事に持っている。",
+      special: sp("新月の 牙", [atk("all", 1.7)])
+    },
+    {
+      id: "rishitoribourei",
+      name: "リシトリボウレイ",
+      from: "ダンジョン 078",
+      area: "moon",
+      evo: "shakkinbourei",
+      rank: "B",
+      element: "ふしぎ",
+      role: "supporter",
+      mul: {},
+      line: "…利子も かえせ…",
+      favorite: "melonpan",
+      title: "利子も返せ",
+      desc: "シャッキンボウレイが呪いのコインで進化した姿。借金だけでなく、利子まで取り立てるようになった。おにおにとは気が合うらしい。",
+      special: sp("りしとり の のろい", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, atk("all", 0.8)])
+    },
     // 忍びの屋敷の キャラの 進化先 2 体 (6 章。町には 出ない)
     {
       id: "jouninman",
@@ -2414,7 +2614,7 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
-  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷" };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
@@ -2444,6 +2644,9 @@ body.nopad #pad { display: none; }
     takaramimic: { to: "kinkomimic", lv: 45 },
     koorimodoki: { to: "koorimodokishin", lv: 50 },
     daichouenkin: { to: "daichouenou", lv: 30 },
+    tsukiusagi: { to: "kaguyausagi", lv: 36 },
+    mangetsuwolf: { to: "shingetsuwolf", lv: 40 },
+    shakkinbourei: { to: "rishitoribourei", lv: 42 },
     geninman: { to: "jouninman", lv: 35 },
     bakudanjirou: { to: "daibakudanjirou", lv: 34 }
   };
@@ -2688,6 +2891,43 @@ body.nopad #pad { display: none; }
       befriends: null,
       lv: 28,
       place: "yashiki"
+    },
+    // 7 章の ボス: 月の迷宮の 大魔法使い ルナヤ (「力を ためさせて もらうわ」)。しかけは Claude の 案 (2026-10-29)
+    //   満ちていく 月: 5 秒ごとに 空の 月が 1 段 満ちて (5 段で 満月)、満月で 4 秒 ためて「満月の ムーンビーム」(全体に 大)。
+    //     空の 月を ロックオンして 当てると、最大HP の 3% ごとに 1 段 欠ける (ルナヤには ほとんど ダメージなし)。ためている あいだに
+    //     満月より 欠けさせると 止まって 新月に もどる (トモオカの 右腕と 同じ しくみ。arm の growEvery・afterCancel)
+    //   もの忘れ (前作の「同じことを何度も話そうとする癖」): ときどき 同じ わざを もう いちど 使う (repeat)
+    runaya7: {
+      id: "runaya7",
+      name: "ルナヤ",
+      element: "ふしぎ",
+      role: "jammer",
+      art: "runaya",
+      scale: 1.4,
+      rank: "B",
+      base: { hp: 720, atk: 12, def: 13, spd: 11, mag: 12 },
+      moves: [
+        { name: "ムーンビーム", w: 3, effects: [atk("one", 1.4, { magic: true, element: "ふしぎ" })] },
+        { name: "月の 魔術", w: 3, effects: [atk("all", 0.6, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "confuse", chance: 0.3 }] },
+        { name: "迷宮がえ", w: 1.5, effects: [{ kind: "status", target: "all", status: "slow", chance: 0.5 }] }
+      ],
+      repeat: 0.25,
+      arm: {
+        max: 5,
+        start: 0,
+        perHit: 0,
+        growEvery: 5,
+        step: 0.03,
+        bodyCut: 0.05,
+        charge: 4,
+        after: 0,
+        afterCancel: 0,
+        move: { name: "満月の ムーンビーム", effects: [atk("all", 2.6, { magic: true, element: "ふしぎ" })] }
+      },
+      gims: { moon: { name: "月", hp: 99, when: "always", pos: [2.8, -0.7], arm: true } },
+      befriends: "runaya",
+      lv: 30,
+      place: "moon"
     }
   };
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
@@ -2748,14 +2988,15 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 228;
+  const MAP_W = 48, MAP_H = 264;
   const TOWN_H = 36;
   const SCHOOL_Y0 = 60;
   const YAMA_Y0 = 84;
   const UMI_Y0 = 120;
   const TERA_Y0 = 156;
   const YASHIKI_Y0 = 192;
-  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z"]);
+  const MOON_Y0 = 228;
+  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z", "V"]);
   const WET = /* @__PURE__ */ new Set(["D", "E", "I"]);
   function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("G"));
@@ -2907,6 +3148,31 @@ body.nopad #pad { display: none; }
     [[3, Y6 + 4], [5, Y6 + 10], [2, Y6 + 16], [4, Y6 + 22], [43, Y6 + 4], [45, Y6 + 12], [42, Y6 + 20], [44, Y6 + 27], [14, Y6 + 27], [33, Y6 + 28], [38, Y6 + 31]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
+    const M = MOON_Y0;
+    fill(0, M, MAP_W - 1, MAP_H - 1, "T");
+    fill(1, M + 27, MAP_W - 2, M + 34, "G");
+    fill(4, M + 1, 44, M + 26, "V");
+    const v = (x0, y0, x1, y1) => fill(x0, y0, x1, y1, "v");
+    v(23, M + 20, 24, M + 26);
+    v(8, M + 20, 40, M + 21);
+    v(8, M + 8, 9, M + 21);
+    v(8, M + 8, 20, M + 9);
+    v(19, M + 3, 20, M + 9);
+    v(17, M + 1, 31, M + 5);
+    v(39, M + 12, 40, M + 21);
+    v(26, M + 12, 40, M + 13);
+    v(26, M + 12, 27, M + 17);
+    v(30, M + 16, 35, M + 17);
+    v(28, M + 16, 29, M + 17);
+    v(12, M + 14, 16, M + 17);
+    v(10, M + 15, 11, M + 16);
+    v(14, M + 10, 15, M + 13);
+    fill(23, M + 27, 24, M + 33, "K");
+    fill(4, M + 31, 6, M + 31, "K");
+    fill(4, M + 32, 24, M + 33, "K");
+    [[3, M + 28], [12, M + 29], [30, M + 29], [40, M + 30], [44, M + 28], [17, M + 33]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -2943,7 +3209,9 @@ body.nopad #pad { display: none; }
     { id: "shoko", label: "書庫", x: 34, y: TERA_Y0 + 3, w: 6, h: 4, wall: "#c8a878", roof: "#4a3a3a", door: { x: 36, y: TERA_Y0 + 6 } },
     { id: "teraStation", label: "ネット寺前駅", x: 2, y: TERA_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#5a3a8a", door: { x: 5, y: TERA_Y0 + 30 } },
     // 忍びの屋敷 (6 章)
-    { id: "yashikiStation", label: "忍びの屋敷前駅", x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#3a3a3a", door: { x: 5, y: YASHIKI_Y0 + 30 } }
+    { id: "yashikiStation", label: "忍びの屋敷前駅", x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#3a3a3a", door: { x: 5, y: YASHIKI_Y0 + 30 } },
+    // 月の迷宮 (7 章)
+    { id: "moonStation", label: "月の迷宮前駅", x: 2, y: MOON_Y0 + 27, w: 6, h: 4, wall: "#e0e0f0", roof: "#3a3a6a", door: { x: 5, y: MOON_Y0 + 30 } }
   ];
   const GATES = [
     { id: "gateW", x: 12, y: TOWN_H - 1, w: 2, only: "beforeClear" },
@@ -2953,7 +3221,9 @@ body.nopad #pad { display: none; }
   ];
   const PROPS = [
     { id: "torii-l", kind: "torii", x: 5, y: 9 },
-    { id: "torii-r", kind: "torii", x: 8, y: 9 }
+    { id: "torii-r", kind: "torii", x: 8, y: 9 },
+    // 7 章: 月の迷宮の 月の 鏡
+    { id: "moonMirror", kind: "mirror", x: 24, y: MOON_Y0 + 1 }
   ];
   const SHOUTENGAI_LV = [6, 10];
   const SCHOOL_LV = [9, 13];
@@ -2962,6 +3232,7 @@ body.nopad #pad { display: none; }
   const CAVE_LV = [17, 20];
   const TERA_LV = [19, 22];
   const YASHIKI_LV = [22, 25];
+  const MOON_LV = [25, 28];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -2987,7 +3258,10 @@ body.nopad #pad { display: none; }
     { id: "takeOku", label: "竹やぶの おく", x: 8, y: TERA_Y0 + 29, cue: "nightEyes", lv: TERA_LV, kinds: [{ id: "notfound", w: 1, time: ["evening", "night"] }] },
     // 忍びの屋敷 (6 章)
     { id: "tenjou", label: "西の間の 天井うら", x: 14, y: YASHIKI_Y0 + 4, cue: "nightEyes", lv: YASHIKI_LV, kinds: [{ id: "geninman", w: 1 }] },
-    { id: "kuraTsubo", label: "蔵の すみ", x: 38, y: YASHIKI_Y0 + 8, cue: "glitch", lv: YASHIKI_LV, kinds: [{ id: "makibikonmk3", w: 1 }] }
+    { id: "kuraTsubo", label: "蔵の すみ", x: 38, y: YASHIKI_Y0 + 8, cue: "glitch", lv: YASHIKI_LV, kinds: [{ id: "makibikonmk3", w: 1 }] },
+    // 月の迷宮 (7 章)
+    { id: "moonTsubo", label: "西の 小部屋の ツボ", x: 13, y: MOON_Y0 + 15, cue: "glitch", lv: MOON_LV, kinds: [{ id: "tsubomajin", w: 1 }] },
+    { id: "moonKado", label: "行き止まりの かげ", x: 34, y: MOON_Y0 + 17, cue: "nightEyes", lv: MOON_LV, kinds: [{ id: "shakkinbourei", w: 1 }] }
   ];
   const ROAMS = [
     { id: "kawakami", label: "夏の川上", x0: 25, y0: 1, x1: 29, y1: 5, max: 1, kinds: [{ id: "soumennagare", w: 1 }] },
@@ -3034,6 +3308,11 @@ body.nopad #pad { display: none; }
     { id: "niwa", label: "屋敷の 庭", x0: 9, y0: YASHIKI_Y0 + 14, x1: 39, y1: YASHIKI_Y0 + 22, max: 2, lv: YASHIKI_LV, kinds: [{ id: "shurikenbo", w: 2 }, { id: "konin", w: 2 }, { id: "aoonibo", w: 1 }, { id: "zumitani", w: 1, after: "clear6" }] },
     { id: "rouka6", label: "屋敷の ろうか", x0: 9, y0: YASHIKI_Y0 + 11, x1: 39, y1: YASHIKI_Y0 + 12, max: 1, lv: YASHIKI_LV, kinds: [{ id: "kanabone", w: 2 }, { id: "hyoutanoni", w: 1, time: ["evening", "night"] }] },
     { id: "nishinoma", label: "西の間", x0: 9, y0: YASHIKI_Y0 + 3, x1: 16, y1: YASHIKI_Y0 + 9, max: 1, lv: YASHIKI_LV, kinds: [{ id: "taikooni", w: 1 }, { id: "bakudanjirou", w: 2 }] },
+    // 月の迷宮 (7 章)。ルナヤは 7 章 クリアの あと (clear7) 鏡の 間に いる
+    { id: "moonSouth", label: "迷宮の 南の 横道", x0: 8, y0: MOON_Y0 + 20, x1: 40, y1: MOON_Y0 + 21, max: 2, lv: MOON_LV, kinds: [{ id: "tsukiusagi", w: 2 }, { id: "nandomoslime", w: 2 }, { id: "watageboushi", w: 1 }] },
+    { id: "moonWest", label: "迷宮の 西の たて道", x0: 8, y0: MOON_Y0 + 8, x1: 20, y1: MOON_Y0 + 19, max: 1, lv: MOON_LV, kinds: [{ id: "mangetsuwolf", w: 2, time: ["evening", "night"] }, { id: "tatsumakitsune", w: 1 }, { id: "nandomoslime", w: 1 }] },
+    { id: "moonEast", label: "迷宮の 東の 行き止まり", x0: 26, y0: MOON_Y0 + 12, x1: 40, y1: MOON_Y0 + 19, max: 1, lv: MOON_LV, kinds: [{ id: "kaminarigumo", w: 1 }, { id: "watageboushi", w: 1 }, { id: "tatsumakitsune", w: 1 }] },
+    { id: "moonOku", label: "月の 鏡の 間", x0: 17, y0: MOON_Y0 + 1, x1: 31, y1: MOON_Y0 + 5, max: 1, lv: MOON_LV, kinds: [{ id: "runaya", w: 1, after: "clear7" }, { id: "tsukiusagi", w: 1, after: "clear7" }] },
     { id: "yashikiSoto", label: "屋敷の まわり", x0: 1, y0: YASHIKI_Y0 + 24, x1: 46, y1: YASHIKI_Y0 + 33, max: 2, lv: YASHIKI_LV, kinds: [{ id: "shurikenbo", w: 1 }, { id: "konin", w: 1 }, { id: "bakudanjirou", w: 1 }] }
   ];
   const FRIENDS = [
@@ -3165,7 +3444,9 @@ body.nopad #pad { display: none; }
     { id: "onioni6", name: "おにおに", art: "onioni", x: 24, y: YASHIKI_Y0 + 5, only: "onioni6" },
     // ルキハ (第 1 形態) は おにおにの うしろに 座っている (話しかけるのは おにおに)
     { id: "rukiha6", name: "ルキハ", art: "rukiha", x: 21, y: YASHIKI_Y0 + 4, only: "onioni6" },
-    { id: "tomooka6", name: "トモオカ", art: "tomooka", x: 35, y: YASHIKI_Y0 + 5, only: "tomooka6", scale: 1.3 }
+    { id: "tomooka6", name: "トモオカ", art: "tomooka", x: 35, y: YASHIKI_Y0 + 5, only: "tomooka6", scale: 1.3 },
+    // 7 章: 月の 鏡の 間で 待つ ルナヤ (話すと 鏡の 回想 → 力を ためす バトル)
+    { id: "runaya7", name: "ルナヤ", art: "runaya", x: 27, y: MOON_Y0 + 2, only: "runaya7", scale: 1.2 }
   ];
   const START = { x: 6, y: 24 };
   const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
@@ -3308,6 +3589,12 @@ body.nopad #pad { display: none; }
   const UMI_IN = { x: 5, y: UMI_Y0 + 5, dir: "down" };
   const STATION_OUT = { x: 5, y: 41, dir: "down" };
   const UMI_AFTER_BOSS = { x: 28, y: UMI_Y0 + 11, dir: "right" };
+  const MOON_IN = { x: 5, y: MOON_Y0 + 31, dir: "down" };
+  const MOON_PLACES = [
+    { id: "kagami", label: "月の鏡", x: 24, y: MOON_Y0 + 2 },
+    { id: "iriguchi", label: "入り口", x: 23.5, y: MOON_Y0 + 25 },
+    { id: "moonStation", label: "駅", x: 5, y: MOON_Y0 + 28 }
+  ];
   const YASHIKI_IN = { x: 5, y: YASHIKI_Y0 + 31, dir: "down" };
   const YASHIKI_PLACES = [
     { id: "okunoma", label: "奥の間", x: 24, y: YASHIKI_Y0 + 4 },
@@ -3368,8 +3655,8 @@ body.nopad #pad { display: none; }
     { id: "cave", label: "海岸どうくつ", x: 37, y: UMI_Y0 + 13 }
   ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
-  const regionOf = (ty) => ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MAP_H] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
+  const areaAt = (x, y) => y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const regionOf = (ty) => ty >= MOON_Y0 ? [MOON_Y0, MAP_H] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
   const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
@@ -3403,7 +3690,7 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6"];
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7"];
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -3589,6 +3876,10 @@ body.nopad #pad { display: none; }
         g.story = "clear6";
         g.chapter = 7;
       }
+      if (bossId === "runaya7") {
+        g.story = "clear7";
+        g.chapter = 8;
+      }
       return out;
     }
     const ids = [...new Set(battle.enemies.map((e) => e.id))];
@@ -3666,10 +3957,14 @@ body.nopad #pad { display: none; }
         return "石の川駅から、電車で 忍びの屋敷へ 行こう";
       case "yashiki":
         return !g.flags.zumi6 ? "忍びの屋敷の 庭で ズミタニに 会おう" : !g.flags.oni6 ? "屋敷の いちばん 奥の「奥の間」へ 行こう" : "東の 蔵で 鬼鬼団の 幹部を たおして メダルを とりもどそう";
+      case "clear6":
+        return "石の川駅から、電車で 月の迷宮へ 行こう";
+      case "meikyu":
+        return "月の迷宮の いちばん 奥の「月の 鏡」を めざそう";
       default: {
         const got = (area) => idsInArea(area).filter((id) => g.zukan.friends[id]).length;
         const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}・${part("yashiki", "屋敷")}`;
+        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}・${part("yashiki", "屋敷")}・${part("moon", "月")}`;
       }
     }
   }
@@ -3684,7 +3979,12 @@ body.nopad #pad { display: none; }
     return true;
   }
   const canRideTrain = (g) => reached(g, "umi");
-  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : []];
+  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : []];
+  function arriveMoon(g) {
+    if (g.story !== "clear6") return false;
+    g.story = "meikyu";
+    return true;
+  }
   function startChapter6(g) {
     if (g.story !== "clear5") return false;
     g.story = "shinobi";
@@ -3782,6 +4082,8 @@ body.nopad #pad { display: none; }
       armDef: sp2.arm || null,
       armLv: sp2.arm ? sp2.arm.start : 0,
       armDmg: 0,
+      armT: 0,
+      repeat: sp2.repeat || 0,
       parts: sp2.parts ? Object.fromEntries(Object.entries(sp2.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
   }
@@ -3903,10 +4205,10 @@ body.nopad #pad { display: none; }
       else if (fx.kind === "status") addStatus(b, from, fx.status, fx.chance);
     }
   }
-  function armGrow(b, u) {
+  function armGrow(b, u, n = u.armDef.perHit) {
     const a = u.armDef;
-    if (u.armLv >= a.max) return;
-    u.armLv = Math.min(a.max, u.armLv + a.perHit);
+    if (u.armLv >= a.max || !n) return;
+    u.armLv = Math.min(a.max, u.armLv + n);
     emit(b, "armGrow", { target: u.uid, lv: u.armLv });
     if (u.armLv >= a.max && !b.armCharge) {
       b.armCharge = { uid: u.uid, left: a.charge };
@@ -3927,6 +4229,11 @@ body.nopad #pad { display: none; }
     emit(b, "armShrink", { target: u.uid, lv: u.armLv });
     if (b.armCharge && b.armCharge.uid === u.uid && u.armLv < a.max) {
       b.armCharge = null;
+      if (a.afterCancel !== void 0) {
+        u.armLv = a.afterCancel;
+        u.armDmg = 0;
+        u.armT = 0;
+      }
       emit(b, "bigCancel", { actor: u.uid, name: a.move.name, arm: true });
     }
   }
@@ -4214,7 +4521,14 @@ body.nopad #pad { display: none; }
         u.shell = move.shell;
         emit(b, "shell", { actor: u.uid, time: move.shell });
       } else if (move.clones) summonClones(b, u);
-      else applyEffects(b, u, move.effects || []);
+      else {
+        applyEffects(b, u, move.effects || []);
+        if (u.repeat && move.effects && move.effects.length && b.rng.chance(u.repeat)) {
+          emit(b, "repeat", { actor: u.uid, name: move.name });
+          emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss" });
+          applyEffects(b, u, move.effects);
+        }
+      }
       return;
     }
     const cmd = chooseCommand(b, u);
@@ -4321,6 +4635,14 @@ body.nopad #pad { display: none; }
       else if (b.clones.tp <= 0) {
         b.clones.tp = ((_a = b.enemies.find((e) => e.uid === b.clones.uid)) == null ? void 0 : _a.cloneDef.teleport) || 4;
         shuffleClones(b);
+      }
+    }
+    for (const e of b.enemies) {
+      if (e.ko || !e.armDef || !e.armDef.growEvery || b.armCharge || b.chance && b.chance.uid === e.uid) continue;
+      e.armT += dt;
+      if (e.armT >= e.armDef.growEvery) {
+        e.armT = 0;
+        armGrow(b, e, 1);
       }
     }
     if (b.armCharge) {
@@ -9885,6 +10207,590 @@ body.nopad #pad { display: none; }
           "...................................."
         ]
       ]
+    },
+    tsukiusagi: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#f0f0f0", "b": "#ffb0c0", "c": "#e04060", "d": "#a07a4a", "e": "#c09a6a" },
+      frames: [
+        [
+          ".....aa..aa.....",
+          ".....ab..ab.....",
+          ".....ab..ab.....",
+          ".....ab..ab.....",
+          ".....aa..aaeeee.",
+          "....aaaaaaaeeee.",
+          "....aaaaaaaeeee.",
+          "....aacaacaad...",
+          "....aaaaaaaad...",
+          "....aaaaaaaad...",
+          ".....aaaaaa.d...",
+          ".....aaaaaa.d...",
+          ".....aaaaaa.d...",
+          ".....aaaaaa.....",
+          "................",
+          "................"
+        ],
+        [
+          ".....aa..aa.....",
+          ".....ab..ab.....",
+          ".....ab..ab.....",
+          ".....ab..abeeee.",
+          ".....aa..aaeeee.",
+          "....aaaaaaaeeee.",
+          "....aaaaaaaad...",
+          "....aacaacaad...",
+          "....aaaaaaaad...",
+          "....aaaaaaaad...",
+          ".....aaaaaa.d...",
+          ".....aaaaaa.d...",
+          ".....aaaaaa.....",
+          ".....aaaaaa.....",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    nandomoslime: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#5ac8c8", "b": "#c0ffff", "c": "#111111", "d": "#2a6a6a" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          "......aaaa......",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "..aabbaaaaaaaa..",
+          "..aaacaaaacaaa..",
+          "..aaacaaaacaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aadddaadddaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "......aaaa......",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "..aabbaaaaaaaa..",
+          "..aaacaaaacaaa..",
+          "..aaacaaaacaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aadddaadddaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    mangetsuwolf: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#fff0a0", "b": "#7a7a8a", "c": "#ffe040", "d": "#6a6a7a" },
+      frames: [
+        [
+          ".........aaaaaa.",
+          ".........aaaaaa.",
+          ".........aaaaaa.",
+          ".........aaabba.",
+          ".........aaabba.",
+          "..........bbbbb.",
+          "bbb.......bbbbb.",
+          "bbbbbbbbbbbbbcb.",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbb...",
+          "..bbbbbbbbbbb...",
+          "...dd.....dd....",
+          "...dd.....dd....",
+          "...dd.....dd....",
+          "................"
+        ],
+        [
+          ".........aaaaaa.",
+          ".........aaaaaa.",
+          ".........aaaaaa.",
+          ".........aaabba.",
+          ".........aaabba.",
+          "..........bbbbb.",
+          "bbb.......bbbbb.",
+          "bbbbbbbbbbbbbcb.",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbb...",
+          "..bbbbbbbbbbb...",
+          "....dd...dd.....",
+          "....dd...dd.....",
+          "....dd...dd.....",
+          "................"
+        ]
+      ]
+    },
+    watageboushi: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ffffff", "b": "#e0e0e8", "c": "#f0c8a0", "d": "#111111", "e": "#ff9ab0", "f": "#6ac04a", "g": "#3a7a2a" },
+      frames: [
+        [
+          "................",
+          "....aaaaaaaa..a.",
+          "...aabaaaaaaaa..",
+          "...aaaaaabaaa...",
+          "...aaaaaaaaaa...",
+          "....aaaaaaaa....",
+          "......cccc......",
+          "......ccdc......",
+          "......ccce......",
+          "......ffff......",
+          "......ffff......",
+          "......ffff......",
+          "......ffff......",
+          "......g..g......",
+          "......g..g......",
+          "................"
+        ],
+        [
+          "....aaaaaaaa....",
+          "...aabaaaaaaaa..",
+          "...aaaaaabaaa.a.",
+          "...aaaaaaaaaa...",
+          "....aaaaaaaa....",
+          "................",
+          "......cccc......",
+          "......ccdc......",
+          "......ccce......",
+          "......ffff......",
+          "......ffff......",
+          "......ffff......",
+          "......ffff......",
+          "......g..g......",
+          "......g..g......",
+          "................"
+        ]
+      ]
+    },
+    tatsumakitsune: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#f08a30", "b": "#fff0e0", "c": "#111111", "d": "#d06a20", "e": "#c8e0f0" },
+      frames: [
+        [
+          "................",
+          ".eeee...........",
+          "..eeee....a..a..",
+          ".eee......a..a..",
+          "..eee.....aaaaa.",
+          "...ee.....aacaa.",
+          "....e.....aaaabb",
+          "....eaaaaaaaaaa.",
+          ".....aaaaaaa....",
+          ".....aabbbba....",
+          ".....aabbbba....",
+          "......d...d.....",
+          "......d...d.....",
+          "......d...d.....",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "..eeee..........",
+          ".eeee.....a..a..",
+          "..eee.....a..a..",
+          ".eee......aaaaa.",
+          "...ee.....aacaa.",
+          "....e.....aaaabb",
+          "....eaaaaaaaaaa.",
+          ".....aaaaaaa....",
+          ".....aabbbba....",
+          ".....aabbbba....",
+          "......d...d.....",
+          "......d...d.....",
+          "......d...d.....",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    shakkinbourei: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#d0d8e8", "b": "#333333", "c": "#ffffff", "d": "#888888", "e": "#e04040" },
+      frames: [
+        [
+          "................",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaabbaaa..",
+          "..aaabbaabbaaa..",
+          "..aaaaaaaaccccc.",
+          "..aaaaaaaacdddc.",
+          "..aaaaaaaaccccc.",
+          "...aaaaaaacdddc.",
+          "...aaaaaaacceec.",
+          "....aaa..accccc.",
+          "....aaa..aaa....",
+          "....aaa.........",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaabbaaa..",
+          "..aaabbaabccccc.",
+          "..aaaaaaaacdddc.",
+          "..aaaaaaaaccccc.",
+          "..aaaaaaaacdddc.",
+          "...aaaaaaacceec.",
+          "...aaaaaaaccccc.",
+          "....aaa..aaa....",
+          "....aaa..aaa....",
+          "....aaa.........",
+          "................"
+        ]
+      ]
+    },
+    tsubomajin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5a3a", "b": "#a07a4a", "c": "#7a5ac8", "d": "#ffe040" },
+      frames: [
+        [
+          "................",
+          "......cccc......",
+          "......dccd......",
+          "......cccc......",
+          "..cccccccccccc..",
+          "..cccccccccccc..",
+          ".....cccccc.....",
+          ".....cccccc.....",
+          ".....cccccc.....",
+          ".....bbbbbb.....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "................"
+        ],
+        [
+          "......cccc......",
+          "......dccd......",
+          "......cccc......",
+          "..cccccccccccc..",
+          "..cccccccccccc..",
+          ".....cccccc.....",
+          ".....cccccc.....",
+          ".....cccccc.....",
+          "................",
+          ".....bbbbbb.....",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "................"
+        ]
+      ]
+    },
+    kaminarigumo: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#6a6a88", "b": "#5a5a78", "c": "#ffe040", "d": "#3a3a50" },
+      frames: [
+        [
+          "................",
+          "................",
+          ".....aaaaaa.....",
+          "...bbbbbbbbbb...",
+          "..bbbbbbbcbcbb..",
+          "..bbbbbbbbcbbb..",
+          "..bbbbbbbbbbbb..",
+          "...bbbbbbbbbb...",
+          "..d.d.d...d.d.d.",
+          "..d.d.d...d.d.d.",
+          "..d.d.d...d.d.d.",
+          "....d.......d...",
+          "................",
+          "................",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          ".....aaaaaa.....",
+          "...bbbbbbbbbb...",
+          "..bbbbbbbcbcbb..",
+          "..bbbbbbbbcbbb..",
+          "..bbbbbbbbbbbb..",
+          "...bbbbbbbbbb...",
+          "..d.d.dc..d.d.d.",
+          "..d.d.dc..d.d.d.",
+          "..d.d.d.c.d.d.d.",
+          "....d...c...d...",
+          ".......c........",
+          ".......c........",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    kaguyausagi: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#f0f0f0", "b": "#efb0ff", "c": "#c040e0", "d": "#a04a70", "e": "#c06a90", "f": "#d03a5a", "g": "#ffd84a", "h": "#3a8ad0", "i": "#6a3ab0" },
+      frames: [
+        [
+          ".....aa..aa.....",
+          ".....ab..ab.....",
+          ".....ab..ab.....",
+          ".....ab..ab.....",
+          ".....aa..aaeeee.",
+          "....aaaaaaaeeee.",
+          "....aaaaaaaeeee.",
+          "....aacaacaad...",
+          "....aaaaaaaad...",
+          "....aaaaaaaad...",
+          ".....aaaaaa.d...",
+          "....ffffffffd...",
+          "....ggggggggd...",
+          "....hhhhhhhh....",
+          "...iiiiiiiiii...",
+          "................"
+        ],
+        [
+          ".....aa..aa.....",
+          ".....ab..ab.....",
+          ".....ab..ab.....",
+          ".....ab..abeeee.",
+          ".....aa..aaeeee.",
+          "....aaaaaaaeeee.",
+          "....aaaaaaaad...",
+          "....aacaacaad...",
+          "....aaaaaaaad...",
+          "....aaaaaaaad...",
+          ".....aaaaaa.d...",
+          "....ffffffffd...",
+          "....gggggggg....",
+          "....hhhhhhhh....",
+          "...iiiiiiiiii...",
+          "................"
+        ]
+      ]
+    },
+    shingetsuwolf: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#746a32", "b": "#7a7a8a", "c": "#595126", "d": "#6a6a7a", "e": "#e8e8ff", "f": "#10162a", "g": "#ff3030" },
+      frames: [
+        [
+          ".........aaaaaa.",
+          ".ffe.....aaaaaa.",
+          ".ffe.....aaaaaa.",
+          ".eee.....aaabba.",
+          ".........aaabba.",
+          "..........bbbbb.",
+          "bbb.......bbbbb.",
+          "bbbbbbbbbbbbbcb.",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbb...",
+          "..bbbbbbbbbbb...",
+          "...dd.....dd....",
+          "...dd.....dd....",
+          "...dd.....dd....",
+          "................"
+        ],
+        [
+          ".........aaaaaa.",
+          ".ffe.....aaaaaa.",
+          ".ffe.....aaaaaa.",
+          ".eee.....aaabba.",
+          ".........aaabba.",
+          "..........bbbbb.",
+          "bbb.......bbgbb.",
+          "bbbbbbbbbbbbbcb.",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbbbdd",
+          "..bbbbbbbbbbb...",
+          "..bbbbbbbbbbb...",
+          "....dd...dd.....",
+          "....dd...dd.....",
+          "....dd...dd.....",
+          "................"
+        ]
+      ]
+    },
+    rishitoribourei: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#d0e8d4", "b": "#333333", "c": "#ffffff", "d": "#888888", "e": "#9040e0", "f": "#8a5a2a", "g": "#5a3a1a", "h": "#f0d0a0" },
+      frames: [
+        [
+          "................",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaabbaaa..",
+          "..aaabbaabbaaa..",
+          "..aaaaaaaaccccc.",
+          "..aaaaaaaacdddc.",
+          "..aaaaaaaaffhff.",
+          "...aaaaaaaggggg.",
+          "...aaaaaaahfffh.",
+          "....aaa..accccc.",
+          "....aaa..aaa....",
+          "....aaa.........",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaaaaaaa...",
+          "..aaabbaabbaaa..",
+          "..aaabbaabccccc.",
+          "..aaaaaaaacdddc.",
+          "..aaaaaaaaccccc.",
+          "..aaaaaaaahfffh.",
+          "...aaaaaaaggggg.",
+          "...aaaaaaaffhff.",
+          "....aaa..aaa....",
+          "....aaa..aaa....",
+          "....aaa.........",
+          "................"
+        ]
+      ]
+    },
+    runaya: {
+      w: 36,
+      h: 50,
+      palette: { "a": "#d8dcf0", "b": "#6a3ab0", "c": "#4a2280", "d": "#ffe680", "e": "#f0c8a0", "f": "#6a30c0", "g": "#ffffff", "h": "#d8a880", "i": "#c03060", "j": "#8a8aa0", "k": "#2a1a3a" },
+      frames: [
+        [
+          "...............bbbb........dddd.....",
+          "...............bbbb.......dd........",
+          "...............bbbb.......dd........",
+          ".............bbbbbbbb.....dd........",
+          ".............bbbbddbb.....dd........",
+          ".............bbbdddbb.....dd........",
+          ".............bbbbddbb.....dd........",
+          "...........bbbbbbbbbbbbbb..dddd.....",
+          "...........bbbbbbbbbbbbbb...jj......",
+          "...........bbbbbbbbbbbbbb...jj......",
+          ".......cccccccccccccccccccccjj......",
+          ".......cccccccccccccccccccccjj......",
+          "..........aaaaaaaaaaaaaaaa..jj......",
+          "..........aaaaaaaaaaaaaaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aaaefgfeefgfeaaa..jj......",
+          "..........aaaefffeefffeaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aaaeeeehheeeeaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aaaeeeiiiieeeaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aabbbbddddbbbbaa..jj......",
+          ".........bbbbbbbddddbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........eeebbbbbbbbbbbbeee.jj......",
+          ".........eeebdbbbbbbbbbbeee.jj......",
+          "..........bbbbbbbbbbbbbbbb..jj......",
+          "..........bbbbbbbbbbbdbbbb..jj......",
+          "..........bbbbbbbbbbbbbbbb..jj......",
+          "........ccccccccccccccccccccjj......",
+          "........ccccccccccccccccccccjj......",
+          "........cccccccccdccccccccccjj......",
+          "........cccdccccccccccccdcccjj......",
+          "........ccccccccccccccccccccjj......",
+          "........ccccccccccccccccccccjj......",
+          "............kkkkk..kkkkk....jj......",
+          "............kkkkk..kkkkk....jj......",
+          "............kkkkk..kkkkk....jj......",
+          "....................................",
+          "....................................",
+          "...................................."
+        ],
+        [
+          "...............bbbb.......dd........",
+          "...............bbbb.......dd........",
+          "...............bbbb.......dd........",
+          ".............bbbbbbbb.....dd........",
+          ".............bbbbddbb.....dd........",
+          ".............bbbdddbb.....dd........",
+          ".............bbbbddbb......dddd.....",
+          "...........bbbbbbbbbbbbbb...jj......",
+          "...........bbbbbbbbbbbbbb...jj......",
+          "...........bbbbbbbbbbbbbb...jj......",
+          ".......cccccccccccccccccccccjj......",
+          ".......cccccccccccccccccccccjj......",
+          "..........aaaaaaaaaaaaaaaa..jj......",
+          "..........aaaaaaaaaaaaaaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aaaefgfeefgfeaaa..jj......",
+          "..........aaaefffeefffeaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aaaeeeehheeeeaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aaaeeeiiiieeeaaa..jj......",
+          "..........aaaeeeeeeeeeeaaa..jj......",
+          "..........aabbbbddddbbbbbbb.jj......",
+          ".........bbbbbbbddddbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbbbb.jj......",
+          ".........bbbbbbbbbbbbbbbeee.jj......",
+          ".........eeebbbbbbbbbbbbeee.jj......",
+          ".........eeebdbbbbbbbbbbbb..jj......",
+          "..........bbbbbbbbbbbbbbbb..jj......",
+          "..........bbbbbbbbbbbdbbbb..jj......",
+          "..........bbbbbbbbbbbbbbbb..jj......",
+          "........ccccccccccccccccccccjj......",
+          "........ccccccccccccccccccccjj......",
+          "........cccccccccdccccccccccjj......",
+          "........cccdccccccccccccdcccjj......",
+          "........ccccccccccccccccccccjj......",
+          "........ccccccccccccccccccccjj......",
+          "............kkkkk..kkkkk....jj......",
+          "............kkkkk..kkkkk....jj......",
+          "............kkkkk..kkkkk............",
+          "....................................",
+          "....................................",
+          "...................................."
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -10578,7 +11484,7 @@ body.nopad #pad { display: none; }
     return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "damNushi" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]) || // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
     p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
-    p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6);
+    p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu");
   }
   const personArt = (g, p) => p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art;
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
@@ -11051,7 +11957,9 @@ body.nopad #pad { display: none; }
     J: "#4a4e58",
     C: "#7a7468",
     Z: "#4a3624",
-    O: "#c8c070"
+    O: "#c8c070",
+    V: "#2a2050",
+    v: "#5a5088"
   };
   function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -11238,6 +12146,25 @@ body.nopad #pad { display: none; }
         r2(0, (x + y) % 2 ? 0 : 15, 16, 1, "#5a6a3a");
         for (let i = 2; i < 16; i += 3) r2(0, i, 16, 1, "#b8b060");
         break;
+      case "V": {
+        r2(0, 0, 16, 16, "#1e1840");
+        if (tileAt(x, y + 1) === "v") {
+          r2(0, 6, 16, 10, "#3a3070");
+          r2(0, 6, 16, 1, "#5a4aa0");
+          if ((x + y) % 3 === 0) {
+            r2(6, 9, 4, 4, "#e8e0a0");
+            r2(7, 9, 3, 3, "#3a3070");
+          }
+        }
+        break;
+      }
+      case "v":
+        r2(0, 0, 16, 16, "#5a5088");
+        r2(0, 7, 16, 1, "#4a4078");
+        r2(y % 2 * 8, 0, 1, 7, "#4a4078");
+        r2((y + 1) % 2 * 8, 8, 1, 8, "#4a4078");
+        if (hash(x, y, 98) < 0.15) r2(Math.floor(hash(x, y, 99) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, "#d8d8ff");
+        break;
       default:
         r2(0, 0, 16, 16, "#ff00ff");
     }
@@ -11270,6 +12197,18 @@ body.nopad #pad { display: none; }
     c.fillRect(dx + 10, dy + 9, 1, 2);
   }
   function drawProp(c, p) {
+    if (p.kind === "mirror") {
+      const px2 = p.x * TILE, py2 = p.y * TILE;
+      c.fillStyle = "#c8c8d8";
+      c.fillRect(px2 - 2, py2 - 6, 20, 22);
+      c.fillStyle = "#9ad8ff";
+      c.fillRect(px2 + 1, py2 - 3, 14, 16);
+      c.fillStyle = "#e8f8ff";
+      c.fillRect(px2 + 3, py2 - 1, 3, 6);
+      c.fillStyle = "#ffe85a";
+      c.fillRect(px2 + 6, py2 - 9, 4, 3);
+      return;
+    }
     if (p.kind !== "torii") return;
     const px = p.x * TILE, py = p.y * TILE;
     c.fillStyle = "#d0402a";
@@ -11484,7 +12423,8 @@ body.nopad #pad { display: none; }
     const wild = createWild(g, app2.rng);
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
-    const inYashiki = () => g.pos.y >= YASHIKI_Y0 * TILE;
+    const inMoon = () => g.pos.y >= MOON_Y0 * TILE;
+    const inYashiki = () => g.pos.y >= YASHIKI_Y0 * TILE && !inMoon();
     const inTera = () => g.pos.y >= TERA_Y0 * TILE && !inYashiki();
     const inUmi = () => g.pos.y >= UMI_Y0 * TILE && !inTera();
     const inYama = () => g.pos.y >= YAMA_Y0 * TILE && g.pos.y < UMI_Y0 * TILE;
@@ -11564,7 +12504,9 @@ body.nopad #pad { display: none; }
           clear5: ["ネット寺の のろいも といたらしいね！ ……ルキハ？ なんか こわい 名前やね。", `なかまは ${friendCount(g)} 人？ ……こおり、ちゃんと 宿題も しなさいよ！`],
           shinobi: ["忍びの屋敷へ 行くとね？ 電車は 石の川駅からよ。", "こおり、メダルを とりもどすまで 帰ってこんでいいけんね！ ……うそうそ、ごはんには 帰ってきなさい。"],
           yashiki: ["忍びの屋敷は どうやった？ 忍者さんって ほんとに いるとね？"],
-          clear6: ["町の 子たちの メダル、とりもどしてくれたって？ こおり、えらいやん！", "おにおにくん……どうしたっちゃろうね。こおり、なんか しっとうと？"]
+          clear6: ["町の 子たちの メダル、とりもどしてくれたって？ こおり、えらいやん！", "おにおにくん……どうしたっちゃろうね。こおり、なんか しっとうと？"],
+          meikyu: ["月の迷宮？ まよったら いかんよ。こおり、あんた 方向おんちやけん。"],
+          clear7: ["おにおにくんを とりもどしに 行くと？ ……こおり、ちゃんと 連れて 帰ってきなさいよ。"]
         }[g.story];
         if (startChapter6(g)) {
           say([
@@ -11630,6 +12572,19 @@ body.nopad #pad { display: none; }
           { who: "トモオカ", art: "tomooka", text: "メダルは わたさんぞ！ 鬼鬼団 幹部、トモオカさまの 右腕を 見せてやる！" },
           furu("たたかれるほど 右腕が 大きく なるみたい！ 右腕を ねらって しぼませて！ 大きく なりきったら 防げない 一撃が くるよ！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("tomooka6"), kind: "boss", place: "yashiki" }) });
+      } else if (p.id === "runaya7") {
+        say([
+          by("runaya", "ここが 月の 鏡よ。……鏡を のぞいて ごらんなさい。"),
+          nar("鏡の 中に、むかしの 景色が うかんだ。"),
+          nar("ひとりの 男が、大きな 竜を、鳥を、けものを……ひとつずつ 喰らっていく。"),
+          nar("喰らう たびに、男の 体の どこかが ゆがんで いった。"),
+          by("runaya", "あの 男は、人の すがたを 着ているだけ。中身は……喰らった ものの かたまりよ。"),
+          by("runaya", "……あの 男に 立ちむかうなら、その 前に あなたたちの 力を ためさせて もらうわ。ためさせて もらうわ。……あら、これも 言ったかしら？"),
+          furu("月が 満ちたら 大技が くるよ！ 空の 月を ねらって 欠けさせて！")
+        ], { done: () => {
+          g.flags.mirror7 = true;
+          app2.startBattle({ enemies: bossEnemies("runaya7"), kind: "boss", place: "moon" });
+        } });
       } else if (p.id === "daishi5") {
         say([
           nar("ダイシの 体に、黒い 紋が どくどくと 脈うっている……。"),
@@ -11691,6 +12646,16 @@ body.nopad #pad { display: none; }
         readOkunoin();
       } else if (b.id === "station") {
         rideTrain();
+      } else if (b.id === "moonStation") {
+        say([nar("月の迷宮前駅。石の川 行きの 電車が とまっている。")], {
+          choices: ["石の川へ もどる", "やめる"],
+          done: (i) => {
+            if (i === 0) {
+              sfx("watch");
+              warp(STATION_OUT);
+            }
+          }
+        });
       } else if (b.id === "yashikiStation") {
         say([nar("忍びの屋敷前駅。石の川 行きの 電車が とまっている。")], {
           choices: ["石の川へ もどる", "やめる"],
@@ -11834,7 +12799,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const lines = trainLines(g);
-      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く" };
+      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く" };
       say([nar(`石の川駅。${lines.length > 1 ? "どこへ 行こうか？" : lines[0] === "tera" ? "ネット寺 行きの 電車が とまっている。" : "海辺の 町 行きの 電車が とまっている。"}`)], {
         choices: [...lines.map((l) => names[l]), "やめる"],
         done: (i) => {
@@ -11847,6 +12812,10 @@ body.nopad #pad { display: none; }
           }
           if (dest === "yashiki") {
             goYashiki();
+            return;
+          }
+          if (dest === "moon") {
+            goMoon();
             return;
           }
           warp(UMI_IN);
@@ -11869,6 +12838,15 @@ body.nopad #pad { display: none; }
         by("daishi", "よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。"),
         by("daishi", "寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。"),
         nar("境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。")
+      ], { done: () => app2.save() });
+    }
+    function goMoon() {
+      warp(MOON_IN);
+      if (!arriveMoon(g)) return;
+      say([
+        nar("電車に ゆられて、月の迷宮に 着いた。"),
+        by("runaya", "ルキハを 追って いるのね。月の 鏡なら、あの 男の むかしを 見せて くれるわ。……月の 鏡なら……あら、これ もう 言ったかしら？"),
+        nar("ルナヤは 迷宮の 奥へ 消えた。月の 鏡は 迷宮の いちばん 奥に ある らしい。")
       ], { done: () => app2.save() });
     }
     function goYashiki() {
@@ -11958,6 +12936,15 @@ body.nopad #pad { display: none; }
           );
         }
         say(lines, { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "runaya7") {
+        say([
+          by("runaya", "……ふふ、合格よ。合格。……あら、これは まだ 言って なかったわね。"),
+          furu("王冠も メダルも、ルキハが 力を 喰らう ために あつめてたんだ……！"),
+          by("runaya", "鬼鬼団の 金色のSE城に、ぬすんだ 力が あつめられて いるはず。おにおにも そこに いるわ。……SE城よ、SE城。わすれないでね？ SE城よ？"),
+          { who: "こおりくん", art: "koori", text: "（おにおにを とりもどそう！）" },
+          nar("７章 クリア！ ルナヤが なかまに なった。"),
+          nar("―― ８章は つぎの アップデートで。")
+        ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "zumitani6") {
         say([
           by("zumitani", "へえ、思ったより やるじゃん♪ 鬼鬼団は この 屋敷の 奥に メダルを はこんでるよ。ただの どろぼうに しては、手ぎわが よすぎるんだよね～。"),
@@ -11977,7 +12964,7 @@ body.nopad #pad { display: none; }
           nar("トモオカは メダルの 袋を 落として にげていった！"),
           nar("町の 子たちの メダルを 少し とりもどした！"),
           nar("６章 クリア！ ズミタニが 屋敷の 庭を 歩きまわるように なった。"),
-          nar("―― ７章は つぎの アップデートで。")
+          nar("石の川駅から、電車で 月の迷宮へ 行けるように なった！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "daishi5") {
         warp(TERA_AFTER_BOSS);
@@ -12271,7 +13258,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
         }
       });
     }
@@ -12329,7 +13316,7 @@ body.nopad #pad { display: none; }
       ensureCanvas(reached(g, "clear3"));
       ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && i < 6; i++) {
+      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && !inMoon() && i < 6; i++) {
         const wy = (i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE);
         ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
       }
@@ -12363,7 +13350,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = TINT[g.time];
         ctx.fillRect(0, 0, 400, 240);
       }
-      if (g.weather === "rain" && !inSchool() && !inCave()) {
+      if (g.weather === "rain" && !inSchool() && !inCave() && !inMoon()) {
         ctx.fillStyle = "rgba(40, 60, 100, 0.15)";
         ctx.fillRect(0, 0, 400, 240);
         ctx.strokeStyle = "rgba(200, 220, 255, 0.55)";
@@ -12496,7 +13483,7 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -12511,7 +13498,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -12956,7 +13943,20 @@ body.nopad #pad { display: none; }
     taikooni: auto("taikooni"),
     jouninman: auto("jouninman"),
     daibakudanjirou: auto("daibakudanjirou"),
-    zumitani: auto("zumitani")
+    zumitani: auto("zumitani"),
+    // ----- 月の迷宮の 9 体と 進化先 3 体 (7 章。2026-10-29) -----
+    tsukiusagi: auto("tsukiusagi"),
+    nandomoslime: auto("nandomoslime"),
+    mangetsuwolf: auto("mangetsuwolf"),
+    watageboushi: auto("watageboushi"),
+    tatsumakitsune: auto("tatsumakitsune"),
+    shakkinbourei: auto("shakkinbourei"),
+    tsubomajin: auto("tsubomajin"),
+    kaminarigumo: auto("kaminarigumo"),
+    kaguyausagi: auto("kaguyausagi"),
+    shingetsuwolf: auto("shingetsuwolf"),
+    rishitoribourei: auto("rishitoribourei"),
+    runaya: auto("runaya")
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -13059,6 +14059,19 @@ body.nopad #pad { display: none; }
     jouninman: { motion: "dash", color: "#c8f08a" },
     daibakudanjirou: { motion: "dash", color: "#ff8a4a" },
     zumitani: { motion: "multi", color: "#c8f08a", glyph: "影", hits: 3 },
+    // 月の迷宮の 9 体 (7 章。仮)
+    tsukiusagi: { motion: "aura", color: "#d8a8ff" },
+    nandomoslime: { motion: "aura", color: "#4aa8e0" },
+    mangetsuwolf: { motion: "dash", color: "#e0e0e0" },
+    watageboushi: { motion: "aura", color: "#c8f08a" },
+    tatsumakitsune: { motion: "cloud", color: "#c8f08a" },
+    shakkinbourei: { motion: "aura", color: "#d8a8ff" },
+    tsubomajin: { motion: "aura", color: "#d8a8ff" },
+    kaminarigumo: { motion: "cloud", color: "#c8f08a" },
+    kaguyausagi: { motion: "aura", color: "#d8a8ff" },
+    shingetsuwolf: { motion: "dash", color: "#c8f08a" },
+    rishitoribourei: { motion: "aura", color: "#d8a8ff" },
+    runaya: { motion: "beam", color: "#ffe85a" },
     // 進化で なる 16 体 (仮)
     harigeneral: { motion: "dash", color: "#e0e0e0" },
     joubachi: { motion: "dash", color: "#c8f08a" },
@@ -14004,7 +15017,7 @@ body.nopad #pad { display: none; }
       let skillHit = HIT_DELAY.skill;
       const list = battle.events.splice(0);
       list.forEach((e, idx) => {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         if (e.type === "begin") {
           enterT = t;
           banner = { text: "いけっ！ なかまたち！", color: COLORS.accent, until: t + 1.2 };
@@ -14092,8 +15105,12 @@ body.nopad #pad { display: none; }
           banner = { text: "それは 分身！ しかえしが くる！", color: "#ff6a6a", until: t + 1.6 };
           sfx("cancel");
         } else if (e.type === "armGrow" || e.type === "armShrink") {
-          const k = battle.enemies.findIndex((x) => x.uid === e.target), pp = k >= 0 ? partPos(k, "arm") : null;
-          if (pp) pops.push({ x: pp.x, y: pp.y - 30, text: e.type === "armGrow" ? `右腕 ↑ ${e.lv}` : `右腕 ↓ ${e.lv}`, color: e.type === "armGrow" ? "#ff8a6a" : "#9ae08a", small: true, until: t + 0.8 });
+          const k = battle.enemies.findIndex((x) => x.uid === e.target), ex = battle.enemies[k];
+          const key2 = ex && ex.gims ? Object.keys(ex.gims).find((g2) => ex.gims[g2].arm) : null, pp = key2 ? partPos(k, key2) : null, nm = key2 ? ex.gims[key2].name : "";
+          if (pp) pops.push({ x: pp.x, y: pp.y - 30, text: e.type === "armGrow" ? `${nm} ↑ ${e.lv}` : `${nm} ↓ ${e.lv}`, color: e.type === "armGrow" ? "#ff8a6a" : "#9ae08a", small: true, until: t + 0.8 });
+        } else if (e.type === "repeat") {
+          const p = posOf(e.actor);
+          if (p) pops.push({ x: p.x, y: p.y - 120, text: "あら、これ もう 言ったかしら？", color: "#e0d0ff", small: true, until: t + 1.4 });
         } else if (e.type === "smoke") {
           banner = { text: "けむりが もくもく……！ 攻撃が 当たりにくい！", color: "#d0d0d8", until: t + 1.8 };
           sfx("cancel");
@@ -14146,7 +15163,8 @@ body.nopad #pad { display: none; }
           if (p) effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.5, color: "#bfeaff" });
         } else if (e.type === "bigCancel") {
           warn = null;
-          banner = { text: e.arm ? `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+          const armName = e.arm ? (_f = Object.values(((_e = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _e.gims) || {}).find((g2) => g2.arm)) == null ? void 0 : _f.name : null;
+          banner = { text: e.arm ? armName === "月" ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
           sfx("big");
         } else if (e.type === "food") {
           banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: "#ff9ad8", until: t + 1.6 };
@@ -14707,6 +15725,13 @@ body.nopad #pad { display: none; }
           ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
           ctx.fill();
         }
+      } else if (place === "moon") {
+        ctx.fillStyle = "#0c0a24";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        ctx.fillStyle = "#ffffff";
+        for (let i = 0; i < 24; i++) ctx.fillRect(i * 97 % 400, i * 37 % (HORIZON - 10), 1, 1);
+        ctx.fillStyle = "#2a2050";
+        for (let i = 0; i < 7; i++) ctx.fillRect(i * 64 - 10, HORIZON - 24 - i % 2 * 10, 44, 34);
       } else if (place === "yashiki") {
         ctx.fillStyle = "#4a3624";
         ctx.fillRect(0, 0, 400, HORIZON);
@@ -14732,7 +15757,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -14934,6 +15959,25 @@ body.nopad #pad { display: none; }
           ctx.restore();
           bar(ctx, q.x - 22, q.y + 18 * k2, 44, 4, lv / mx, hot ? "#ff4a3a" : "#ffb84a");
           text(ctx, `右腕 ${lv}/${mx}`, q.x, q.y + 18 * k2 + 13, { size: 9.5, align: "center", bold: true, color: hot ? "#ff9a8a" : "#ffe0b0" });
+        } else if (key2 === "moon") {
+          const lv = e.armLv, mx = e.armDef.max, hot = lv >= mx - 1;
+          ctx.fillStyle = hot ? `rgba(255, 240, 140, ${0.3 + 0.2 * Math.sin(t * 8)})` : "rgba(255,255,255,0.08)";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, 24, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#2a2450";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, 16, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.fillStyle = "#ffe89a";
+          ctx.fillRect(q.x + 16 - 32 * lv / mx, q.y - 16, 32 * lv / mx, 32);
+          ctx.restore();
+          bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? "#ffe85a" : "#9a9ad8");
+          text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
         } else if (key2 === "bell") {
           const swing = open ? Math.sin(t * 5) * 0.08 : 0;
           ctx.save();
@@ -14977,6 +16021,7 @@ body.nopad #pad { display: none; }
       ctx.stroke();
     }
     function drawTop(ctx) {
+      var _a, _b;
       drawBackground(ctx);
       battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
       battle.enemies.forEach((e, i) => {
@@ -15017,9 +16062,10 @@ body.nopad #pad { display: none; }
         text(ctx, "チャンスタイム！", 200, 32, { size: 24, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
         text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: "center", bold: true });
       } else if (battle.armCharge && !battle.outcome) {
+        const moonBoss = (_b = (_a = battle.enemies.find((x) => x.uid === battle.armCharge.uid)) == null ? void 0 : _a.gims) == null ? void 0 : _b.moon;
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.92)", edge: "#ffb84a" });
-        text(ctx, `!! 防御不能「${warn ? warn.name : ""}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
-        text(ctx, `右腕を ねらって しぼませろ！ (${Math.max(0, battle.armCharge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
+        text(ctx, moonBoss ? `!! 満月！「${warn ? warn.name : ""}」を ためている！` : `!! 防御不能「${warn ? warn.name : ""}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `${moonBoss ? "空の 月を ねらって 欠けさせろ！" : "右腕を ねらって しぼませろ！"} (${Math.max(0, battle.armCharge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
       } else if (battle.chant && !battle.outcome) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(90, 20, 90, 0.9)", edge: "#ffe85a" });
         text(ctx, `お経を となえている……「${warn ? warn.name : ""}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });

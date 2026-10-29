@@ -626,6 +626,38 @@ try {
     await shot('yashiki-clear');
     check(await evaluate('window.__app.g.story === "clear6"'), 'トモオカを たおすと 6 章 クリア');
 
+    // ----- 7 章: 電車で 月の迷宮 → 鏡の 間の ルナヤ (満ちていく 月) (2026-10-29) -----
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    for (let i = 0; i < 3; i++) await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('moon-arrive');
+    check(await evaluate('window.__app.g.story === "meikyu" && window.__app.g.pos.y > 228 * 16'), '6 章 クリアの あと 電車で 月の迷宮へ (7 章)');
+    await at(23.5, 251, 'up');
+    await sleep(200);
+    await shot('moon-maze');
+    await at(27, 231, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "runaya7" && window.__app.g.flags.mirror7'), '月の 鏡の 回想 → ルナヤと バトル');
+    await key('KeyJ');
+    await sleep(600);
+    await evaluate('(() => { const e = window.__app.scene.battle.enemies[0]; e.max = e.hp = 99999; e.armLv = 4; e.armT = 99; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.armCharge)'), 'ルナヤ: 満月で ムーンビームを ためる');
+    await sleep(300);
+    await shot('moon-full');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.lock = e.uid; b.lockPart = "moon"; e.armDmg = e.max; return true; })()');
+    check(await waitFor('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; return !b.armCharge && e.armLv === 0; })()'), 'ルナヤ: 月を ねらうと 欠けて 止まり 新月に もどる');
+    await sleep(300);
+    await shot('moon-new');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "clear7" && window.__app.g.medals.some(m => m.id === "runaya")'), 'ルナヤに 勝つと 7 章 クリア (なかまに なる)');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

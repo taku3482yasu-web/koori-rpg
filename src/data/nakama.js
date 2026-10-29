@@ -180,6 +180,19 @@ export const WAZA = {
     jouninman: W('かげぎり', 'かぜ', 'front', 1.6, 'confuse', 0.2),
     daibakudanjirou: W('大ばくはつ', 'ほのお', 'around', 2.4),
     zumitani: W('クナイ乱れうち', 'かぜ', 'line', 1.3),
+    // 月の迷宮 (7 章)
+    tsukiusagi: W('もちつき', 'ふしぎ', 'front', 1.1),
+    nandomoslime: W('言ったっけ アタック', 'みず', 'front', 1.1, 'confuse', 0.3),
+    mangetsuwolf: W('まんげつ かみつき', 'ふつう', 'front', 1.4),
+    watageboushi: W('わたげふわり', 'かぜ', 'line', 0.8, 'sleep', 0.4),
+    tatsumakitsune: W('たつまき', 'かぜ', 'around', 1),
+    shakkinbourei: W('かえせ…', 'ふしぎ', 'front', 0.9, 'slow', 0.5),
+    tsubomajin: W('ツボの けむり', 'ふしぎ', 'around', 0.7, 'confuse', 0.3),
+    kaminarigumo: W('かみなり', 'かぜ', 'line', 1.4, 'slow', 0.5),
+    kaguyausagi: W('月がえりの光', 'ふしぎ', 'line', 1.2, 'confuse', 0.4),
+    shingetsuwolf: W('しんげつのきば', 'ふつう', 'front', 1.8, 'confuse', 0.3),
+    rishitoribourei: W('利子とりたて', 'ふしぎ', 'front', 1.2),
+    runaya: W('ムーンビーム', 'ふしぎ', 'line', 1.3),
     // 進化で なる キャラ (ダンジョンの 進化先)
     harigeneral: W('針とばし', 'ふつう', 'line', 1.2),
     joubachi: W('じょおうばり', 'かぜ', 'front', 1.5, 'poison', 0.4),
@@ -213,7 +226,8 @@ export const WAZA = {
     daishi5: W('説法', 'ふしぎ', 'around', 0.6, 'sleep', 0.4),
     zumitani6: W('クナイ乱れうち', 'かぜ', 'line', 1.3),
     onioni6: W('金棒 たたき', 'ほのお', 'front', 1.4),
-    tomooka6: W('右ストレート', 'ふつう', 'front', 1.3)
+    tomooka6: W('右ストレート', 'ふつう', 'front', 1.3),
+    runaya7: W('ムーンビーム', 'ふしぎ', 'line', 1.3)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
@@ -804,6 +818,81 @@ const LIST = [
         title: '忍びの屋敷の主', desc: 'ASO四天王の1人。古くから続くズミタニ家の忍者で、77代目。すばやい動きで敵を翻弄する。口調は明るいが、言葉のふしぶしにとげがある。',
         special: sp('影分身の術', [atk('all', 0.7, { hits: 3 })])
     },
+    // ----- 月の迷宮の 9 体 (7 章「月の迷宮と 喰らう 者の 伝説」。2026-10-29。ダンジョンの 月の迷宮と 夜・ふしぎの キャラ。D 5・C 4) -----
+    //   ルナヤは 迷宮の いちばん 奥の ボス (満ちていく 月) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'tsukiusagi', name: 'ツキウサギ', from: 'ダンジョン 029', area: 'moon', rank: 'D', element: 'ふしぎ', role: 'healer', mul: {},
+        line: 'ぺったん！', favorite: 'melonpan',
+        title: 'ぺったんこ', desc: '月で餅つきをしている。もちはとてもおいしい。',
+        special: sp('月の もちつき', [{ kind: 'heal', target: 'party', power: 0.5 }])
+    },
+    {
+        id: 'nandomoslime', name: 'ナンドモスライム', from: 'ダンジョン 033', area: 'moon', rank: 'D', element: 'みず', role: 'defender', mul: {},
+        line: '言ったっけ？言ったっけ？', favorite: 'niboshi',
+        title: '心配性のスライム', desc: '生まれる際に、ルナヤの魔法を受けたため、心配性が映ってしまった。',
+        special: sp('言ったっけ 言ったっけ', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'mangetsuwolf', name: 'マンゲツウルフ', from: 'ダンジョン 031', area: 'moon', rank: 'D', element: 'ふつう', role: 'attacker', mul: {},
+        line: 'ワォーン！', favorite: 'onigiri',
+        title: '満月にあこがれる狼', desc: '満月を型取ったカツラをかぶっている狼。カツラは常時発行している。',
+        special: sp('満月の 遠ぼえ', [atk('all', 1.7)])
+    },
+    {
+        id: 'watageboushi', name: 'ワタゲボウシ', from: 'ダンジョン 092', area: 'moon', rank: 'D', element: 'かぜ', role: 'supporter', mul: {},
+        line: 'ふわふわ～', favorite: 'choco',
+        title: '正体不明の綿毛', desc: 'いつか見たあの景色に向かうため、今日も風に乗る。',
+        special: sp('わたげ ふぶき', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'tatsumakitsune', name: 'タツマキツネ', from: 'ダンジョン 090', area: 'moon', rank: 'D', element: 'かぜ', role: 'jammer', mul: {},
+        line: 'コーン！（ぐるぐる）', favorite: 'choco',
+        title: '竜巻の卵', desc: 'しっぽで竜巻を育てている狐。この竜巻はやがて独り立ちし、災害として、地球を練り歩く。',
+        special: sp('大たつまき', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'shakkinbourei', name: 'シャッキンボウレイ', from: 'ダンジョン 046', area: 'moon', rank: 'C', element: 'ふしぎ', role: 'supporter', mul: {},
+        line: '…かえせ…かえせ…', favorite: 'melonpan',
+        title: '借金返せ', desc: '借金を返してもらえないものの恨みが具現化したもの。',
+        special: sp('かえせ かえせ', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'tsubomajin', name: 'ツボマジン', from: 'ダンジョン 043', area: 'moon', rank: 'C', element: 'ふしぎ', role: 'supporter', mul: {},
+        line: '出でよ！', favorite: 'melonpan',
+        title: '壺のマジン', desc: 'ジーニーをリスペクトしている。願いを１つかなえることができなくもない。',
+        special: sp('出でよ 大魔神', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'kaminarigumo', name: 'カミナリグモ', from: 'ダンジョン 091', area: 'moon', rank: 'C', element: 'かぜ', role: 'jammer', mul: {},
+        line: 'ゴロゴロ…ピシャーン！', favorite: 'choco',
+        title: 'カミナリグモもどき', desc: '雷雲を模した蜘蛛。しかし雷の力は本物。',
+        special: sp('いなずま 乱れうち', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'slow', chance: 0.6 }])
+    },
+    {
+        id: 'runaya', name: 'ルナヤ', from: 'アソ・ダンジョン', area: 'moon', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: { mag: 1.25, hp: 0.95 },
+        line: 'よく来たわね。…よく来たわね。あら、もう言ったかしら？', favorite: 'melonpan',
+        title: '月の迷宮の大魔法使い', desc: 'ASO四天王の1人。前は摩天楼を作り、今は 月の迷宮を作った大魔法使い。迷宮の形を自由自在に変えられる。月の魔術を使い、月の力をこめたビームを放つ。心配性なのか、同じことを何度も話そうとする癖がある。',
+        special: sp('満月の ムーンビーム', [atk('all', 1.6, { magic: true, element: 'ふしぎ' })])
+    },
+    // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
+    {
+        id: 'kaguyausagi', name: 'カグヤウサギ', from: 'ダンジョン 069', area: 'moon', evo: 'tsukiusagi', rank: 'C', element: 'ふしぎ', role: 'healer', mul: {},
+        line: '月に 帰りますね', favorite: 'melonpan',
+        title: '月に帰る兎', desc: 'ツキウサギが月のしずくで進化した姿。餅つきの腕を見こまれて、月のお姫様のおともになった。ときどき「月に帰ります」と言っていなくなる。もちは相変わらずおいしい。',
+        special: sp('月への 帰り道', [{ kind: 'heal', target: 'party', power: 0.5 }])
+    },
+    {
+        id: 'shingetsuwolf', name: 'シンゲツウルフ', from: 'ダンジョン 070', area: 'moon', evo: 'mangetsuwolf', rank: 'C', element: 'かぜ', role: 'attacker', mul: {},
+        line: 'アオーーン！', favorite: 'choco',
+        title: '新月の狼', desc: 'マンゲツウルフが満月をあきらめて進化した姿。カツラを外したら、新月の夜にいちばん強くなれることに気づいた。カツラは今も大事に持っている。',
+        special: sp('新月の 牙', [atk('all', 1.7)])
+    },
+    {
+        id: 'rishitoribourei', name: 'リシトリボウレイ', from: 'ダンジョン 078', area: 'moon', evo: 'shakkinbourei', rank: 'B', element: 'ふしぎ', role: 'supporter', mul: {},
+        line: '…利子も かえせ…', favorite: 'melonpan',
+        title: '利子も返せ', desc: 'シャッキンボウレイが呪いのコインで進化した姿。借金だけでなく、利子まで取り立てるようになった。おにおにとは気が合うらしい。',
+        special: sp('りしとり の のろい', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
     // 忍びの屋敷の キャラの 進化先 2 体 (6 章。町には 出ない)
     {
         id: 'jouninman', name: 'ジョウニンマン', from: 'ダンジョン 066', area: 'yashiki', evo: 'geninman', rank: 'C', element: 'かぜ', role: 'attacker', mul: {},
@@ -927,7 +1016,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -964,6 +1053,9 @@ export const EVOLVE = {
     takaramimic: { to: 'kinkomimic', lv: 45 },
     koorimodoki: { to: 'koorimodokishin', lv: 50 },
     daichouenkin: { to: 'daichouenou', lv: 30 },
+    tsukiusagi: { to: 'kaguyausagi', lv: 36 },
+    mangetsuwolf: { to: 'shingetsuwolf', lv: 40 },
+    shakkinbourei: { to: 'rishitoribourei', lv: 42 },
     geninman: { to: 'jouninman', lv: 35 },
     bakudanjirou: { to: 'daibakudanjirou', lv: 34 },
 };
@@ -1124,6 +1216,25 @@ export const BOSSES = {
             move: { name: '丘砕きの一撃', effects: [atk('all', 2.6, { unguardable: true })] } },
         gims: { arm: { name: '右腕', hp: 99, when: 'always', pos: [-1.15, -0.68], arm: true } },
         befriends: null, lv: 28, place: 'yashiki'
+    },
+    // 7 章の ボス: 月の迷宮の 大魔法使い ルナヤ (「力を ためさせて もらうわ」)。しかけは Claude の 案 (2026-10-29)
+    //   満ちていく 月: 5 秒ごとに 空の 月が 1 段 満ちて (5 段で 満月)、満月で 4 秒 ためて「満月の ムーンビーム」(全体に 大)。
+    //     空の 月を ロックオンして 当てると、最大HP の 3% ごとに 1 段 欠ける (ルナヤには ほとんど ダメージなし)。ためている あいだに
+    //     満月より 欠けさせると 止まって 新月に もどる (トモオカの 右腕と 同じ しくみ。arm の growEvery・afterCancel)
+    //   もの忘れ (前作の「同じことを何度も話そうとする癖」): ときどき 同じ わざを もう いちど 使う (repeat)
+    runaya7: {
+        id: 'runaya7', name: 'ルナヤ', element: 'ふしぎ', role: 'jammer', art: 'runaya', scale: 1.4, rank: 'B',
+        base: { hp: 720, atk: 12, def: 13, spd: 11, mag: 12 },
+        moves: [
+            { name: 'ムーンビーム', w: 3, effects: [atk('one', 1.4, { magic: true, element: 'ふしぎ' })] },
+            { name: '月の 魔術', w: 3, effects: [atk('all', 0.6, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.3 }] },
+            { name: '迷宮がえ', w: 1.5, effects: [{ kind: 'status', target: 'all', status: 'slow', chance: 0.5 }] }
+        ],
+        repeat: 0.25,
+        arm: { max: 5, start: 0, perHit: 0, growEvery: 5, step: 0.03, bodyCut: 0.05, charge: 4, after: 0, afterCancel: 0,
+            move: { name: '満月の ムーンビーム', effects: [atk('all', 2.6, { magic: true, element: 'ふしぎ' })] } },
+        gims: { moon: { name: '月', hp: 99, when: 'always', pos: [2.8, -0.7], arm: true } },
+        befriends: 'runaya', lv: 30, place: 'moon'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

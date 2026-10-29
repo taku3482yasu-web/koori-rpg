@@ -18,7 +18,9 @@
 //   clear5   5 章 クリア。ここから 6 章「忍びの屋敷と 消えた メダル」: 家の 前の ともいしと 話す
 //   shinobi  石の川駅から 電車で 忍びの屋敷へ 行ける
 //   yashiki  屋敷に 着いた。ボス 3 回: 庭の ズミタニ (flags.zumi6) → 奥の 間の おにおに (flags.oni6) → 東の 蔵の トモオカ
-//   clear6   6 章 クリア。なかまを あつめる (順番は story.js)
+//   clear6   6 章 クリア。ここから 7 章「月の迷宮と 喰らう 者の 伝説」: 石の川駅から 電車で 月の迷宮へ
+//   meikyu   月の迷宮に 着いた (ルナヤに まねかれる)。迷宮の いちばん 奥で 月の 鏡 (flags.mirror7) → ルナヤ (ボス)
+//   clear7   7 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
@@ -229,6 +231,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'zumitani6') g.flags.zumi6 = true;
         if (bossId === 'onioni6') g.flags.oni6 = true;
         if (bossId === 'tomooka6') { g.story = 'clear6'; g.chapter = 7; }
+        if (bossId === 'runaya7') { g.story = 'clear7'; g.chapter = 8; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -310,11 +313,14 @@ export function objective(g) {
         case 'shinobi': return '石の川駅から、電車で 忍びの屋敷へ 行こう';
         case 'yashiki': return !g.flags.zumi6 ? '忍びの屋敷の 庭で ズミタニに 会おう'
             : !g.flags.oni6 ? '屋敷の いちばん 奥の「奥の間」へ 行こう' : '東の 蔵で 鬼鬼団の 幹部を たおして メダルを とりもどそう';
+        // 7 章「月の迷宮と 喰らう 者の 伝説」
+        case 'clear6': return '石の川駅から、電車で 月の迷宮へ 行こう';
+        case 'meikyu': return '月の迷宮の いちばん 奥の「月の 鏡」を めざそう';
         default: {
-            // 6 章 クリアの あと: なかま あつめ
+            // 7 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}・${part('yashiki', '屋敷')}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}・${part('yashiki', '屋敷')}・${part('moon', '月')}`;
         }
     }
 }
@@ -334,7 +340,14 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : [])];
+
+// 月の迷宮に はじめて 着いた (7 章の はじまり)。はじめて なら true
+export function arriveMoon(g) {
+    if (g.story !== 'clear6') return false;
+    g.story = 'meikyu';
+    return true;
+}
 
 // 6 章の はじまり: 5 章 クリアの あと ともいしと 話す。はじめて なら true
 export function startChapter6(g) {

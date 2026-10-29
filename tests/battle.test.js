@@ -483,3 +483,22 @@ test('6 章の トモオカ: 体を 攻撃されると 右腕が 大きく、右
     assert.ok(b.events.some(e => e.type === 'special' && e.name === '丘砕きの一撃'));
     assert.equal(boss.armLv, boss.armDef.after, '打つと 右腕は もとに もどる');
 });
+
+test('7 章の ルナヤ: 月が 時間で 満ち、満月で ムーンビームを ためる。月を ねらうと 欠けて 止まる。ときどき 同じ わざを もう いちど', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 40 }, { uid: 'b', id: 'kogame', lv: 40 }, { uid: 'c', id: 'haribaby', lv: 40 }], enemies: [{ id: 'runaya7', lv: 30 }], rng: createRng(6), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.equal(boss.armLv, 0);
+    for (let i = 0; i < 1000 && !b.armCharge; i++) { boss.hp = boss.max; step(b, 0.05); }
+    assert.equal(boss.armLv, boss.armDef.max, '時間で 満月');
+    assert.ok(b.armCharge, 'ムーンビームを ためる');
+    assert.ok(lockOn(b, boss.uid, 'moon'));
+    const hp = boss.hp;
+    for (let i = 0; i < 200 && b.armCharge; i++) { b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+    assert.ok(!b.armCharge && boss.armLv < boss.armDef.max, '月が 欠けて 止まる');
+    assert.ok(hp - boss.hp < boss.max * 0.1, '月を ねらうと ルナヤには ほとんど ダメージなし');
+    // もの忘れ
+    const b2 = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 10 }], enemies: [{ id: 'runaya7', lv: 30 }], rng: createRng(1), kind: 'boss' });
+    for (let i = 0; i < 600 && !b2.events.some(e => e.type === 'repeat'); i++) { b2.enemies[0].hp = b2.enemies[0].max; b2.wheel[0].hp = b2.wheel[0].max; step(b2, 0.05); }
+    assert.ok(b2.events.some(e => e.type === 'repeat'), 'あら、これ もう 言ったかしら？');
+});

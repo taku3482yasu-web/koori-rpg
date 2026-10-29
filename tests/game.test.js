@@ -428,3 +428,21 @@ test('6 章: ともいし → 電車で 忍びの屋敷 → ズミタニ → お
     assert.equal(g.story, 'clear6');
     assert.ok(!here('tomooka6'));
 });
+
+test('7 章: 電車で 月の迷宮 → 鏡の 間の ルナヤに 勝つと 7 章 クリア (2026-10-29)', async () => {
+    const { arriveMoon, trainLines } = await import('../src/logic/game.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    g.story = 'yashiki';
+    assert.ok(!trainLines(g).includes('moon'));
+    g.story = 'clear6';
+    assert.ok(trainLines(g).includes('moon'));
+    assert.match(objective(g), /月の迷宮/);
+    assert.ok(arriveMoon(g));
+    assert.ok(peopleHere(g).some(p => p.id === 'runaya7'));
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('runaya7'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'runaya');
+    assert.equal(g.story, 'clear7');
+    assert.ok(!peopleHere(g).some(p => p.id === 'runaya7'));
+});

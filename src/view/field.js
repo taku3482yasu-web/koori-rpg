@@ -5,12 +5,13 @@
 // 4 章: ともいしと 話す → 商店街の 石の川駅から 電車で 海辺の 町へ → ライバル探検隊 (バージョンで ちがう) → 黒い 紋の 浦の島重蔵
 // 5 章: ともいし → ダイシの 手紙 → 電車で ネット寺 → 黒い 紋の 3 体を 助ける → コオニンの かげ → 紋に のまれた ダイシ
 // 6 章: ともいし → 電車で 忍びの屋敷 → 庭の ズミタニ (影分身) → 奥の 間で ルキハ と おにおに → 東の 蔵の 幹部 トモオカ (右腕)
+// 7 章: 電車で 月の迷宮 (ルナヤに まねかれる) → 迷宮の 奥の 月の 鏡で 回想 → ルナヤ (満ちていく 月)
 //   セリフは ストーリー工房 (https://claude.ai/artifact/2FExjjNSVxzmaDyk81oJxH) の 4〜6 章の とおり
 // =====================================================================
 import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
-    TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES } from '../data/map.js';
+    TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
@@ -20,7 +21,7 @@ import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile,
 import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
-    startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki } from '../logic/game.js';
+    startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -65,7 +66,8 @@ export function createField(app) {
     const hiding = s => spotActive(g, s, g.playTime) && !wild.list.some(c => c.spot === s.id);
 
     // 学校の 中・山・海に いるか (町と 学校と 山と 海は つながって いないので、カメラも 地図も べつに する)
-    const inYashiki = () => g.pos.y >= YASHIKI_Y0 * TILE;
+    const inMoon = () => g.pos.y >= MOON_Y0 * TILE;
+    const inYashiki = () => g.pos.y >= YASHIKI_Y0 * TILE && !inMoon();
     const inTera = () => g.pos.y >= TERA_Y0 * TILE && !inYashiki();
     const inUmi = () => g.pos.y >= UMI_Y0 * TILE && !inTera();
     const inYama = () => g.pos.y >= YAMA_Y0 * TILE && g.pos.y < UMI_Y0 * TILE;
@@ -145,7 +147,9 @@ export function createField(app) {
                 clear5: ['ネット寺の のろいも といたらしいね！ ……ルキハ？ なんか こわい 名前やね。', `なかまは ${friendCount(g)} 人？ ……こおり、ちゃんと 宿題も しなさいよ！`],
                 shinobi: ['忍びの屋敷へ 行くとね？ 電車は 石の川駅からよ。', 'こおり、メダルを とりもどすまで 帰ってこんでいいけんね！ ……うそうそ、ごはんには 帰ってきなさい。'],
                 yashiki: ['忍びの屋敷は どうやった？ 忍者さんって ほんとに いるとね？'],
-                clear6: ['町の 子たちの メダル、とりもどしてくれたって？ こおり、えらいやん！', 'おにおにくん……どうしたっちゃろうね。こおり、なんか しっとうと？']
+                clear6: ['町の 子たちの メダル、とりもどしてくれたって？ こおり、えらいやん！', 'おにおにくん……どうしたっちゃろうね。こおり、なんか しっとうと？'],
+                meikyu: ['月の迷宮？ まよったら いかんよ。こおり、あんた 方向おんちやけん。'],
+                clear7: ['おにおにくんを とりもどしに 行くと？ ……こおり、ちゃんと 連れて 帰ってきなさいよ。']
             }[g.story];
             if (startChapter6(g)) {
                 // 6 章の はじまり「ねらわれた メダル」(ストーリー工房 6 章 場面 1)
@@ -217,6 +221,17 @@ export function createField(app) {
                 { who: 'トモオカ', art: 'tomooka', text: 'メダルは わたさんぞ！ 鬼鬼団 幹部、トモオカさまの 右腕を 見せてやる！' },
                 furu('たたかれるほど 右腕が 大きく なるみたい！ 右腕を ねらって しぼませて！ 大きく なりきったら 防げない 一撃が くるよ！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('tomooka6'), kind: 'boss', place: 'yashiki' }) });
+        } else if (p.id === 'runaya7') {
+            // 7 章: 月の 鏡の 回想 (ストーリー工房 7 章 場面 2) → 力を ためす バトル
+            say([
+                by('runaya', 'ここが 月の 鏡よ。……鏡を のぞいて ごらんなさい。'),
+                nar('鏡の 中に、むかしの 景色が うかんだ。'),
+                nar('ひとりの 男が、大きな 竜を、鳥を、けものを……ひとつずつ 喰らっていく。'),
+                nar('喰らう たびに、男の 体の どこかが ゆがんで いった。'),
+                by('runaya', 'あの 男は、人の すがたを 着ているだけ。中身は……喰らった ものの かたまりよ。'),
+                by('runaya', '……あの 男に 立ちむかうなら、その 前に あなたたちの 力を ためさせて もらうわ。ためさせて もらうわ。……あら、これも 言ったかしら？'),
+                furu('月が 満ちたら 大技が くるよ！ 空の 月を ねらって 欠けさせて！')
+            ], { done: () => { g.flags.mirror7 = true; app.startBattle({ enemies: bossEnemies('runaya7'), kind: 'boss', place: 'moon' }); } });
         } else if (p.id === 'daishi5') {
             // 5 章の ボス: 紋に のまれた ダイシ (仏の顔 → HP が 半分で 鬼の顔)
             say([
@@ -280,6 +295,11 @@ export function createField(app) {
             readOkunoin();
         } else if (b.id === 'station') {
             rideTrain();
+        } else if (b.id === 'moonStation') {
+            say([nar('月の迷宮前駅。石の川 行きの 電車が とまっている。')], {
+                choices: ['石の川へ もどる', 'やめる'],
+                done: i => { if (i === 0) { sfx('watch'); warp(STATION_OUT); } }
+            });
         } else if (b.id === 'yashikiStation') {
             say([nar('忍びの屋敷前駅。石の川 行きの 電車が とまっている。')], {
                 choices: ['石の川へ もどる', 'やめる'],
@@ -407,7 +427,7 @@ export function createField(app) {
     function rideTrain() {
         if (!canRideTrain(g)) { say([nar('石の川駅。いまは 電車に 乗る 用事が ない。')]); return; }
         const lines = trainLines(g);
-        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く', yashiki: '忍びの屋敷へ 行く' };
+        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く', yashiki: '忍びの屋敷へ 行く', moon: '月の迷宮へ 行く' };
         say([nar(`石の川駅。${lines.length > 1 ? 'どこへ 行こうか？' : lines[0] === 'tera' ? 'ネット寺 行きの 電車が とまっている。' : '海辺の 町 行きの 電車が とまっている。'}`)], {
             choices: [...lines.map(l => names[l]), 'やめる'],
             done: i => {
@@ -416,6 +436,7 @@ export function createField(app) {
                 sfx('watch');
                 if (dest === 'tera') { goTera(); return; }
                 if (dest === 'yashiki') { goYashiki(); return; }
+                if (dest === 'moon') { goMoon(); return; }
                 warp(UMI_IN);
                 if (!arriveUmi(g)) return;
                 const L = rivalLines();
@@ -438,6 +459,17 @@ export function createField(app) {
             by('daishi', 'よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。'),
             by('daishi', '寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。'),
             nar('境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。')
+        ], { done: () => app.save() });
+    }
+
+    // 月の迷宮に 着く (7 章)。はじめて なら ルナヤが まねく (ストーリー工房 7 章 場面 1)
+    function goMoon() {
+        warp(MOON_IN);
+        if (!arriveMoon(g)) return;
+        say([
+            nar('電車に ゆられて、月の迷宮に 着いた。'),
+            by('runaya', 'ルキハを 追って いるのね。月の 鏡なら、あの 男の むかしを 見せて くれるわ。……月の 鏡なら……あら、これ もう 言ったかしら？'),
+            nar('ルナヤは 迷宮の 奥へ 消えた。月の 鏡は 迷宮の いちばん 奥に ある らしい。')
         ], { done: () => app.save() });
     }
 
@@ -533,6 +565,16 @@ export function createField(app) {
                 );
             }
             say(lines, { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'runaya7') {
+            // 7 章 クリア: ねらいは 鬼鬼団 (ストーリー工房 7 章 場面 3)
+            say([
+                by('runaya', '……ふふ、合格よ。合格。……あら、これは まだ 言って なかったわね。'),
+                furu('王冠も メダルも、ルキハが 力を 喰らう ために あつめてたんだ……！'),
+                by('runaya', '鬼鬼団の 金色のSE城に、ぬすんだ 力が あつめられて いるはず。おにおにも そこに いるわ。……SE城よ、SE城。わすれないでね？ SE城よ？'),
+                { who: 'こおりくん', art: 'koori', text: '（おにおにを とりもどそう！）' },
+                nar('７章 クリア！ ルナヤが なかまに なった。'),
+                nar('―― ８章は つぎの アップデートで。')
+            ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'zumitani6') {
             say([
                 by('zumitani', 'へえ、思ったより やるじゃん♪ 鬼鬼団は この 屋敷の 奥に メダルを はこんでるよ。ただの どろぼうに しては、手ぎわが よすぎるんだよね～。'),
@@ -553,7 +595,7 @@ export function createField(app) {
                 nar('トモオカは メダルの 袋を 落として にげていった！'),
                 nar('町の 子たちの メダルを 少し とりもどした！'),
                 nar('６章 クリア！ ズミタニが 屋敷の 庭を 歩きまわるように なった。'),
-                nar('―― ７章は つぎの アップデートで。')
+                nar('石の川駅から、電車で 月の迷宮へ 行けるように なった！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'daishi5') {
             // 5 章 クリア: 書庫で ルキハの 名前 (ストーリー工房 5 章 場面 4)
@@ -789,7 +831,7 @@ export function createField(app) {
             done: () => {
                 fighting = c;
                 const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
             }
         });
     }
@@ -854,7 +896,7 @@ export function createField(app) {
         ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
         // 川の きらきら (町だけ)
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && i < 6; i++) {
+        for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && !inMoon() && i < 6; i++) {
             const wy = ((i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE));
             ctx.fillRect(30 * TILE + ((i * 23) % 60) - cam.x, wy - cam.y, 4, 1);
         }
@@ -888,7 +930,7 @@ export function createField(app) {
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
-        if (g.weather === 'rain' && !inSchool() && !inCave()) {
+        if (g.weather === 'rain' && !inSchool() && !inCave() && !inMoon()) {
             ctx.fillStyle = 'rgba(40, 60, 100, 0.15)';
             ctx.fillRect(0, 0, 400, 240);
             ctx.strokeStyle = 'rgba(200, 220, 255, 0.55)';
@@ -1025,7 +1067,9 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        const labels = inYashiki()
+        const labels = inMoon()
+            ? MOON_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
+            : inYashiki()
             ? YASHIKI_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
             : inTera()
             ? TERA_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
@@ -1060,7 +1104,8 @@ export function createField(app) {
             : g.story === 'clear4' ? { x: 8, y: 24 } : g.story === 'tera' ? { x: 5, y: 40 }
             : g.story === 'netdera' ? (monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 })
             : g.story === 'clear5' ? { x: 8, y: 24 } : g.story === 'shinobi' ? { x: 5, y: 40 }
-            : g.story === 'yashiki' ? (!g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 }) : null;
+            : g.story === 'yashiki' ? (!g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 })
+            : g.story === 'clear6' ? { x: 5, y: 40 } : g.story === 'meikyu' ? { x: 24, y: MOON_Y0 + 2 } : null;
         const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
         if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });

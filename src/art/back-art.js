@@ -356,5 +356,18 @@ export const BACK_ART = {
     taikooni: auto('taikooni'),
     jouninman: auto('jouninman'),
     daibakudanjirou: auto('daibakudanjirou'),
-    zumitani: auto('zumitani')
+    zumitani: auto('zumitani'),
+    // ----- 月の迷宮の 9 体と 進化先 3 体 (7 章。2026-10-29) -----
+    tsukiusagi: auto('tsukiusagi'),
+    nandomoslime: auto('nandomoslime'),
+    mangetsuwolf: auto('mangetsuwolf'),
+    watageboushi: auto('watageboushi'),
+    tatsumakitsune: auto('tatsumakitsune'),
+    shakkinbourei: auto('shakkinbourei'),
+    tsubomajin: auto('tsubomajin'),
+    kaminarigumo: auto('kaminarigumo'),
+    kaguyausagi: auto('kaguyausagi'),
+    shingetsuwolf: auto('shingetsuwolf'),
+    rishitoribourei: auto('rishitoribourei'),
+    runaya: auto('runaya')
 };

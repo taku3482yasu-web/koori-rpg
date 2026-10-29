@@ -30,6 +30,8 @@
 //     分身なら しっぱい: 当てた なかまに しかえし (ダメージと とりつき)
 //   右腕 (6 章の トモオカ): 体を 攻撃される たびに 右腕が 1 段 大きく なり、限界で 防御不能の 必殺技を ためる (b.armCharge)。
 //     右腕を ねらって 当てると、決まった ダメージごとに 1 段ずつ しぼむ (体への ダメージは へる)
+//   満ちていく 月 (7 章の ルナヤ): 右腕と 同じ しくみで、growEvery 秒ごとに 1 段 満ちる (体を たたいても 満ちない)
+//   もの忘れ (7 章の ルナヤ): repeat の 確率で 同じ わざを もう いちど 使う
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -61,7 +63,7 @@ function makeUnit({ uid, id, lv, bond = 0 }, side) {
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
         gims: sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
-        cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0,
+        cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
 }
@@ -177,10 +179,10 @@ function cloneFail(b, from, clone) {
     }
 }
 // ----- 右腕 (6 章の トモオカ) -----
-function armGrow(b, u) {
+function armGrow(b, u, n = u.armDef.perHit) {
     const a = u.armDef;
-    if (u.armLv >= a.max) return;
-    u.armLv = Math.min(a.max, u.armLv + a.perHit);
+    if (u.armLv >= a.max || !n) return;
+    u.armLv = Math.min(a.max, u.armLv + n);
     emit(b, 'armGrow', { target: u.uid, lv: u.armLv });
     if (u.armLv >= a.max && !b.armCharge) {
         b.armCharge = { uid: u.uid, left: a.charge };
@@ -197,6 +199,7 @@ function armShrink(b, u, dmg) {
     emit(b, 'armShrink', { target: u.uid, lv: u.armLv });
     if (b.armCharge && b.armCharge.uid === u.uid && u.armLv < a.max) {
         b.armCharge = null;
+        if (a.afterCancel !== undefined) { u.armLv = a.afterCancel; u.armDmg = 0; u.armT = 0; }   // 7 章の 月: 止めると 新月に もどる
         emit(b, 'bigCancel', { actor: u.uid, name: a.move.name, arm: true });
     }
 }
@@ -479,7 +482,15 @@ function act(b, u) {
         if (move.summon) summonIdol(b, u);
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
         else if (move.clones) summonClones(b, u);
-        else applyEffects(b, u, move.effects || []);
+        else {
+            applyEffects(b, u, move.effects || []);
+            // もの忘れ (7 章の ルナヤ): ときどき 同じ わざを もう いちど
+            if (u.repeat && move.effects && move.effects.length && b.rng.chance(u.repeat)) {
+                emit(b, 'repeat', { actor: u.uid, name: move.name });
+                emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
+                applyEffects(b, u, move.effects);
+            }
+        }
         return;
     }
     const cmd = chooseCommand(b, u);
@@ -575,6 +586,12 @@ export function step(b, dt) {
         b.clones.tp -= dt;
         if (b.clones.left <= 0) clearClones(b, 'time');
         else if (b.clones.tp <= 0) { b.clones.tp = b.enemies.find(e => e.uid === b.clones.uid)?.cloneDef.teleport || 4; shuffleClones(b); }
+    }
+    // 時間で 満ちる 部位 (7 章の 月)
+    for (const e of b.enemies) {
+        if (e.ko || !e.armDef || !e.armDef.growEvery || b.armCharge || (b.chance && b.chance.uid === e.uid)) continue;
+        e.armT += dt;
+        if (e.armT >= e.armDef.growEvery) { e.armT = 0; armGrow(b, e, 1); }
     }
     if (b.armCharge) {
         const u = b.enemies.find(e => e.uid === b.armCharge.uid);

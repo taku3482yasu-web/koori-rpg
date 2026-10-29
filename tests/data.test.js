@@ -268,7 +268,7 @@ test('進化で なる キャラは 地区の 数に 入らない。ランクは
 test('地図: 忍びの屋敷 (6 章)。庭から ろうかへは 1 マスの 戸口で、ズミタニが ふさぐ。3 人の ボスの 前に 立てる', async () => {
     const { YASHIKI_Y0, YASHIKI_IN } = await import('../src/data/map.js');
     assert.ok([...TILES[YASHIKI_Y0]].every(c => c === 'T'));
-    assert.deepEqual(regionOf(YASHIKI_IN.y), [YASHIKI_Y0, MAP_H]);
+    assert.deepEqual(regionOf(YASHIKI_IN.y), [YASHIKI_Y0, YASHIKI_Y0 + 36]);
     assert.equal(TILES[YASHIKI_IN.y][YASHIKI_IN.x], 'K');
     const z = PEOPLE.find(p => p.id === 'zumitani6');
     assert.ok(BLOCK.has(TILES[z.y - 1][z.x - 1]) && BLOCK.has(TILES[z.y - 1][z.x + 1]) && !BLOCK.has(TILES[z.y - 1][z.x]), '戸口は 1 マス');
@@ -289,4 +289,28 @@ test('地図の マスの 文字は ぜんぶ 地図の 色と 絵が ある (�
         assert.ok(MINI_COLORS[ch], `${ch} の 地図の 色`);
         assert.ok(src.includes(`case '${ch}'`), `${ch} の 絵`);
     }
+});
+
+test('地図: 月の迷宮 (7 章)。入り口から 月の 鏡の 間の ルナヤまで 歩いて 行ける (行き止まりも ある)', async () => {
+    const { MOON_Y0, MOON_IN, MOON_MIRROR } = await import('../src/data/map.js');
+    assert.ok([...TILES[MOON_Y0]].every(c => c === 'T'));
+    assert.deepEqual(regionOf(MOON_IN.y), [MOON_Y0, MAP_H]);
+    assert.ok(BLOCK.has('V'));
+    // 駅の 前から 歩ける マスを たどる
+    const seen = new Set([`${MOON_IN.x},${MOON_IN.y}`]);
+    const q = [[MOON_IN.x, MOON_IN.y]];
+    const open = (x, y) => y >= MOON_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !(x === MOON_MIRROR.x && y === MOON_MIRROR.y);
+    while (q.length) {
+        const [x, y] = q.shift();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const k = `${x + dx},${y + dy}`;
+            if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); }
+        }
+    }
+    const r = PEOPLE.find(p => p.id === 'runaya7');
+    assert.ok(seen.has(`${r.x},${r.y + 1}`), 'ルナヤの 前まで 行ける');
+    const moon = idsInArea('moon');
+    assert.equal(moon.length, 9);
+    const count = rk => moon.filter(id => NAKAMA[id].rank === rk).length;
+    assert.deepEqual([count('D'), count('C')], [5, 4]);
 });

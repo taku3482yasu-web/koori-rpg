@@ -267,9 +267,14 @@ export function createBattleView(app, battle, place) {
                 banner = { text: 'それは 分身！ しかえしが くる！', color: '#ff6a6a', until: t + 1.6 };
                 sfx('cancel');
             } else if (e.type === 'armGrow' || e.type === 'armShrink') {
-                // 6 章: トモオカの 右腕
-                const k = battle.enemies.findIndex(x => x.uid === e.target), pp = k >= 0 ? partPos(k, 'arm') : null;
-                if (pp) pops.push({ x: pp.x, y: pp.y - 30, text: e.type === 'armGrow' ? `右腕 ↑ ${e.lv}` : `右腕 ↓ ${e.lv}`, color: e.type === 'armGrow' ? '#ff8a6a' : '#9ae08a', small: true, until: t + 0.8 });
+                // 6 章: トモオカの 右腕・7 章: ルナヤの 月
+                const k = battle.enemies.findIndex(x => x.uid === e.target), ex = battle.enemies[k];
+                const key = ex && ex.gims ? Object.keys(ex.gims).find(g2 => ex.gims[g2].arm) : null, pp = key ? partPos(k, key) : null, nm = key ? ex.gims[key].name : '';
+                if (pp) pops.push({ x: pp.x, y: pp.y - 30, text: e.type === 'armGrow' ? `${nm} ↑ ${e.lv}` : `${nm} ↓ ${e.lv}`, color: e.type === 'armGrow' ? '#ff8a6a' : '#9ae08a', small: true, until: t + 0.8 });
+            } else if (e.type === 'repeat') {
+                // 7 章: ルナヤの もの忘れ (同じ わざを もう いちど)
+                const p = posOf(e.actor);
+                if (p) pops.push({ x: p.x, y: p.y - 120, text: 'あら、これ もう 言ったかしら？', color: '#e0d0ff', small: true, until: t + 1.4 });
             } else if (e.type === 'smoke') {
                 // 4 章: 玉手箱が こわれて けむり
                 banner = { text: 'けむりが もくもく……！ 攻撃が 当たりにくい！', color: '#d0d0d8', until: t + 1.8 };
@@ -327,7 +332,8 @@ export function createBattleView(app, battle, place) {
                 if (p) effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.5, color: '#bfeaff' });
             } else if (e.type === 'bigCancel') {
                 warn = null;
-                banner = { text: e.arm ? `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+                const armName = e.arm ? Object.values(battle.enemies.find(x => x.uid === e.actor)?.gims || {}).find(g2 => g2.arm)?.name : null;
+                banner = { text: e.arm ? (armName === '月' ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！`) : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
                 sfx('big');
             } else if (e.type === 'food') {
                 banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: '#ff9ad8', until: t + 1.6 };
@@ -778,6 +784,13 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'moon') {
+            // 月の迷宮 (7 章): 夜空と 星、むらさきの 石の かべ
+            ctx.fillStyle = '#0c0a24'; ctx.fillRect(0, 0, 400, HORIZON);
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 24; i++) ctx.fillRect((i * 97) % 400, (i * 37) % (HORIZON - 10), 1, 1);
+            ctx.fillStyle = '#2a2050';
+            for (let i = 0; i < 7; i++) ctx.fillRect(i * 64 - 10, HORIZON - 24 - (i % 2) * 10, 44, 34);
         } else if (place === 'yashiki') {
             // 屋敷の 中 (6 章): 板べいと しょうじ
             ctx.fillStyle = '#4a3624'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -806,7 +819,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -978,6 +991,17 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 22, q.y + 18 * k2, 44, 4, lv / mx, hot ? '#ff4a3a' : '#ffb84a');
                 text(ctx, `右腕 ${lv}/${mx}`, q.x, q.y + 18 * k2 + 13, { size: 9.5, align: 'center', bold: true, color: hot ? '#ff9a8a' : '#ffe0b0' });
+            } else if (key === 'moon') {
+                // 空の 月 (7 章): 段が 上がるほど 満ちる。満月が 近いと 光る
+                const lv = e.armLv, mx = e.armDef.max, hot = lv >= mx - 1;
+                ctx.fillStyle = hot ? `rgba(255, 240, 140, ${0.3 + 0.2 * Math.sin(t * 8)})` : 'rgba(255,255,255,0.08)';
+                ctx.beginPath(); ctx.arc(q.x, q.y, 24, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#2a2450'; ctx.beginPath(); ctx.arc(q.x, q.y, 16, 0, Math.PI * 2); ctx.fill();
+                ctx.save(); ctx.beginPath(); ctx.arc(q.x, q.y, 16, 0, Math.PI * 2); ctx.clip();
+                ctx.fillStyle = '#ffe89a'; ctx.fillRect(q.x + 16 - 32 * lv / mx, q.y - 16, 32 * lv / mx, 32);
+                ctx.restore();
+                bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
+                text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
             } else if (key === 'bell') {
                 // 鐘 (いつも うしろに ある。お経の あいだ だけ 光って ねらえる)
                 const swing = open ? Math.sin(t * 5) * 0.08 : 0;
@@ -1047,9 +1071,10 @@ export function createBattleView(app, battle, place) {
             text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: 'center', bold: true });
         } else if (battle.armCharge && !battle.outcome) {
             // 右腕が 限界 (6 章): 防御不能の 大技を ためている
+            const moonBoss = battle.enemies.find(x => x.uid === battle.armCharge.uid)?.gims?.moon;
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.92)', edge: '#ffb84a' });
-            text(ctx, `!! 防御不能「${warn ? warn.name : ''}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
-            text(ctx, `右腕を ねらって しぼませろ！ (${Math.max(0, battle.armCharge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
+            text(ctx, moonBoss ? `!! 満月！「${warn ? warn.name : ''}」を ためている！` : `!! 防御不能「${warn ? warn.name : ''}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
+            text(ctx, `${moonBoss ? '空の 月を ねらって 欠けさせろ！' : '右腕を ねらって しぼませろ！'} (${Math.max(0, battle.armCharge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
         } else if (battle.chant && !battle.outcome) {
             // お経 (5 章): となえきると 必殺技。鐘を 鳴らせば 止まる
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(90, 20, 90, 0.9)', edge: '#ffe85a' });
