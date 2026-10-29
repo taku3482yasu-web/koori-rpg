@@ -195,6 +195,9 @@ export const WAZA = {
     runaya: W('ムーンビーム', 'ふしぎ', 'line', 1.3),
     // 進化で なる キャラ (ダンジョンの 進化先)
     harigeneral: W('針とばし', 'ふつう', 'line', 1.2),
+    // 追加の 進化先 (2026-10-30)。やけどは どく
+    daienjou: W('大炎上', 'ほのお', 'around', 1.2, 'poison', 0.4),
+    kingharry: W('キングニードル', 'ふつう', 'line', 1.8),
     joubachi: W('じょおうばり', 'かぜ', 'front', 1.5, 'poison', 0.4),
     oodonguriko: W('おおころがり', 'しぜん', 'front', 1.8),
     nemuridakeou: W('ほうしのあらし', 'しぜん', 'around', 0, 'sleep', 0.8),
@@ -1005,6 +1008,19 @@ const LIST = [
         title: '大腸菌の王', desc: 'ダイチョウエンキンが育ちきった姿。友好型のままだが、おなかのぐるぐるは何倍にもなった。こおりくんとは昔からの友達らしい。',
         special: sp('大腸 大混乱', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
     },
+    // 追加の 進化先 2 体 (2026-10-30。ダンジョンの 進化表の のこり。ダイエンジョウの「筋肉の山 B10F」の 条件も いまは Lv だけ)
+    {
+        id: 'daienjou', name: 'ダイエンジョウ', from: 'ダンジョン 063', area: 'tera', evo: 'enjoubouzu', rank: 'C', element: 'ほのお', role: 'attacker', mul: { atk: 1.05 },
+        line: '大炎上 上等！', favorite: 'cider',
+        title: '大炎上の申し子', desc: 'エンジョウボウズが筋肉の山の熱にあてられて進化した姿。炎上の規模がけた違いになり、本人も燃えている。反省の色は見えない。',
+        special: sp('超 大炎上', [atk('all', 1.8)])
+    },
+    {
+        id: 'kingharry', name: 'キングハリー', from: 'ダンジョン 156', area: 'ishinokawa', evo: 'harigeneral', rank: 'C', element: 'ふつう', role: 'attacker', mul: { atk: 1.1 },
+        line: '余が キングハリーである！', favorite: 'cider',
+        title: 'ハリーの王', desc: 'ハリジェネラルが出世してキングになった姿。免許を持ったまま、ついに王になった。一人称は「余」。',
+        special: sp('キングの 号令', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 1.2)])
+    },
 ];
 
 // わざ・術を つける
@@ -1053,6 +1069,9 @@ export const EVOLVE = {
     takaramimic: { to: 'kinkomimic', lv: 45 },
     koorimodoki: { to: 'koorimodokishin', lv: 50 },
     daichouenkin: { to: 'daichouenou', lv: 30 },
+    // 追加 (2026-10-30)。ハリジェネラルは もう 1 回 進化する (ハリーベビー → ハリジェネラル → キングハリー)
+    enjoubouzu: { to: 'daienjou', lv: 30 },
+    harigeneral: { to: 'kingharry', lv: 55 },
     tsukiusagi: { to: 'kaguyausagi', lv: 36 },
     mangetsuwolf: { to: 'shingetsuwolf', lv: 40 },
     shakkinbourei: { to: 'rishitoribourei', lv: 42 },

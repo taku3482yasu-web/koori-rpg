@@ -496,13 +496,13 @@ body.nopad #pad { display: none; }
     }
     if (ac.state === "suspended") ac.resume();
   }
-  function tone(freq, start, dur, { type = "square", vol = 0.06, slide = 0 } = {}) {
+  function tone(freq2, start, dur, { type = "square", vol = 0.06, slide = 0 } = {}) {
     const t = ac.currentTime + start;
     const osc = ac.createOscillator();
     const gain = ac.createGain();
     osc.type = type;
-    osc.frequency.setValueAtTime(freq, t);
-    if (slide) osc.frequency.linearRampToValueAtTime(freq + slide, t + dur);
+    osc.frequency.setValueAtTime(freq2, t);
+    if (slide) osc.frequency.linearRampToValueAtTime(freq2 + slide, t + dur);
     gain.gain.setValueAtTime(vol, t);
     gain.gain.exponentialRampToValueAtTime(1e-4, t + dur);
     osc.connect(gain).connect(ac.destination);
@@ -553,6 +553,436 @@ body.nopad #pad { display: none; }
     if (!ac || muted || ac.state !== "running") return;
     (_a = SOUNDS[name]) == null ? void 0 : _a.call(SOUNDS);
   }
+  const audioContext = () => ac && !muted && ac.state === "running" ? ac : null;
+  const MODES = {
+    major: [0, 2, 4, 5, 7, 9, 11],
+    minor: [0, 2, 3, 5, 7, 8, 10],
+    harmonic: [0, 2, 3, 5, 7, 8, 11],
+    dorian: [0, 2, 3, 5, 7, 9, 10],
+    mixolydian: [0, 2, 4, 5, 7, 9, 10],
+    phrygian: [0, 1, 3, 5, 7, 8, 10],
+    // 和風 (みやこぶし) にも 使う
+    lydian: [0, 2, 4, 6, 7, 9, 11]
+  };
+  const SONGS = {
+    // ----- タイトル -----
+    title: {
+      name: "こおりくんの 大冒険",
+      bpm: 116,
+      root: 72,
+      mode: "major",
+      lead: "square",
+      melody: "5, - 1 2 3 - 5 - | 4 - 3 2 2 - . 5, | 6, - 1 3 6 - 5 - | 4 - 3 4 6 - - . | 5 - 1' 7 6 - 5 - | 4 3 2 - 5 - 7, - | 6, 1 4 6 5 - 3 1 | 2 - - 5, 2 - 7, -",
+      chords: "1 5 6 4 1 5 4 5",
+      bass: "r . o . f . o .",
+      arp: "0 . 2 . 1 . 2 .",
+      drums: "k h s h k k s h"
+    },
+    // ----- 町 (地区) ごと。地区の 名前は nakama.js の AREAS -----
+    ishinokawa: {
+      name: "石の川タウンの 夏休み",
+      bpm: 112,
+      root: 67,
+      mode: "major",
+      lead: "square",
+      melody: "1 . 3 5 1' - 5 . | 6 - 4 6 5 - . . | 3 . 5 1' 7 - 6 5 | 2 - 3 4 5 - - . | 1 . 3 5 1' - 2' 1' | 7 6 4 6 1' - 6 - | 5 . 3 . 2 - 5 . | 1 - - . 5, . 7, .",
+      chords: "1 4 1 5 1 4 5 1",
+      bass: "r . f . o . f .",
+      arp: ". 1 . 2 . 1 . 2",
+      drums: "k h s h k h s h"
+    },
+    shoutengai: {
+      name: "ネオンの 商店街",
+      bpm: 128,
+      root: 65,
+      mode: "mixolydian",
+      lead: "square",
+      melody: "1' . 1' 7 5 . 4 5 | . 7 - 5 4 - 2 . | 4 . 6 1' 6 . 4 6 | 5 - 3 1 2 - . . | 1' . 1' 7 5 . 4 5 | . 7 - 5 4 - 7 1' | 2' . 1' 7 6 . 4 6 | 5 - - . 5 . 7 .",
+      chords: "1 7 4 1 1 7 4 5",
+      bass: "r . r o . o f .",
+      arp: ". 0 . 1 . 2 . 1",
+      drums: "k h s h k s s h"
+    },
+    school: {
+      name: "夜の 石の川小学校",
+      bpm: 92,
+      root: 69,
+      mode: "harmonic",
+      lead: "triangle",
+      melody: "1 . 3 . 5 - 4 3 | 3 - - . . . . . | 6, . 1 . 4 - 3 2 | 7, - - - . . . . | 1' . 7 . 6 - 5 4 | 3 - 6 - . . 1 . | 2 . 4 . 6 - 5 4 | 7, - 2 - 5, - - .",
+      chords: "1 6 4 5 1 6 2 5",
+      bass: "r . . . r . . .",
+      arp: "0 1 2 1 0 1 2 1",
+      drums: ". . . . h . . ."
+    },
+    yama: {
+      name: "山と 氷の ダム",
+      bpm: 104,
+      root: 62,
+      mode: "dorian",
+      lead: "square",
+      melody: "1' - 5 - 1' 2' 3' - | 2' - 1' 6 5 - - . | 4 5 6 - 5 4 3 - | 1 - 2 - 3 - - . | 5 - 3 5 6 - 5 3 | 4 - 6 1' 6 - - 4 | 7, - 2 4 3 - 2 1 | 1 - - - . . 5, .",
+      chords: "1 4 1 7 3 4 7 1",
+      bass: "r - o - f - o -",
+      arp: "0 1 2 3 2 1 0 1",
+      drums: "k . h . s . h h"
+    },
+    umi: {
+      name: "海辺の 町",
+      bpm: 100,
+      root: 70,
+      mode: "major",
+      lead: "triangle",
+      melody: "3 - 5 - 6 5 3 - | 1 - 2 3 2 - . . | 6, 1 2 - 1 6, 5, - | 2 - - 3 5 - . . | 3 - 5 - 6 1' 6 5 | 3 - 2 1 6, - 1 - | 4 - 6 - 5 - 3 2 | 1 - - - . . . .",
+      chords: "1 6 2 5 1 6 4 5",
+      bass: "r . . f o . f .",
+      arp: ". . 2 . . 1 . .",
+      drums: "k . h k . . s h"
+    },
+    tera: {
+      name: "ネット寺",
+      bpm: 88,
+      root: 62,
+      mode: "phrygian",
+      lead: "triangle",
+      melody: "1' - - 6 5 - 4 - | 2 - 4 - 5 - - . | 6 - 5 6 1' - 6 5 | 4 - - 2 1 - - . | 5 - 6 1' 2' - 1' 6 | 5 - 4 - 5 6 5 - | 4 - 2 - 4 5 2 - | 1 - - - . . . .",
+      chords: "1 2 6 1 4 6 2 1",
+      bass: "r - - - f - - -",
+      drums: "k . . b . . b ."
+    },
+    yashiki: {
+      name: "忍びの屋敷",
+      bpm: 138,
+      root: 64,
+      mode: "phrygian",
+      lead: "square",
+      melody: "1 . 1 2 4 . 5 . | 6 5 4 2 1 - . . | 1 . 1 2 4 . 6 . | 5 - 4 2 4 - . . | 1' . 6 . 5 . 6 1' | 2' - 1' 6 5 - - . | 4 . 5 6 5 4 2 4 | 1 - - . 1 . . .",
+      chords: "1 1 2 1 6 7 2 1",
+      bass: "r r o r r o r o",
+      drums: "k h s h k k s h"
+    },
+    moon: {
+      name: "月の迷宮",
+      bpm: 80,
+      root: 65,
+      mode: "lydian",
+      lead: "sine",
+      melody: "5 - - - 3 - 2 - | 4 - - - 3 - - . | 5 - 6 - 7 - 1' - | 2' - - - 1' - - . | 3' - 2' - 7 - 5 - | 6 - - 4 3 - - . | 2 - 3 - 4 - 6 - | 5 - - - . . . .",
+      chords: "1 2 1 2 3 2 7 1",
+      bass: "r - - - - - - -",
+      arp: "0 1 2 3 0 1 2 3",
+      drums: ". . . . . . . ."
+    },
+    // ----- ふつうの 戦闘・ライバル探検隊 -----
+    battle: {
+      name: "なかまと バトル",
+      bpm: 152,
+      root: 69,
+      mode: "minor",
+      lead: "square",
+      melody: "1 . 1 . 3 . 5 4 | 5 . 4 . 3 2 1 2 | 3 . 3 . 6 . 5 3 | 4 . 5 . 2 - . . | 1' . 7 . 5 . 3 5 | 7 . 6 . 5 4 3 2 | 4 . 6 . 1' . 6 4 | 5 - 4 - 7, - 2 -",
+      chords: "1 7 6 7 1 7 4 5",
+      bass: "r o r o r o r o",
+      drums: "k h s h k k s h"
+    },
+    rival: {
+      name: "ライバル探検隊",
+      bpm: 156,
+      root: 64,
+      mode: "dorian",
+      lead: "square",
+      melody: "5 . 5 6 . 5 3 . | 4 - 6 - 5 - 3 2 | 5 . 5 6 . 5 1' . | 7 - 6 - 4 - . . | 2' - 1' 7 . 6 7 . | 1' - - 5 3 - 5 . | 6 . 6 5 4 . 6 . | 5 - 7, 2 5 - . .",
+      chords: "1 4 1 4 7 1 4 5",
+      bass: "r . o r . r o .",
+      drums: "k h s k k h s h"
+    },
+    // ----- ボスごとの 戦闘 BGM (nakama.js の BOSSES の id) -----
+    nushi: {
+      name: "足音 百かぞえ (ヌシ)",
+      bpm: 132,
+      root: 60,
+      mode: "harmonic",
+      lead: "sawtooth",
+      melody: "1 . 1 . 1 . 3 2 | 1 . 7, . 6, - . . | 1 . 1 . 1 . 4 3 | 2 - 7, - 5, - . . | 5 . 5 6 5 . 3 . | 4 . 4 5 4 . 2 . | 3 . 3 4 3 . 1 . | 7, - 2 - 5 - 7 -",
+      chords: "1 1 6 5 1 1 4 5",
+      bass: "r . r . r . r .",
+      drums: "k . s . k . s k"
+    },
+    kage: {
+      name: "ろうかを 走る 影 (ルナシャドウ)",
+      bpm: 144,
+      root: 71,
+      mode: "phrygian",
+      lead: "square",
+      melody: "1 2 1 . 5 . 4 . | 2 1 2 . 1 - . . | 1 2 1 . 6 . 5 . | 4 2 4 . 5 - . . | 1' . 7 6 5 . 6 5 | 4 . 2 1 2 - . . | 6, . 1 2 4 . 2 1 | 2 - - 1 - - . .",
+      chords: "1 2 1 2 4 3 2 1",
+      bass: "r . . r . . r .",
+      drums: "k . . s . . k s"
+    },
+    himuro: {
+      name: "氷河の 咆哮 (ダムの主)",
+      bpm: 138,
+      root: 62,
+      mode: "harmonic",
+      lead: "square",
+      melody: "1' - 7 - 1' 2' 3' - | 2' - 1' - 7 - 5 - | 6 - 5 - 6 7 1' - | 7 - - - 5 - - . | 3' - 2' - 1' - 6 - | 1' - 7 6 5 - 3 - | 4 - 5 6 2' - 1' 7 | 7 - - - 5 - 7 -",
+      chords: "1 6 4 5 1 6 2 5",
+      bass: "r o r o r o r o",
+      arp: "0 1 2 1 0 1 2 1",
+      drums: "k h s h k k s h"
+    },
+    urashima4: {
+      name: "黒い 紋と 玉手箱 (浦の島重蔵)",
+      bpm: 140,
+      root: 67,
+      mode: "harmonic",
+      lead: "square",
+      steps: 6,
+      melody: "1 - 3 5 - 3 | 1' - 7 6 - 5 | 6 - 1' 4 - 6 | 5 - - 7, - - | 1 - 3 5 - 1' | 3' - 2' 1' - 6 | 4 - 6 1' - 7 | 7 - - 5 - -",
+      chords: "1 6 4 5 1 6 4 5",
+      bass: "r - o f - o",
+      drums: "k h h s h h"
+    },
+    daishi5: {
+      name: "鬼の面と お経 (ダイシ)",
+      bpm: 120,
+      root: 62,
+      mode: "phrygian",
+      lead: "sawtooth",
+      melody: "1 - 1 2 4 - 5 - | 6 - 5 4 5 - - . | 1' - 6 5 6 - 5 4 | 2 - - - 1 - - . | 5 . 5 6 1' . 2' 1' | 6 - 5 - 4 - 2 - | 4 . 5 6 5 . 4 2 | 1 - - - 1 . 2 .",
+      chords: "1 1 2 1 6 6 2 1",
+      bass: "r . r . o . r .",
+      drums: "k b s b k b s b"
+    },
+    zumitani6: {
+      name: "影分身 (ズミタニ)",
+      bpm: 168,
+      root: 64,
+      mode: "minor",
+      lead: "square",
+      melody: "1 3 4 5 7 5 4 3 | 4 5 4 3 1 - . . | 1 3 4 5 1' 7 5 4 | 5 - 3 - 4 - . . | 1' . 1' 7 5 . 5 4 | 3 . 3 4 5 - . . | 6 . 6 5 4 . 4 3 | 2 - 5, - 7, - 2 -",
+      chords: "1 1 7 6 1 1 4 5",
+      bass: "r o r o r o r o",
+      drums: "k h s h k h s s"
+    },
+    onioni6: {
+      name: "光の 消えた 目 (おにおに)",
+      bpm: 128,
+      root: 65,
+      mode: "minor",
+      lead: "square",
+      melody: "5 - - 4 3 - 1 - | 3 - - 2 1 - 6, - | 1 - 3 - 5 - 1' - | 7 - - - . . 5 . | 1' - 7 - 6 - 5 - | 6 - 5 - 4 - 3 - | 4 - 3 - 4 - 6 - | 5 - - - 7, - - .",
+      chords: "1 6 3 7 1 6 4 5",
+      bass: "r - o - r - o -",
+      arp: "0 1 2 1 0 1 2 1",
+      drums: "k . s . k k s ."
+    },
+    tomooka6: {
+      name: "幹部の 右腕 (トモオカ)",
+      bpm: 150,
+      root: 70,
+      mode: "phrygian",
+      lead: "sawtooth",
+      melody: "1 . . 1 2 . 1 . | 5 . . 4 2 - . . | 1 . . 1 2 . 4 . | 5 . 6 . 5 - . . | 1' . 7 . 6 . 5 . | 6 . 5 . 4 . 2 . | 1 . 2 . 4 . 5 6 | 5 - - - 2 - 1 -",
+      chords: "1 2 1 7 6 2 1 1",
+      bass: "r . . r . . r r",
+      drums: "k . . s . . k s"
+    },
+    runaya7: {
+      name: "満ちていく 月 (ルナヤ)",
+      bpm: 132,
+      root: 61,
+      mode: "harmonic",
+      lead: "triangle",
+      steps: 6,
+      melody: "5 - - 1' - 7 | 6 - 5 4 - - | 3 - - 6 - 5 | 5 - - - - . | 1' - 7 6 - 5 | 4 - 3 4 - 6 | 5 - 4 3 - 2 | 7, - - 2 - -",
+      chords: "1 6 4 5 1 6 2 5",
+      bass: "r - - f - -",
+      arp: "0 1 2 3 2 1",
+      drums: "k . h s . h"
+    },
+    // 曲が まだ ない ボス (8 章 から 先) は これ
+    boss: {
+      name: "ボス バトル",
+      bpm: 150,
+      root: 69,
+      mode: "harmonic",
+      lead: "square",
+      melody: "1 . 3 . 5 . 1' . | 7 - 6 - 5 - . . | 4 . 6 . 1' . 3' . | 2' - 1' - 7 - . . | 1' . 7 6 5 . 6 7 | 1' - 5 - 3 - . . | 4 . 4 5 6 . 7 1' | 7 - - - 5 - 7 -",
+      chords: "1 6 4 5 1 6 2 5",
+      bass: "r o r o r o r o",
+      drums: "k h s h k k s h"
+    }
+  };
+  const tokens = (s) => (s || "").split(/\s+/).filter((t) => t && t !== "|");
+  function degree(tok, mode2) {
+    const m = /^([#b]?)([1-7])([',]*)$/.exec(tok);
+    if (!m) return null;
+    const scale = MODES[mode2];
+    let semi = scale[Number(m[2]) - 1] + (m[1] === "#" ? 1 : m[1] === "b" ? -1 : 0);
+    for (const c of m[3]) semi += c === "'" ? 12 : -12;
+    return semi;
+  }
+  function triad(root, mode2) {
+    const scale = MODES[mode2];
+    return [0, 2, 4].map((k) => scale[(root - 1 + k) % 7] + (root - 1 + k >= 7 ? 12 : 0));
+  }
+  function compileSong(song) {
+    const steps = song.steps || 8;
+    const chords = tokens(song.chords).map(Number);
+    const total = chords.length * steps;
+    const stepSec = 60 / song.bpm / 2;
+    const notes = [];
+    const hold = (list, i) => {
+      let n = 1;
+      while (list[(i + n) % list.length] === "-" && i + n < list.length) n++;
+      return n;
+    };
+    const mel = tokens(song.melody);
+    mel.forEach((t, i) => {
+      const d = degree(t, song.mode);
+      if (d !== null) notes.push({ step: i, len: hold(mel, i), midi: song.root + d, voice: "lead" });
+    });
+    for (const [voice, pat] of [["bass", tokens(song.bass)], ["arp", tokens(song.arp)]]) {
+      if (!pat.length) continue;
+      for (let s = 0; s < total; s++) {
+        const t = pat[s % pat.length];
+        const ch = triad(chords[Math.floor(s / steps)], song.mode);
+        let midi = null;
+        if (voice === "bass") {
+          const base = song.root - 24 + ch[0];
+          midi = t === "r" ? base : t === "o" ? base + 12 : t === "f" ? base + 7 : null;
+        } else {
+          midi = /^[0-2]$/.test(t) ? song.root - 12 + ch[Number(t)] : t === "3" ? song.root + ch[0] : null;
+        }
+        if (midi !== null) notes.push({ step: s, len: voice === "bass" ? hold(pat, s % pat.length) : 1, midi, voice });
+      }
+    }
+    const hits = [];
+    const dr = tokens(song.drums);
+    if (dr.length) for (let s = 0; s < total; s++) {
+      const t = dr[s % dr.length];
+      if (t === "x") hits.push({ step: s, kind: "k" }, { step: s, kind: "h" });
+      else if (t !== ".") hits.push({ step: s, kind: t });
+    }
+    return { steps, total, stepSec, notes, hits };
+  }
+  function bgmFor({ scene, area, battle }) {
+    if (scene === "title") return "title";
+    if (scene === "field" || scene === "menu") return SONGS[area] ? area : "ishinokawa";
+    if (scene === "battle" && battle) {
+      if (battle.outcome) return null;
+      if (battle.kind === "boss") return SONGS[battle.bossId] ? battle.bossId : "boss";
+      if (battle.kind === "rival") return "rival";
+      return "battle";
+    }
+    return null;
+  }
+  const VOL = { lead: 0.032, bass: 0.045, arp: 0.014 };
+  const AHEAD = 0.25;
+  const compiled = {};
+  let want = null;
+  let cur = null;
+  let noise = null;
+  function noiseBuffer(ac2) {
+    if (noise) return noise;
+    noise = ac2.createBuffer(1, ac2.sampleRate * 0.3, ac2.sampleRate);
+    const d = noise.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    return noise;
+  }
+  const freq = (midi) => 440 * 2 ** ((midi - 69) / 12);
+  function note(ac2, out, n, t, stepSec, wave) {
+    const osc = ac2.createOscillator();
+    const g = ac2.createGain();
+    const dur = n.len * stepSec;
+    osc.type = n.voice === "bass" ? "triangle" : n.voice === "arp" ? "triangle" : wave;
+    osc.frequency.setValueAtTime(freq(n.midi), t);
+    const v = VOL[n.voice];
+    g.gain.setValueAtTime(1e-4, t);
+    g.gain.linearRampToValueAtTime(v, t + 0.01);
+    g.gain.setValueAtTime(v, t + Math.max(0.02, dur - 0.05));
+    g.gain.exponentialRampToValueAtTime(1e-4, t + dur * 0.98);
+    osc.connect(g).connect(out);
+    osc.start(t);
+    osc.stop(t + dur);
+  }
+  function drum(ac2, out, kind, t) {
+    const g = ac2.createGain();
+    g.connect(out);
+    if (kind === "k") {
+      const osc = ac2.createOscillator();
+      osc.frequency.setValueAtTime(150, t);
+      osc.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+      g.gain.setValueAtTime(0.09, t);
+      g.gain.exponentialRampToValueAtTime(1e-4, t + 0.15);
+      osc.connect(g);
+      osc.start(t);
+      osc.stop(t + 0.16);
+    } else if (kind === "b") {
+      const osc = ac2.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, t);
+      osc.frequency.exponentialRampToValueAtTime(620, t + 0.06);
+      g.gain.setValueAtTime(0.05, t);
+      g.gain.exponentialRampToValueAtTime(1e-4, t + 0.08);
+      osc.connect(g);
+      osc.start(t);
+      osc.stop(t + 0.09);
+    } else {
+      const src = ac2.createBufferSource();
+      src.buffer = noiseBuffer(ac2);
+      const f = ac2.createBiquadFilter();
+      f.type = "highpass";
+      f.frequency.value = kind === "h" ? 7e3 : 1800;
+      const len = kind === "h" ? 0.04 : 0.12;
+      g.gain.setValueAtTime(kind === "h" ? 0.025 : 0.05, t);
+      g.gain.exponentialRampToValueAtTime(1e-4, t + len);
+      src.connect(f).connect(g);
+      src.start(t);
+      src.stop(t + len + 0.01);
+    }
+  }
+  function stopCur(ac2) {
+    if (!cur) return;
+    const g = cur.gain;
+    g.gain.cancelScheduledValues(ac2.currentTime);
+    g.gain.setValueAtTime(g.gain.value, ac2.currentTime);
+    g.gain.linearRampToValueAtTime(0, ac2.currentTime + 0.4);
+    setTimeout(() => g.disconnect(), 1500);
+    cur = null;
+  }
+  function schedule() {
+    const ac2 = audioContext();
+    if (!ac2) return;
+    if (((cur == null ? void 0 : cur.id) ?? null) !== want) {
+      stopCur(ac2);
+      if (want) {
+        const c2 = compiled[want] || (compiled[want] = compileSong(SONGS[want]));
+        const gain = ac2.createGain();
+        gain.gain.value = 1;
+        gain.connect(ac2.destination);
+        cur = { id: want, c: c2, wave: SONGS[want].lead || "square", gain, start: ac2.currentTime + 0.45, next: 0 };
+      }
+    }
+    if (!cur) return;
+    const { c } = cur;
+    const until = ac2.currentTime + AHEAD;
+    while (cur.start + cur.next * c.stepSec < ac2.currentTime - 0.05) cur.next++;
+    while (cur.start + cur.next * c.stepSec < until) {
+      const s = cur.next % c.total;
+      const t = cur.start + cur.next * c.stepSec;
+      for (const n of c.notes) if (n.step === s) note(ac2, cur.gain, n, t, c.stepSec, cur.wave);
+      for (const h of c.hits) if (h.step === s) drum(ac2, cur.gain, h.kind, t);
+      cur.next++;
+    }
+  }
+  function playBgm(id) {
+    want = id && SONGS[id] ? id : null;
+    schedule();
+  }
+  const currentBgm = () => (cur == null ? void 0 : cur.id) ?? null;
+  if (typeof window !== "undefined") setInterval(schedule, 100);
   const ROLES = {
     attacker: "攻める",
     defender: "守る",
@@ -734,6 +1164,9 @@ body.nopad #pad { display: none; }
     runaya: W$1("ムーンビーム", "ふしぎ", "line", 1.3),
     // 進化で なる キャラ (ダンジョンの 進化先)
     harigeneral: W$1("針とばし", "ふつう", "line", 1.2),
+    // 追加の 進化先 (2026-10-30)。やけどは どく
+    daienjou: W$1("大炎上", "ほのお", "around", 1.2, "poison", 0.4),
+    kingharry: W$1("キングニードル", "ふつう", "line", 1.8),
     joubachi: W$1("じょおうばり", "かぜ", "front", 1.5, "poison", 0.4),
     oodonguriko: W$1("おおころがり", "しぜん", "front", 1.8),
     nemuridakeou: W$1("ほうしのあらし", "しぜん", "around", 0, "sleep", 0.8),
@@ -2607,6 +3040,39 @@ body.nopad #pad { display: none; }
       title: "大腸菌の王",
       desc: "ダイチョウエンキンが育ちきった姿。友好型のままだが、おなかのぐるぐるは何倍にもなった。こおりくんとは昔からの友達らしい。",
       special: sp("大腸 大混乱", [atk("all", 0.8, { magic: true }), { kind: "status", target: "all", status: "poison", chance: 0.6 }])
+    },
+    // 追加の 進化先 2 体 (2026-10-30。ダンジョンの 進化表の のこり。ダイエンジョウの「筋肉の山 B10F」の 条件も いまは Lv だけ)
+    {
+      id: "daienjou",
+      name: "ダイエンジョウ",
+      from: "ダンジョン 063",
+      area: "tera",
+      evo: "enjoubouzu",
+      rank: "C",
+      element: "ほのお",
+      role: "attacker",
+      mul: { atk: 1.05 },
+      line: "大炎上 上等！",
+      favorite: "cider",
+      title: "大炎上の申し子",
+      desc: "エンジョウボウズが筋肉の山の熱にあてられて進化した姿。炎上の規模がけた違いになり、本人も燃えている。反省の色は見えない。",
+      special: sp("超 大炎上", [atk("all", 1.8)])
+    },
+    {
+      id: "kingharry",
+      name: "キングハリー",
+      from: "ダンジョン 156",
+      area: "ishinokawa",
+      evo: "harigeneral",
+      rank: "C",
+      element: "ふつう",
+      role: "attacker",
+      mul: { atk: 1.1 },
+      line: "余が キングハリーである！",
+      favorite: "cider",
+      title: "ハリーの王",
+      desc: "ハリジェネラルが出世してキングになった姿。免許を持ったまま、ついに王になった。一人称は「余」。",
+      special: sp("キングの 号令", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, atk("all", 1.2)])
     }
   ];
   function moves(id, element, rank, upper = false) {
@@ -2644,6 +3110,9 @@ body.nopad #pad { display: none; }
     takaramimic: { to: "kinkomimic", lv: 45 },
     koorimodoki: { to: "koorimodokishin", lv: 50 },
     daichouenkin: { to: "daichouenou", lv: 30 },
+    // 追加 (2026-10-30)。ハリジェネラルは もう 1 回 進化する (ハリーベビー → ハリジェネラル → キングハリー)
+    enjoubouzu: { to: "daienjou", lv: 30 },
+    harigeneral: { to: "kingharry", lv: 55 },
     tsukiusagi: { to: "kaguyausagi", lv: 36 },
     mangetsuwolf: { to: "shingetsuwolf", lv: 40 },
     shakkinbourei: { to: "rishitoribourei", lv: 42 },
@@ -10791,6 +11260,92 @@ body.nopad #pad { display: none; }
           "...................................."
         ]
       ]
+    },
+    daienjou: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ff2a2a", "b": "#ff4040", "c": "#f89898", "d": "#111111", "e": "#ab2525", "f": "#5f2525", "g": "#3d1717", "h": "#ff6a1a", "i": "#ffd040", "j": "#ff3a1a" },
+      frames: [
+        [
+          ".....aibbba.....",
+          ".....ahhaaai....",
+          ".....jhhjahh....",
+          ".....ccccchh....",
+          ".....cddcdd.....",
+          ".....cdccdc.....",
+          ".....cccccc.....",
+          ".....cceecc.....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          ".....gg..gg.....",
+          "................"
+        ],
+        [
+          ".....aaiaaa.....",
+          ".....ahhaai.....",
+          ".....jhhj.hh....",
+          ".....ccccchh....",
+          ".....cddcdd.....",
+          ".....cdccdc.....",
+          ".....cccccc.....",
+          ".....cceecc.....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          "....ffffffff....",
+          ".....gg..gg.....",
+          "................"
+        ]
+      ]
+    },
+    kingharry: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5ac0", "b": "#c02a3a", "c": "#f0d0a0", "d": "#111111", "e": "#ff8aa0", "f": "#ffd840", "g": "#e02a5a", "h": "#ffffff" },
+      frames: [
+        [
+          "................",
+          "................",
+          ".........f.f.f..",
+          ".........fffff..",
+          ".........ffgff..",
+          "....aaaa.fffff..",
+          "....aaaaaa......",
+          "..aaaaaaaccccc..",
+          ".bbbbbbbbcccdc..",
+          ".baaaaaaaccccc..",
+          ".baaaaaaaccccce.",
+          ".baaaaaaaccccc..",
+          ".baaaaaaaab.....",
+          ".baaaaaaaab.....",
+          ".bbbbbbbbbb.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          ".........f.f.f..",
+          ".........fffff.h",
+          ".........ffgff..",
+          "....aaaa.fffff..",
+          "....aaaaaa......",
+          "..aaaaaaaccccc..",
+          ".bbbbbbbbcccdc..",
+          ".baaaaaaaccccc..",
+          ".baaaaaaaccccce.",
+          ".baaaaaaaccccc..",
+          ".baaaaaaaab.....",
+          ".baaaaaaaab.....",
+          ".bbbbbbbbbb.....",
+          "................"
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -13540,13 +14095,13 @@ body.nopad #pad { display: none; }
   function backArt(art) {
     if (!art) return art;
     if (cache.has(art)) return cache.get(art);
-    const freq = {};
+    const freq2 = {};
     let total = 0;
     for (const row2 of art.frames[0]) for (const ch of row2) if (ch !== ".") {
-      freq[ch] = (freq[ch] || 0) + 1;
+      freq2[ch] = (freq2[ch] || 0) + 1;
       total++;
     }
-    const rare = new Set(Object.keys(freq).filter((ch) => freq[ch] < total * 0.12));
+    const rare = new Set(Object.keys(freq2).filter((ch) => freq2[ch] < total * 0.12));
     const back = { ...art, frames: art.frames.map((f) => backFrame(f, rare)) };
     cache.set(art, back);
     return back;
@@ -13956,7 +14511,10 @@ body.nopad #pad { display: none; }
     kaguyausagi: auto("kaguyausagi"),
     shingetsuwolf: auto("shingetsuwolf"),
     rishitoribourei: auto("rishitoribourei"),
-    runaya: auto("runaya")
+    runaya: auto("runaya"),
+    // 追加の 進化先 (2026-10-30)
+    daienjou: auto("daienjou"),
+    kingharry: auto("kingharry")
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -14089,6 +14647,8 @@ body.nopad #pad { display: none; }
     hyouzanmuscle: { motion: "dash", color: "#bff0ff" },
     kinkomimic: { motion: "aura", color: "#e0e0e0" },
     daichouenou: { motion: "cloud", color: "#d8a8ff" },
+    daienjou: { motion: "rain", color: "#ff8a4a" },
+    kingharry: { motion: "multi", color: "#e0e0e0" },
     // こおりくん: 大腸炎アタック
     koori: { motion: "cloud", color: "#c8a060", glyph: "@" }
   };
@@ -16207,8 +16767,8 @@ body.nopad #pad { display: none; }
         const on = k === introIndex;
         panel(ctx, bn.x, bn.y, bn.w, bn.h, { fill: on ? "#2d5aa8" : "rgba(26,36,64,0.95)", edge: on ? COLORS.accent : "#3a4a70" });
         text(ctx, bn.label, bn.x + bn.w / 2, bn.y + 36, { size: 18, align: "center", bold: true, color: off ? COLORS.dim : "#ffffff" });
-        const note = bn.key === "item" ? btn("y") : bn.key === "food" ? off ? "投げられない" : btn("x") : bn.key === "run" && off ? "にげられない" : "";
-        if (note) text(ctx, note, bn.x + bn.w / 2, bn.y + 54, { size: 9.5, align: "center", color: COLORS.dim });
+        const note2 = bn.key === "item" ? btn("y") : bn.key === "food" ? off ? "投げられない" : btn("x") : bn.key === "run" && off ? "にげられない" : "";
+        if (note2) text(ctx, note2, bn.x + bn.w / 2, bn.y + 54, { size: 9.5, align: "center", color: COLORS.dim });
       });
       text(ctx, `十字キーで えらんで ${btn("a")}　どうぐ・おやつを 使うと バトル開始`, 160, 222, { size: 9.5, align: "center", color: COLORS.dim, maxWidth: 300 });
     }
@@ -16884,6 +17444,17 @@ body.nopad #pad { display: none; }
   app.setVersion(app.version);
   app.scene = createTitle(app);
   window.__app = app;
+  window.__bgm = currentBgm;
+  function wantedBgm() {
+    var _a;
+    const sc = app.scene;
+    const b = sc.battle;
+    return bgmFor({
+      scene: sc.name,
+      area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
+      battle: b ? { kind: b.kind, outcome: b.outcome, bossId: ((_a = b.enemies.find((e) => BOSSES[e.id])) == null ? void 0 : _a.id) ?? null } : null
+    });
+  }
   let last = performance.now(), saveTimer = 0;
   function frame(now) {
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1e3));
@@ -16892,6 +17463,7 @@ body.nopad #pad { display: none; }
     if (input.touch.justDown || Object.values(input.pressed).some(Boolean)) unlockSound();
     if (app.talk.isActive()) app.talk.update(dt, input);
     else app.scene.update(dt, input);
+    playBgm(wantedBgm());
     app.scene.drawTop(screens.top);
     app.scene.drawBottom(screens.bottom);
     if (app.g && app.scene === app.field) {

@@ -55,3 +55,5 @@ export function sfx(name) {
 }
 
 export function setMuted(v) { muted = v; }
+// BGM (core/bgm.js) も 同じ 音の 出口を 使う。まだ 鳴らせない ときは null
+export const audioContext = () => (ac && !muted && ac.state === 'running' ? ac : null);

@@ -147,6 +147,8 @@ export const SPECIALS = {
     hyouzanmuscle: { motion: 'dash', color: '#bff0ff' },
     kinkomimic: { motion: 'aura', color: '#e0e0e0' },
     daichouenou: { motion: 'cloud', color: '#d8a8ff' },
+    daienjou: { motion: 'rain', color: '#ff8a4a' },
+    kingharry: { motion: 'multi', color: '#e0e0e0' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };

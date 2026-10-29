@@ -154,7 +154,9 @@ test('全員が どこかに 出る。見えている キャラが 大多数・�
     const hidden = new Set([...SPOTS.flatMap(s => s.kinds.map(k => k.id)), ...MYSTERIES.map(m => m.nakama), ...SEALS.map(m => m.nakama), ...MONS.map(m => m.nakama)]);
     const roam = new Set(ROAMS.flatMap(s => s.kinds.map(k => k.id)));
     // 進化で なる キャラ (evo) は 町には 出ない。進化前の キャラが どこかに 出る
-    for (const id of NAKAMA_IDS) assert.ok(hidden.has(id) || roam.has(id) || (NAKAMA[id].evo && (hidden.has(NAKAMA[id].evo) || roam.has(NAKAMA[id].evo))), `${id} の 出る場所`);
+    //   2 回 進化する キャラ (ハリーベビー → ハリジェネラル → キングハリー) は いちばん もとの キャラを 見る
+    const root = id => (NAKAMA[id].evo ? root(NAKAMA[id].evo) : id);
+    for (const id of NAKAMA_IDS) assert.ok(hidden.has(root(id)) || roam.has(root(id)), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
     for (const s of SPOTS) assert.ok(s.cue, `${s.id} の 違和感`);
 });

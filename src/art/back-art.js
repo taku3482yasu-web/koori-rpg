@@ -369,5 +369,8 @@ export const BACK_ART = {
     kaguyausagi: auto('kaguyausagi'),
     shingetsuwolf: auto('shingetsuwolf'),
     rishitoribourei: auto('rishitoribourei'),
-    runaya: auto('runaya')
+    runaya: auto('runaya'),
+    // 追加の 進化先 (2026-10-30)
+    daienjou: auto('daienjou'),
+    kingharry: auto('kingharry')
 };

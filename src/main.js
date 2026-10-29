@@ -9,6 +9,10 @@ import { createInput } from './core/input.js';
 import { createRng } from './core/rng.js';
 import { loadSave, writeSave } from './core/save.js';
 import { unlockSound } from './core/sound.js';
+import { playBgm, currentBgm } from './core/bgm.js';
+import { bgmFor } from './data/bgm.js';
+import { BOSSES } from './data/nakama.js';
+import { areaAt, TILE } from './data/map.js';
 import { newGame, migrate, VERSIONS, watchMedals, applyBattleResult, bondLevel } from './logic/game.js';
 import { createBattle } from './logic/battle.js';
 import { createTalk } from './view/talk.js';
@@ -87,6 +91,18 @@ const app = {
 app.setVersion(app.version);
 app.scene = createTitle(app);
 window.__app = app;   // 自動テスト・デバッグ用
+window.__bgm = currentBgm;
+
+// ----- BGM: 町は 地区ごと・バトルは ボスごと (data/bgm.js) -----
+function wantedBgm() {
+    const sc = app.scene;
+    const b = sc.battle;
+    return bgmFor({
+        scene: sc.name,
+        area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
+        battle: b ? { kind: b.kind, outcome: b.outcome, bossId: b.enemies.find(e => BOSSES[e.id])?.id ?? null } : null
+    });
+}
 
 // ----- 毎コマ -----
 let last = performance.now(), saveTimer = 0;
@@ -97,6 +113,7 @@ function frame(now) {
     if (input.touch.justDown || Object.values(input.pressed).some(Boolean)) unlockSound();
     if (app.talk.isActive()) app.talk.update(dt, input);
     else app.scene.update(dt, input);
+    playBgm(wantedBgm());
     app.scene.drawTop(screens.top);
     app.scene.drawBottom(screens.bottom);
     if (app.g && app.scene === app.field) {

@@ -112,6 +112,7 @@ try {
     const beforeY = await evaluate('window.__app.g.pos.y');
     await key('KeyS', 300);
     check(await evaluate(`window.__app.g.pos.y > ${beforeY}`), 'S キーで 下へ 歩く');
+    check(await evaluate('window.__bgm() === "ishinokawa"'), `町では 石の川タウンの BGM (${await evaluate('window.__bgm()')})`);
     await shot('field');
 
     // ----- 神社で ウォッチを もらう -----
@@ -186,6 +187,7 @@ try {
     await key('KeyJ');
     await sleep(300);
     check(await evaluate('window.__app.scene.debug.allyShown() && !window.__app.scene.battle.waiting'), '「たたかう」で なかまが 出てきて 始まる');
+    check(await evaluate('window.__bgm() === "battle"'), `バトルでは 戦闘の BGM (${await evaluate('window.__bgm()')})`);
     await sleep(1500);
     await shot('battle');
 
@@ -696,6 +698,7 @@ try {
     await sleep(200);
     await shot('boss-noflee');
     check(await sceneIs('battle') && await evaluate('window.__app.scene.battle.waiting'), 'ボスからは にげられない');
+    check(await evaluate('window.__bgm() === "nushi"'), `ボスごとの BGM (${await evaluate('window.__bgm()')})`);
     await key('KeyW');
     await key('KeyA');
     await key('KeyJ');
