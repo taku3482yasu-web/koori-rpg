@@ -16,6 +16,8 @@
 //     たたかう (begin)・どうぐ・おやつ の どれかで 始まる。にげる (flee) は 特別な バトル (ボス・七不思議) では できない
 //   部位の ある ボス (2 章の 影): 右手・左手・頭を ロックオンで ねらって こわす。頭を こわすと チャンスタイム
 //     (ボスが 決まった 回数 うごけない)。おわると 部位が もとに もどる
+//   氷の 偶像 (3 章の ダムの主。2026-10-29 ユーザー指定): ボスの わざ「氷の偶像」で 左右 どちらかに 偶像を 1 体 作る。
+//     2 体 そろうと 必殺技の ため (charge) に 入る。ためて いる あいだに 偶像を こわすと 必殺技は 止まる。チャンスタイムは なし
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -80,7 +82,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -88,6 +90,40 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
     b.frontAlive = () => b.front().filter(u => u && !u.ko);
     b.enemiesAlive = () => b.enemies.filter(u => !u.ko);
     return b;
+}
+
+// ----- 氷の 偶像 (3 章の ダムの主) -----
+export const IDOL_SLOTS = ['left', 'right'];
+export const idolsOf = (b, boss) => b.enemies.filter(e => e.idol && !e.ko && e.owner === boss.uid);
+// 左右の あいている ほうに 偶像を 作る。2 体 そろったら 必殺技の ため に 入る
+function summonIdol(b, boss) {
+    const m = boss.bigMove;
+    const used = idolsOf(b, boss).map(e => e.slot);
+    const free = IDOL_SLOTS.filter(s => !used.includes(s));
+    if (!free.length) return;
+    const slot = b.rng.pick(free);
+    b.enemies = b.enemies.filter(e => !(e.idol && e.ko && e.slot === slot));   // こわれた 偶像の あとに 作る
+    const idol = makeUnit({ id: boss.id, lv: boss.lv }, 'enemy');
+    Object.assign(idol, { name: m.idolName, idol: true, owner: boss.uid, slot, boss: false, bigMove: null, bossMoves: null, special: null, parts: null });
+    idol.max = idol.hp = Math.max(1, Math.round(boss.max * m.idolHp));
+    b.enemies.push(idol);
+    emit(b, 'summon', { actor: boss.uid, target: idol.uid, slot });
+    if (idolsOf(b, boss).length >= IDOL_SLOTS.length && !b.charge) {
+        b.charge = { uid: boss.uid, left: m.charge };
+        emit(b, 'telegraph', { actor: boss.uid, name: m.name, warn: m.charge, idols: true });
+    }
+}
+// たおれた ときの あとしまつ: 偶像が こわれたら ため を 止める・ボスが たおれたら 偶像も きえる
+function afterKo(b, u) {
+    if (u.idol && b.charge && b.charge.uid === u.owner) {
+        b.charge = null;
+        const boss = b.enemies.find(e => e.uid === u.owner);
+        emit(b, 'bigCancel', { actor: u.owner, name: boss?.bigMove?.name || '' });
+    }
+    if (!u.idol && u.side === 'enemy') {
+        for (const idol of idolsOf(b, u)) { idol.hp = 0; idol.ko = true; emit(b, 'ko', { target: idol.uid, side: 'enemy' }); }
+        if (b.charge && b.charge.uid === u.uid) b.charge = null;
+    }
 }
 
 const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
@@ -119,6 +155,7 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null } 
         to.ko = true;
         to.status = {};
         emit(b, 'ko', { target: to.uid, side: to.side });
+        afterKo(b, to);
     }
     return dmg;
 }
@@ -247,11 +284,13 @@ function act(b, u) {
         return;
     }
     // 部位の ある ボス: ボスの わざから えらぶ (こわれた 部位の わざは 使えない)
+    // 偶像を 作る わざは 偶像が 2 体 そろって いない あいだだけ
     if (u.bossMoves) {
-        const list = u.bossMoves.filter(m => !m.part || !u.parts[m.part].broken);
+        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)));
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
-        applyEffects(b, u, move.effects);
+        if (move.summon) summonIdol(b, u);
+        else applyEffects(b, u, move.effects);
         return;
     }
     const cmd = chooseCommand(b, u);
@@ -297,7 +336,7 @@ function tickUnit(b, u, dt, acting) {
 
 function checkOutcome(b) {
     if (b.outcome) return;
-    if (b.enemies.every(e => e.ko)) {
+    if (b.enemies.every(e => e.ko || e.idol)) {
         b.outcome = 'win';
         emit(b, 'win');
     } else if (b.wheel.filter(Boolean).every(u => u.ko)) {
@@ -327,7 +366,7 @@ export function step(b, dt) {
     }
     for (const e of b.enemies) {
         if (e.ko) continue;
-        tickUnit(b, e, dt, true);
+        tickUnit(b, e, dt, !e.idol);   // 偶像は 動かない
         if (e.bigMove) bossTick(b, e, dt);
         checkOutcome(b);
         if (b.outcome) return;
@@ -347,6 +386,17 @@ export function step(b, dt) {
 function bossTick(b, e, dt) {
     if (b.chance && b.chance.uid === e.uid) return;   // チャンスタイムの あいだは 大技も 止まる
     const m = e.bigMove;
+    // 偶像で 必殺技を ためる ボス: ため が おわると 打つ (偶像は くだける)
+    if (m.trigger === 'idols') {
+        if (!b.charge || b.charge.uid !== e.uid) return;
+        b.charge.left -= dt;
+        if (b.charge.left > 0) return;
+        b.charge = null;
+        emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
+        applyEffects(b, e, m.effects);
+        for (const idol of idolsOf(b, e)) { idol.hp = 0; idol.ko = true; emit(b, 'ko', { target: idol.uid, side: 'enemy' }); }
+        return;
+    }
     b.bossTimer += dt;
     if (!b.warned && b.bossTimer >= m.every - m.warn) {
         b.warned = true;

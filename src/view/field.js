@@ -1,7 +1,7 @@
 // =====================================================================
 // 町の 場面: 上画面で 歩く・調べる・レンズで さがす、下画面に 地図と ボタン (設計書 5 章・7 章)
 // 2 章: 小学校の 入り口 (夕方・夜) から 校舎の 中へ。七不思議を 調べると バトル。げた箱の マットで 外へ
-// 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → 氷の 封印 3 つ → ダムの ヌシ
+// 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → 氷の 封印 3 つ → ダムの主 (ヒョウガリュウ)
 // =====================================================================
 import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
@@ -121,13 +121,14 @@ export function createField(app) {
                 { who: 'ろうかの カゲ', art: 'lunashadow', text: '…………。' },
                 furu('これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('kage'), kind: 'boss', place: 'school' }) });
-        } else if (p.id === 'modoki') {
-            // 3 章の ボス: ダムの ヌシ (コオリモドキ・真)
+        } else if (p.id === 'damNushi') {
+            // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)
             say([
-                { who: '', text: '氷の 城の 前に、王冠を かぶった こおりくんが 立っている……！？' },
-                { who: 'ダムの ヌシ', art: 'koorimodokishin', text: 'やあ、ニセモノの こおりくん。ぼくこそ ほんものの こおりくんだよ。' },
-                { who: 'ダムの ヌシ', art: 'koorimodokishin', text: 'この 王冠で、山の 水は ぜんぶ ぼくの 氷の 城に なった。こおり族の 王さまは ぼくだ！' },
-                furu('コオリモドキ……！ 王冠の 力で 進化してる！ こおり族には ほのおの なかまが 有利だよ！')
+                { who: '', text: '氷の 城の 前に、王冠を かぶった 大きな 龍が いる……！' },
+                { who: 'ダムの主', art: 'hyougaryu', text: 'グルルル……氷河の 底で 眠っていた わしを 起こしたのは だれだ……。' },
+                { who: 'ダムの主', art: 'hyougaryu', text: 'この 王冠が ある かぎり、山の 水は すべて わしの 氷よ！' },
+                furu('ダムの主……ヒョウガリュウだ！ 王冠の 力で あばれてるんだ！'),
+                furu('「氷の偶像」を 2 つ 作られたら、大技の ために 入るよ。ためて いる あいだに 偶像を こわせば 止められる！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('himuro'), kind: 'boss', place: 'dam' }) });
         } else if (p.id === 'nushi') {
             if (g.story === 'bridge') {
@@ -312,13 +313,13 @@ export function createField(app) {
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'himuro') {
             warp(YAMA_AFTER_BOSS);
             say([
-                { who: 'コオリモドキ・真', art: 'koorimodokishin', text: 'うう……ぼくは ほんものに なりたかった だけなのに……。' },
+                { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'グ……王冠の 力に のまれて おったか……。' },
                 { who: '', text: '王冠が コロンと 落ちた。氷の 城が とけはじめる……！' },
                 { who: '', text: 'ゴゴゴゴ……！ ダムに 水が もどってきた！' },
-                { who: 'おにおに', art: 'onioni', text: 'ちぇっ、モドキの やつ、王冠を わたしたのに 役に たたないな。水を 止めて 町を こまらせる 作戦も しっぱいか。' },
+                { who: 'おにおに', art: 'onioni', text: 'ちぇっ、王冠で ヒョウガリュウを あやつって、水を 止めて 町を こまらせる 作戦も しっぱいか。' },
                 { who: 'おにおに', art: 'onioni', text: 'つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！' },
                 furu('おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。'),
-                { who: 'コオリモドキ・真', art: 'koorimodokishin', text: '……ぼくも、ほんものの こおりくんの なかまに なって いい？' },
+                { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'こおり族の 子よ……王冠を まもれなかった わびだ。わしも 力を かそう。' },
                 { who: '', text: '３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。' },
                 { who: '', text: '―― ４章は つぎの アップデートで。' }
             ], { done: () => app.save() });

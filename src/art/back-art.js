@@ -1,5 +1,5 @@
 // =====================================================================
-// なかま 60 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
+// なかま 61 体の うしろ姿 (2026-10-26 ユーザー指定: バトルで 手前に いる 味方は 背中を 見せる。商店街の 20 体は 2026-10-27)
 // ---------------------------------------------------------------------
 // 前向きの 絵 (legacy-art.js・new-art.js) と 同じ 形・同じ 色。1 文字 = 1 ドット・'.' は 透明・16 × 16。
 //   描いた もの: 体の うしろが 前と ちがう キャラ (トゲ・羽・しっぽ・甲羅・はちまきの むすび目 など)
@@ -296,5 +296,6 @@ export const BACK_ART = {
     obakekabocha: faceless('obakekabocha', { d: 'b', c: 'b' }),                   // かぼちゃの うしろ
     haetorigusan: faceless('haetorigusan', { f: 'c', e: 'd' }),
     kokemusha: faceless('kokemusha', { d: 'a', e: 'a' }),                         // かぶとの うしろ
-    koorimodokishin: faceless('koorimodokishin', { e: 'c', f: 'c' }, { rows: [2, 99] })   // 王冠は そのまま
+    koorimodokishin: faceless('koorimodokishin', { e: 'c', f: 'c' }, { rows: [2, 99] }),  // 王冠は そのまま
+    hyougaryu: faceless('hyougaryu', { e: 'b', g: 'f' })                                  // 頭と つばさの うしろ
 };

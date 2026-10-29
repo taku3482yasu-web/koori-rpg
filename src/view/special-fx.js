@@ -81,6 +81,7 @@ export const SPECIALS = {
     haetorigusan: { motion: 'dash', color: '#5ac05a', drain: true },
     kokemusha: { motion: 'dash', color: '#6ab04a' },
     koorimodokishin: { motion: 'spin', color: '#7aaad0' },
+    hyougaryu: { motion: 'beam', color: '#bff0ff' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };

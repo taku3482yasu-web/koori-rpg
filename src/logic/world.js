@@ -18,7 +18,7 @@ export function peopleHere(g) {
         (p.only === 'beforeWatch' && g.story === 'intro') ||
         (p.only === 'beforeClear' && !reached(g, 'clear')) ||
         (p.only === 'kage' && g.story === 'school' && allMysteriesSolved(g)) ||
-        (p.only === 'modoki' && g.story === 'yama' && g.flags.oku && SEALS.every(q => g.mysteries[q.id])));
+        (p.only === 'damNushi' && g.story === 'yama' && g.flags.oku && SEALS.every(q => g.mysteries[q.id])));
 }
 
 // 工事中の さく (1 章 クリアまで 商店街へ 行けない・2 章 クリアまで 山へ 行けない)

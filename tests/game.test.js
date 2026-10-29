@@ -57,7 +57,7 @@ test('2 章: 七不思議を 7 つ たしかめると 8 つ目の 影が 出て�
     assert.match(objective(g), /山道/);
 });
 
-test('3 章: 山に 入り、奥の院で 言いつたえを 読み、封印を 3 つ とくと ダムの ヌシが 出て、たおすと 3 章 クリア (2026-10-29)', () => {
+test('3 章: 山に 入り、奥の院で 言いつたえを 読み、封印を 3 つ とくと ダムの主が 出て、たおすと 3 章 クリア (2026-10-29)', () => {
     const g = newGame('naitei');
     receiveWatch(g);
     g.story = 'clear2';
@@ -69,23 +69,23 @@ test('3 章: 山に 入り、奥の院で 言いつたえを 読み、封印を 
     assert.ok(!readLegend(g), '2 回目は なにも おきない');
     assert.match(objective(g), /封印.*0\/3/);
     for (const m of SEALS) {
-        assert.ok(!peopleHere(g).some(p => p.id === 'modoki'), '封印が のこって いると ヌシは いない');
+        assert.ok(!peopleHere(g).some(p => p.id === 'damNushi'), '封印が のこって いると ダムの主は いない');
         const b = winBattle(g, [{ id: m.nakama, lv: m.lv }]);
         b.mystery = m.id;
         applyBattleResult(g, b, rng);
     }
     assert.equal(sealsSolved(g), 3);
     assert.equal(mysteriesSolved(g), 0, '七不思議の 数には 入らない');
-    assert.ok(peopleHere(g).some(p => p.id === 'modoki'), '封印を ぜんぶ とくと ダムの ヌシ');
+    assert.ok(peopleHere(g).some(p => p.id === 'damNushi'), '封印を ぜんぶ とくと ダムの主');
     const lake = { x: 25, y: YAMA_Y0 + 8 };
     assert.ok(!blockedTile(g, lake.x, lake.y), 'クリア前は 湖の 底を 歩ける');
     const out = applyBattleResult(g, winBattle(g, bossEnemies('himuro'), 'boss'), rng);
     assert.equal(out.bossId, 'himuro');
-    assert.equal(out.befriend.id, 'koorimodokishin');
+    assert.equal(out.befriend.id, 'hyougaryu');
     assert.equal(g.story, 'clear3');
-    assert.ok(!peopleHere(g).some(p => p.id === 'modoki'), 'たおすと いなくなる');
+    assert.ok(!peopleHere(g).some(p => p.id === 'damNushi'), 'たおすと いなくなる');
     assert.ok(blockedTile(g, lake.x, lake.y), 'クリアで 湖に 水が もどる');
-    assert.match(objective(g), /山 1\/11/);
+    assert.match(objective(g), /山 1\/12/);
 });
 
 test('3 章: 山道は 2 章 クリアまで 通行止め', () => {

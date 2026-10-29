@@ -50,7 +50,9 @@ const BIG_KEYS = ['kogame', 'tsuribariuo', 'mokugyoro', 'rousokubi', 'daichouenk
     // 2 章 石の川小学校の 9 体 (2026-10-28)
     'fusaiyougaikotsu', 'mirrormuscle', 'proteingolem', 'takaramimic', 'umibozun', 'wasurekurage', 'mikazukibat', 'lunashadow', 'yoroinukegara',
     // 3 章 山と ダムの 10 体 (2026-10-29。コオリモドキ・真は 3 章の ボス)
-    'yukimidango', 'yukidarumuscle', 'fubukipenguin', 'tsuraracomori', 'koorinokagami', 'mandoragon', 'obakekabocha', 'haetorigusan', 'kokemusha', 'koorimodokishin'];
+    'yukimidango', 'yukidarumuscle', 'fubukipenguin', 'tsuraracomori', 'koorinokagami', 'mandoragon', 'obakekabocha', 'haetorigusan', 'kokemusha', 'koorimodokishin',
+    // 3 章の ボス ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)
+    'hyougaryu'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

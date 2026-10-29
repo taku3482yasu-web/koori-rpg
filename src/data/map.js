@@ -207,7 +207,7 @@ export const ROAMS = [
     { id: 'yamaMori', label: '森の 原っぱ', x0: 3, y0: YAMA_Y0 + 20, x1: 22, y1: YAMA_Y0 + 33, max: 2, lv: YAMA_LV, kinds: [{ id: 'haetorigusan', w: 2 }, { id: 'obakekabocha', w: 2, time: ['evening', 'night'] }, { id: 'kokemusha', w: 1, after: 'clear3' }] },
     { id: 'yamaHatake', label: '山の畑', x0: 5, y0: YAMA_Y0 + 26, x1: 10, y1: YAMA_Y0 + 29, max: 1, lv: YAMA_LV, kinds: [{ id: 'obakekabocha', w: 1 }] },
     { id: 'sekkei', label: '雪渓', x0: 38, y0: YAMA_Y0 + 14, x1: 46, y1: YAMA_Y0 + 20, max: 2, lv: YAMA_LV, kinds: [{ id: 'yukimidango', w: 2 }, { id: 'fubukipenguin', w: 2 }, { id: 'koorinokagami', w: 1, after: 'clear3' }, { id: 'koorimodokishin', w: 1, after: 'clear3', time: ['night'] }] },
-    { id: 'iwaba', label: '岩場', x0: 38, y0: YAMA_Y0 + 21, x1: 46, y1: YAMA_Y0 + 31, max: 1, lv: YAMA_LV, kinds: [{ id: 'koorimodoki', w: 2 }, { id: 'yukidarumuscle', w: 1, after: 'clear3' }] },
+    { id: 'iwaba', label: '岩場', x0: 38, y0: YAMA_Y0 + 21, x1: 46, y1: YAMA_Y0 + 31, max: 1, lv: YAMA_LV, kinds: [{ id: 'koorimodoki', w: 2 }, { id: 'yukidarumuscle', w: 1, after: 'clear3' }, { id: 'hyougaryu', w: 1, after: 'clear3', time: ['night'] }] },
     { id: 'kosho', label: '湖の 底', x0: 20, y0: YAMA_Y0 + 6, x1: 45, y1: YAMA_Y0 + 11, max: 1, lv: YAMA_LV, kinds: [{ id: 'koorimodoki', w: 1 }] }
 ];
 
@@ -246,8 +246,8 @@ export const PEOPLE = [
     { id: 'nushi', name: 'ヌシ', art: 'hashishita', x: 31, y: 17, h: 2, only: 'beforeClear', scale: 2 },
     // 2 章: 七不思議を 7 つ たしかめると、ろうかの おくに 8 つ目の ふしぎ (ボス) が 出る
     { id: 'kage', name: 'ろうかの カゲ', art: 'lunashadow', x: 9, y: 70, only: 'kage', scale: 2 },
-    // 3 章: 氷の 封印を 3 つ とくと、氷の 城の 前に ダムの ヌシ (ボス) が 出る
-    { id: 'modoki', name: 'ダムの ヌシ', art: 'koorimodokishin', x: 32, y: YAMA_Y0 + 6, h: 2, only: 'modoki', scale: 2 }
+    // 3 章: 氷の 封印を 3 つ とくと、氷の 城の 前に ダムの主 (ボス・ヒョウガリュウ) が 出る
+    { id: 'damNushi', name: 'ダムの主', art: 'hyougaryu', x: 32, y: YAMA_Y0 + 6, h: 2, only: 'damNushi', scale: 2 }
 ];
 
 // こおりくんが 始める 場所 (家の 前)

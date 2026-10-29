@@ -1,5 +1,5 @@
 // =====================================================================
-// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体。3 章で 山と ダムの 11 体)
+// なかまの データ (設計書 4 章。1 章 = 石の川タウンの 20 体 + ボス。段階 2 で 商店街の 20 体。2 章で 石の川小学校の 9 体。3 章で 山と ダムの 12 体)
 // ---------------------------------------------------------------------
 // 前作 (koori-dungeon) から来た 15 体は、名前・属性・役割・説明・口ぐせを ダンジョンの データから写した。
 // 新キャラ 5 体 (イシコロン〜ハシシタボウズ) は 設計書 4.6 の案。
@@ -143,6 +143,7 @@ export const WAZA = {
     haetorigusan: W('パックン', 'しぜん', 'front', 1.8),
     kokemusha: W('こけむし斬り', 'しぜん', 'front', 1.8),
     koorimodokishin: W('コオリハンマー', 'こおり', 'front', 2.0, 'confuse', 0.3),
+    hyougaryu: W('ひょうがブレス', 'こおり', 'line', 1.3, 'slow', 0.2),
     // こおりくん・ボス
     koori: W('コオリソード', 'こおり', 'front', 1.4),
     nushi: W('百のかぞえうた', 'ふしぎ', 'around', 0.6, 'confuse', 0.3),
@@ -475,9 +476,9 @@ const LIST = [
         title: '正体不明', desc: '正体不明の存在。いったい何者なのか、何が目的なのか、その一切が不明である。',
         special: sp('正体不明', [atk('all', 1.6, { magic: true })])
     },
-    // ----- 山と ダムの 11 体 (3 章「ダムの水が消える」。2026-10-29。ダンジョンから。D 7・C 3・B 1) -----
+    // ----- 山と ダムの 12 体 (3 章「ダムの水が消える」。2026-10-29。ダンジョンから。D 7・C 4・B 1。ヒョウガリュウは C (2026-10-29 ユーザー指定)) -----
     //   こおり族 6 体と しょくぶつ族 (しぜん) 4 体。コケムシャ・コオリノカガミ・ユキダルマッスルは 氷の 封印を まもる (map.js の SEALS)
-    //   コオリモドキ・真は ダムの ヌシ (ボス) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    //   ヒョウガリュウは ダムの主 (ボス) を たおすと なかまに なる。コオリモドキ・真は 3 章 クリアの あと 夜の 雪渓に 出る。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
     {
         id: 'yukimidango', name: 'ユキミダンゴ', from: 'ダンジョン 035', area: 'yama', rank: 'D', element: 'こおり', role: 'defender', mul: { def: 1.1, hp: 1.05 },
         line: 'おつきみ～', favorite: 'onigiri',
@@ -543,6 +544,12 @@ const LIST = [
         line: 'ぼくこそ ほんものの こおりくんだよ', favorite: 'choco',
         title: '真のコオリモドキ', desc: 'コオリモドキがこおりの王冠で進化した姿。ニセ四天王絶対殺す剣まで覚えてしまった。こいつこそ、本物の本物のこおりくんだ。',
         special: sp('ニセ四天王絶対殺す剣', [atk('all', 2.0)])
+    },
+    {
+        id: 'hyougaryu', name: 'ヒョウガリュウ', from: 'ダンジョン V10', area: 'yama', rank: 'C', element: 'こおり', role: 'attacker', mul: { hp: 1.1, atk: 1.1 },
+        line: '氷河の 底で 眠っていた……', favorite: 'niboshi',
+        title: '氷河の龍', desc: '氷河の底に眠っていた龍。氷の力を持つ。',
+        special: sp('氷河の咆哮', [atk('all', 2.0, { element: 'こおり', magic: true })])
     }
 ];
 
@@ -603,20 +610,23 @@ export const BOSSES = {
         bigMove: { name: 'アンノウン', every: 14, warn: 2.5, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ', hits: 3 })] },
         befriends: 'lunashadow', lv: 13, place: 'school'
     },
-    // 3 章の ボス: ダムの ヌシ (コオリモドキ・真。2026-10-29)。こおりの 王冠で ダムの 水を ぜんぶ こおらせ、氷の 城に して しまった
-    //   ふだんは 氷の わざ。ときどき 王冠が かがやいて 自分を 強くする。必殺技は ニセ四天王絶対殺す剣 (予告つき・輪を 回して よける)
-    //   こおり族なので しぜん・かぜの なかまが 不利 / ほのおの なかまが 有利
+    // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)。こおりの 王冠で 目ざめ、ダムの 水を ぜんぶ 氷の 城に した
+    //   わざ: ひょうがブレス (全体に こおり 中)・かみつき (1 体に 中)・はばたき (全体に ふつう 中〜小)・大吹雪 (全体に こおり 中〜大)
+    //   氷の偶像: 左右 どちらかに 自分の 偶像を 1 体 作る。2 体 そろうと 必殺技 氷河の咆哮 (全体に こおり 大) の ため に 入る。
+    //     ためて いる あいだに 偶像を こわすと 必殺技は 止まる (battle.js の summonIdol)。チャンスタイムは なし
     himuro: {
-        id: 'himuro', name: 'ダムの ヌシ・コオリモドキ・真', element: 'こおり', role: 'attacker', art: 'koorimodokishin', scale: 2, rank: 'B',
-        base: { hp: 600, atk: 15, def: 14, spd: 12, mag: 15 },
+        id: 'himuro', name: 'ダムの主', element: 'こおり', role: 'attacker', art: 'hyougaryu', scale: 2, rank: 'B',
+        base: { hp: 800, atk: 15, def: 14, spd: 12, mag: 15 },
         moves: [
-            { name: 'コオリソード', w: 3, effects: [atk('one', 1.2)] },
-            { name: 'コオリハンマー', w: 2, effects: [atk('one', 1.8), { kind: 'status', target: 'one', status: 'confuse', chance: 0.3 }] },
-            { name: 'こおりのいき', w: 2, effects: [atk('all', 0.6, { magic: true }), { kind: 'status', target: 'all', status: 'slow', chance: 0.3 }] },
-            { name: '王冠の かがやき', w: 1, effects: [{ kind: 'buff', target: 'self', stat: 'atk', amount: 0.3, time: 8 }] }
+            { name: 'ひょうがブレス', w: 3, effects: [atk('all', 0.75, { magic: true, element: 'こおり' })] },
+            { name: 'かみつき', w: 3, effects: [atk('one', 1.3)] },
+            { name: 'はばたき', w: 2, effects: [atk('all', 0.55, { element: 'ふつう' })] },
+            { name: '大吹雪', w: 1.5, effects: [atk('all', 0.95, { magic: true, element: 'こおり' })] },
+            { name: '氷の偶像', w: 2, summon: true }
         ],
-        bigMove: { name: 'ニセ四天王絶対殺す剣', every: 13, warn: 2.5, effects: [atk('all', 1.7)] },
-        befriends: 'koorimodokishin', lv: 17, place: 'dam'
+        // 必殺技は 時間では 打たない (偶像が 2 体 そろうと charge 秒 ためて 打つ)。偶像の HP は ボスの 最大HP の idolHp
+        bigMove: { name: '氷河の咆哮', trigger: 'idols', charge: 7, idolName: '氷の偶像', idolHp: 0.06, effects: [atk('all', 1.6, { magic: true, element: 'こおり' })] },
+        befriends: 'hyougaryu', lv: 17, place: 'dam'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
-import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, canRescue, rescueTargets, startRescue, resolveRescue, begin, flee, canFlee } from '../src/logic/battle.js';
+import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, canRescue, rescueTargets, startRescue, resolveRescue, begin, flee, canFlee, idolsOf } from '../src/logic/battle.js';
 import { NAKAMA_IDS } from '../src/data/nakama.js';
 
 const run = (b, seconds, dt = 1 / 30) => {
@@ -167,6 +167,57 @@ test('3 章の ボス ダムの ヌシ (Lv17) は 6 体 Lv15 なら だいたい
     }
     assert.ok(wins6 >= 15, `6 体で 勝った ${wins6}/30`);
     assert.ok(wins1 <= 2, `1 体で 勝った ${wins1}/30`);
+});
+
+test('ダムの主: 氷の偶像を 左右に 作り、2 体 そろうと 必殺技を ためる。ためて いる あいだに 偶像を こわすと 止まる (2026-10-29)', () => {
+    const allies = ['koori', 'kogame', 'kozarappa'].map(id => ({ id, lv: 15 }));
+    const b = createBattle({ allies, enemies: [{ id: 'himuro', lv: 17 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.equal(boss.name, 'ダムの主');
+    // 偶像を 作る わざだけ 使わせる
+    const summon = boss.bossMoves.find(m => m.summon);
+    boss.bossMoves = [summon];
+    const actOnce = () => { boss.timer = 999; step(b, 1 / 30); };
+    actOnce();
+    assert.equal(idolsOf(b, boss).length, 1, '1 体目');
+    assert.equal(b.charge, null, '1 体では ためない');
+    actOnce();
+    const idols = idolsOf(b, boss);
+    assert.deepEqual(idols.map(i => i.slot).sort(), ['left', 'right'], '左右に 1 体ずつ');
+    assert.ok(b.charge && b.charge.uid === boss.uid, '2 体 そろうと ためる');
+    assert.ok(b.events.some(e => e.type === 'telegraph' && e.name === '氷河の咆哮'));
+    // こわすと 止まる
+    idols[0].hp = 1;
+    b.lock = idols[0].uid;
+    for (let i = 0; i < 300 && !idols[0].ko; i++) step(b, 1 / 30);
+    assert.ok(idols[0].ko, '偶像は こわせる');
+    assert.equal(b.charge, null, '必殺技が 止まる');
+    assert.ok(b.events.some(e => e.type === 'bigCancel'));
+    assert.ok(!b.events.some(e => e.type === 'special' && e.big), '必殺技は 出ない');
+    assert.ok(!b.outcome, '偶像を こわしても バトルは つづく');
+});
+
+test('ダムの主: 偶像を こわさないと ため の あと 必殺技 (偶像は くだける)。ボスを たおすと 勝ち (偶像は のこらない)', () => {
+    const allies = ['koori', 'kogame', 'kozarappa'].map(id => ({ id, lv: 15 }));
+    const b = createBattle({ allies, enemies: [{ id: 'himuro', lv: 17 }], rng: createRng(4), kind: 'boss' });
+    const boss = b.enemies[0];
+    const summon = boss.bossMoves.find(m => m.summon);
+    boss.bossMoves = [summon];
+    for (let k = 0; k < 2; k++) { boss.timer = 999; step(b, 1 / 30); }
+    boss.bossMoves = [{ name: 'まつ', w: 1, effects: [] }];
+    const idols = idolsOf(b, boss);
+    idols.forEach(i => { i.hp = i.max = 99999; });
+    for (let i = 0; i < 30 * 8 && !b.events.some(e => e.type === 'special' && e.big); i++) step(b, 1 / 30);
+    assert.ok(b.events.some(e => e.type === 'special' && e.big && e.name === '氷河の咆哮'), 'ため の あと 必殺技');
+    assert.equal(idolsOf(b, boss).length, 0, '偶像は くだける');
+    boss.bossMoves = [summon];
+    boss.timer = 999; step(b, 1 / 30);
+    assert.equal(idolsOf(b, boss).length, 1);
+    boss.hp = 1;
+    b.lock = boss.uid;
+    for (let i = 0; i < 600 && !b.outcome; i++) step(b, 1 / 30);
+    assert.equal(b.outcome, 'win', '偶像が のこって いても ボスを たおせば 勝ち');
+    assert.equal(idolsOf(b, boss).length, 0);
 });
 
 test('とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おたすけ できて、成功で 治る (2 章)', () => {

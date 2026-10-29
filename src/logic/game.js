@@ -154,7 +154,7 @@ export function applyBattleResult(g, battle, rng) {
         g.money += out.money;
         return out;
     }
-    for (const e of battle.enemies) {
+    for (const e of battle.enemies.filter(x => !x.idol)) {
         out.exp += expReward(e.id, e.lv);
         out.money += moneyReward(e.id, e.lv);
         if (NAKAMA[e.id]) g.wins[e.id] = (g.wins[e.id] || 0) + 1;

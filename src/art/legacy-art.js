@@ -2490,5 +2490,47 @@ export const LEGACY_ART = {
                 '................'
             ]
         ]
+    },
+    hyougaryu: {
+        w: 16, h: 16,
+        palette: {"a":"#6ab0e8","b":"#8ac8f0","c":"#b8e0f8","d":"#e8f4ff","e":"#2a4a8a","f":"#d8f0ff","g":"#ffffff"},
+        frames: [
+            [
+                '..........d..d..',
+                '..........d..d..',
+                '.....gg..bbbbbb.',
+                '....fggf.bbbbeb.',
+                '....ffff.bbbbbb.',
+                '....ffff.bbbbbdd',
+                '...bffffbbbbbbb.',
+                '...bcccccccb....',
+                '...bcccccccb....',
+                '.aabcccccccb....',
+                'bbabcccccccb....',
+                'bbabcccccccb....',
+                '...bbbbbbbbb....',
+                '....aa...aa.....',
+                '....aa...aa.....',
+                '....aa...aa.....'
+            ],
+            [
+                '..........d..d..',
+                '.........bbbbbb.',
+                '.....gg..bbbbeb.',
+                '....fggf.bbbbbb.',
+                '....ffff.bbbbbdg',
+                '....ffff.bbbbbbg',
+                '...bffffbbbb...g',
+                '...bcccccccb....',
+                '...bcccccccb....',
+                '.aabcccccccb....',
+                'bbabcccccccb....',
+                'bbabcccccccb....',
+                '...bbbbbbbbb....',
+                '....aa...aa.....',
+                '....aa...aa.....',
+                '....aa...aa.....'
+            ]
+        ]
     }
 };

@@ -66,11 +66,14 @@ export function createBattleView(app, battle, place) {
     })();
     const flash = {};              // uid → 光る 時間
 
-    const enemyPos = i => {
-        const n = battle.enemies.length;
+    const enemyPos = k => {
+        const e = battle.enemies[k];
+        // 氷の 偶像 (3 章の ダムの主) は ボスの 左右
+        if (e && e.idol) return { x: e.slot === 'left' ? 76 : 324, y: 140, scale: 3 };
+        const main = battle.enemies.filter(x => !x.idol), n = main.length, i = main.indexOf(e);
         // 部位の ある ボス (2 章の 影) は とても 大きい
-        if (n === 1 && battle.enemies[0].parts) return { x: 200, y: 156, scale: 6.5 };
-        if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
+        if (n === 1 && main[0].parts) return { x: 200, y: 156, scale: 6.5 };
+        if (n === 1) return main[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
         if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
         return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];   // 3 体 (まんなかが 奥)
     };
@@ -269,8 +272,18 @@ export function createBattleView(app, battle, place) {
                 banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
-                warn = { name: e.name, until: t + e.warn };
+                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols) };
                 sfx('cancel');
+            } else if (e.type === 'summon') {
+                // 氷の 偶像が できた (3 章の ダムの主)
+                banner = { text: `${nameOf(e.target)}が あらわれた！`, color: '#bfeaff', until: t + 1.4 };
+                sfx('lens');
+                const p = posOf(e.target);
+                if (p) effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.5, color: '#bfeaff' });
+            } else if (e.type === 'bigCancel') {
+                warn = null;
+                banner = { text: `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+                sfx('big');
             } else if (e.type === 'food') {
                 banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: '#ff9ad8', until: t + 1.6 };
                 sfx(e.favorite ? 'friend' : 'ok');
@@ -715,7 +728,7 @@ export function createBattleView(app, battle, place) {
 
     // back: うしろ姿 (味方)
     function drawUnit(ctx, u, p, { scale = 3, flip = false, back = false } = {}) {
-        if (!u) return;
+        if (!u || (u.idol && u.ko)) return;   // こわれた 偶像は きえる
         const lit = (flash[u.uid] || 0) > t;
         const sleeping = u.status.sleep > 0;
         const bobY = u.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5;
@@ -730,12 +743,14 @@ export function createBattleView(app, battle, place) {
         ctx.fill();
         // うしろ姿: 描いた 絵 (back-art.js) が なければ 顔を 消して 作る (back.js)
         const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
-        drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? '#ffffff' : null, sx, sy });
+        drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
+        // 氷の 偶像: 水色の 氷を 重ねる
+        if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: '#cdf2ff', sx, sy });
         const w = u.parts ? 150 : 44, head = p.y - art.h * scale;
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
         const barY = head - 10, nameY = head - 14;
         bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
-        text(ctx, `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: 'center' });
+        text(ctx, u.idol ? u.name : `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: 'center' });
         // もう 仲間に した 敵は HP の 右に 金の メダル (2026-10-28 ユーザー指定)
         if (u.side === 'enemy' && g.zukan.friends[u.id]) drawFriendMark(ctx, p.x + w / 2 + 8, barY + 3, 5);
         const marks = Object.keys(u.status).map(k => STATUS_NAMES[k]);
@@ -847,7 +862,12 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 90, 6, 220, 46, { fill: 'rgba(90, 40, 0, 0.88)', edge: '#ffe85a' });
             text(ctx, 'チャンスタイム！', 200, 32, { size: 24, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
             text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: 'center', bold: true });
-        } else if (warn && warn.until > t) {
+        } else if (warn && warn.idols && battle.charge && !battle.outcome) {
+            // 偶像で ためる 必殺技: こわせば 止まる
+            panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
+            text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
+            text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
+        } else if (warn && !warn.idols && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });

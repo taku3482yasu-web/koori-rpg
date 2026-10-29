@@ -682,6 +682,7 @@ body.nopad #pad { display: none; }
     haetorigusan: W$1("パックン", "しぜん", "front", 1.8),
     kokemusha: W$1("こけむし斬り", "しぜん", "front", 1.8),
     koorimodokishin: W$1("コオリハンマー", "こおり", "front", 2, "confuse", 0.3),
+    hyougaryu: W$1("ひょうがブレス", "こおり", "line", 1.3, "slow", 0.2),
     // こおりくん・ボス
     koori: W$1("コオリソード", "こおり", "front", 1.4),
     nushi: W$1("百のかぞえうた", "ふしぎ", "around", 0.6, "confuse", 0.3),
@@ -1409,9 +1410,9 @@ body.nopad #pad { display: none; }
       desc: "正体不明の存在。いったい何者なのか、何が目的なのか、その一切が不明である。",
       special: sp("正体不明", [atk("all", 1.6, { magic: true })])
     },
-    // ----- 山と ダムの 11 体 (3 章「ダムの水が消える」。2026-10-29。ダンジョンから。D 7・C 3・B 1) -----
+    // ----- 山と ダムの 12 体 (3 章「ダムの水が消える」。2026-10-29。ダンジョンから。D 7・C 4・B 1。ヒョウガリュウは C (2026-10-29 ユーザー指定)) -----
     //   こおり族 6 体と しょくぶつ族 (しぜん) 4 体。コケムシャ・コオリノカガミ・ユキダルマッスルは 氷の 封印を まもる (map.js の SEALS)
-    //   コオリモドキ・真は ダムの ヌシ (ボス) を たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    //   ヒョウガリュウは ダムの主 (ボス) を たおすと なかまに なる。コオリモドキ・真は 3 章 クリアの あと 夜の 雪渓に 出る。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
     {
       id: "yukimidango",
       name: "ユキミダンゴ",
@@ -1576,6 +1577,21 @@ body.nopad #pad { display: none; }
       title: "真のコオリモドキ",
       desc: "コオリモドキがこおりの王冠で進化した姿。ニセ四天王絶対殺す剣まで覚えてしまった。こいつこそ、本物の本物のこおりくんだ。",
       special: sp("ニセ四天王絶対殺す剣", [atk("all", 2)])
+    },
+    {
+      id: "hyougaryu",
+      name: "ヒョウガリュウ",
+      from: "ダンジョン V10",
+      area: "yama",
+      rank: "C",
+      element: "こおり",
+      role: "attacker",
+      mul: { hp: 1.1, atk: 1.1 },
+      line: "氷河の 底で 眠っていた……",
+      favorite: "niboshi",
+      title: "氷河の龍",
+      desc: "氷河の底に眠っていた龍。氷の力を持つ。",
+      special: sp("氷河の咆哮", [atk("all", 2, { element: "こおり", magic: true })])
     }
   ];
   function moves(id, element, rank, upper = false) {
@@ -1648,26 +1664,29 @@ body.nopad #pad { display: none; }
       lv: 13,
       place: "school"
     },
-    // 3 章の ボス: ダムの ヌシ (コオリモドキ・真。2026-10-29)。こおりの 王冠で ダムの 水を ぜんぶ こおらせ、氷の 城に して しまった
-    //   ふだんは 氷の わざ。ときどき 王冠が かがやいて 自分を 強くする。必殺技は ニセ四天王絶対殺す剣 (予告つき・輪を 回して よける)
-    //   こおり族なので しぜん・かぜの なかまが 不利 / ほのおの なかまが 有利
+    // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)。こおりの 王冠で 目ざめ、ダムの 水を ぜんぶ 氷の 城に した
+    //   わざ: ひょうがブレス (全体に こおり 中)・かみつき (1 体に 中)・はばたき (全体に ふつう 中〜小)・大吹雪 (全体に こおり 中〜大)
+    //   氷の偶像: 左右 どちらかに 自分の 偶像を 1 体 作る。2 体 そろうと 必殺技 氷河の咆哮 (全体に こおり 大) の ため に 入る。
+    //     ためて いる あいだに 偶像を こわすと 必殺技は 止まる (battle.js の summonIdol)。チャンスタイムは なし
     himuro: {
       id: "himuro",
-      name: "ダムの ヌシ・コオリモドキ・真",
+      name: "ダムの主",
       element: "こおり",
       role: "attacker",
-      art: "koorimodokishin",
+      art: "hyougaryu",
       scale: 2,
       rank: "B",
-      base: { hp: 600, atk: 15, def: 14, spd: 12, mag: 15 },
+      base: { hp: 800, atk: 15, def: 14, spd: 12, mag: 15 },
       moves: [
-        { name: "コオリソード", w: 3, effects: [atk("one", 1.2)] },
-        { name: "コオリハンマー", w: 2, effects: [atk("one", 1.8), { kind: "status", target: "one", status: "confuse", chance: 0.3 }] },
-        { name: "こおりのいき", w: 2, effects: [atk("all", 0.6, { magic: true }), { kind: "status", target: "all", status: "slow", chance: 0.3 }] },
-        { name: "王冠の かがやき", w: 1, effects: [{ kind: "buff", target: "self", stat: "atk", amount: 0.3, time: 8 }] }
+        { name: "ひょうがブレス", w: 3, effects: [atk("all", 0.75, { magic: true, element: "こおり" })] },
+        { name: "かみつき", w: 3, effects: [atk("one", 1.3)] },
+        { name: "はばたき", w: 2, effects: [atk("all", 0.55, { element: "ふつう" })] },
+        { name: "大吹雪", w: 1.5, effects: [atk("all", 0.95, { magic: true, element: "こおり" })] },
+        { name: "氷の偶像", w: 2, summon: true }
       ],
-      bigMove: { name: "ニセ四天王絶対殺す剣", every: 13, warn: 2.5, effects: [atk("all", 1.7)] },
-      befriends: "koorimodokishin",
+      // 必殺技は 時間では 打たない (偶像が 2 体 そろうと charge 秒 ためて 打つ)。偶像の HP は ボスの 最大HP の idolHp
+      bigMove: { name: "氷河の咆哮", trigger: "idols", charge: 7, idolName: "氷の偶像", idolHp: 0.06, effects: [atk("all", 1.6, { magic: true, element: "こおり" })] },
+      befriends: "hyougaryu",
       lv: 17,
       place: "dam"
     }
@@ -1859,7 +1878,7 @@ body.nopad #pad { display: none; }
     { id: "yamaMori", label: "森の 原っぱ", x0: 3, y0: YAMA_Y0 + 20, x1: 22, y1: YAMA_Y0 + 33, max: 2, lv: YAMA_LV, kinds: [{ id: "haetorigusan", w: 2 }, { id: "obakekabocha", w: 2, time: ["evening", "night"] }, { id: "kokemusha", w: 1, after: "clear3" }] },
     { id: "yamaHatake", label: "山の畑", x0: 5, y0: YAMA_Y0 + 26, x1: 10, y1: YAMA_Y0 + 29, max: 1, lv: YAMA_LV, kinds: [{ id: "obakekabocha", w: 1 }] },
     { id: "sekkei", label: "雪渓", x0: 38, y0: YAMA_Y0 + 14, x1: 46, y1: YAMA_Y0 + 20, max: 2, lv: YAMA_LV, kinds: [{ id: "yukimidango", w: 2 }, { id: "fubukipenguin", w: 2 }, { id: "koorinokagami", w: 1, after: "clear3" }, { id: "koorimodokishin", w: 1, after: "clear3", time: ["night"] }] },
-    { id: "iwaba", label: "岩場", x0: 38, y0: YAMA_Y0 + 21, x1: 46, y1: YAMA_Y0 + 31, max: 1, lv: YAMA_LV, kinds: [{ id: "koorimodoki", w: 2 }, { id: "yukidarumuscle", w: 1, after: "clear3" }] },
+    { id: "iwaba", label: "岩場", x0: 38, y0: YAMA_Y0 + 21, x1: 46, y1: YAMA_Y0 + 31, max: 1, lv: YAMA_LV, kinds: [{ id: "koorimodoki", w: 2 }, { id: "yukidarumuscle", w: 1, after: "clear3" }, { id: "hyougaryu", w: 1, after: "clear3", time: ["night"] }] },
     { id: "kosho", label: "湖の 底", x0: 20, y0: YAMA_Y0 + 6, x1: 45, y1: YAMA_Y0 + 11, max: 1, lv: YAMA_LV, kinds: [{ id: "koorimodoki", w: 1 }] }
   ];
   const FRIENDS = [
@@ -1977,8 +1996,8 @@ body.nopad #pad { display: none; }
     { id: "nushi", name: "ヌシ", art: "hashishita", x: 31, y: 17, h: 2, only: "beforeClear", scale: 2 },
     // 2 章: 七不思議を 7 つ たしかめると、ろうかの おくに 8 つ目の ふしぎ (ボス) が 出る
     { id: "kage", name: "ろうかの カゲ", art: "lunashadow", x: 9, y: 70, only: "kage", scale: 2 },
-    // 3 章: 氷の 封印を 3 つ とくと、氷の 城の 前に ダムの ヌシ (ボス) が 出る
-    { id: "modoki", name: "ダムの ヌシ", art: "koorimodokishin", x: 32, y: YAMA_Y0 + 6, h: 2, only: "modoki", scale: 2 }
+    // 3 章: 氷の 封印を 3 つ とくと、氷の 城の 前に ダムの主 (ボス・ヒョウガリュウ) が 出る
+    { id: "damNushi", name: "ダムの主", art: "hyougaryu", x: 32, y: YAMA_Y0 + 6, h: 2, only: "damNushi", scale: 2 }
   ];
   const START = { x: 6, y: 24 };
   const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
@@ -2267,7 +2286,7 @@ body.nopad #pad { display: none; }
       g.money += out.money;
       return out;
     }
-    for (const e of battle.enemies) {
+    for (const e of battle.enemies.filter((x) => !x.idol)) {
       out.exp += expReward(e.id, e.lv);
       out.money += moneyReward(e.id, e.lv);
       if (NAKAMA[e.id]) g.wins[e.id] = (g.wins[e.id] || 0) + 1;
@@ -2475,7 +2494,8 @@ body.nopad #pad { display: none; }
       lock: null,
       lockPart: null,
       weakT: 0,
-      chance: null
+      chance: null,
+      charge: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -2484,6 +2504,41 @@ body.nopad #pad { display: none; }
     b.frontAlive = () => b.front().filter((u) => u && !u.ko);
     b.enemiesAlive = () => b.enemies.filter((u) => !u.ko);
     return b;
+  }
+  const IDOL_SLOTS = ["left", "right"];
+  const idolsOf = (b, boss) => b.enemies.filter((e) => e.idol && !e.ko && e.owner === boss.uid);
+  function summonIdol(b, boss) {
+    const m = boss.bigMove;
+    const used = idolsOf(b, boss).map((e) => e.slot);
+    const free = IDOL_SLOTS.filter((s) => !used.includes(s));
+    if (!free.length) return;
+    const slot = b.rng.pick(free);
+    b.enemies = b.enemies.filter((e) => !(e.idol && e.ko && e.slot === slot));
+    const idol = makeUnit({ id: boss.id, lv: boss.lv }, "enemy");
+    Object.assign(idol, { name: m.idolName, idol: true, owner: boss.uid, slot, boss: false, bigMove: null, bossMoves: null, special: null, parts: null });
+    idol.max = idol.hp = Math.max(1, Math.round(boss.max * m.idolHp));
+    b.enemies.push(idol);
+    emit(b, "summon", { actor: boss.uid, target: idol.uid, slot });
+    if (idolsOf(b, boss).length >= IDOL_SLOTS.length && !b.charge) {
+      b.charge = { uid: boss.uid, left: m.charge };
+      emit(b, "telegraph", { actor: boss.uid, name: m.name, warn: m.charge, idols: true });
+    }
+  }
+  function afterKo(b, u) {
+    var _a;
+    if (u.idol && b.charge && b.charge.uid === u.owner) {
+      b.charge = null;
+      const boss = b.enemies.find((e) => e.uid === u.owner);
+      emit(b, "bigCancel", { actor: u.owner, name: ((_a = boss == null ? void 0 : boss.bigMove) == null ? void 0 : _a.name) || "" });
+    }
+    if (!u.idol && u.side === "enemy") {
+      for (const idol of idolsOf(b, u)) {
+        idol.hp = 0;
+        idol.ko = true;
+        emit(b, "ko", { target: idol.uid, side: "enemy" });
+      }
+      if (b.charge && b.charge.uid === u.uid) b.charge = null;
+    }
   }
   const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
   const buffOf = (u, stat) => u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0;
@@ -2511,6 +2566,7 @@ body.nopad #pad { display: none; }
       to.ko = true;
       to.status = {};
       emit(b, "ko", { target: to.uid, side: to.side });
+      afterKo(b, to);
     }
     return dmg;
   }
@@ -2624,10 +2680,11 @@ body.nopad #pad { display: none; }
       return;
     }
     if (u.bossMoves) {
-      const list = u.bossMoves.filter((m) => !m.part || !u.parts[m.part].broken);
+      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length));
       const move = b.rng.weighted(list.map((m) => ({ m, w: m.w }))).m;
       emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss" });
-      applyEffects(b, u, move.effects);
+      if (move.summon) summonIdol(b, u);
+      else applyEffects(b, u, move.effects);
       return;
     }
     const cmd = chooseCommand(b, u);
@@ -2671,7 +2728,7 @@ body.nopad #pad { display: none; }
   }
   function checkOutcome(b) {
     if (b.outcome) return;
-    if (b.enemies.every((e) => e.ko)) {
+    if (b.enemies.every((e) => e.ko || e.idol)) {
       b.outcome = "win";
       emit(b, "win");
     } else if (b.wheel.filter(Boolean).every((u) => u.ko)) {
@@ -2704,7 +2761,7 @@ body.nopad #pad { display: none; }
     }
     for (const e of b.enemies) {
       if (e.ko) continue;
-      tickUnit(b, e, dt, true);
+      tickUnit(b, e, dt, !e.idol);
       if (e.bigMove) bossTick(b, e, dt);
       checkOutcome(b);
       if (b.outcome) return;
@@ -2722,6 +2779,20 @@ body.nopad #pad { display: none; }
   function bossTick(b, e, dt) {
     if (b.chance && b.chance.uid === e.uid) return;
     const m = e.bigMove;
+    if (m.trigger === "idols") {
+      if (!b.charge || b.charge.uid !== e.uid) return;
+      b.charge.left -= dt;
+      if (b.charge.left > 0) return;
+      b.charge = null;
+      emit(b, "special", { actor: e.uid, name: m.name, side: "enemy", big: true });
+      applyEffects(b, e, m.effects);
+      for (const idol of idolsOf(b, e)) {
+        idol.hp = 0;
+        idol.ko = true;
+        emit(b, "ko", { target: idol.uid, side: "enemy" });
+      }
+      return;
+    }
     b.bossTimer += dt;
     if (!b.warned && b.bossTimer >= m.every - m.warn) {
       b.warned = true;
@@ -5376,6 +5447,49 @@ body.nopad #pad { display: none; }
           "................"
         ]
       ]
+    },
+    hyougaryu: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#6ab0e8", "b": "#8ac8f0", "c": "#b8e0f8", "d": "#e8f4ff", "e": "#2a4a8a", "f": "#d8f0ff", "g": "#ffffff" },
+      frames: [
+        [
+          "..........d..d..",
+          "..........d..d..",
+          ".....gg..bbbbbb.",
+          "....fggf.bbbbeb.",
+          "....ffff.bbbbbb.",
+          "....ffff.bbbbbdd",
+          "...bffffbbbbbbb.",
+          "...bcccccccb....",
+          "...bcccccccb....",
+          ".aabcccccccb....",
+          "bbabcccccccb....",
+          "bbabcccccccb....",
+          "...bbbbbbbbb....",
+          "....aa...aa.....",
+          "....aa...aa.....",
+          "....aa...aa....."
+        ],
+        [
+          "..........d..d..",
+          ".........bbbbbb.",
+          ".....gg..bbbbeb.",
+          "....fggf.bbbbbb.",
+          "....ffff.bbbbbdg",
+          "....ffff.bbbbbbg",
+          "...bffffbbbb...g",
+          "...bcccccccb....",
+          "...bcccccccb....",
+          ".aabcccccccb....",
+          "bbabcccccccb....",
+          "bbabcccccccb....",
+          "...bbbbbbbbb....",
+          "....aa...aa.....",
+          "....aa...aa.....",
+          "....aa...aa....."
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -5937,7 +6051,7 @@ body.nopad #pad { display: none; }
   const mysteriesSolved = (g) => MYSTERIES.filter((m) => g.mysteries && g.mysteries[m.id]).length;
   const allMysteriesSolved = (g) => mysteriesSolved(g) >= MYSTERIES.length;
   function peopleHere(g) {
-    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "modoki" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]));
+    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "damNushi" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]));
   }
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
   const sealsHere = (g) => SEALS.filter((q) => !(g.mysteries && g.mysteries[q.id]));
@@ -6835,12 +6949,13 @@ body.nopad #pad { display: none; }
           { who: "ろうかの カゲ", art: "lunashadow", text: "…………。" },
           furu("これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("kage"), kind: "boss", place: "school" }) });
-      } else if (p.id === "modoki") {
+      } else if (p.id === "damNushi") {
         say([
-          { who: "", text: "氷の 城の 前に、王冠を かぶった こおりくんが 立っている……！？" },
-          { who: "ダムの ヌシ", art: "koorimodokishin", text: "やあ、ニセモノの こおりくん。ぼくこそ ほんものの こおりくんだよ。" },
-          { who: "ダムの ヌシ", art: "koorimodokishin", text: "この 王冠で、山の 水は ぜんぶ ぼくの 氷の 城に なった。こおり族の 王さまは ぼくだ！" },
-          furu("コオリモドキ……！ 王冠の 力で 進化してる！ こおり族には ほのおの なかまが 有利だよ！")
+          { who: "", text: "氷の 城の 前に、王冠を かぶった 大きな 龍が いる……！" },
+          { who: "ダムの主", art: "hyougaryu", text: "グルルル……氷河の 底で 眠っていた わしを 起こしたのは だれだ……。" },
+          { who: "ダムの主", art: "hyougaryu", text: "この 王冠が ある かぎり、山の 水は すべて わしの 氷よ！" },
+          furu("ダムの主……ヒョウガリュウだ！ 王冠の 力で あばれてるんだ！"),
+          furu("「氷の偶像」を 2 つ 作られたら、大技の ために 入るよ。ためて いる あいだに 偶像を こわせば 止められる！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("himuro"), kind: "boss", place: "dam" }) });
       } else if (p.id === "nushi") {
         if (g.story === "bridge") {
@@ -7026,13 +7141,13 @@ body.nopad #pad { display: none; }
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "himuro") {
         warp(YAMA_AFTER_BOSS);
         say([
-          { who: "コオリモドキ・真", art: "koorimodokishin", text: "うう……ぼくは ほんものに なりたかった だけなのに……。" },
+          { who: "ヒョウガリュウ", art: "hyougaryu", text: "グ……王冠の 力に のまれて おったか……。" },
           { who: "", text: "王冠が コロンと 落ちた。氷の 城が とけはじめる……！" },
           { who: "", text: "ゴゴゴゴ……！ ダムに 水が もどってきた！" },
-          { who: "おにおに", art: "onioni", text: "ちぇっ、モドキの やつ、王冠を わたしたのに 役に たたないな。水を 止めて 町を こまらせる 作戦も しっぱいか。" },
+          { who: "おにおに", art: "onioni", text: "ちぇっ、王冠で ヒョウガリュウを あやつって、水を 止めて 町を こまらせる 作戦も しっぱいか。" },
           { who: "おにおに", art: "onioni", text: "つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！" },
           furu("おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。"),
-          { who: "コオリモドキ・真", art: "koorimodokishin", text: "……ぼくも、ほんものの こおりくんの なかまに なって いい？" },
+          { who: "ヒョウガリュウ", art: "hyougaryu", text: "こおり族の 子よ……王冠を まもれなかった わびだ。わしも 力を かそう。" },
           { who: "", text: "３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。" },
           { who: "", text: "―― ４章は つぎの アップデートで。" }
         ], { done: () => app2.save() });
@@ -7903,8 +8018,10 @@ body.nopad #pad { display: none; }
     haetorigusan: faceless("haetorigusan", { f: "c", e: "d" }),
     kokemusha: faceless("kokemusha", { d: "a", e: "a" }),
     // かぶとの うしろ
-    koorimodokishin: faceless("koorimodokishin", { e: "c", f: "c" }, { rows: [2, 99] })
+    koorimodokishin: faceless("koorimodokishin", { e: "c", f: "c" }, { rows: [2, 99] }),
     // 王冠は そのまま
+    hyougaryu: faceless("hyougaryu", { e: "b", g: "f" })
+    // 頭と つばさの うしろ
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -7971,6 +8088,7 @@ body.nopad #pad { display: none; }
     haetorigusan: { motion: "dash", color: "#5ac05a", drain: true },
     kokemusha: { motion: "dash", color: "#6ab04a" },
     koorimodokishin: { motion: "spin", color: "#7aaad0" },
+    hyougaryu: { motion: "beam", color: "#bff0ff" },
     // こおりくん: 大腸炎アタック
     koori: { motion: "cloud", color: "#c8a060", glyph: "@" }
   };
@@ -8786,10 +8904,12 @@ body.nopad #pad { display: none; }
       return `${es[Math.floor((es.length - 1) / 2)].name}たちが あらわれた！`;
     })();
     const flash = {};
-    const enemyPos = (i) => {
-      const n = battle.enemies.length;
-      if (n === 1 && battle.enemies[0].parts) return { x: 200, y: 156, scale: 6.5 };
-      if (n === 1) return battle.enemies[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
+    const enemyPos = (k) => {
+      const e = battle.enemies[k];
+      if (e && e.idol) return { x: e.slot === "left" ? 76 : 324, y: 140, scale: 3 };
+      const main = battle.enemies.filter((x) => !x.idol), n = main.length, i = main.indexOf(e);
+      if (n === 1 && main[0].parts) return { x: 200, y: 156, scale: 6.5 };
+      if (n === 1) return main[0].boss ? { x: 200, y: 142, scale: 5 } : { x: 200, y: 132, scale: 3.5 };
       if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
       return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];
     };
@@ -8983,8 +9103,17 @@ body.nopad #pad { display: none; }
           banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
-          warn = { name: e.name, until: t + e.warn };
+          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols) };
           sfx("cancel");
+        } else if (e.type === "summon") {
+          banner = { text: `${nameOf(e.target)}が あらわれた！`, color: "#bfeaff", until: t + 1.4 };
+          sfx("lens");
+          const p = posOf(e.target);
+          if (p) effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.5, color: "#bfeaff" });
+        } else if (e.type === "bigCancel") {
+          warn = null;
+          banner = { text: `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+          sfx("big");
         } else if (e.type === "food") {
           banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: "#ff9ad8", until: t + 1.6 };
           sfx(e.favorite ? "friend" : "ok");
@@ -9533,7 +9662,7 @@ body.nopad #pad { display: none; }
       }
     }
     function drawUnit(ctx, u, p, { scale = 3, flip = false, back = false } = {}) {
-      if (!u) return;
+      if (!u || u.idol && u.ko) return;
       const lit = (flash[u.uid] || 0) > t;
       const sleeping = u.status.sleep > 0;
       const bobY = u.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5;
@@ -9546,11 +9675,12 @@ body.nopad #pad { display: none; }
       ctx.ellipse(ground.x, ground.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
       ctx.fill();
       const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
-      drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : 1, tint: lit ? "#ffffff" : null, sx, sy });
+      drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? "#ffffff" : null, sx, sy });
+      if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
       const w = u.parts ? 150 : 44, head = p.y - art.h * scale;
       const barY = head - 10, nameY = head - 14;
       bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
-      text(ctx, `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
+      text(ctx, u.idol ? u.name : `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
       if (u.side === "enemy" && g.zukan.friends[u.id]) drawFriendMark(ctx, p.x + w / 2 + 8, barY + 3, 5);
       const marks = Object.keys(u.status).map((k) => STATUS_NAMES[k]);
       if (u.ko) marks.push("たおれた");
@@ -9657,7 +9787,11 @@ body.nopad #pad { display: none; }
         panel(ctx, 90, 6, 220, 46, { fill: "rgba(90, 40, 0, 0.88)", edge: "#ffe85a" });
         text(ctx, "チャンスタイム！", 200, 32, { size: 24, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
         text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: "center", bold: true });
-      } else if (warn && warn.until > t) {
+      } else if (warn && warn.idols && battle.charge && !battle.outcome) {
+        panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
+        text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
+      } else if (warn && !warn.idols && warn.until > t) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
