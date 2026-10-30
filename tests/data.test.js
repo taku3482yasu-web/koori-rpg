@@ -162,7 +162,8 @@ test('全員が どこかに 出る。見えている キャラが 大多数・�
     const fused = new Set(RECIPES.map(r => r.to).filter(c => c.startsWith('n:')).map(c => c.slice(2)));
     //   ライバル探検隊 (team) は 15 章の 仲間クエストで チームに 勝つと なかまに なる
     const teamIds = new Set(Object.values(TEAMS).flatMap(t => t.members));
-    for (const id of NAKAMA_IDS) assert.ok(NAKAMA[id].fuse ? fused.has(id) : NAKAMA[id].team ? teamIds.has(id) : hidden.has(root(id)) || roam.has(root(id)), `${id} の 出る場所`);
+    //   storyOnly (おにおに) は ストーリーで なかまに なる
+    for (const id of NAKAMA_IDS) assert.ok(NAKAMA[id].storyOnly || (NAKAMA[id].fuse ? fused.has(id) : NAKAMA[id].team ? teamIds.has(id) : hidden.has(root(id)) || roam.has(root(id))), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
     for (const s of SPOTS) assert.ok(s.cue, `${s.id} の 違和感`);
 });
@@ -356,12 +357,12 @@ test('地図: 金色のSE城 (8 章)。駅から 大鬼 → 双頭鬼 → 金滅
 });
 
 test('地図: 14 章の 遊園地。駅から アトラクション 3 つの 入り口と 広場の ボスの 前まで 歩いて 行ける', async () => {
-    const { PARK_Y0, PARK_IN, PARK_CLUES } = await import('../src/data/map.js');
-    assert.deepEqual(regionOf(PARK_IN.y), [PARK_Y0, MAP_H]);
+    const { PARK_Y0, PARK_IN, PARK_CLUES, KINNIKU_Y0 } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(PARK_IN.y), [PARK_Y0, KINNIKU_Y0]);
     const seen = new Set([`${PARK_IN.x},${PARK_IN.y}`]);
     const q = [[PARK_IN.x, PARK_IN.y]];
     const inB = (x, y) => BUILDINGS.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
-    const open = (x, y) => y >= PARK_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !inB(x, y);
+    const open = (x, y) => y >= PARK_Y0 && y < KINNIKU_Y0 && !BLOCK.has(TILES[y][x]) && !inB(x, y);
     while (q.length) {
         const [x, y] = q.shift();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -375,4 +376,32 @@ test('地図: 14 章の 遊園地。駅から アトラクション 3 つの 入
     }
     const boss = PEOPLE.find(p => p.id === 'boss14');
     assert.ok(seen.has(`${boss.x},${boss.y + 1}`), 'ボスの 前');
+});
+
+test('地図: 筋肉の山 (9 章)。駅から 氷河の ハル麒麟の 前まで 行けて、ハル麒麟を たおすと 山頂の ノゾエマの 前まで 行ける', async () => {
+    const { KINNIKU_Y0, KINNIKU_IN } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(KINNIKU_IN.y), [KINNIKU_Y0, MAP_H]);
+    const kirin = PEOPLE.find(p => p.id === 'harukirin9'), noz = PEOPLE.find(p => p.id === 'nozoema9');
+    const reach = blockKirin => {
+        const seen = new Set([`${KINNIKU_IN.x},${KINNIKU_IN.y}`]);
+        const q = [[KINNIKU_IN.x, KINNIKU_IN.y]];
+        const inB = (x, y) => BUILDINGS.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+        const open = (x, y) => y >= KINNIKU_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !inB(x, y) && !(blockKirin && x === kirin.x && y === kirin.y);
+        while (q.length) {
+            const [x, y] = q.shift();
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const k = `${x + dx},${y + dy}`;
+                if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); }
+            }
+        }
+        return seen;
+    };
+    const before = reach(true);
+    assert.ok(before.has(`${kirin.x},${kirin.y + 1}`), 'ハル麒麟の 前まで');
+    assert.ok(!before.has(`${noz.x},${noz.y + 1}`), 'ハル麒麟が いる あいだは 山頂へ 行けない');
+    assert.ok(reach(false).has(`${noz.x},${noz.y + 1}`), 'ハル麒麟を たおすと ノゾエマの 前まで');
+    const k = idsInArea('kinniku');
+    assert.equal(k.length, 13);
+    const count = rk => k.filter(id => NAKAMA[id].rank === rk).length;
+    assert.deepEqual([count('D'), count('C'), count('B')], [6, 5, 2]);
 });

@@ -72,7 +72,10 @@ const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon
     // 合体でしか 会えない ハリー一族 10 体 (合体の館。2026-10-30)
     'harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry',
     // 15 章で なかまに なる ライバル探検隊 (ASK-3・お願いマッスル は 4 章で 写した。2026-10-30)
-    'ishii', 'mazuda', 'naitoon', 'yahami', 'maechokkin', 'norahan', 'okagappa', 'hibikimakuri', 'yamamou'];
+    'ishii', 'mazuda', 'naitoon', 'yahami', 'maechokkin', 'norahan', 'okagappa', 'hibikimakuri', 'yamamou',
+    // 9 章 筋肉の山と 雪どけの 氷河 (2026-10-30)
+    'dumbbellkong', 'magmatcho', 'kazanmatcho', 'yukiusapon', 'tsurarabo', 'kakigoora', 'penguinknight', 'shirokumatcho', 'yukionnan',
+    'sakurarisu', 'harukazedori', 'fukinoton', 'harukirin', 'nozoema'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

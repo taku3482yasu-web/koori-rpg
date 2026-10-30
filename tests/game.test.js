@@ -563,8 +563,8 @@ test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごと�
     assert.equal(kairouOf(g).best, 14);
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
     assert.ok(kairouEnemies(g)[0].lv > lvs[0], '上の 階ほど 強い');
-    // 14 階目は その バージョンの 14 章の ボス
-    g.kairou.floor = 14;
+    // さいごの 階は その バージョンの 14 章の ボス
+    g.kairou.floor = 16;
     assert.equal(kairouEnemies(g)[0].id, 'rihama14');
 });
 
@@ -588,4 +588,34 @@ test('15 章: ライバル探検隊の 仲間クエスト。その バージョ�
         assert.ok(TEAMS[teams[0]].members.filter(id => id !== TEAMS[teams[0]].leader).every(id => NAKAMA[id].rank === 'A'), 'メンバーは A');
         assert.ok(!peopleHere(g).some(p => p.team === teams[0]), '勝った チームは いなく なる');
     }
+});
+
+test('9 章: おにおにが なかまに → 電車で 筋肉の山 → ハル麒麟 → ノゾエマに 勝つと 9 章 クリア・必殺技が 進化 (2026-10-30)', async () => {
+    const { startChapter9, arriveKinniku, trainLines, heroUpgraded, startChapter14 } = await import('../src/logic/game.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const here = id => peopleHere(g).some(p => p.id === id);
+    g.story = 'clear8';
+    assert.match(objective(g), /ともいし/);
+    assert.ok(!trainLines(g).includes('kinniku'));
+    const oni = startChapter9(g);
+    assert.equal(oni.id, 'onioni', 'おにおにが なかまに');
+    assert.equal(startChapter9(g), null, '2 回目は なにも おきない');
+    assert.ok(trainLines(g).includes('kinniku'));
+    assert.ok(!startChapter14(g), '9 章が おわるまで 14 章は はじまらない');
+    assert.ok(arriveKinniku(g));
+    assert.ok(here('harukirin9') && !here('nozoema9'));
+    let out = applyBattleResult(g, winBattle(g, bossEnemies('harukirin9'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'harukirin');
+    assert.ok(!here('harukirin9') && here('nozoema9'));
+    assert.match(objective(g), /ノゾエマ/);
+    assert.ok(!heroUpgraded(g));
+    out = applyBattleResult(g, winBattle(g, bossEnemies('nozoema9'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'nozoema');
+    assert.ok(out.heroSpecial);
+    assert.equal(g.story, 'clear9');
+    assert.equal(g.chapter, 10);
+    assert.ok(heroUpgraded(g), '必殺技が 進化');
+    assert.ok(startChapter14(g), '9 章の あとで 14 章 (いまの 本編の さいご)');
 });

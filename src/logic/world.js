@@ -35,6 +35,9 @@ export function peopleHere(g) {
         (p.only === 'soutou8' && g.story === 'oshiro' && !g.flags.soutou8) ||
         (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
         (p.only === 'onioni8' && g.story === 'oshiro') ||
+        // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
+        (p.only === 'harukirin9' && g.story === 'kinniku' && !g.flags.kirin9) ||
+        (p.only === 'nozoema9' && g.story === 'kinniku' && g.flags.kirin9) ||
         // 14 章: おにおには 遊園地に いっしょに 来ている。夜に 手がかりが そろうと 広場に 残党の ボス
         (p.only === 'park14' && (g.story === 'park' || g.story === 'yoru')) ||
         (p.only === 'boss14' && g.story === 'yoru' && PARK_CLUES.every(c => g.flags.clue14 && g.flags.clue14[c.id])) ||

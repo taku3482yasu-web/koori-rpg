@@ -15,7 +15,8 @@
 // その 下 (y 192〜227) は 忍びの屋敷 (6 章。2026-10-29)。5 章 クリアの あと ともいしと 話すと、石の川駅から 電車で 行ける
 // その 下 (y 228〜263) は 月の迷宮 (7 章。2026-10-29)。6 章 クリアの あと、石の川駅から 電車で 行ける
 // その 下 (y 264〜299) は 金色のSE城 (8 章。2026-10-30)。7 章 クリアの あと、石の川駅から 電車で 行ける
-// いちばん 下 (y 300〜335) は 14 章の 遊園地 (2026-10-30)。内定版は ナイテイパーク・免許版は メンキョシティ (地図は 同じで 名前が ちがう)
+// その 下 (y 300〜335) は 14 章の 遊園地 (2026-10-30)。内定版は ナイテイパーク・免許版は メンキョシティ (地図は 同じで 名前が ちがう)
+// いちばん 下 (y 336〜371) は 筋肉の山 (9 章。2026-10-30)。8 章 クリアの あと、石の川駅から 電車で 行ける。とちゅうに 雪どけの 氷河
 //
 //   tiles[y][x]: G 草 / F 花 / T 木 / R 道 / W 川 / B 橋 / P 川原の 石ころ / S 公園の 砂 / K 石だたみ / A 駐車場
 //                学校: L 木の ゆか / X かべ / Y プールサイド / M げた箱の マット (W は プールの 水)
@@ -29,7 +30,7 @@
 //   SPOTS: レンズで さがす 場所 (設計書 5.2)。kinds の time は 出る 時間帯、weather: 'rain' は 雨の日だけ
 // =====================================================================
 export const TILE = 16;
-export const MAP_W = 48, MAP_H = 336;
+export const MAP_W = 48, MAP_H = 372;
 export const TOWN_H = 36;       // ここから 下が 商店街
 export const SCHOOL_Y0 = 60;    // ここから 下が 小学校の 中
 export const YAMA_Y0 = 84;      // ここから 下が 山と ダム
@@ -39,6 +40,7 @@ export const YASHIKI_Y0 = 192;  // ここから 下が 忍びの屋敷 (6 章)
 export const MOON_Y0 = 228;     // ここから 下が 月の迷宮 (7 章)
 export const SHIRO_Y0 = 264;    // ここから 下が 金色のSE城 (8 章)
 export const PARK_Y0 = 300;     // ここから 下が 14 章の 遊園地 (ナイテイパーク / メンキョシティ)
+export const KINNIKU_Y0 = 336;  // ここから 下が 筋肉の山 (9 章)
 export const BLOCK = new Set(['T', 'W', 'X', 'Q', 'I', 'J', 'Z', 'V', 'k']);
 export const WET = new Set(['D', 'E', 'I']);   // 3 章 クリアで 水に もどる マス
 
@@ -237,6 +239,23 @@ function build() {
     fill(23, P + 25, 24, P + 31, 'K');
     fill(4, P + 31, 6, P + 31, 'K'); fill(4, P + 32, 24, P + 33, 'K');
     [[3, P + 28], [12, P + 29], [30, P + 29], [40, P + 30], [44, P + 28], [17, P + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
+
+    // ----- 筋肉の山 (y 336〜371。9 章「筋肉の山と 新しい なかま」) -----
+    //   南の 駅から 登山道を のぼる → 雪どけの 氷河 (ハル麒麟が 北への 細道を ふさぐ) → 尾根道 → 山頂の 道場 (ノゾエマ)
+    const K = KINNIKU_Y0;
+    fill(0, K, MAP_W - 1, MAP_H - 1, 'T');
+    fill(1, K + 1, MAP_W - 2, K + 34, 'G');
+    fill(4, K + 1, 43, K + 25, 'Q');                                     // 岩山
+    fill(23, K + 20, 24, K + 25, 'U');                                   // 登山口から 北へ
+    fill(8, K + 19, 24, K + 20, 'U');                                    // 登山道 (西へ)
+    fill(8, K + 14, 9, K + 20, 'U');
+    fill(5, K + 10, 20, K + 15, 'N');                                    // 雪どけの 氷河
+    fill(13, K + 6, 13, K + 9, 'U');                                     // 氷河から 北への 細道 (ハル麒麟が ふさぐ)
+    fill(13, K + 5, 34, K + 6, 'U');                                     // 尾根道 (東へ)
+    fill(28, K + 1, 41, K + 4, 'L');                                     // 山頂の 道場
+    fill(23, K + 26, 24, K + 31, 'K');
+    fill(4, K + 31, 6, K + 31, 'K'); fill(4, K + 32, 24, K + 33, 'K');
+    [[3, K + 28], [12, K + 29], [30, K + 29], [40, K + 30], [44, K + 28], [17, K + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
     return t.map(row => row.join(''));
 }
 export const TILES = build();
@@ -286,6 +305,7 @@ export const BUILDINGS = [
     { id: 'attrA', label: 'コースター', x: 8, y: PARK_Y0 + 11, w: 6, h: 4, wall: '#ffd0e0', roof: '#e04a8a', door: { x: 11, y: PARK_Y0 + 14 } },
     { id: 'attrB', label: 'かんらん車', x: 20, y: PARK_Y0 + 3, w: 8, h: 4, wall: '#d0f0ff', roof: '#3a8ae0', door: { x: 24, y: PARK_Y0 + 6 } },
     { id: 'attrC', label: 'おばけ屋敷', x: 34, y: PARK_Y0 + 11, w: 6, h: 4, wall: '#d8d0e8', roof: '#4a3a6a', door: { x: 37, y: PARK_Y0 + 14 } },
+    { id: 'kinnikuStation', label: '筋肉の山 登山口駅', x: 2, y: KINNIKU_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#6a4a2a', door: { x: 5, y: KINNIKU_Y0 + 30 } },
     { id: 'parkStation', label: '遊園地前駅', x: 2, y: PARK_Y0 + 27, w: 6, h: 4, wall: '#fff0d0', roof: '#e08a2a', door: { x: 5, y: PARK_Y0 + 30 } }
 ];
 
@@ -326,6 +346,8 @@ export const MOON_LV = [25, 28];
 export const SHIRO_LV = [28, 31];
 // 14 章の 遊園地の キャラの Lv
 export const PARK_LV = [36, 40];
+// 筋肉の山の キャラの Lv (9 章)
+export const KINNIKU_LV = [31, 35];
 
 // かくれている キャラ (レンズで さがす。2026-10-26 ユーザー指定: ふだんの 画面でも「なにか へん」と わかるように 化けている)
 //   x, y はマス。cue: ふだんの 画面に 出す 違和感の 絵 (view/field.js の drawCue)
@@ -362,6 +384,7 @@ export const SPOTS = [
     { id: 'moonKado', label: '行き止まりの かげ', x: 34, y: MOON_Y0 + 17, cue: 'nightEyes', lv: MOON_LV, kinds: [{ id: 'shakkinbourei', w: 1 }] },
     // 金色のSE城 (8 章)
     { id: 'shiroMasu', label: '城門の 豆の ます', x: 21, y: SHIRO_Y0 + 26, cue: 'glitch', lv: SHIRO_LV, kinds: [{ id: 'setsubunmame', w: 1 }] },
+    { id: 'hyougaFuki', label: '氷河の 雪の 下', x: 6, y: KINNIKU_Y0 + 15, cue: 'glitch', lv: KINNIKU_LV, kinds: [{ id: 'fukinoton', w: 1 }] },
     { id: 'shiroKama', label: '大広間の すみの かまど', x: 10, y: SHIRO_Y0 + 19, cue: 'nightEyes', lv: SHIRO_LV, kinds: [{ id: 'onigirin', w: 1 }] }
 ];
 
@@ -420,6 +443,12 @@ export const ROAMS = [
     { id: 'shiroSoto', label: '城の まわり', x0: 1, y0: SHIRO_Y0 + 26, x1: 46, y1: SHIRO_Y0 + 33, max: 2, lv: SHIRO_LV, kinds: [{ id: 'setsubunmame', w: 2 }, { id: 'onibin', w: 1, time: ['evening', 'night'] }, { id: 'tsunodaruma', w: 1 }] },
     { id: 'hiroma', label: '大広間', x0: 9, y0: SHIRO_Y0 + 20, x1: 38, y1: SHIRO_Y0 + 23, max: 2, lv: SHIRO_LV, kinds: [{ id: 'tsunodaruma', w: 2 }, { id: 'onibin', w: 2 }, { id: 'onigirin', w: 1 }] },
     { id: 'gyokuza', label: '玉座の 間', x0: 12, y0: SHIRO_Y0 + 7, x1: 35, y1: SHIRO_Y0 + 9, max: 1, lv: SHIRO_LV, kinds: [{ id: 'goukioni', w: 1, after: 'clear8' }, { id: 'kinmetsuki', w: 1, after: 'clear8' }] },
+    // 筋肉の山 (9 章)
+    { id: 'tozandou', label: '登山道', x0: 8, y0: KINNIKU_Y0 + 19, x1: 24, y1: KINNIKU_Y0 + 20, max: 2, lv: KINNIKU_LV, kinds: [{ id: 'dumbbellkong', w: 2 }, { id: 'magmatcho', w: 2 }, { id: 'harukazedori', w: 1 }] },
+    { id: 'hyouga', label: '雪どけの 氷河', x0: 5, y0: KINNIKU_Y0 + 11, x1: 20, y1: KINNIKU_Y0 + 15, max: 3, lv: KINNIKU_LV, kinds: [{ id: 'yukiusapon', w: 2 }, { id: 'tsurarabo', w: 2 }, { id: 'kakigoora', w: 1 }, { id: 'penguinknight', w: 1 }, { id: 'shirokumatcho', w: 1 }, { id: 'yukionnan', w: 1, time: ['evening', 'night'] }, { id: 'sakurarisu', w: 1 }] },
+    // ノゾエマと ハル麒麟は 9 章 クリアの あと (clear9) 山頂の 道場に いる
+    { id: 'doujou', label: '山頂の 道場', x0: 28, y0: KINNIKU_Y0 + 1, x1: 41, y1: KINNIKU_Y0 + 4, max: 1, lv: KINNIKU_LV, kinds: [{ id: 'nozoema', w: 1, after: 'clear9' }, { id: 'harukirin', w: 1, after: 'clear9' }, { id: 'dumbbellkong', w: 1, after: 'clear9' }] },
+    { id: 'one', label: '尾根道', x0: 13, y0: KINNIKU_Y0 + 5, x1: 34, y1: KINNIKU_Y0 + 6, max: 1, lv: KINNIKU_LV, kinds: [{ id: 'harukazedori', w: 2 }, { id: 'dumbbellkong', w: 1 }, { id: 'magmatcho', w: 1 }] },
     // 14 章の 遊園地 (前の 地区の にぎやかな キャラが あそびに 来ている)
     { id: 'parkHiroba', label: '遊園地の 広場', x0: 5, y0: PARK_Y0 + 16, x1: 42, y1: PARK_Y0 + 23, max: 3, lv: PARK_LV, kinds: [{ id: 'gachapon', w: 2 }, { id: 'chouchinbura', w: 2 }, { id: 'neonkurage', w: 1, time: ['evening', 'night'] }, { id: 'pachinkodaman', w: 1 }, { id: 'kinmenkoinu', w: 1 }] },
     { id: 'yashikiSoto', label: '屋敷の まわり', x0: 1, y0: YASHIKI_Y0 + 24, x1: 46, y1: YASHIKI_Y0 + 33, max: 2, lv: YASHIKI_LV, kinds: [{ id: 'shurikenbo', w: 1 }, { id: 'konin', w: 1 }, { id: 'bakudanjirou', w: 1 }] }
@@ -497,6 +526,9 @@ export const PEOPLE = [
     { id: 'soutou8', name: '双頭鬼', art: 'soutouki', x: 24, y: SHIRO_Y0 + 15, only: 'soutou8', scale: 1.4 },
     { id: 'kinme8', name: '金滅鬼', art: 'kinmetsuki', x: 24, y: SHIRO_Y0 + 11, only: 'kinme8', scale: 1.2 },
     { id: 'onioni8', name: 'おにおに', art: 'onioni', x: 24, y: SHIRO_Y0 + 7, only: 'onioni8' },
+    // 9 章: 雪どけの 氷河の ハル麒麟 (北への 細道の 前) → 山頂の 道場の ノゾエマ
+    { id: 'harukirin9', name: 'ハル麒麟', art: 'harukirin', x: 13, y: KINNIKU_Y0 + 10, only: 'harukirin9', scale: 1.3 },
+    { id: 'nozoema9', name: 'ノゾエマ', art: 'nozoema', x: 34, y: KINNIKU_Y0 + 2, only: 'nozoema9', scale: 1.3 },
     // 14 章: 遊園地の 広場の おにおに (いっしょに 来た)。夜は 広場の まんなかに 残党の ボス (バージョンで ちがう)
     { id: 'oni14', name: 'おにおに', art: 'onioni', x: 20, y: PARK_Y0 + 20, only: 'park14' },
     { id: 'boss14', name: 'サアラハ', art: 'saaraha', nameBy: { naitei: 'サアラハ', menkyo: 'リハマ' }, artBy: { naitei: 'saaraha', menkyo: 'rihama' }, x: 24, y: PARK_Y0 + 12, only: 'boss14', scale: 1.3 },
@@ -589,6 +621,16 @@ export const MOON_PLACES = [
     { id: 'moonStation', label: '駅', x: 5, y: MOON_Y0 + 28 }
 ];
 
+// ----- 筋肉の山 (9 章「筋肉の山と 新しい なかま」。2026-10-30) -----
+export const KINNIKU_IN = { x: 5, y: KINNIKU_Y0 + 31, dir: 'down' };
+export const KINNIKU_PLACES = [
+    { id: 'doujou', label: '山頂の 道場', x: 34, y: KINNIKU_Y0 + 2 },
+    { id: 'one', label: '尾根道', x: 22, y: KINNIKU_Y0 + 5 },
+    { id: 'hyouga', label: '雪どけの 氷河', x: 12, y: KINNIKU_Y0 + 13 },
+    { id: 'tozandou', label: '登山道', x: 16, y: KINNIKU_Y0 + 19 },
+    { id: 'kinnikuStation', label: '駅', x: 5, y: KINNIKU_Y0 + 28 }
+];
+
 // ----- 14 章の 遊園地 (ナイテイパーク / メンキョシティ。2026-10-30) -----
 export const PARK_IN = { x: 5, y: PARK_Y0 + 31, dir: 'down' };
 export const PARK_NAME = { naitei: 'ナイテイパーク', menkyo: 'メンキョシティ' };
@@ -664,9 +706,9 @@ export const UMI_PLACES = [
 
 export const tileAt = (x, y) => (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? 'T' : TILES[y][x]);
 // その マスの 地区 (設計書 5.1)
-export const areaAt = (x, y) => (y >= PARK_Y0 ? 'park' : y >= SHIRO_Y0 ? 'shiro' : y >= MOON_Y0 ? 'moon' : y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
+export const areaAt = (x, y) => (y >= KINNIKU_Y0 ? 'kinniku' : y >= PARK_Y0 ? 'park' : y >= SHIRO_Y0 ? 'shiro' : y >= MOON_Y0 ? 'moon' : y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
 export const inSchoolTile = y => y >= SCHOOL_Y0 && y < YAMA_Y0;
 // 町・学校・山・海 は つながって いないので、カメラと 地図は べつに する。[上, 下) の マス
-export const regionOf = ty => (ty >= PARK_Y0 ? [PARK_Y0, MAP_H] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
+export const regionOf = ty => (ty >= KINNIKU_Y0 ? [KINNIKU_Y0, MAP_H] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
 // どうくつの 中か (4 章。バトルの 背景が かわる)
 export const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;

@@ -33,7 +33,7 @@ const INTRO_BTN = [
     { x: 164, y: 134, w: 136, h: 62, label: 'にげる', key: 'run' }
 ];
 const ENTER_TIME = 0.45;       // なかまが とびだしてくる 時間
-// おはらい: 後ろに とりつかれた なかまが いるとき、輪の まんなかが ボタンに なる (2 章)
+// おたすけ: 後ろに とりつかれた なかまが いるとき、輪の まんなかが ボタンに なる (2 章)
 const RESCUE_BTN = { x: WHEEL.x - 34, y: WHEEL.y - 22, w: 68, h: 44 };
 // バトルの 進む 速さ (2026-10-28 ユーザー指定: 1 回 1 回の 行動が 速いので ゆっくり。倍速で その 2 倍)
 export const BATTLE_SPEED = { normal: 0.6, fast: 1.2 };
@@ -257,6 +257,13 @@ export function createBattleView(app, battle, place) {
                 if (e.why === 'cage') banner = { text: 'おりが こわれた！ ふるカワが にげだした！ チャンス！', color: COLORS.accent, until: t + 2 };
                 if (e.why === 'signal') banner = { text: '信号機を こわした！ リハマが とまった！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
+            } else if (e.type === 'regenHeal') {
+                banner = { text: `${nameOf(e.actor)}の HP が ぜんぶ もどった……！`, color: '#ff6a6a', until: t + 2 };
+                sfx('heal');
+            } else if (e.type === 'regenCancel') {
+                banner = { text: '角を こわした！ 全回復を 止めた！', color: COLORS.accent, until: t + 2 };
+                warn = null;
+                sfx('big');
             } else if (e.type === 'burstBreak') {
                 // 8 章の おにおに: ためている あいだに 攻撃を うけきって 紋が 暴発
                 banner = { text: `紋が 暴発した！「${e.name}」！ ${nameOf(e.actor)}が 目を まわした！`, color: '#ffb84a', until: t + 2 };
@@ -331,10 +338,10 @@ export function createBattleView(app, battle, place) {
                 const p = posOf(e.actor);
                 if (p) pops.push({ x: p.x, y: p.y - 62, text: e.mode === 'lazy' ? 'いたずらの とりつき: なまけている…' : 'いたずらの とりつき: 味方を こうげき！', color: '#c88aff', small: true, until: t + 1.2 });
             } else if (e.type === 'rescue') {
-                banner = { text: e.ok ? `おはらい せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おはらい しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
+                banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
-                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst) };
+                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen) };
                 sfx('cancel');
             } else if (e.type === 'summon') {
                 // 氷の 偶像が できた (3 章の ダムの主)
@@ -383,7 +390,7 @@ export function createBattleView(app, battle, place) {
     function trySpecial(pos) {
         if (!canSpecial(battle, pos)) { sfx('cancel'); return; }
         const unit = startSpecial(battle, pos);
-        const sp = specialOf(unit.id);
+        const sp = specialOf(unit.special.fx || unit.id);   // こおりくんの 進化した 必殺技は べつの 動き
         const command = app.rng.pick(COMMANDS);   // コマンドは 毎回 ランダム
         mg = { unit, pos, sp, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1, resolved: false };
         sfx('ok');
@@ -454,7 +461,7 @@ export function createBattleView(app, battle, place) {
         }
     }
 
-    // おはらい (2 章。2026-10-30 に おたすけ から 名前を かえた): 後ろの とりつかれた なかまを コマンドで 治す。成功 (大成功を ふくむ) で とりつきが ぜんぶ ぬける
+    // おたすけ (2 章。2026-10-30 に いったん「おはらい」に したが、ユーザー指定で おたすけに もどした): 後ろの とりつかれた なかまを コマンドで 治す。成功 (大成功を ふくむ) で とりつきが ぜんぶ ぬける
     function tryRescue() {
         const u = rescueTargets(battle)[0];
         if (!u) { sfx('cancel'); return; }
@@ -796,6 +803,14 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'kinniku' || place === 'hyouga') {
+            // 9 章 筋肉の山 / 雪どけの 氷河: 青空と 雪の のこる 山
+            ctx.fillStyle = place === 'hyouga' ? '#9ad0f0' : '#7ab8e8'; ctx.fillRect(0, 0, 400, HORIZON);
+            ctx.fillStyle = '#7a6a5a';
+            ctx.beginPath(); ctx.moveTo(-20, HORIZON); ctx.lineTo(80, 30); ctx.lineTo(180, HORIZON); ctx.lineTo(240, 50); ctx.lineTo(330, 20); ctx.lineTo(430, HORIZON); ctx.fill();
+            ctx.fillStyle = '#f4f8ff';
+            [[80, 30], [240, 50], [330, 20]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x - 22, y + 22); ctx.lineTo(x, y); ctx.lineTo(x + 22, y + 22); ctx.fill(); });
+            if (place === 'hyouga') { ctx.fillStyle = '#ffb0c8'; for (let i = 0; i < 14; i++) ctx.fillRect((i * 61 + t * 20) % 400, (i * 29 + t * 14) % HORIZON, 3, 2); }
         } else if (place === 'yuen') {
             // 14 章の 遊園地 (夜): かんらん車の かげと 光る 電球
             ctx.fillStyle = '#141032'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -847,7 +862,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -1037,6 +1052,14 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
                 text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+            } else if (key === 'horn' && !pt.broken) {
+                // ハル麒麟の 角 (9 章): 金色の 角。ためている あいだは ピンクに 光る
+                const glow = battle.regen && battle.regen.uid === e.uid;
+                ctx.fillStyle = glow ? `rgba(255, 176, 200, ${0.4 + 0.3 * Math.sin(t * 10)})` : 'rgba(255, 232, 140, 0.25)';
+                ctx.beginPath(); ctx.arc(q.x, q.y, 16, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#ffd860';
+                ctx.beginPath(); ctx.moveTo(q.x - 6, q.y + 8); ctx.lineTo(q.x + 2, q.y - 16); ctx.lineTo(q.x + 6, q.y + 8); ctx.fill();
+                label(key, q, 14);
             } else if (key === 'cage' && !pt.broken) {
                 // ふるカワの おり (14 章の サアラハ): 黒い おりの 中に ふるカワ
                 drawArt(ctx, ART.furukawa, Math.floor(t * 2), q.x, q.y + 14, { scale: 1.6 });
@@ -1143,6 +1166,11 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(90, 20, 90, 0.9)', edge: '#ffe85a' });
             text(ctx, `お経を となえている……「${warn ? warn.name : ''}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffe0a0' });
+        } else if (battle.regen && !battle.outcome) {
+            // 9 章の ハル麒麟: ためおわると 角が のこっていれば 全回復
+            panel(ctx, 30, 8, 340, 40, { fill: 'rgba(40, 110, 60, 0.92)', edge: '#ffb0c8' });
+            text(ctx, `!! 「${warn ? warn.name : '春の 目ざめ'}」を ためている！ 全回復される！`, 200, 25, { size: 13, align: 'center', bold: true });
+            text(ctx, `角を ねらって こわせ！ (${Math.max(0, battle.regen.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#e0ffe0' });
         } else if (battle.burst && !battle.outcome) {
             // 8 章の おにおに: ためている あいだに 決まった ダメージを あたえると 紋が 暴発する。2 回目からは ガード
             const bu = battle.burst;
@@ -1159,7 +1187,7 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
-        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && warn.until > t) {
+        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
@@ -1197,7 +1225,7 @@ export function createBattleView(app, battle, place) {
         }
         ctx.stroke();
         drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
-        text(ctx, mg.rescue ? `おはらい: ${u.name}の とりつきを はらえ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: 'center', bold: true, color: mg.rescue ? '#e0b0ff' : COLORS.accent });
+        text(ctx, mg.rescue ? `おたすけ: ${u.name}の とりつきを はらえ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: 'center', bold: true, color: mg.rescue ? '#e0b0ff' : COLORS.accent });
         text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: 'center', bold: true });
         if (mg.phase === 'result') text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
     }
@@ -1228,10 +1256,10 @@ export function createBattleView(app, battle, place) {
         ctx.arc(WHEEL.x, WHEEL.y, WHEEL.r, -Math.PI * 5 / 6 - 0.4, -Math.PI / 6 + 0.4);
         ctx.stroke();
         text(ctx, 'まえ', WHEEL.x, WHEEL.y - WHEEL.r - 12, { size: 10, align: 'center', color: COLORS.accent, bold: true });
-        // 時計 (とりつかれた なかまが 後ろに いると「おはらい」ボタン)
+        // 時計 (とりつかれた なかまが 後ろに いると「おたすけ」ボタン)
         if (rescueTargets(battle).length) {
             panel(ctx, RESCUE_BTN.x, RESCUE_BTN.y, RESCUE_BTN.w, RESCUE_BTN.h, { fill: Math.floor(t * 4) % 2 ? '#7a3aa8' : '#5a2a88', edge: '#e0b0ff', r: 20 });
-            text(ctx, 'おはらい！', WHEEL.x, WHEEL.y + 2, { size: 11, align: 'center', bold: true });
+            text(ctx, 'おたすけ！', WHEEL.x, WHEEL.y + 2, { size: 11, align: 'center', bold: true });
             text(ctx, btn('help'), WHEEL.x, WHEEL.y + 15, { size: 9, align: 'center', color: '#e0d0ff' });
         } else {
             panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: '#1b3a6b', edge: '#bff0ff', r: 20 });

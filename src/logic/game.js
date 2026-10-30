@@ -23,7 +23,10 @@
 //   clear7   7 章 クリア。ここから 8 章「金色のSE城の 決戦」: 石の川駅から 電車で 金色のSE城へ
 //   oshiro   SE城に 着いた (ライバル探検隊が 門を こじあける)。幹部 3 人: 大広間の 大鬼 (flags.ooni8) → 双頭の間の 双頭鬼
 //            (flags.soutou8) → 金の間の 金滅鬼 (flags.kinme8) → 玉座の 間の おにおに (ボス)
-//   clear8   8 章 クリア。(9〜13 章は まだ。本編の さいご = MAIN_END)
+//   clear8   8 章 クリア。ここから 9 章「筋肉の山と 新しい なかま」: ともいしの 家で おにおにが なかまに
+//   onijoin  石の川駅から 電車で 筋肉の山へ 行ける
+//   kinniku  筋肉の山に 着いた。雪どけの 氷河の ハル麒麟 (flags.kirin9) → 山頂の 道場の ノゾエマ
+//   clear9   9 章 クリア。こおりくんの 必殺技が「絶対殺すソード・レクイエム」に 進化。(10〜13 章は まだ。本編の さいご = MAIN_END)
 //   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
 //   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
@@ -264,6 +267,8 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'soutou8') g.flags.soutou8 = true;
         if (bossId === 'kinme8') g.flags.kinme8 = true;
         if (bossId === 'onioni8') { g.story = 'clear8'; g.chapter = 9; }
+        if (bossId === 'harukirin9') g.flags.kirin9 = true;
+        if (bossId === 'nozoema9') { g.story = 'clear9'; g.chapter = 10; out.heroSpecial = true; }
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
     }
@@ -354,6 +359,11 @@ export function objective(g) {
         case 'oshiro': return !g.flags.ooni8 ? 'SE城の 大広間で 幹部の 大鬼を たおそう'
             : !g.flags.soutou8 ? '双頭の間で 幹部の 双頭鬼を たおそう'
             : !g.flags.kinme8 ? '金の間で 幹部の 金滅鬼を たおそう' : '玉座の 間で おにおにを とりもどそう';
+        // 9 章「筋肉の山と 新しい なかま」
+        case 'clear8': return '家の 前の ともいしと 話そう';
+        case 'onijoin': return '石の川駅から、電車で 筋肉の山へ 行こう';
+        case 'kinniku': return !g.flags.kirin9 ? '雪どけの 氷河の ハル麒麟を こえよう' : '山頂の 道場で ノゾエマに 会おう';
+        case 'clear9': return '家の 前の ともいしと 話そう';
         // 14 章 (バージョンで ちがう)
         case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
         case 'park': return 'アトラクションで 遊ぼう。帰るときは 遊園地前駅へ';
@@ -384,7 +394,22 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
+
+// ----- 9 章 (2026-10-30) -----
+// 8 章 クリアの あと ともいしの 家で: おにおにが なかまに なる。はじめて なら おにおにの メダル
+export function startChapter9(g) {
+    if (g.story !== 'clear8') return null;
+    g.story = 'onijoin';
+    return addMedal(g, 'onioni', 35);
+}
+export function arriveKinniku(g) {
+    if (g.story !== 'onijoin') return false;
+    g.story = 'kinniku';
+    return true;
+}
+// こおりくんの 必殺技が 進化しているか (9 章 クリアから「絶対殺すソード・レクイエム」)
+export const heroUpgraded = g => reached(g, 'clear9');
 
 // 金色のSE城に はじめて 着いた (8 章の はじまり)。はじめて なら true
 export function arriveShiro(g) {

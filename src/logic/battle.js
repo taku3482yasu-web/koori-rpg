@@ -11,7 +11,7 @@
 //   ボスは 大技の 前に 予告 (telegraph) を 出す。そのあいだに 輪を 回して 守りの 強い なかまを 前に 出せる
 //   とりつき (2 章。設計書 3.4): ねむり・のろい・こんらん・どく・いたずら・めくらまし は ぜんぶ「とりつき」(2026-10-30 ユーザー指定)。
 //     いたずらの とりつきは なまけたり 味方を 攻めたり する。めくらましの とりつきは 攻撃が 当たりにくい。
-//     輪で 後ろに 回して「おはらい」(ミニゲーム) で ぜんぶ 治す。時間でも ぬける
+//     輪で 後ろに 回して「おたすけ」(ミニゲーム) で ぜんぶ 治す。時間でも ぬける
 //   ロックオン (設計書 3.2): プレイヤーが ねらう 敵を えらぶ。味方の 1 体ねらいの 攻撃は その 敵へ。
 //     ねらった 敵には 6 秒ごとに 2 秒「弱点の 光」が 出て、そのあいだに 当てると ダメージ +20%
 //   はじまり (2026-10-29 ユーザー指定): intro の バトルは「○○が あらわれた！」で 止まって 待つ (waiting)。
@@ -39,6 +39,10 @@
 //     双頭鬼: 右の 頭 (とりつき) と 左の 頭 (術)。頭を こわすと その 頭の わざ (move の gim) が 使えない。
 //       両方 こわす (gims の group が ぜんぶ こわれる) と チャンスタイム → おわると 頭は もとに もどる
 //     金滅鬼: めくらましの とりつき を つかう。チャンスタイムは ない
+//   9 章 (2026-10-30 ユーザー指定):
+//     ハル麒麟: HP が 半分に なると「春の 目ざめ」を ためる (b.regen)。ためおわった とき 角 (gims.horn) が のこっていたら 全回復。
+//       角を こわすと ため が 止まり、もう ためない。チャンスタイムは なし
+//     ノゾエマ: 「筋肉の おたすけ」で 自分の こうげきが 重なって 上がる (buff の stack)。チャンスタイムは なし
 //     おにおに: 必殺技を ためる あいだ (b.burst) に 決まった ダメージを あたえると 紋が 暴発 (自爆): 味方に ダメージ + チャンスタイム。
 //       2 回目からの ためでは ガードして、うける ダメージが へる (guardCut)
 // =====================================================================
@@ -48,12 +52,12 @@ import { speciesOf, statsAt } from './units.js';
 
 export const GAUGE_MAX = 100;
 const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10 };
-// とりつきの 種類 (どれも おはらいで 治る)
+// とりつきの 種類 (どれも おたすけで 治る)
 export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'いたずら', blind: 'めくらまし' };
 export const toritsukiName = k => `${STATUS_NAMES[k]}の とりつき`;
 export const isPossessed = u => Object.keys(u.status).length > 0;
 export const BLIND_MISS = 0.4;  // めくらましの とりつき: 攻撃が 4 わり 当たらない
-const RESCUE_COOLDOWN = 3;     // おはらいに しっぱい したら 3 秒 待つ
+const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
 export const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
 export const PART_ORDER = ['rhand', 'lhand', 'head'];
 export const HEAD_GUARD = 0.15;   // 手が のこっている うちに 頭を ねらうと 手で ガードされる (ダメージ 15%。2026-10-28 ユーザー指定)
@@ -62,20 +66,22 @@ const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
 
 let uidSeq = 0;
-function makeUnit({ uid, id, lv, bond = 0 }, side) {
+// upgrade: こおりくんの 必殺技が 進化している (9 章 クリアから)
+function makeUnit({ uid, id, lv, bond = 0, upgrade = false }, side) {
     const sp = speciesOf(id);
     const st = statsAt(id, lv);
     return {
         uid: uid ?? `${side}-${++uidSeq}`,
         id, lv, side, bond,
         name: sp.name, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
-        waza: sp.waza, jutsu: sp.jutsu, special: sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
+        waza: sp.waza, jutsu: sp.jutsu, special: (upgrade && sp.special2) || sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
         bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
         gims: sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
+        regenDef: sp.regen || null,
         cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
@@ -131,6 +137,11 @@ function hitGim(b, u, key, dmg) {
     //   14 章: サアラハの おり (ふるカワが にげる。もどらない)・リハマの 信号機 (赤信号の あいだだけ 出る。こわすと 赤信号が おわる)
     if (part.chance) { if (part.when === 'shell') u.shell = 0; startChance(b, u, part.chance); return; }
     if (part.group && Object.values(u.gims).filter(p => p.group === part.group).every(p => p.broken)) { startChance(b, u, part.group); return; }
+    if (key === 'horn') {
+        // ハル麒麟の 角 (9 章): こわすと 全回復の ため が 止まる
+        if (b.regen && b.regen.uid === u.uid) { b.regen = null; emit(b, 'regenCancel', { actor: u.uid }); }
+        return;
+    }
     if (key === 'box') {
         // 玉手箱が こわれた: 玉手箱の わざと 必殺技が 使えない。けむりが 出て 味方の 攻撃が 当たりにくい
         u.bossMoves = u.bossMoves.filter(m => !m.box);
@@ -263,7 +274,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -307,6 +318,7 @@ function afterKo(b, u) {
     }
     if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
     if (b.burst && b.burst.uid === u.uid) b.burst = null;
+    if (b.regen && b.regen.uid === u.uid) b.regen = null;
 }
 
 const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
@@ -376,6 +388,11 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
         if (to.rage >= to.max * to.oniDef.at) enterOni(b, to);
     }
     if (from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
+    // 9 章の ハル麒麟: HP が 半分を 切ると、角が のこっていれば 全回復の ため に 入る
+    if (to.regenDef && to.hp > 0 && !b.regen && to.hp <= to.max * to.regenDef.at && to.gims && to.gims.horn && !to.gims.horn.broken) {
+        b.regen = { uid: to.uid, left: to.regenDef.charge };
+        emit(b, 'telegraph', { actor: to.uid, name: to.regenDef.name, warn: to.regenDef.charge, regen: true });
+    }
     // 8 章の おにおに: ためている あいだに 決まった ダメージを あたえると 紋が 暴発
     if (burstOn && to.hp > 0) {
         b.burst.dmg += dmg;
@@ -449,7 +466,9 @@ function applyEffects(b, user, effects, mult = 1) {
             } else if (fx.kind === 'status') {
                 addStatus(b, to, fx.status, fx.chance * mult);
             } else if (fx.kind === 'buff') {
-                to.buffs[fx.stat] = { amount: fx.amount * Math.min(1.5, mult), t: fx.time };
+                // stack: 重ねがけ (9 章の ノゾエマの「筋肉の おたすけ」)。cap まで
+                const prev = fx.stack && to.buffs[fx.stat] && to.buffs[fx.stat].t > 0 ? to.buffs[fx.stat].amount : 0;
+                to.buffs[fx.stat] = { amount: Math.min(fx.cap ?? 9, prev + fx.amount * Math.min(1.5, mult)), t: fx.time };
                 emit(b, 'buff', { target: to.uid, stat: fx.stat });
             }
         }
@@ -651,6 +670,23 @@ export function step(b, dt) {
             }
         }
     }
+    // 9 章の ハル麒麟: ためおわった とき 角が のこっていたら 全回復
+    if (b.regen) {
+        const u = b.enemies.find(e => e.uid === b.regen.uid);
+        if (!u || u.ko) b.regen = null;
+        else {
+            b.regen.left -= dt;
+            if (b.regen.left <= 0) {
+                b.regen = null;
+                if (!u.gims.horn.broken) {
+                    const amount = u.max - u.hp;
+                    u.hp = u.max;
+                    emit(b, 'regenHeal', { actor: u.uid, amount });
+                    emit(b, 'heal', { target: u.uid, amount });
+                }
+            }
+        }
+    }
     if (b.smoke) {
         b.smoke.left -= dt;
         if (b.smoke.left <= 0) { b.smoke = null; emit(b, 'smokeEnd'); }
@@ -780,7 +816,7 @@ export function lockOn(b, uid, part = null) {
 // 弱点の 光が 出ているか (ねらって 4 秒後から 2 秒、6 秒ごと)
 export const weakActive = b => Boolean(b.lock) && b.weakT % WEAK_EVERY >= WEAK_EVERY - WEAK_TIME;
 
-// おはらい: 後ろに いる とりつかれた なかまを ミニゲームで 治す (ミニゲームの あいだは 止める)。とりつきは ぜんぶ ぬける
+// おたすけ: 後ろに いる とりつかれた なかまを ミニゲームで 治す (ミニゲームの あいだは 止める)。とりつきは ぜんぶ ぬける
 const unitByUid = (b, uid) => b.wheel.find(u => u && u.uid === uid) || null;
 export function canRescue(b, uid) {
     const u = unitByUid(b, uid);

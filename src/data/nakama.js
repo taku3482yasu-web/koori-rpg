@@ -267,6 +267,24 @@ export const WAZA = {
     r_yamamou: W('おちょくりボーンフィーバー', 'ふつう', 'front', 1.6, 'confuse', 0.4),
     saaraha14: W('内定とりけし', 'ふしぎ', 'around', 0.8, 'possess', 0.3),
     rihama14: W('ノーブレーキ', 'かぜ', 'line', 1.5),
+    // 筋肉の山と 雪どけの 氷河 (9 章)。やけど は どく・よわき・まひ は のろい・こおり (氷づけ) は ねむり
+    onioni: W('金棒 たたき', 'ほのお', 'front', 1.6),
+    dumbbellkong: W('ダンベルなげ', 'ふつう', 'line', 1.4),
+    magmatcho: W('マグマパンチ', 'ほのお', 'front', 1.3, 'poison', 0.5),
+    kazanmatcho: W('火山ふんか', 'ほのお', 'around', 1.4, 'poison', 0.4),
+    yukiusapon: W('ゆきうさジャンプ', 'こおり', 'front', 1.2),
+    tsurarabo: W('つららおとし', 'こおり', 'line', 1.3),
+    kakigoora: W('かき氷キーン', 'こおり', 'front', 1.0, 'confuse', 0.4),
+    penguinknight: W('ナイトスライディング', 'みず', 'line', 1.3),
+    shirokumatcho: W('シロクマハグ', 'こおり', 'front', 1.6),
+    yukionnan: W('ふぶきのいき', 'こおり', 'around', 0.9, 'sleep', 0.25),
+    sakurarisu: W('さくらふぶき', 'しぜん', 'around', 1.0, 'blind', 0.3),
+    harukazedori: W('はるいちばん', 'かぜ', 'line', 1.3),
+    fukinoton: W('ふきのとうボム', 'しぜん', 'front', 1.1, 'poison', 0.4),
+    harukirin: W('春をよぶ角', 'しぜん', 'around', 1.3, 'slow', 0.4),
+    nozoema: W('兜割り', 'ふつう', 'front', 2.2),
+    harukirin9: W('麒麟のいかずち', 'かぜ', 'line', 1.5, 'slow', 0.3),
+    nozoema9: W('刀の一振り', 'ふつう', 'around', 1.6),
     ooni8: W('ふみつけ', 'ふつう', 'around', 1),
     soutou8: W('かみつき', 'ふつう', 'front', 1.2),
     kinme8: W('金色の鬼気', 'ふしぎ', 'around', 1.1, 'blind', 0.4),
@@ -1112,6 +1130,101 @@ const LIST = [
         title: '牛にあこがれる青年', desc: 'チーム5DX のメンバー。牛にあこがれていて、どんなときも牛へのリスペクトを欠かさない。おちょくられるのが大嫌い。',
         special: sp('おちょくりボーンフィーバー', [atk('one', 2.4), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
     },
+    // ----- 筋肉の山と 雪どけの 氷河の 13 体 (9 章「筋肉の山と 新しい なかま」。2026-10-30。D 6・C 5・B 2) -----
+    //   ダンジョンの 筋肉の山 (ダンベルコング・マグマッチョ) と 雪どけの 氷河 (ユキウサポン〜フキノトン)。
+    //   ハル麒麟は 氷河の ボス、ノゾエマは 山頂の ボス。たおすと なかまに なる。名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'dumbbellkong', name: 'ダンベルコング', from: 'ダンジョン 037', area: 'kinniku', rank: 'C', element: 'ふつう', role: 'attacker', mul: { atk: 1.15 },
+        line: 'ウホッ（ナイスバルク）', favorite: 'onigiri',
+        title: 'ダンベルが腕のゴーレム', desc: 'ダンベル型の腕を持つ。とても生きづらい。',
+        special: sp('ナイスバルク', [atk('all', 1.7)])
+    },
+    {
+        id: 'magmatcho', name: 'マグマッチョ', from: 'ダンジョン 041', area: 'kinniku', rank: 'C', element: 'ほのお', role: 'attacker', mul: { atk: 1.1 },
+        line: 'アツい筋肉！', favorite: 'cider',
+        title: 'マグマッチョ', desc: 'マグマの力を持つ。アツい筋肉を誇る。間で燃える次男。',
+        special: sp('マグマ マッスル', [atk('all', 1.5, { element: 'ほのお' }), { kind: 'status', target: 'all', status: 'poison', chance: 0.4 }])
+    },
+    {
+        id: 'yukiusapon', name: 'ユキウサポン', from: 'ダンジョン V01', area: 'kinniku', rank: 'D', element: 'こおり', role: 'attacker', mul: { spd: 1.15 },
+        line: 'ぴょん！ ゆきだま ぶつけるぴょん', favorite: 'kyuuri',
+        title: '雪だま投げのウサギ', desc: '雪だまを投げるのが大好きなウサギ。氷河がとけてきたので、雪を大事に使っている。',
+        special: sp('ゆきだま 千本ノック', [atk('all', 1.6, { element: 'こおり' })])
+    },
+    {
+        id: 'tsurarabo', name: 'ツララボウ', from: 'ダンジョン V02', area: 'kinniku', rank: 'D', element: 'こおり', role: 'attacker', mul: {},
+        line: 'ぽたっ……ぽたっ……', favorite: 'cider',
+        title: 'とけかけのつらら', desc: 'とけかけたつららの妖怪。ぽたぽたしずくを落としながら、春が来るのをこわがっている。',
+        special: sp('つらら しぐれ', [atk('all', 1.5, { element: 'こおり' })])
+    },
+    {
+        id: 'kakigoora', name: 'カキゴーラ', from: 'ダンジョン V03', area: 'kinniku', rank: 'D', element: 'こおり', role: 'jammer', mul: {},
+        line: 'キーンと するよ～', favorite: 'choco',
+        title: 'かき氷の妖怪', desc: 'かき氷の付喪神。急いで食べた人の頭を、キーンとさせるのが得意。',
+        special: sp('大盛り キーン', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'penguinknight', name: 'ペンギンナイト', from: 'ダンジョン V04', area: 'kinniku', rank: 'C', element: 'みず', role: 'defender', mul: { def: 1.1 },
+        line: '騎士の すべりを 見よ！', favorite: 'niboshi',
+        title: '氷河の騎士', desc: '氷の上をすべりながら戦うペンギンの騎士。止まるのは苦手。',
+        special: sp('騎士の 大すべり', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'shirokumatcho', name: 'シロクマッチョ', from: 'ダンジョン V05', area: 'kinniku', rank: 'C', element: 'こおり', role: 'attacker', mul: { atk: 1.1, hp: 1.05 },
+        line: 'さむいほど 筋肉が よろこぶ', favorite: 'niboshi',
+        title: '寒さで鍛えた熊', desc: '寒いほど筋肉がよろこぶシロクマ。春が近づくと、筋肉がしょんぼりする。',
+        special: sp('ホッキョク ベアハグ', [atk('one', 2.4)])
+    },
+    {
+        id: 'yukionnan', name: 'ユキオンナン', from: 'ダンジョン V06', area: 'kinniku', rank: 'C', element: 'こおり', role: 'jammer', mul: { mag: 1.1 },
+        line: 'こおりつけ……', favorite: 'melonpan',
+        title: '雪の女', desc: '雪どけの氷河に住む雪女。春を止めようと、まわりをこおりつかせている。',
+        special: sp('しずかな ふぶき', [atk('all', 0.9, { magic: true, element: 'こおり' }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.5 }])
+    },
+    {
+        id: 'sakurarisu', name: 'サクラリス', from: 'ダンジョン V07', area: 'kinniku', rank: 'D', element: 'しぜん', role: 'healer', mul: {},
+        line: 'もうすぐ 春ですよ～', favorite: 'melonpan',
+        title: '春を知らせるリス', desc: 'サクラの花びらを運ぶリス。このリスを見かけると、もうすぐ春が来る。',
+        special: sp('花ふぶきの いやし', [{ kind: 'heal', target: 'party', power: 0.5 }])
+    },
+    {
+        id: 'harukazedori', name: 'ハルカゼドリ', from: 'ダンジョン V08', area: 'kinniku', rank: 'D', element: 'かぜ', role: 'attacker', mul: { spd: 1.15 },
+        line: 'ピューイ！ 春いちばん！', favorite: 'onigiri',
+        title: '春いちばんの鳥', desc: '春いちばんの風に乗ってやって来る鳥。この鳥が鳴くと、雪が一気にとけはじめる。',
+        special: sp('春いちばん', [atk('all', 1.6, { element: 'かぜ' })])
+    },
+    {
+        id: 'fukinoton', name: 'フキノトン', from: 'ダンジョン V09', area: 'kinniku', rank: 'D', element: 'しぜん', role: 'jammer', mul: { def: 1.05 },
+        line: 'ゆきの したから こんにちは', favorite: 'kyuuri',
+        title: '雪の下の芽', desc: '雪の下から顔を出すフキノトウ。ほろ苦い味は、大人にしかわからない。',
+        special: sp('ほろにが ボム', [atk('all', 0.8), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
+    },
+    {
+        id: 'harukirin', name: 'ハル麒麟', from: 'ダンジョン 限定ボス', area: 'kinniku', rank: 'B', element: 'しぜん', role: 'supporter', mul: { mag: 1.15 },
+        line: '氷は とけ、春が 来る。それが さだめ', favorite: 'kyuuri',
+        title: '春来る', desc: '春を告げる麒麟の一種。ハル麒麟が通った後は一面の桜が咲き、春風が吹くといわれている。',
+        special: sp('春麗', [atk('all', 1.2, { magic: true, element: 'しぜん' }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.5 }])
+    },
+    {
+        id: 'nozoema', name: 'ノゾエマ', from: 'アソ・ダンジョン', area: 'kinniku', rank: 'B', element: 'ふつう', role: 'defender', mul: { atk: 1.3, hp: 1.1 },
+        line: 'その前に、この筋肉を見よ！', favorite: 'onigiri',
+        title: '四天王最強', desc: 'ASO四天王最強。圧倒的な力を秘め、刀の一振りで、立ちふさがるものは何であろうと切り伏せる。鎧の中にはたくましい筋肉が隠れていて、毎日の日課は鏡に向かって自分の筋肉を見せつけること。',
+        special: sp('鏡筋一刀斬り', [atk('all', 2.0)])
+    },
+    // 進化で なる キャラ: マグマッチョ → カザンマッチョ (ダンジョンの 進化表の のこり。9 章)
+    {
+        id: 'kazanmatcho', name: 'カザンマッチョ', from: 'ダンジョン 073', area: 'kinniku', evo: 'magmatcho', rank: 'B', element: 'ほのお', role: 'attacker', mul: { atk: 1.15 },
+        line: '噴火する 筋肉！', favorite: 'cider',
+        title: '噴火する筋肉', desc: 'マグマッチョがASOの壺の底の熱で進化した姿。アツい筋肉が火山のように噴火する。',
+        special: sp('大噴火 マッスル', [atk('all', 1.9, { element: 'ほのお' })])
+    },
+    // おにおに (9 章で なかまに なる。2026-10-30。ストーリーで 必ず なかまに なる ので 町には 出ない = storyOnly)
+    {
+        id: 'onioni', name: 'おにおに', from: 'スロット・ダンジョン', area: 'shiro', storyOnly: true, rank: 'A', element: 'ほのお', role: 'attacker', mul: { atk: 1.2, hp: 1.1 },
+        line: '金かえせ！', favorite: 'choco',
+        title: 'SE城の主', desc: '鬼鬼団の団長で、金色のSE城の主。パチンコに目がなく、こおりくんに お金を 貸している。ルキハに あやつられていたが、紋が とけて こおりくんの なかまに なった。',
+        special: sp('鬼神 金棒くだき', [atk('all', 2.0, { element: 'ほのお' })])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
         id: 'kaguyausagi', name: 'カグヤウサギ', from: 'ダンジョン 069', area: 'moon', evo: 'tsukiusagi', rank: 'C', element: 'ふしぎ', role: 'healer', mul: {},
@@ -1267,7 +1380,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地', kinniku: '筋肉の山' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -1294,7 +1407,7 @@ export const TEAM_LV = 50;
 export const teamsIn = version => Object.keys(TEAMS).filter(k => !TEAMS[k].version || TEAMS[k].version === version);
 
 // 地区で 出会う キャラ (進化で なる キャラ・合体でしか 会えない キャラは 入れない)
-export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
+export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse && !NAKAMA[id].storyOnly);
 
 // ----- 進化 (設計書 4.3。2026-10-29) -----
 //   なかまが 決まった Lv に なると、すがたが 変わって 進化先の キャラに なる (メダルは そのまま。Lv・けいけんちも そのまま)
@@ -1319,6 +1432,7 @@ export const EVOLVE = {
     takaramimic: { to: 'kinkomimic', lv: 45 },
     koorimodoki: { to: 'koorimodokishin', lv: 50 },
     daichouenkin: { to: 'daichouenou', lv: 30 },
+    magmatcho: { to: 'kazanmatcho', lv: 44 },   // 9 章 (2026-10-30)
     // 追加 (2026-10-30)。ハリジェネラルは もう 1 回 進化する (ハリーベビー → ハリジェネラル → キングハリー)
     enjoubouzu: { to: 'daienjou', lv: 30 },
     harigeneral: { to: 'kingharry', lv: 55 },
@@ -1571,6 +1685,36 @@ export const BOSSES = {
         chanceTurns: 4,
         befriends: null, lv: 35, place: 'shiro'
     },
+    // ----- 9 章「筋肉の山と 新しい なかま」の ボス 2 体 (2026-10-30 ユーザー指定) -----
+    // ハル麒麟 (雪どけの 氷河): HP が 半分に なると「春の 目ざめ」を ためる。ためおわった とき 角が のこっていたら HP を 全回復。
+    //   角を ねらって こわすと 全回復を 止められる (こわれた 角は もどらない。もう ためない)。チャンスタイムは なし
+    harukirin9: {
+        id: 'harukirin9', name: 'ハル麒麟', element: 'しぜん', role: 'supporter', art: 'harukirin', scale: 1.6, rank: 'B',
+        base: { hp: 980, atk: 16, def: 16, spd: 12, mag: 18 },
+        moves: [
+            { name: '春をよぶ角', w: 3, effects: [atk('all', 0.8, { magic: true, element: 'しぜん' }), { kind: 'status', target: 'all', status: 'slow', chance: 0.35 }] },
+            { name: '麒麟のいかずち', w: 3, effects: [atk('one', 1.5, { magic: true, element: 'かぜ' })] },
+            { name: '春の そよ風', w: 2, effects: [{ kind: 'heal', target: 'self', power: 0.25 }] }
+        ],
+        bigMove: { name: '春麗', every: 14, warn: 2.5, effects: [atk('all', 1.3, { magic: true, element: 'しぜん' }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.4 }] },
+        regen: { name: '春の 目ざめ', at: 0.5, charge: 7 },
+        gims: { horn: { name: '角', hp: 0.08, when: 'always', pos: [0.15, -0.95] } },
+        befriends: 'harukirin', lv: 37, place: 'hyouga'
+    },
+    // ノゾエマ (筋肉の山の 山頂): 1 体への 斬撃・全体の 斬撃。「筋肉の おたすけ」で 自分の こうげきを どんどん 上げる (重なる)。
+    //   チャンスタイムは なし。中盤の 鬼門。たおすと なかまに なり、こおりくんの 必殺技が 進化する
+    nozoema9: {
+        id: 'nozoema9', name: 'ノゾエマ', element: 'ふつう', role: 'defender', art: 'nozoema', scale: 1.7, rank: 'A',
+        base: { hp: 1180, atk: 19, def: 18, spd: 12, mag: 12 },
+        moves: [
+            { name: '刀の一振り', w: 3, effects: [atk('one', 1.6)] },
+            { name: '兜割り', w: 2, effects: [atk('one', 2.1)] },
+            { name: '大斬撃', w: 2.5, effects: [atk('all', 0.95)] },
+            { name: '筋肉の おたすけ', w: 2, effects: [{ kind: 'buff', target: 'self', stat: 'atk', amount: 0.2, time: 999, stack: true, cap: 1.2 }] }
+        ],
+        bigMove: { name: '鏡筋一刀斬り', every: 12, warn: 2.5, effects: [atk('all', 1.7)] },
+        befriends: 'nozoema', lv: 40, place: 'kinniku'
+    },
     // ----- 14 章の ボス (バージョンで ちがう。ルキハの 軍勢の 残党。しかけは Claude の 案・2026-10-30) -----
     // サアラハ (内定版。ナイテイパーク): ふるカワを おりに とじこめている。おりを ねらって こわすと ふるカワが にげて チャンスタイム
     //   (おりは もどらない)。おりが ある あいだは「ふるカワを 盾に」(まもりが 上がる) を 使う。とりつきが 多い
@@ -1609,7 +1753,7 @@ export const BOSSES = {
 // 14 章の ボスは バージョンで ちがう
 export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
 // 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
-export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'boss14'];
+export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'boss14'];
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)
@@ -1648,7 +1792,9 @@ export const HERO = {
     id: HERO_ID, name: 'こおりくん', element: 'こおり', role: 'attacker', rank: 'B', art: 'koori', hero: true,
     base: { hp: 60, atk: 15, def: 12, spd: 13, mag: 13 },
     line: 'いくぞ！', title: 'この 物語の 主人公', desc: '石の川タウンに すむ こおりの 男の子。おなかまウォッチで なかまを 呼び出す。たまに 大腸炎。',
-    special: sp('大腸炎アタック', [atk('all', 1.8), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
+    special: sp('大腸炎アタック', [atk('all', 1.8), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }]),
+    // 9 章 クリア (ノゾエマの 修行) で 進化する 必殺技 (2026-10-30 ユーザー指定)。fx は 必殺技の 動き (special-fx.js)
+    special2: { ...sp('絶対殺すソード・レクイエム', [atk('all', 2.6, { element: 'こおり' }), { kind: 'status', target: 'all', status: 'slow', chance: 0.5 }]), fx: 'koori2' }
 };
 Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
 

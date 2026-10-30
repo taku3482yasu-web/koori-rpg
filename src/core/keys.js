@@ -5,7 +5,7 @@
 // 最後に さわった ものに 合わせて input.js が setKeyMode() で 切りかえる
 // =====================================================================
 const KEY_NAMES = { a: 'J', b: 'K', x: 'I', y: 'U', l: 'Q', r: 'E', start: 'Shift', fast: 'F', help: 'H' };
-const BUTTON_NAMES = { fast: 'START', help: 'SELECT' };   // 倍速は ゲームパッド・スマホでは START、おはらいは SELECT
+const BUTTON_NAMES = { fast: 'START', help: 'SELECT' };   // 倍速は ゲームパッド・スマホでは START、おたすけは SELECT
 let mode = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches ? 'button' : 'key';
 
 export function setKeyMode(kind) {

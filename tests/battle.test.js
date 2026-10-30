@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRng } from '../src/core/rng.js';
 import { createBattle, step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, canRescue, rescueTargets, startRescue, resolveRescue, begin, flee, canFlee, idolsOf } from '../src/logic/battle.js';
-import { NAKAMA_IDS } from '../src/data/nakama.js';
+import { NAKAMA_IDS, NAKAMA } from '../src/data/nakama.js';
 
 const run = (b, seconds, dt = 1 / 30) => {
     for (let t = 0; t < seconds && !b.outcome; t += dt) step(b, dt);
@@ -220,7 +220,7 @@ test('ダムの主: 偶像を こわさないと ため の あと 必殺技 (�
     assert.equal(idolsOf(b, boss).length, 0);
 });
 
-test('いたずらの とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おはらい できて、成功で 治る (2 章)', () => {
+test('いたずらの とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おたすけ できて、成功で 治る (2 章)', () => {
     const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 8 }));
     const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(2) });
     b.enemies[0].timer = -999;
@@ -246,7 +246,7 @@ test('いたずらの とりつき: なまけたり 味方を 攻めたり す�
     assert.ok(!u.status.possess, '成功で 治る');
 });
 
-test('とりつき: ねむり・のろい・こんらん・どく・めくらまし も ぜんぶ とりつき。おはらいで まとめて ぬける (2026-10-30)', async () => {
+test('とりつき: ねむり・のろい・こんらん・どく・めくらまし も ぜんぶ とりつき。おたすけで まとめて ぬける (2026-10-30)', async () => {
     const { isPossessed, toritsukiName, STATUS_NAMES, BLIND_MISS } = await import('../src/logic/battle.js');
     assert.deepEqual(Object.keys(STATUS_NAMES).sort(), ['blind', 'confuse', 'poison', 'possess', 'sleep', 'slow']);
     assert.equal(toritsukiName('slow'), 'のろいの とりつき');
@@ -254,7 +254,7 @@ test('とりつき: ねむり・のろい・こんらん・どく・めくらま
     const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(4) });
     const u = b.wheel[3];   // 後ろ
     u.status = { sleep: 9, slow: 9, confuse: 9, poison: 9, blind: 9 };
-    assert.ok(isPossessed(u) && canRescue(b, u.uid), 'いたずら いがいの とりつきも おはらい できる');
+    assert.ok(isPossessed(u) && canRescue(b, u.uid), 'いたずら いがいの とりつきも おたすけ できる');
     resolveRescue(b, startRescue(b, u.uid), true);
     assert.deepEqual(u.status, {}, 'ぜんぶ ぬける');
     // めくらまし: 攻撃が 4 わりほど 当たらない
@@ -647,4 +647,59 @@ test('14 章の リハマ: 赤信号の あいだは 体が かたく、信号�
     assert.equal(boss.shell, 0, '赤信号が おわる');
     for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
     assert.ok(!boss.gims.signal.broken, '信号は もどる');
+});
+
+test('9 章の ハル麒麟: HP が 半分で ため → 角が のこっていたら 全回復。チャンスタイムは なし', () => {
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'harukirin9', lv: 37 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    for (let i = 0; i < 3000 && !b.regen; i++) { keepAlive(b); step(b, 0.05); }
+    assert.ok(b.regen, 'HP が 半分を 切ると ためる');
+    assert.ok(boss.hp <= boss.max * 0.5);
+    b.wheel.forEach(u => { if (u) u.timer = -999; });   // ため の あいだ 攻撃しない
+    for (let i = 0; i < 400 && b.regen; i++) step(b, 0.05);
+    assert.equal(boss.hp, boss.max, '角が のこっていたので 全回復');
+    assert.ok(b.events.some(e => e.type === 'regenHeal'));
+    assert.ok(!b.events.some(e => e.type === 'chance'), 'チャンスタイムは ない');
+});
+
+test('9 章の ハル麒麟: 角を こわすと 全回復の ため が 止まり、もう ためない', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'harukirin9', lv: 37 }], rng: createRng(5), kind: 'boss' });
+    const boss = b.enemies[0];
+    for (let i = 0; i < 3000 && !b.regen; i++) { keepAlive(b); step(b, 0.05); }
+    assert.ok(b.regen);
+    boss.gims.horn.hp = 1;
+    assert.ok(lockOn(b, boss.uid, 'horn'));
+    for (let i = 0; i < 400 && !boss.gims.horn.broken; i++) { keepAlive(b); step(b, 0.05); }
+    assert.ok(boss.gims.horn.broken);
+    assert.ok(!b.regen && b.events.some(e => e.type === 'regenCancel'), 'ため が 止まる');
+    boss.hp = Math.round(boss.max * 0.4);
+    for (let i = 0; i < 200; i++) { boss.hp = Math.max(1, boss.hp); keepAlive(b); step(b, 0.05); }
+    assert.ok(!b.regen && !b.events.some(e => e.type === 'regenHeal'), '角が ないと もう 全回復しない');
+});
+
+test('9 章の ノゾエマ: 1 体・全体の 斬撃。「筋肉の おたすけ」で こうげきが 重なって 上がる。チャンスタイムは なし', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const def = BOSSES.nozoema9;
+    assert.ok(def.moves.some(m => m.effects.some(fx => fx.kind === 'attack' && fx.target === 'one')));
+    assert.ok(def.moves.some(m => m.effects.some(fx => fx.kind === 'attack' && fx.target === 'all')));
+    assert.ok(!def.gims && !def.parts && !def.regen);
+    assert.ok(def.lv > BOSSES.harukirin9.lv && def.base.atk > BOSSES.harukirin9.base.atk, '中盤の 鬼門');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'nozoema9', lv: 40 }], rng: createRng(2), kind: 'boss' });
+    const boss = b.enemies[0];
+    let most = 0;
+    for (let i = 0; i < 3000; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); most = Math.max(most, boss.buffs.atk?.amount || 0); }
+    const n = b.events.filter(e => e.type === 'skill' && e.name === '筋肉の おたすけ').length;
+    assert.ok(n >= 2, `おたすけ ${n} 回`);
+    assert.ok(most > 0.2 + 1e-9, `こうげきが 重なって 上がる (${most})`);
+    assert.ok(most <= def.moves.find(m => m.name === '筋肉の おたすけ').effects[0].cap + 1e-9, '上限まで');
+    assert.ok(!b.events.some(e => e.type === 'chance'));
+});
+
+test('こおりくんの 必殺技は 9 章 クリアで「絶対殺すソード・レクイエム」に 進化する', () => {
+    const b = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 30 }], enemies: [{ id: 'ishikoron', lv: 1 }], rng: createRng(1) });
+    assert.equal(b.wheel[0].special.name, '大腸炎アタック');
+    const b2 = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 30, upgrade: true }, { uid: 'b', id: 'kogame', lv: 30, upgrade: true }], enemies: [{ id: 'ishikoron', lv: 1 }], rng: createRng(1) });
+    assert.equal(b2.wheel[0].special.name, '絶対殺すソード・レクイエム');
+    assert.equal(b2.wheel[1].special.name, NAKAMA.kogame.special.name, 'ほかの なかまは かわらない');
 });
