@@ -39,6 +39,10 @@
 //     双頭鬼: 右の 頭 (とりつき) と 左の 頭 (術)。頭を こわすと その 頭の わざ (move の gim) が 使えない。
 //       両方 こわす (gims の group が ぜんぶ こわれる) と チャンスタイム → おわると 頭は もとに もどる
 //     金滅鬼: めくらましの とりつき を つかう。チャンスタイムは ない
+//   13 章の ルキハ・ニオニオーテン (2026-10-30 ユーザー指定): キメラの 部位 (gims の chimeraPart) が のこっている あいだは
+//     HP に 攻撃が とどかない。ぜんぶ こわすと 頭 (when: exposed) が 出て HP に とどく。regrow 秒で 部位が もどる。
+//     HP 半分で enrage (こうげき・すばやさ アップ・オオグライノカミツキ)。カミツキで 味方の コマンド (eaten) を 喰らい 自分の わざに する。
+//     頭を ねらって 当てると 1 つ 取りもどす。わざの hitsMin〜hitsMax は ランダムな 回数 (オオグライ)
 //   大魔王ASO (14 章 クリアの あと。2026-10-30 ユーザー指定): 拘束のリング (b.bind) で 味方 1 体が うごけず、輪も 回せない。
 //     リング (gims.ring) を こわすと とける。第 1 形態の HP が なくなると 第 2 形態 (phase2) に かわる (HP は もとに もどる)
 //   11 章の バクエンリュウ (2026-10-30 ユーザー指定): 体が マグマで ふだんは 攻撃が きかない (magma。チャンスタイムの あいだだけ きく)。
@@ -93,7 +97,8 @@ function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
         gims: sp.throws || sp.ring ? {} : sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
-        ringDef: sp.ring || null, phase2Def: sp.phase2 || null, phase: 1, bound: false,
+        ringDef: sp.ring || null, phase2Def: sp.phase2 || null, phase: 1, bound: false, huge: Boolean(sp.huge),
+        chimera: null, headOut: false, headT: 0, enrageDef: null, enraged: false, stolen: [], eaten: null,
         regenDef: sp.regen || null, magma: Boolean(sp.magma), throwDef: sp.throws || null, throwT: sp.throws ? sp.throws.every - sp.throws.first : 0, throwNo: 0, summonDef: sp.summons || null, summonNo: 0, drained: null, drainOf: null,
         cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
@@ -136,6 +141,7 @@ export function gimOpen(b, u, key) {
     if (p.when === 'shell') return u.shell > 0 && !(b.chance && b.chance.uid === u.uid);
     if (p.when === 'oni') return u.oni;
     if (p.when === 'chant') return Boolean(b.chant && b.chant.uid === u.uid);
+    if (p.when === 'exposed') return u.headOut;   // 13 章: キメラの 部位を ぜんぶ こわすと 出る 頭
     return true;
 }
 export const openGims = (b, u) => (u.gims ? Object.keys(u.gims).filter(k => gimOpen(b, u, k)) : []);
@@ -151,6 +157,12 @@ function hitGim(b, u, key, dmg) {
     if (part.chance) { if (part.when === 'shell') u.shell = 0; startChance(b, u, part.chance); return; }
     if (part.group && Object.values(u.gims).filter(p => p.group === part.group).every(p => p.broken)) { startChance(b, u, part.group); return; }
     if (key === 'ring') { releaseBind(b); return; }   // 拘束のリング (大魔王ASO)
+    if (part.chimeraPart && Object.values(u.gims).filter(p => p.chimeraPart).every(p => p.broken)) {
+        u.headOut = true;
+        u.headT = u.chimera.regrow;
+        emit(b, 'headOut', { actor: u.uid });
+        return;
+    }
     if (key === 'horn') {
         // ハル麒麟の 角 (9 章): こわすと 全回復の ため が 止まる
         if (b.regen && b.regen.uid === u.uid) { b.regen = null; emit(b, 'regenCancel', { actor: u.uid }); }
@@ -375,9 +387,46 @@ function transform(b, u) {
     u.bigMove = p2.bigMove;
     u.buffs = {};
     u.status = {};
+    u.huge = Boolean(p2.huge);
+    if (p2.gims) u.gims = Object.fromEntries(Object.entries(p2.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(u.max * p.hp)), hp: Math.max(1, Math.round(u.max * p.hp)), broken: false }]));
+    u.chimera = p2.chimera || null;
+    u.enrageDef = p2.enrage || null;
     b.bossTimer = 0;
     b.warned = false;
     emit(b, 'transform', { actor: u.uid, name: p2.name });
+}
+// ----- キメラ (13 章の ニオニオーテン) -----
+const EAT_LABEL = { attack: 'こうげき', waza: 'わざ', jutsu: '術', guard: 'まもり' };
+function enrage(b, u) {
+    const d = u.enrageDef;
+    u.enraged = true;
+    u.buffs.atk = { amount: d.atk, t: 99999 };
+    u.buffs.spd = { amount: d.spd, t: 99999 };
+    u.bossMoves = [...u.bossMoves, { ...d.eat, eat: true }];
+    emit(b, 'enrage', { actor: u.uid });
+}
+// オオグライノカミツキ: 味方 1 体の コマンドを 1 つ 喰らって 自分の わざに する
+function eatCommand(b, u) {
+    const targets = b.frontAlive().filter(a => !a.eaten);
+    if (!targets.length) return false;
+    const to = b.rng.pick(targets);
+    const cmd = b.rng.pick(['attack', 'waza', 'jutsu', 'guard']);
+    to.eaten = cmd;
+    damage(b, u, to, 1.0);
+    const effects = cmd === 'waza' ? to.waza.effects : cmd === 'jutsu' ? to.jutsu.effects : cmd === 'guard' ? [{ kind: 'buff', target: 'self', stat: 'def', amount: 0.6, time: 10 }] : [atk1(1.3)];
+    const move = { name: `喰らった ${to.name}の ${cmd === 'waza' ? to.waza.name : cmd === 'jutsu' ? to.jutsu.name : EAT_LABEL[cmd]}`, w: 2.5, effects, stolenFrom: to.uid };
+    u.bossMoves = [...u.bossMoves, move];
+    u.stolen.push({ uid: to.uid, cmd, name: move.name });
+    emit(b, 'eat', { actor: u.uid, target: to.uid, cmd, label: EAT_LABEL[cmd] });
+    return true;
+}
+const atk1 = power => ({ kind: 'attack', target: 'one', power });
+function regain(b, u) {
+    const s = u.stolen.shift();
+    const to = b.wheel.find(a => a && a.uid === s.uid);
+    if (to) to.eaten = null;
+    u.bossMoves = u.bossMoves.filter(m => m.name !== s.name);
+    emit(b, 'regain', { target: s.uid, label: EAT_LABEL[s.cmd] });
 }
 
 // ----- ASO が 投げる 道具 (11 章の バクエンリュウ) -----
@@ -492,6 +541,9 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     }
     // しかけの 部位を ねらっている
     const gim = from.side === 'ally' && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
+    // 13 章の ニオニオーテン: 部位が のこっている あいだは 体に とどかない (部位には とどく)
+    const chimeraBlock = to.chimera && from.side === 'ally' && !to.headOut;
+    if (chimeraBlock && !(gim && to.gims[gim].chimeraPart)) { emit(b, 'immune', { target: to.uid, actor: from.uid, chimera: true }); return 0; }
     // 11 章の バクエンリュウ: 投げられた 道具を ねらうと 使う。体は マグマで チャンスタイム いがいは きかない
     if (to.magma && from.side === 'ally') {
         if (gim && to.gims[gim].thrown) { useThrown(b, to, gim); return 0; }
@@ -518,7 +570,16 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     const burstGuard = burstOn && b.burst.guard ? to.bigMove.guardCut : 1;
     let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell * burstGuard;
     dmg = Math.max(1, Math.round(dmg));
+    if (chimeraBlock) {
+        // キメラの 部位だけに 当たる
+        emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, part: gim });
+        hitGim(b, to, gim, dmg);
+        return dmg;
+    }
+    // ニオニオーテンの 頭を ねらって 当てると、喰らわれた コマンドを 1 つ 取りもどす
+    if (to.chimera && from.side === 'ally' && gim === 'head' && to.stolen.length) regain(b, to);
     to.hp = Math.max(0, to.hp - dmg);
+    if (to.enrageDef && !to.enraged && to.hp > 0 && to.hp <= to.max * to.enrageDef.at) enrage(b, to);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
     emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1 || burstGuard < 1, weak: weak && !headGuard, headGuard, part: gim });
@@ -605,7 +666,8 @@ function applyEffects(b, user, effects, mult = 1) {
         }
         for (const to of targets) {
             if (fx.kind === 'attack') {
-                for (let h = 0; h < (fx.hits || 1); h++) {
+                const hits = fx.hitsMax ? fx.hitsMin + b.rng.int(fx.hitsMax - fx.hitsMin + 1) : fx.hits || 1;   // オオグライは 4〜6 回
+                for (let h = 0; h < hits; h++) {
                     const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element, unguardable: fx.unguardable });
                     if (fx.drain) heal(b, user, user, dmg * fx.drain);
                 }
@@ -640,6 +702,7 @@ export function chooseCommand(b, u) {
     if (!u.hero && !u.boss && b.rng.chance(LOAF)) return 'loaf';
     // ボスは 大技 (bigMove) が あるので、ふだんは 通常攻撃が 多い
     const w = { ...(u.boss ? BOSS_W : ACTION_W[u.role] || ACTION_W.attacker) };
+    if (u.eaten) w[u.eaten] = 0;   // 13 章: ニオニオーテンに 喰らわれた コマンドは 使えない
     const hurt = friends(b, u.side).some(f => f.hp < f.max * 0.6);
     if (u.role === 'healer') w.waza = hurt ? 200 : 0;
     // 回復の術は ケガを した 味方が いるときだけ (いれば 多めに)
@@ -689,12 +752,13 @@ function act(b, u) {
             (!m.drain || (minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some(f => !f.drained))) && (!m.bind || !b.bind) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
         if (!list.length) { emit(b, 'stunned', { actor: u.uid, left: 0 }); return; }
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
-        emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
+        emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss', morph: Boolean(move.morph) });
         if (move.summon) summonIdol(b, u);
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
         else if (move.clones) summonClones(b, u);
         else if (move.drain) drainSummon(b, u);
         else if (move.bind) bindOne(b, u);
+        else if (move.eat) { if (!eatCommand(b, u)) applyEffects(b, u, [atk1(1.2)]); }
         else if (move.melt) { applyEffects(b, u, move.effects); meltThrown(b, u); }
         else {
             applyEffects(b, u, move.effects || []);
@@ -820,6 +884,17 @@ export function step(b, dt) {
                 u.armDmg = 0;
                 emit(b, 'armShrink', { target: u.uid, lv: u.armLv });
             }
+        }
+    }
+    // 13 章: 頭が 出て しばらく すると キメラの 部位が もとに もどる
+    for (const e of b.enemies) {
+        if (e.ko || !e.headOut) continue;
+        e.headT -= dt;
+        if (e.headT <= 0) {
+            e.headOut = false;
+            for (const p of Object.values(e.gims)) if (p.chimeraPart) { p.hp = p.max; p.broken = false; }
+            if (b.lock === e.uid) b.lockPart = null;
+            emit(b, 'regrow', { actor: e.uid });
         }
     }
     // 11 章: ASO が 道具を 投げる (チャンスタイムの あいだは 投げない)

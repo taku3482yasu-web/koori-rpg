@@ -557,7 +557,7 @@ test('8 章の 双頭鬼: 頭を こわすと その 頭の わざが 使えな�
     for (let i = 0; i < 2000 && !boss.gims.rhead.broken; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
     assert.ok(boss.gims.rhead.broken && !b.chance, '右の 頭 だけでは チャンスに ならない');
     const from = b.events.length;
-    for (let i = 0; i < 600; i++) { boss.hp = boss.max; keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 0; }); step(b, 0.05); }
+    for (let i = 0; i < 600; i++) { boss.hp = boss.max; keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
     const used = b.events.slice(from).filter(e => e.type === 'skill' && e.actor === boss.uid).map(e => e.name);
     assert.ok(used.length > 3, `わざを 使う ${used.length}`);
     assert.ok(!used.some(n => n.startsWith('右の頭')), '右の 頭の わざ (とりつき) は 使わない');
@@ -931,4 +931,98 @@ test('大魔王ASO: 第 1 形態の HP が なくなると 第 2 形態 (術 ぜ
     // 第 2 形態で たおすと 勝ち
     for (let i = 0; i < 4000 && !b.outcome; i++) { keepAlive(b); boss.hp = Math.min(boss.hp, 50); step(b, 0.05); }
     assert.equal(b.outcome, 'win');
+});
+
+test('13 章の ルキハ: 体を 変形させる わざ・オオグライは 全体に 4〜6 回。チャンスタイムは なし', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const def = BOSSES.rukiha13;
+    const names = def.moves.map(m => m.name);
+    for (const n of ['トリノツバサ', 'ウシノツノ', 'ヘビノメ']) assert.ok(names.includes(n), n);
+    assert.equal(def.moves.find(m => m.name === 'ヘビノメ').effects[0].status, 'stun');
+    assert.equal(def.moves.find(m => m.name === 'トリノツバサ').effects[0].target, 'all');
+    assert.equal(def.moves.find(m => m.name === 'ウシノツノ').effects[0].target, 'one');
+    assert.ok(!def.bigMove.trigger && !def.gims, 'チャンスタイムは なし');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'rukiha13', lv: 62 }], rng: createRng(4), kind: 'boss' });
+    keepAlive(b);
+    b.bossTimer = def.bigMove.every + def.bigMove.warn + 1;
+    b.warned = true;
+    const from = b.events.length;
+    for (let i = 0; i < 40 && !b.events.slice(from).some(e => e.type === 'special' && e.name === 'オオグライ'); i++) { keepAlive(b); step(b, 0.05); }
+    const ev = b.events.slice(from);
+    const at = ev.findIndex(e => e.type === 'special' && e.name === 'オオグライ');
+    assert.ok(at >= 0, 'オオグライ');
+    const boss = b.enemies[0].uid;
+    const hits = ev.slice(at).filter(e => e.type === 'damage' && b.wheel.some(u => u && u.uid === e.target)).length;
+    const n = b.front().filter(Boolean).length;
+    assert.ok(hits >= 4 * n && hits <= 6 * n, `${hits} 回 (${n} 体)`);
+    assert.ok(boss);
+});
+
+test('13 章: ルキハを たおすと ルキハ・ニオニオーテン。部位が のこると 体に きかない → ぜんぶ こわすと 顔が 出る → しばらくで もどる', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty().map(a => ({ ...a, lv: 80 })), enemies: [{ id: 'rukiha13', lv: 62 }], rng: createRng(6), kind: 'boss' });
+    const boss = b.enemies[0];
+    boss.hp = 1;
+    b.lock = boss.uid;
+    b.wheel.forEach(u => { if (u) u.timer = 0; });
+    for (let i = 0; i < 200 && boss.phase === 1; i++) step(b, 0.05);
+    assert.equal(boss.phase, 2);
+    assert.equal(boss.name, 'ルキハ・ニオニオーテン');
+    assert.ok(boss.huge && boss.chimera);
+    const parts = Object.entries(boss.gims).filter(([, p]) => p.chimeraPart).map(([k]) => k);
+    assert.deepEqual(parts.sort(), ['arm', 'body', 'legs', 'wing']);
+    // 部位が のこっている あいだは HP が へらない
+    const hp = boss.hp;
+    b.lock = boss.uid; b.lockPart = null;
+    for (let i = 0; i < 60; i++) { keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+    assert.equal(boss.hp, hp, 'キメラの 体に はじかれる');
+    // 部位を ぜんぶ こわす
+    for (const k of parts) {
+        boss.gims[k].hp = 1;
+        assert.ok(lockOn(b, boss.uid, k), k);
+        for (let i = 0; i < 200 && !boss.gims[k].broken; i++) { keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+        assert.ok(boss.gims[k].broken, `${k} を こわした`);
+    }
+    assert.ok(boss.headOut, '顔が 出た');
+    assert.ok(lockOn(b, boss.uid, 'head'), '顔を ねらえる');
+    for (let i = 0; i < 60 && boss.hp === hp; i++) { keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+    assert.ok(boss.hp < hp, '顔に 当てると HP が へる');
+    // しばらく すると 部位が もどる
+    for (let i = 0; i < 600 && boss.headOut; i++) { keepAliveNoAct(b); boss.hp = Math.max(boss.hp, boss.max * 0.8); step(b, 0.05); }
+    assert.ok(!boss.headOut && parts.every(k => !boss.gims[k].broken), '部位が もどった');
+});
+
+test('13 章: ニオニオーテンは HP 半分で 紅く なり、オオグライノカミツキで コマンドを 喰らう。顔に 当てると 取りもどす', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const p2 = BOSSES.rukiha13.phase2;
+    const names = p2.moves.map(m => m.name);
+    for (const n of ['マジュウノヒトタチ', 'セイレイノウタ', 'チョウジュウノホノオ', 'チョウジュウノイカヅチ', 'チョウジュウノコオリ']) assert.ok(names.includes(n), n);
+    assert.equal(p2.moves.find(m => m.name === 'セイレイノウタ').effects[0].status, 'confuse');
+    const b = createBattle({ allies: strongParty().map(a => ({ ...a, lv: 80 })), enemies: [{ id: 'rukiha13', lv: 62 }], rng: createRng(8), kind: 'boss' });
+    const boss = b.enemies[0];
+    boss.hp = 1; b.lock = boss.uid;
+    b.wheel.forEach(u => { if (u) u.timer = 0; });
+    for (let i = 0; i < 200 && boss.phase === 1; i++) step(b, 0.05);
+    assert.equal(boss.phase, 2);
+    // 顔を 出して HP 半分の すこし 上に
+    for (const p of Object.values(boss.gims)) if (p.chimeraPart) p.broken = true;
+    boss.headOut = true; boss.headT = 999;
+    boss.hp = Math.floor(boss.max * 0.5) + 5;
+    assert.ok(lockOn(b, boss.uid, 'head'));
+    for (let i = 0; i < 100 && !boss.enraged; i++) { keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 99; }); step(b, 0.05); }
+    assert.ok(boss.enraged, 'HP 半分で 紅く');
+    assert.ok(boss.buffs.atk.amount > 0 && boss.bossMoves.some(m => m.eat), 'オオグライノカミツキを おぼえた');
+    // カミツキだけ 使わせる
+    boss.bossMoves = boss.bossMoves.filter(m => m.eat);
+    b.lockPart = null; b.lock = null;
+    for (let i = 0; i < 1500 && !boss.stolen.length; i++) { keepAliveNoAct(b); boss.hp = Math.max(boss.hp, boss.max * 0.4); step(b, 0.05); }
+    assert.ok(boss.stolen.length, 'コマンドを 喰らった');
+    const victim = b.wheel.find(u => u && u.eaten);
+    assert.ok(victim && boss.bossMoves.some(m => m.stolenFrom === victim.uid), '自分の わざに した');
+    // 喰われた コマンドは えらばない
+    assert.ok(lockOn(b, boss.uid, 'head'));
+    for (let i = 0; i < 200 && victim.eaten; i++) { keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 99; }); boss.hp = Math.max(boss.hp, boss.max * 0.4); step(b, 0.05); }
+    assert.ok(!victim.eaten, '顔に 当てて 取りもどした');
+    assert.ok(!boss.bossMoves.some(m => m.stolenFrom === victim.uid));
 });

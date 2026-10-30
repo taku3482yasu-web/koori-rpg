@@ -105,7 +105,7 @@ function wantedBgm() {
         scene: sc.name,
         area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
         story: app.g ? app.g.story : null,
-        battle: b ? { kind: b.kind, outcome: b.outcome, bossId: b.enemies.find(e => BOSSES[e.id])?.id ?? null } : null
+        battle: b ? (() => { const boss = b.enemies.find(e => BOSSES[e.id]); return { kind: b.kind, outcome: b.outcome, bossId: boss?.id ?? null, phase: boss?.phase ?? 1, enraged: Boolean(boss?.enraged) }; })() : null
     });
 }
 

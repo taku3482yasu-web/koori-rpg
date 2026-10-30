@@ -408,7 +408,7 @@ test('地図: 筋肉の山 (9 章)。駅から 氷河の ハル麒麟の 前ま�
 
 test('地図: ASOの壺の底 (11 章)。駅から 火山の 底の バクエンリュウの 前まで 行けて、たおすと ASO の 間に 入れる', async () => {
     const { TSUBO_Y0, TSUBO_IN } = await import('../src/data/map.js');
-    assert.deepEqual(regionOf(TSUBO_IN.y), [TSUBO_Y0, MAP_H]);
+    assert.deepEqual(regionOf(TSUBO_IN.y), [TSUBO_Y0, TSUBO_Y0 + 36]);
     assert.ok(BLOCK.has('m'), '溶岩は 通れない');
     const baku = PEOPLE.find(p => p.id === 'bakuen11'), aso = PEOPLE.find(p => p.id === 'aso11');
     const reach = blockBaku => {

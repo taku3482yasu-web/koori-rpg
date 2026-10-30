@@ -903,6 +903,55 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear12"'), '家で ねると 出発の 前の 夜 (12 章 クリア)');
 
+    // ----- 13 章: 喰らいの 城 → ルキハ → ルキハ・ニオニオーテン (キメラ) → エンディング (2026-10-30) -----
+    const K13 = 408;
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "kuraie"'), '12 章の あと ともいしに 見送られて 出発 (13 章)');
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    for (let i = 0; i < 7; i++) await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('kurai-arrive');
+    check(await evaluate(`window.__app.g.story === "kurai" && window.__app.g.pos.y > ${K13} * 16 && window.__bgm() === "kurai"`), '黒い 光の 道で 喰らいの 城へ (城の BGM)');
+    await at(24, K13 + 5, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "rukiha13" && window.__bgm() === "rukiha13"'), '最上階の ルキハと バトル (嵐の 予兆の BGM)');
+    await key('KeyJ');
+    await sleep(500);
+    // チャンスタイムの 表示: 左上に 小さく + ボスの 頭に ピヨピヨの わっか (HP が 見える)
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.chance = { uid: e.uid, left: 5 }; e.timer = -999; return true; })()');
+    await sleep(500);
+    await shot('kurai-chance-ring');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.chance = null; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); b.enemies[0].hp = 1; b.lock = b.enemies[0].uid; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].phase === 2'), 'ルキハを たおすと ルキハ・ニオニオーテンに 変わる');
+    await sleep(300);
+    check(await evaluate('window.__bgm() === "niolioten13" && window.__app.scene.battle.enemies[0].huge'), 'ニオニオーテン: つぎはぎの BGM');
+    await sleep(1500);
+    await shot('kurai-niolioten');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; for (const p of Object.values(e.gims)) if (p.chimeraPart) { p.hp = 1; } e.timer = -999; b.bossTimer = -99; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); b.lock = e.uid; b.lockPart = "wing"; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].gims.wing.broken'), 'ニオニオーテン: 竜の 翼を ロックオンで こわせる');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; for (const p of Object.values(e.gims)) if (p.chimeraPart && !p.broken) p.broken = true; e.headOut = true; e.headT = 99; e.timer = -999; b.lock = e.uid; b.lockPart = "head"; return true; })()');
+    await sleep(300);
+    await shot('kurai-head');
+    await evaluate('(() => { const e = window.__app.scene.battle.enemies[0]; e.hp = Math.floor(e.max * 0.5) + 3; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].enraged'), 'HP 半分で 体が 紅く どす黒く なる');
+    await sleep(300);
+    check(await evaluate('window.__bgm() === "final13"'), 'HP 半分から こおりくんの テーマの 最終決戦 BGM');
+    await sleep(1200);
+    await shot('kurai-enraged');
+    await winNow();
+    await skipTalk(40);
+    await sleep(200);
+    await shot('kurai-ending');
+    check(await evaluate('window.__app.g.story === "clear13" && window.__app.g.pos.y < 30 * 16'), 'ニオニオーテンに 勝つと エンディング (13 章 クリア・家の 前へ)');
+
     // ----- 14 章 (内定版): 招待券 → ナイテイパーク → ふるカワが いない → 夜の 手がかり → サアラハ (おり) (2026-10-30) -----
     const P14 = 300;
     await at(8, 25, 'up');
@@ -912,7 +961,7 @@ try {
     await at(5, 41, 'up');
     await key('KeyJ');
     await sleep(1500);
-    for (let i = 0; i < 7; i++) await key('ArrowDown');
+    for (let i = 0; i < 8; i++) await key('ArrowDown');
     await key('Enter');
     await skipTalk();
     await sleep(200);

@@ -426,5 +426,43 @@ export const NEW_ART = {
             '.....oaaa.aaa.aaa.aaa.aao.....',
             '.....aa...aa...aa...aa..a.....'
         ])
+    },
+    // ルキハ・ニオニオーテン (13 章。ルキハの 第 2 形態。新キャラ・2026-10-30): 喰らってきた 生き物の つぎはぎの キメラ。
+    //   左に 竜の 翼・右に 大きな 鬼の 腕・うろこの 体 (むらさきの 紋)・けものの 足・鳥の くちばし。上の まんなかに ぐちゃぐちゃの ルキハの 顔。
+    //   部位 (翼・腕・体・足・頭) は この 絵の 上で ねらう (nakama.js の rect)
+    niolioten: {
+        w: 32, h: 28,
+        palette: { o: '#0a0408', w: '#3a1a4a', W: '#6a3a8a', h: '#2a2438', s: '#c8a898', S: '#8a5a6a', r: '#e02040', m: '#3a0a10', y: '#e0a020',
+            b: '#2a2a3a', B: '#4a4a6a', c: '#a040e0', a: '#a02020', A: '#ffd040', l: '#5a3a2a', L: '#8a5a3a', k: '#e0e0e0' },
+        frames: bob([
+            '........oo......................',
+            '.......owWo.oooooooo............',
+            '......owwWoohhhhhhhho...........',
+            '.....oWWWWoohhhhhhhho...........',
+            '....owwwwWoohssssssso...........',
+            '...owwwwwWoosrrsssshoo..........',
+            '..owwwwwwWoosSsssrssyyo.........',
+            '.oWWWWWWWWoossmmmmssyooooooo....',
+            'owwwwwwwwWoosssmssSsooaaaaaao...',
+            'wwwwwwwwwWbbBbbBbbBbbBaaaaaao...',
+            'wwwwwwwwwWbBbbBbbBbbBbaaaaaAo...',
+            'WWWWWWWWWWBbbBbbBbbBbbaaaaaao...',
+            'wwwwwwwwwWbbBbbBbbBbbBaaaaaao...',
+            'wwwwwwwwwWbBbbBcccbbBbaaaaaaooo.',
+            'wwwwwwwwwWBbbBcccbbBbbaaaaaaaaao',
+            'oooooooooobbBbbBbbBbbBaaaaaaaaao',
+            '.........obBbbBbbBbbBboaaaaaaaao',
+            '.........oBbbBbbBbbBbboaaaaaaaao',
+            '.........obbBbbBbbBbbBoaaaaaaaao',
+            '.........obBbbBbbBbbBbooAoAoAoAo',
+            '.........oBbbBbbBbbBbbo.o.o.o.o.',
+            '........ollLllloollLlllo........',
+            '........olLlllLoolLlllLo........',
+            '........oLlllLlooLlllLlo........',
+            '........olllLlloolllLllo........',
+            '........ollLllloollLlllo........',
+            '........olLlllLoolLlllLo........',
+            '........okokoko.okokoko.........'
+        ])
     }
 };

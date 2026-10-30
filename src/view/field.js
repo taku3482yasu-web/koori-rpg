@@ -21,7 +21,7 @@ import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES, PARK_Y0, PARK_IN, PARK_PLACES, PARK_NAME, PARK_CLUES,
-    KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES } from '../data/map.js';
+    KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14 } from '../data/nakama.js';
@@ -33,7 +33,7 @@ import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -79,7 +79,8 @@ export function createField(app) {
 
     // 学校の 中・山・海に いるか (町と 学校と 山と 海は つながって いないので、カメラも 地図も べつに する)
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
-    const inTsubo = () => g.pos.y >= TSUBO_Y0 * TILE;
+    const inKurai = () => g.pos.y >= KURAI_Y0 * TILE;
+    const inTsubo = () => between(TSUBO_Y0, KURAI_Y0);
     const inKinniku = () => between(KINNIKU_Y0, TSUBO_Y0);
     const inPark = () => between(PARK_Y0, KINNIKU_Y0);
     const darkHere = () => g.story === 'shuugeki' && g.pos.y < SCHOOL_Y0 * TILE;   // 10 章の 黒い 霧 (町と 商店街)
@@ -195,6 +196,9 @@ export function createField(app) {
                 clear11: ['ASOさんって 人に 会えたと？ ……こおり、なんか 顔つきが かわったね。'],
                 shuuketsu: ['神社に みんな あつまっとるらしいよ。……こおり、あんた いつのまに こんなに ともだちが できたと？'],
                 clear12: ['……ほら、ふるカワちゃんが また 来とるよ。'],
+                kuraie: ['こおり、おべんとう もった？ ……ちゃんと 帰って きなさいよ。'],
+                kurai: ['こおり……。お母さん、ここで まっとるけんね。'],
+                clear13: ['おかえり、こおり。……ほんとに よう がんばったね。'],
                 invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
                 park: ['遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。'],
                 yoru: ['ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！'],
@@ -209,6 +213,17 @@ export function createField(app) {
                     nar('おにおにが なかまに なった！'),
                     furu('ルキハと 戦うには、もっと 強く ならなきゃ。……筋肉の山の ノゾエマさんに 修行を つけて もらおう！'),
                     nar('石の川駅から、電車で 筋肉の山へ 行けるように なった！')
+                ], { done: () => app.save() });
+                return;
+            }
+            if (startChapter13(g)) {
+                // 13 章の はじまり「出発」(ストーリー工房 12 章 場面 3 の つづき。セリフは Claude の 仮組)
+                say([
+                    nar('朝。黒い 空の むこうに、ルキハの 城が うかんでいる。'),
+                    tomo('……行って らっしゃい、こおり。'),
+                    furu('石の川駅から、城へ つづく 黒い 光の 道が のびてるって！'),
+                    by('onioni', 'みんな 先に 行って まっとるぞ。……さあ、終わらせに 行くか。'),
+                    nar('石の川駅から、喰らいの 城へ 行けるように なった！')
                 ], { done: () => app.save() });
                 return;
             }
@@ -390,6 +405,15 @@ export function createField(app) {
                 furu('投げられた 道具を ねらって 攻撃すると 使えるよ！ 剣なら 力が 上がって、実なら 回復、水爆弾なら 体が かたまるはず！'),
                 furu('マグマの 波で 道具が とけちゃうから、いそいで！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('bakuen11'), kind: 'boss', place: 'tsubo' }) });
+        } else if (p.id === 'rukiha13') {
+            // 13 章の ボス: ルキハ (ストーリー工房 13 章 場面 2「ルキハ」)。たおすと ニオニオーテンに 変わる (場面 3・4 は バトルの 中)
+            const rk = text => ({ who: 'ルキハ', art: 'rukiha', text });
+            say([
+                rk('来たか、こおり族の 子。王冠の 味が、まだ 舌に のこっているぞ。'),
+                rk('おまえも、おまえの なかまも、みんな オレの 中で ひとつに なれば いい。'),
+                { who: 'こおりくん', art: 'koori', text: '（そんな こと させない！）' },
+                furu('ルキハは 体を 変形させて 攻撃してくるよ！ 気を つけて！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('rukiha13'), kind: 'boss', place: 'kurai' }) });
         } else if (p.id === 'aso11') {
             // 11 章: ASO の 間の 大魔王ASO (ストーリー工房 11 章 場面 2・3。ASO とは 戦わない)
             if (canFightAso(g)) {
@@ -522,7 +546,7 @@ export function createField(app) {
                             tomo('……ちゃんと 帰って きなさい！ 借金も 返さんまま いなくなるのは ゆるさんけんね！'),
                             nar('こおりくんは しずかに ねむった。'),
                             nar('１２章 クリア！'),
-                            nar('―― １３章は つぎの アップデートで。')
+                            nar('つぎの 朝、家の 前の ともいしと 話そう。')
                         ], { done: () => app.save() });
                     } else if (i === 0) {
                         advanceTime(g, app.rng);
@@ -545,6 +569,11 @@ export function createField(app) {
             rideTrain();
         } else if (b.id === 'attrA' || b.id === 'attrB' || b.id === 'attrC') {
             lookAttraction(b.id);
+        } else if (b.id === 'kuraiStation') {
+            say([nar('黒い 光の 道。石の川駅に つながっている。')], {
+                choices: ['石の川へ もどる', 'やめる'],
+                done: i => { if (i === 0) { sfx('watch'); warp(STATION_OUT); } }
+            });
         } else if (b.id === 'tsuboStation') {
             say([nar('ASOの壺前駅。石の川 行きの 電車が とまっている。')], {
                 choices: ['石の川へ もどる', 'やめる'],
@@ -710,7 +739,7 @@ export function createField(app) {
     function rideTrain() {
         if (!canRideTrain(g)) { say([nar('石の川駅。いまは 電車に 乗る 用事が ない。')]); return; }
         const lines = trainLines(g);
-        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く', yashiki: '忍びの屋敷へ 行く', moon: '月の迷宮へ 行く', shiro: '金色のSE城へ 行く', kinniku: '筋肉の山へ 行く', tsubo: 'ASOの壺の底へ 行く', park: `${parkName()}へ 行く` };
+        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く', yashiki: '忍びの屋敷へ 行く', moon: '月の迷宮へ 行く', shiro: '金色のSE城へ 行く', kinniku: '筋肉の山へ 行く', tsubo: 'ASOの壺の底へ 行く', kurai: '喰らいの 城へ 行く', park: `${parkName()}へ 行く` };
         say([nar(`石の川駅。${lines.length > 1 ? 'どこへ 行こうか？' : lines[0] === 'tera' ? 'ネット寺 行きの 電車が とまっている。' : '海辺の 町 行きの 電車が とまっている。'}`)], {
             choices: [...lines.map(l => names[l]), 'やめる'],
             done: i => {
@@ -724,6 +753,7 @@ export function createField(app) {
                 if (dest === 'park') { goPark(); return; }
                 if (dest === 'kinniku') { goKinniku(); return; }
                 if (dest === 'tsubo') { goTsubo(); return; }
+                if (dest === 'kurai') { goKurai(); return; }
                 warp(UMI_IN);
                 if (!arriveUmi(g)) return;
                 const L = rivalLines();
@@ -746,6 +776,20 @@ export function createField(app) {
             by('daishi', 'よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。'),
             by('daishi', '寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。'),
             nar('境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。')
+        ], { done: () => app.save() });
+    }
+
+    // ----- 13 章 (喰らいの 城) -----
+    function goKurai() {
+        warp(KURAI_IN);
+        if (!arriveKurai(g)) return;
+        // ストーリー工房 13 章 場面 1「喰らいの 城」
+        say([
+            nar('黒い 光の 道を ぬけると、喰らいの 城の 前に 出た。'),
+            nar('城の まわりを、紋つきの 軍勢が うめつくしている。'),
+            by('onioni', 'ここは おれたち 鬼鬼団が 引き受ける！ 行け、こおり！'),
+            { who: 'ズミタニ', art: 'zumitani', text: 'ほらほら、早く 行って！ ここで 負けたら、77代目の 名が なくからね♪' },
+            furu('城の 中も 紋つきで いっぱい……。最上階まで 一気に 行こう！')
         ], { done: () => app.save() });
     }
 
@@ -966,6 +1010,28 @@ export function createField(app) {
                 nar('おにおにの 必殺技が「鬼の王の金棒」に 進化した！'),
                 furu('これで ルキハの 城へ 行けるね……！ 今夜は 家に 帰って ゆっくり ねよう。')
             ], { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'rukiha13') {
+            // 13 章 クリア: エンディング (ストーリー工房 13 章 場面 5)
+            const ending = [
+                nar('ルキハの 顔が くずれ、喰らわれた 光が 空へ かえっていく。'),
+                nar('世界じゅうの 紋が、しずかに 消えた。'),
+                by('onioni', '終わったな、こおり。……よくやった。'),
+                furu('こおりくん、帰ろう。石の川タウンに！')
+            ];
+            say(ending, {
+                done: () => {
+                    warp({ x: 6, y: 24, dir: 'up' });
+                    g.time = 0;
+                    say([
+                        tomo(`おかえり、こおり。……さ、つぎは ${g.version === 'menkyo' ? '免許' : '内定'} とりなさい！`),
+                        nar('―― こおりくんの 大冒険 ～大集合だヨ！おともだち！～ ――'),
+                        nar('ストーリー: こおりくんの 作者　／　キャラ: こおりくんシリーズの みんな　／　プログラム・音楽: Claude'),
+                        nar(`なかま ${friendCount(g)} 人と いっしょに 世界を すくった。ありがとう！`),
+                        nar('１３章 クリア！ ―― おわり ――'),
+                        nar('……でも、こおりくんの 毎日は つづく。家の 前の ともいしと 話そう。')
+                    ], { done: () => app.save() });
+                }
+            });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'aso15') {
             say([
                 { who: '大魔王ASO', art: 'maou', text: '……見事だ。この 我を 二度も 地に つけるとはな。' },
@@ -1329,7 +1395,7 @@ export function createField(app) {
             done: () => {
                 fighting = c;
                 const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: darkTown(g, source) ? 'town' : inTsubo() ? 'tsubo' : inKinniku() ? (inHyouga() ? 'hyouga' : 'kinniku') : inPark() ? 'yuen' : inShiro() ? 'shiro' : inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inKurai() ? 'kurai' : darkTown(g, source) ? 'town' : inTsubo() ? 'tsubo' : inKinniku() ? (inHyouga() ? 'hyouga' : 'kinniku') : inPark() ? 'yuen' : inShiro() ? 'shiro' : inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
             }
         });
     }
@@ -1581,7 +1647,9 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        const labels = inTsubo()
+        const labels = inKurai()
+            ? KURAI_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
+            : inTsubo()
             ? TSUBO_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
             : inKinniku()
             ? KINNIKU_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
@@ -1630,8 +1698,9 @@ export function createField(app) {
             : g.story === 'clear6' ? { x: 5, y: 40 } : g.story === 'meikyu' ? { x: 24, y: MOON_Y0 + 2 }
             : g.story === 'clear7' ? { x: 5, y: 40 }
             : g.story === 'oshiro' ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) }
-            : g.story === 'clear8' || g.story === 'clear10' || g.story === 'clear11' || g.story === 'clear12' ? { x: 8, y: 24 }
+            : g.story === 'clear8' || g.story === 'clear10' || g.story === 'clear11' || g.story === 'clear12' || g.story === 'clear13' ? { x: 8, y: 24 }
             : g.story === 'shuuketsu' ? (!g.flags.oni12 ? { x: 8, y: 6 } : { x: 6, y: 23 })
+            : g.story === 'kuraie' ? { x: 5, y: 40 } : g.story === 'kurai' ? { x: 24, y: KURAI_Y0 + 4 }
             : g.story === 'tsuboe' ? { x: 5, y: 40 } : g.story === 'tsubo' ? (!g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 }) : g.story === 'invite' || g.story === 'onijoin' ? { x: 5, y: 40 }
             : g.story === 'shuugeki' ? ((g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null)
             : g.story === 'kinniku' ? (!g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 })

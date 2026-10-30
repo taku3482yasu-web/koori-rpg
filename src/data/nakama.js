@@ -292,6 +292,7 @@ export const WAZA = {
     dradora: W('ドラ爆', 'ほのお', 'around', 1.3),
     bakuenryu: W('マグマの 波', 'ほのお', 'around', 1.2, 'poison', 0.3),
     bakuen11: W('ほのおの いき', 'ほのお', 'line', 1.4),
+    rukiha13: W('ウシノツノ', 'ふつう', 'front', 1.6),
     onioni12: W('鬼神 金棒', 'ほのお', 'around', 1.4),
     aso: W('亜祖宇激烈破', 'ふしぎ', 'around', 1.6),
     aso15: W('魔剣 生成', 'ふしぎ', 'front', 1.8),
@@ -1448,7 +1449,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地', kinniku: '筋肉の山', tsubo: 'ASOの壺の底' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地', kinniku: '筋肉の山', tsubo: 'ASOの壺の底', kurai: '喰らいの 城' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -1754,6 +1755,49 @@ export const BOSSES = {
         chanceTurns: 4,
         befriends: null, lv: 35, place: 'shiro'
     },
+    // ----- 13 章「喰らいの 城」の ボス: ルキハ → ルキハ・ニオニオーテン (2026-10-30 ユーザー指定) -----
+    // 第 1 形態 ルキハ: 体を 変形させて トリノツバサ (全体)・ウシノツノ (1 体)・ヘビノメ (全体 行動不能の とりつき)。チャンスタイムは なし。
+    //   必殺技 オオグライ: 全体に ふつうの 中ダメージを 4〜6 回
+    // 第 2 形態 ルキハ・ニオニオーテン (第 1 形態の HP が なくなると): マジュウノヒトタチ (1 体)・セイレイノウタ (全体 こんらん)・
+    //   チョウジュウノ○○ (7 属性の 術)。翼・腕・体・足 (キメラの 部位。ドット絵の その 部分) を ロックオンで こわせる。
+    //   ぜんぶ こわすと 頭が 出て、攻撃が HP に とどく (chimera)。HP が 半分で 紅く どす黒く なり (enrage) 攻撃が はげしく なる。
+    //   オオグライノカミツキ: 味方 1 体の こうげき・わざ・術・まもり の どれかを 喰らって 自分の わざに する。頭を ねらって 当てると 取りもどす
+    rukiha13: {
+        id: 'rukiha13', name: 'ルキハ', element: 'ふしぎ', role: 'attacker', art: 'rukiha', scale: 1.6, rank: 'S',
+        base: { hp: 1150, atk: 24, def: 20, spd: 15, mag: 22 },
+        moves: [
+            { name: 'トリノツバサ', w: 3, morph: true, effects: [atk('all', 1.0, { element: 'かぜ' })] },
+            { name: 'ウシノツノ', w: 3, morph: true, effects: [atk('one', 1.8)] },
+            { name: 'ヘビノメ', w: 2, morph: true, effects: [{ kind: 'status', target: 'all', status: 'stun', chance: 0.45 }] },
+            { name: 'ケモノノツメ', w: 2, morph: true, effects: [atk('one', 1.2, { hits: 2 })] }
+        ],
+        bigMove: { name: 'オオグライ', every: 13, warn: 2.5, effects: [atk('all', 0.5, { hitsMin: 4, hitsMax: 6, element: 'ふつう' })] },
+        phase2: {
+            name: 'ルキハ・ニオニオーテン', art: 'niolioten', huge: true,
+            moves: [
+                { name: 'マジュウノヒトタチ', w: 3, effects: [atk('one', 2.0)] },
+                { name: 'セイレイノウタ', w: 2, effects: [{ kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }] },
+                { name: 'チョウジュウノホノオ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'ほのお' })] },
+                { name: 'チョウジュウノミズ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'みず' })] },
+                { name: 'チョウジュウノコオリ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'こおり' })] },
+                { name: 'チョウジュウノイカヅチ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'かぜ' })] },
+                { name: 'チョウジュウノツタ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'しぜん' })] },
+                { name: 'チョウジュウノマボロシ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'ふしぎ' })] },
+                { name: 'チョウジュウノイワ', w: 1, effects: [atk('all', 0.95, { magic: true, element: 'ふつう' })] }
+            ],
+            bigMove: { name: 'ゼンブ オレノ モノ', every: 14, warn: 2.5, effects: [atk('all', 1.5, { magic: true, element: 'ふしぎ' })] },
+            gims: {
+                wing: { name: '竜の 翼', hp: 0.07, when: 'always', rect: [0, 1, 9, 14], chimeraPart: true },
+                arm: { name: '鬼の 腕', hp: 0.07, when: 'always', rect: [22, 7, 31, 19], chimeraPart: true },
+                body: { name: 'うろこの 体', hp: 0.08, when: 'always', rect: [10, 9, 21, 20], chimeraPart: true },
+                legs: { name: 'けものの 足', hp: 0.07, when: 'always', rect: [8, 21, 23, 27], chimeraPart: true },
+                head: { name: 'ルキハの 顔', hp: 99, when: 'exposed', rect: [12, 1, 21, 8], face: true }
+            },
+            chimera: { regrow: 16 },
+            enrage: { at: 0.5, atk: 0.5, spd: 0.3, eat: { name: 'オオグライノカミツキ', w: 3 } }
+        },
+        befriends: null, lv: 62, place: 'kurai'
+    },
     // ----- 12 章「集結」の ボス (2026-10-30 ユーザー指定) -----
     // おにおに・鬼神: ルキハとの 決戦の 前に こおりくんに 勝負を いどむ。最初から 第 2 形態 (鬼神)。8 章とは くらべものに ならない 攻撃。
     //   チャンスタイムは 8 章の おにおにと 同じ (ため の あいだに ダメージで 紋……ではなく 力の 暴発。2 回目からは ガード)
@@ -1921,7 +1965,7 @@ export const BOSSES = {
 // 14 章の ボスは バージョンで ちがう
 export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
 // 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
-export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'bakuen11', 'onioni12', 'boss14'];
+export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'bakuen11', 'onioni12', 'rukiha13', 'boss14'];
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)

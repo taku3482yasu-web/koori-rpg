@@ -17,7 +17,8 @@
 // その 下 (y 264〜299) は 金色のSE城 (8 章。2026-10-30)。7 章 クリアの あと、石の川駅から 電車で 行ける
 // その 下 (y 300〜335) は 14 章の 遊園地 (2026-10-30)。内定版は ナイテイパーク・免許版は メンキョシティ (地図は 同じで 名前が ちがう)
 // その 下 (y 336〜371) は 筋肉の山 (9 章。2026-10-30)。8 章 クリアの あと、石の川駅から 電車で 行ける。とちゅうに 雪どけの 氷河
-// いちばん 下 (y 372〜407) は ASOの壺の底 (11 章。2026-10-30)。10 章 クリアの あと、石の川駅から 電車で 行ける。火山の 底に バクエンリュウ
+// その 下 (y 372〜407) は ASOの壺の底 (11 章。2026-10-30)。10 章 クリアの あと、石の川駅から 電車で 行ける。火山の 底に バクエンリュウ
+// いちばん 下 (y 408〜443) は 喰らいの 城 (13 章。2026-10-30)。12 章 クリアの あと、石の川駅から 黒い 光の 道で 行ける
 //
 //   tiles[y][x]: G 草 / F 花 / T 木 / R 道 / W 川 / B 橋 / P 川原の 石ころ / S 公園の 砂 / K 石だたみ / A 駐車場
 //                学校: L 木の ゆか / X かべ / Y プールサイド / M げた箱の マット (W は プールの 水)
@@ -32,7 +33,7 @@
 //   SPOTS: レンズで さがす 場所 (設計書 5.2)。kinds の time は 出る 時間帯、weather: 'rain' は 雨の日だけ
 // =====================================================================
 export const TILE = 16;
-export const MAP_W = 48, MAP_H = 408;
+export const MAP_W = 48, MAP_H = 444;
 export const TOWN_H = 36;       // ここから 下が 商店街
 export const SCHOOL_Y0 = 60;    // ここから 下が 小学校の 中
 export const YAMA_Y0 = 84;      // ここから 下が 山と ダム
@@ -44,6 +45,7 @@ export const SHIRO_Y0 = 264;    // ここから 下が 金色のSE城 (8 章)
 export const PARK_Y0 = 300;     // ここから 下が 14 章の 遊園地 (ナイテイパーク / メンキョシティ)
 export const KINNIKU_Y0 = 336;  // ここから 下が 筋肉の山 (9 章)
 export const TSUBO_Y0 = 372;    // ここから 下が ASOの壺の底 (11 章)
+export const KURAI_Y0 = 408;    // ここから 下が 喰らいの 城 (13 章)
 export const BLOCK = new Set(['T', 'W', 'X', 'Q', 'I', 'J', 'Z', 'V', 'k', 'm']);
 export const WET = new Set(['D', 'E', 'I']);   // 3 章 クリアで 水に もどる マス
 
@@ -277,6 +279,20 @@ function build() {
     fill(23, A + 26, 24, A + 31, 'K');
     fill(4, A + 31, 6, A + 31, 'K'); fill(4, A + 32, 24, A + 33, 'K');
     [[3, A + 28], [12, A + 29], [30, A + 29], [40, A + 30], [44, A + 28], [17, A + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
+
+    // ----- 喰らいの 城 (y 408〜443。13 章「喰らいの 城」) -----
+    //   南の 駅 (黒い 光の 道の 先) から 城門 → 軍勢の いる 大広間 → 北の 階段 → 最上階 (ルキハ)
+    const R = KURAI_Y0;
+    fill(0, R, MAP_W - 1, MAP_H - 1, 'T');
+    fill(1, R + 1, MAP_W - 2, R + 34, 'G');
+    fill(6, R + 1, 41, R + 25, 'V');                                     // 城の かべ
+    fill(9, R + 16, 38, R + 23, 'v');                                    // 大広間
+    fill(23, R + 24, 24, R + 25, 'v');                                   // 城門
+    fill(23, R + 11, 24, R + 15, 'v');                                   // 階段
+    fill(12, R + 2, 35, R + 10, 'v');                                    // 最上階
+    fill(23, R + 26, 24, R + 31, 'K');
+    fill(4, R + 31, 6, R + 31, 'K'); fill(4, R + 32, 24, R + 33, 'K');
+    [[3, R + 28], [12, R + 29], [30, R + 29], [40, R + 30], [44, R + 28], [17, R + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
     return t.map(row => row.join(''));
 }
 export const TILES = build();
@@ -326,6 +342,7 @@ export const BUILDINGS = [
     { id: 'attrA', label: 'コースター', x: 8, y: PARK_Y0 + 11, w: 6, h: 4, wall: '#ffd0e0', roof: '#e04a8a', door: { x: 11, y: PARK_Y0 + 14 } },
     { id: 'attrB', label: 'かんらん車', x: 20, y: PARK_Y0 + 3, w: 8, h: 4, wall: '#d0f0ff', roof: '#3a8ae0', door: { x: 24, y: PARK_Y0 + 6 } },
     { id: 'attrC', label: 'おばけ屋敷', x: 34, y: PARK_Y0 + 11, w: 6, h: 4, wall: '#d8d0e8', roof: '#4a3a6a', door: { x: 37, y: PARK_Y0 + 14 } },
+    { id: 'kuraiStation', label: '黒い 光の 道', x: 2, y: KURAI_Y0 + 27, w: 6, h: 4, wall: '#3a2a4a', roof: '#1a0a2a', door: { x: 5, y: KURAI_Y0 + 30 } },
     { id: 'tsuboStation', label: 'ASOの壺前駅', x: 2, y: TSUBO_Y0 + 27, w: 6, h: 4, wall: '#d8c8b8', roof: '#4a2a5a', door: { x: 5, y: TSUBO_Y0 + 30 } },
     { id: 'kinnikuStation', label: '筋肉の山 登山口駅', x: 2, y: KINNIKU_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#6a4a2a', door: { x: 5, y: KINNIKU_Y0 + 30 } },
     { id: 'parkStation', label: '遊園地前駅', x: 2, y: PARK_Y0 + 27, w: 6, h: 4, wall: '#fff0d0', roof: '#e08a2a', door: { x: 5, y: PARK_Y0 + 30 } }
@@ -372,6 +389,8 @@ export const PARK_LV = [36, 40];
 export const KINNIKU_LV = [31, 35];
 // ASOの壺の底の キャラの Lv (11 章)
 export const TSUBO_LV = [38, 42];
+// 喰らいの 城の 軍勢の Lv (13 章。ぜんぶ 紋つき)
+export const KURAI_LV = [52, 56];
 
 // かくれている キャラ (レンズで さがす。2026-10-26 ユーザー指定: ふだんの 画面でも「なにか へん」と わかるように 化けている)
 //   x, y はマス。cue: ふだんの 画面に 出す 違和感の 絵 (view/field.js の drawCue)
@@ -467,6 +486,9 @@ export const ROAMS = [
     { id: 'shiroSoto', label: '城の まわり', x0: 1, y0: SHIRO_Y0 + 26, x1: 46, y1: SHIRO_Y0 + 33, max: 2, lv: SHIRO_LV, kinds: [{ id: 'setsubunmame', w: 2 }, { id: 'onibin', w: 1, time: ['evening', 'night'] }, { id: 'tsunodaruma', w: 1 }] },
     { id: 'hiroma', label: '大広間', x0: 9, y0: SHIRO_Y0 + 20, x1: 38, y1: SHIRO_Y0 + 23, max: 2, lv: SHIRO_LV, kinds: [{ id: 'tsunodaruma', w: 2 }, { id: 'onibin', w: 2 }, { id: 'onigirin', w: 1 }] },
     { id: 'gyokuza', label: '玉座の 間', x0: 12, y0: SHIRO_Y0 + 7, x1: 35, y1: SHIRO_Y0 + 9, max: 1, lv: SHIRO_LV, kinds: [{ id: 'goukioni', w: 1, after: 'clear8' }, { id: 'kinmetsuki', w: 1, after: 'clear8' }] },
+    // 喰らいの 城 (13 章)。ルキハの 軍勢 = これまでの 強い キャラが 紋つき (・闇) で 出る
+    { id: 'kuraiHiroma', label: '喰らいの 城の 大広間', x0: 9, y0: KURAI_Y0 + 16, x1: 38, y1: KURAI_Y0 + 23, max: 3, lv: KURAI_LV, kinds: [{ id: 'goukioni', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'shirokumatcho', w: 2 }, { id: 'nakatadraco', w: 1 }, { id: 'yukionnan', w: 1 }, { id: 'dradora', w: 1 }] },
+    { id: 'kuraiSoto', label: '喰らいの 城の まわり', x0: 1, y0: KURAI_Y0 + 26, x1: 46, y1: KURAI_Y0 + 33, max: 2, lv: KURAI_LV, kinds: [{ id: 'hinotorin', w: 2 }, { id: 'onibin', w: 2 }, { id: 'youganworm', w: 1 }] },
     // ASOの壺の底 (11 章)。バクエンリュウは 11 章 クリアの あと (clear11) 火山の 底に いる
     { id: 'youganDou', label: '溶岩の 大どうくつ', x0: 8, y0: TSUBO_Y0 + 13, x1: 38, y1: TSUBO_Y0 + 19, max: 3, lv: TSUBO_LV, kinds: [{ id: 'asohei', w: 3 }, { id: 'hinotorin', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'youganworm', w: 2 }, { id: 'dradora', w: 1 }] },
     { id: 'kazanSoko', label: '火山の 底', x0: 8, y0: TSUBO_Y0 + 3, x1: 28, y1: TSUBO_Y0 + 7, max: 1, lv: TSUBO_LV, kinds: [{ id: 'youganworm', w: 1 }, { id: 'hinotorin', w: 1 }, { id: 'bakuenryu', w: 1, after: 'clear11' }] },
@@ -553,6 +575,8 @@ export const PEOPLE = [
     { id: 'soutou8', name: '双頭鬼', art: 'soutouki', x: 24, y: SHIRO_Y0 + 15, only: 'soutou8', scale: 1.4 },
     { id: 'kinme8', name: '金滅鬼', art: 'kinmetsuki', x: 24, y: SHIRO_Y0 + 11, only: 'kinme8', scale: 1.2 },
     { id: 'onioni8', name: 'おにおに', art: 'onioni', x: 24, y: SHIRO_Y0 + 7, only: 'onioni8' },
+    // 13 章: 喰らいの 城の 最上階の ルキハ
+    { id: 'rukiha13', name: 'ルキハ', art: 'rukiha', x: 24, y: KURAI_Y0 + 4, only: 'rukiha13', scale: 1 },
     // 12 章: 神社に あつまった みんな (話せる) と、勝負を いどむ おにおに
     { id: 'onioni12', name: 'おにおに', art: 'onioni2', x: 8, y: 6, only: 'onioni12', scale: 1.2 },
     { id: 'g12zumitani', name: 'ズミタニ', art: 'zumitani', x: 3, y: 7, only: 'gather12' },
@@ -660,6 +684,16 @@ export const MOON_PLACES = [
     { id: 'moonStation', label: '駅', x: 5, y: MOON_Y0 + 28 }
 ];
 
+// ----- 喰らいの 城 (13 章「喰らいの 城」。2026-10-30) -----
+export const KURAI_IN = { x: 5, y: KURAI_Y0 + 31, dir: 'down' };
+export const KURAI_PLACES = [
+    { id: 'saijou', label: '最上階', x: 24, y: KURAI_Y0 + 3 },
+    { id: 'kaidan', label: '階段', x: 23.5, y: KURAI_Y0 + 13 },
+    { id: 'hiroma', label: '大広間', x: 16, y: KURAI_Y0 + 20 },
+    { id: 'jomon', label: '城門', x: 23.5, y: KURAI_Y0 + 25 },
+    { id: 'kuraiStation', label: '黒い 光の 道', x: 5, y: KURAI_Y0 + 28 }
+];
+
 // ----- ASOの壺の底 (11 章「ASOの壺の底」。2026-10-30) -----
 export const TSUBO_IN = { x: 5, y: TSUBO_Y0 + 31, dir: 'down' };
 export const TSUBO_PLACES = [
@@ -755,9 +789,9 @@ export const UMI_PLACES = [
 
 export const tileAt = (x, y) => (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? 'T' : TILES[y][x]);
 // その マスの 地区 (設計書 5.1)
-export const areaAt = (x, y) => (y >= TSUBO_Y0 ? 'tsubo' : y >= KINNIKU_Y0 ? 'kinniku' : y >= PARK_Y0 ? 'park' : y >= SHIRO_Y0 ? 'shiro' : y >= MOON_Y0 ? 'moon' : y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
+export const areaAt = (x, y) => (y >= KURAI_Y0 ? 'kurai' : y >= TSUBO_Y0 ? 'tsubo' : y >= KINNIKU_Y0 ? 'kinniku' : y >= PARK_Y0 ? 'park' : y >= SHIRO_Y0 ? 'shiro' : y >= MOON_Y0 ? 'moon' : y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
 export const inSchoolTile = y => y >= SCHOOL_Y0 && y < YAMA_Y0;
 // 町・学校・山・海 は つながって いないので、カメラと 地図は べつに する。[上, 下) の マス
-export const regionOf = ty => (ty >= TSUBO_Y0 ? [TSUBO_Y0, MAP_H] : ty >= KINNIKU_Y0 ? [KINNIKU_Y0, TSUBO_Y0] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
+export const regionOf = ty => (ty >= KURAI_Y0 ? [KURAI_Y0, MAP_H] : ty >= TSUBO_Y0 ? [TSUBO_Y0, KURAI_Y0] : ty >= KINNIKU_Y0 ? [KINNIKU_Y0, TSUBO_Y0] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
 // どうくつの 中か (4 章。バトルの 背景が かわる)
 export const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;

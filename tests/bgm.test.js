@@ -51,3 +51,14 @@ test('どの 曲を 鳴らすか: タイトル・町の 地区・ふつうの �
     assert.equal(bgmFor({ scene: 'battle', battle: { kind: 'boss', bossId: 'nushi', outcome: 'win' } }), null);
     assert.equal(bgmFor({ scene: 'result' }), null);
 });
+
+test('13 章: ルキハ → ニオニオーテン (つぎはぎ) → HP 半分から こおりくんの テーマの 最終決戦', async () => {
+    const { bgmFor, SONGS } = await import('../src/data/bgm.js');
+    const battle = (phase, enraged) => bgmFor({ scene: 'battle', battle: { kind: 'boss', bossId: 'rukiha13', phase, enraged } });
+    assert.equal(battle(1, false), 'rukiha13');
+    assert.equal(battle(2, false), 'niolioten13');
+    assert.equal(battle(2, true), 'final13');
+    assert.equal(SONGS.final13.melody, SONGS.title.melody, 'こおりくんの テーマ');
+    assert.ok(SONGS.final13.bpm > SONGS.title.bpm + 30, '決戦用に はやく');
+    assert.equal(SONGS.niolioten13.melody.split('|').length, 8, '8 小節');
+});

@@ -696,6 +696,18 @@ body.nopad #pad { display: none; }
       arp: "0 1 2 1 0 1 2 1",
       drums: "k . . . s . . ."
     },
+    // 13 章 喰らいの 城: 低い 音で ゆっくり、ときどき 不協和
+    kurai: {
+      name: "喰らいの 城",
+      bpm: 84,
+      root: 60,
+      mode: "harmonic",
+      lead: "triangle",
+      melody: "1 - - - 7, - - . | 1 - 2 - 3 - - . | 2 - - - 1 - 7, . | 6, - - - - - - . | 3 - - - 2 - - . | 3 - 4 - 5 - - . | 4 - 3 - 2 - 7, . | 1 - - - - - - .",
+      chords: "1 1 4 5 6 4 5 1",
+      bass: "r - - - r - - -",
+      drums: "k . . . . . s ."
+    },
     tsubo: {
       name: "ASOの壺の底",
       bpm: 88,
@@ -926,6 +938,19 @@ body.nopad #pad { display: none; }
       bass: "r r o r r r o r",
       drums: "x h s h x h s s"
     },
+    // 13 章: 嵐の 予兆 + つぎはぎ (とちゅうで 音階や ノリが いきなり かわる)
+    rukiha13: {
+      name: "嵐の 予兆 (ルキハ)",
+      bpm: 120,
+      root: 62,
+      mode: "phrygian",
+      lead: "sawtooth",
+      melody: "1 - - - 2 - - . | 1 - - - 7, - - . | 1 . 1 2 . 4 5 . | 6 . 5 4 2 . 1 . | 5 - - - 6 - - . | 5 4 2 1 7, 1 2 4 | 1' . 7 . 1' . 7 . | 6 - 5 - 2 - 1 -",
+      chords: "1 1 2 6 4 2 6 1",
+      bass: "r - - - r - - -",
+      arp: ". . . . 0 1 2 3",
+      drums: "k . . . . . s . "
+    },
     onioni12: {
       name: "鬼の王 (おにおに・鬼神)",
       bpm: 170,
@@ -996,7 +1021,7 @@ body.nopad #pad { display: none; }
       bass: "r r o r r r o r",
       drums: "x h s h x h s s"
     },
-    // 曲が まだ ない ボス (10 章 から 先) は これ
+    // 曲が まだ ない ボス は これ
     boss: {
       name: "ボス バトル",
       bpm: 150,
@@ -1010,6 +1035,36 @@ body.nopad #pad { display: none; }
     }
   };
   const tokens = (s) => (s || "").split(/\s+/).filter((t) => t && t !== "|");
+  const bars = (id, from, n = 2) => {
+    const t = tokens(SONGS[id].melody), st = SONGS[id].steps || 8;
+    return Array.from({ length: n }, (_, i) => t.slice((from + i) * st, (from + i + 1) * st).join(" ")).join(" | ");
+  };
+  const chordsOf = (id, from, n = 2) => tokens(SONGS[id].chords).slice(from, from + n).join(" ");
+  const PATCH = [["ishinokawa", 0], ["kage", 0], ["himuro", 4], ["onioni8", 0]];
+  SONGS.niolioten13 = {
+    name: "つぎはぎの 獣 (ルキハ・ニオニオーテン)",
+    bpm: 150,
+    root: 64,
+    mode: "harmonic",
+    lead: "sawtooth",
+    melody: PATCH.map(([id, f]) => bars(id, f)).join(" | "),
+    chords: PATCH.map(([id, f]) => chordsOf(id, f)).join(" "),
+    bass: "r o r o r . r o",
+    arp: "0 . 2 . 1 . 3 .",
+    drums: "k h s h k k s ."
+  };
+  SONGS.final13 = {
+    name: "こおりくんの テーマ・最終決戦",
+    bpm: 172,
+    root: 72,
+    mode: "major",
+    lead: "square",
+    melody: SONGS.title.melody,
+    chords: SONGS.title.chords,
+    bass: "r o r o r o r o",
+    arp: "0 1 2 3 2 1 0 1",
+    drums: "x h s h x h s s"
+  };
   function degree(tok, mode2) {
     const m = /^([#b]?)([1-7])([',]*)$/.exec(tok);
     if (!m) return null;
@@ -1068,6 +1123,7 @@ body.nopad #pad { display: none; }
     if (scene === "field" || scene === "menu" || scene === "fusion") return SONGS[area] ? area : "ishinokawa";
     if (scene === "battle" && battle) {
       if (battle.outcome) return null;
+      if (battle.bossId === "rukiha13" && battle.phase === 2) return battle.enraged ? "final13" : "niolioten13";
       if (battle.kind === "boss" || battle.kind === "kairou") return SONGS[battle.bossId] ? battle.bossId : "boss";
       if (battle.kind === "rival" || battle.kind === "team") return "rival";
       return "battle";
@@ -1474,6 +1530,7 @@ body.nopad #pad { display: none; }
     dradora: W$1("ドラ爆", "ほのお", "around", 1.3),
     bakuenryu: W$1("マグマの 波", "ほのお", "around", 1.2, "poison", 0.3),
     bakuen11: W$1("ほのおの いき", "ほのお", "line", 1.4),
+    rukiha13: W$1("ウシノツノ", "ふつう", "front", 1.6),
     onioni12: W$1("鬼神 金棒", "ほのお", "around", 1.4),
     aso: W$1("亜祖宇激烈破", "ふしぎ", "around", 1.6),
     aso15: W$1("魔剣 生成", "ふしぎ", "front", 1.8),
@@ -4264,7 +4321,7 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
-  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮", shiro: "金色のSE城", park: "遊園地", kinniku: "筋肉の山", tsubo: "ASOの壺の底" };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮", shiro: "金色のSE城", park: "遊園地", kinniku: "筋肉の山", tsubo: "ASOの壺の底", kurai: "喰らいの 城" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
@@ -4708,6 +4765,59 @@ body.nopad #pad { display: none; }
       lv: 35,
       place: "shiro"
     },
+    // ----- 13 章「喰らいの 城」の ボス: ルキハ → ルキハ・ニオニオーテン (2026-10-30 ユーザー指定) -----
+    // 第 1 形態 ルキハ: 体を 変形させて トリノツバサ (全体)・ウシノツノ (1 体)・ヘビノメ (全体 行動不能の とりつき)。チャンスタイムは なし。
+    //   必殺技 オオグライ: 全体に ふつうの 中ダメージを 4〜6 回
+    // 第 2 形態 ルキハ・ニオニオーテン (第 1 形態の HP が なくなると): マジュウノヒトタチ (1 体)・セイレイノウタ (全体 こんらん)・
+    //   チョウジュウノ○○ (7 属性の 術)。翼・腕・体・足 (キメラの 部位。ドット絵の その 部分) を ロックオンで こわせる。
+    //   ぜんぶ こわすと 頭が 出て、攻撃が HP に とどく (chimera)。HP が 半分で 紅く どす黒く なり (enrage) 攻撃が はげしく なる。
+    //   オオグライノカミツキ: 味方 1 体の こうげき・わざ・術・まもり の どれかを 喰らって 自分の わざに する。頭を ねらって 当てると 取りもどす
+    rukiha13: {
+      id: "rukiha13",
+      name: "ルキハ",
+      element: "ふしぎ",
+      role: "attacker",
+      art: "rukiha",
+      scale: 1.6,
+      rank: "S",
+      base: { hp: 1150, atk: 24, def: 20, spd: 15, mag: 22 },
+      moves: [
+        { name: "トリノツバサ", w: 3, morph: true, effects: [atk("all", 1, { element: "かぜ" })] },
+        { name: "ウシノツノ", w: 3, morph: true, effects: [atk("one", 1.8)] },
+        { name: "ヘビノメ", w: 2, morph: true, effects: [{ kind: "status", target: "all", status: "stun", chance: 0.45 }] },
+        { name: "ケモノノツメ", w: 2, morph: true, effects: [atk("one", 1.2, { hits: 2 })] }
+      ],
+      bigMove: { name: "オオグライ", every: 13, warn: 2.5, effects: [atk("all", 0.5, { hitsMin: 4, hitsMax: 6, element: "ふつう" })] },
+      phase2: {
+        name: "ルキハ・ニオニオーテン",
+        art: "niolioten",
+        huge: true,
+        moves: [
+          { name: "マジュウノヒトタチ", w: 3, effects: [atk("one", 2)] },
+          { name: "セイレイノウタ", w: 2, effects: [{ kind: "status", target: "all", status: "confuse", chance: 0.6 }] },
+          { name: "チョウジュウノホノオ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "ほのお" })] },
+          { name: "チョウジュウノミズ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "みず" })] },
+          { name: "チョウジュウノコオリ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "こおり" })] },
+          { name: "チョウジュウノイカヅチ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "かぜ" })] },
+          { name: "チョウジュウノツタ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "しぜん" })] },
+          { name: "チョウジュウノマボロシ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "ふしぎ" })] },
+          { name: "チョウジュウノイワ", w: 1, effects: [atk("all", 0.95, { magic: true, element: "ふつう" })] }
+        ],
+        bigMove: { name: "ゼンブ オレノ モノ", every: 14, warn: 2.5, effects: [atk("all", 1.5, { magic: true, element: "ふしぎ" })] },
+        gims: {
+          wing: { name: "竜の 翼", hp: 0.07, when: "always", rect: [0, 1, 9, 14], chimeraPart: true },
+          arm: { name: "鬼の 腕", hp: 0.07, when: "always", rect: [22, 7, 31, 19], chimeraPart: true },
+          body: { name: "うろこの 体", hp: 0.08, when: "always", rect: [10, 9, 21, 20], chimeraPart: true },
+          legs: { name: "けものの 足", hp: 0.07, when: "always", rect: [8, 21, 23, 27], chimeraPart: true },
+          head: { name: "ルキハの 顔", hp: 99, when: "exposed", rect: [12, 1, 21, 8], face: true }
+        },
+        chimera: { regrow: 16 },
+        enrage: { at: 0.5, atk: 0.5, spd: 0.3, eat: { name: "オオグライノカミツキ", w: 3 } }
+      },
+      befriends: null,
+      lv: 62,
+      place: "kurai"
+    },
     // ----- 12 章「集結」の ボス (2026-10-30 ユーザー指定) -----
     // おにおに・鬼神: ルキハとの 決戦の 前に こおりくんに 勝負を いどむ。最初から 第 2 形態 (鬼神)。8 章とは くらべものに ならない 攻撃。
     //   チャンスタイムは 8 章の おにおにと 同じ (ため の あいだに ダメージで 紋……ではなく 力の 暴発。2 回目からは ガード)
@@ -4963,7 +5073,7 @@ body.nopad #pad { display: none; }
     }
   };
   const BOSS14 = { naitei: "saaraha14", menkyo: "rihama14" };
-  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "tashikeda10", "bakuen11", "onioni12", "boss14"];
+  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "tashikeda10", "bakuen11", "onioni12", "rukiha13", "boss14"];
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
   const rival = (id, name, element, role, rank, mul, line2, special, extra = {}) => {
     const base = {};
@@ -5024,7 +5134,7 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 408;
+  const MAP_W = 48, MAP_H = 444;
   const TOWN_H = 36;
   const SCHOOL_Y0 = 60;
   const YAMA_Y0 = 84;
@@ -5036,6 +5146,7 @@ body.nopad #pad { display: none; }
   const PARK_Y0 = 300;
   const KINNIKU_Y0 = 336;
   const TSUBO_Y0 = 372;
+  const KURAI_Y0 = 408;
   const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z", "V", "k", "m"]);
   const WET = /* @__PURE__ */ new Set(["D", "E", "I"]);
   function build() {
@@ -5294,6 +5405,20 @@ body.nopad #pad { display: none; }
     [[3, A + 28], [12, A + 29], [30, A + 29], [40, A + 30], [44, A + 28], [17, A + 33]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
+    const R = KURAI_Y0;
+    fill(0, R, MAP_W - 1, MAP_H - 1, "T");
+    fill(1, R + 1, MAP_W - 2, R + 34, "G");
+    fill(6, R + 1, 41, R + 25, "V");
+    fill(9, R + 16, 38, R + 23, "v");
+    fill(23, R + 24, 24, R + 25, "v");
+    fill(23, R + 11, 24, R + 15, "v");
+    fill(12, R + 2, 35, R + 10, "v");
+    fill(23, R + 26, 24, R + 31, "K");
+    fill(4, R + 31, 6, R + 31, "K");
+    fill(4, R + 32, 24, R + 33, "K");
+    [[3, R + 28], [12, R + 29], [30, R + 29], [40, R + 30], [44, R + 28], [17, R + 33]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -5341,6 +5466,7 @@ body.nopad #pad { display: none; }
     { id: "attrA", label: "コースター", x: 8, y: PARK_Y0 + 11, w: 6, h: 4, wall: "#ffd0e0", roof: "#e04a8a", door: { x: 11, y: PARK_Y0 + 14 } },
     { id: "attrB", label: "かんらん車", x: 20, y: PARK_Y0 + 3, w: 8, h: 4, wall: "#d0f0ff", roof: "#3a8ae0", door: { x: 24, y: PARK_Y0 + 6 } },
     { id: "attrC", label: "おばけ屋敷", x: 34, y: PARK_Y0 + 11, w: 6, h: 4, wall: "#d8d0e8", roof: "#4a3a6a", door: { x: 37, y: PARK_Y0 + 14 } },
+    { id: "kuraiStation", label: "黒い 光の 道", x: 2, y: KURAI_Y0 + 27, w: 6, h: 4, wall: "#3a2a4a", roof: "#1a0a2a", door: { x: 5, y: KURAI_Y0 + 30 } },
     { id: "tsuboStation", label: "ASOの壺前駅", x: 2, y: TSUBO_Y0 + 27, w: 6, h: 4, wall: "#d8c8b8", roof: "#4a2a5a", door: { x: 5, y: TSUBO_Y0 + 30 } },
     { id: "kinnikuStation", label: "筋肉の山 登山口駅", x: 2, y: KINNIKU_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#6a4a2a", door: { x: 5, y: KINNIKU_Y0 + 30 } },
     { id: "parkStation", label: "遊園地前駅", x: 2, y: PARK_Y0 + 27, w: 6, h: 4, wall: "#fff0d0", roof: "#e08a2a", door: { x: 5, y: PARK_Y0 + 30 } }
@@ -5371,6 +5497,7 @@ body.nopad #pad { display: none; }
   const PARK_LV = [36, 40];
   const KINNIKU_LV = [31, 35];
   const TSUBO_LV = [38, 42];
+  const KURAI_LV = [52, 56];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -5459,6 +5586,9 @@ body.nopad #pad { display: none; }
     { id: "shiroSoto", label: "城の まわり", x0: 1, y0: SHIRO_Y0 + 26, x1: 46, y1: SHIRO_Y0 + 33, max: 2, lv: SHIRO_LV, kinds: [{ id: "setsubunmame", w: 2 }, { id: "onibin", w: 1, time: ["evening", "night"] }, { id: "tsunodaruma", w: 1 }] },
     { id: "hiroma", label: "大広間", x0: 9, y0: SHIRO_Y0 + 20, x1: 38, y1: SHIRO_Y0 + 23, max: 2, lv: SHIRO_LV, kinds: [{ id: "tsunodaruma", w: 2 }, { id: "onibin", w: 2 }, { id: "onigirin", w: 1 }] },
     { id: "gyokuza", label: "玉座の 間", x0: 12, y0: SHIRO_Y0 + 7, x1: 35, y1: SHIRO_Y0 + 9, max: 1, lv: SHIRO_LV, kinds: [{ id: "goukioni", w: 1, after: "clear8" }, { id: "kinmetsuki", w: 1, after: "clear8" }] },
+    // 喰らいの 城 (13 章)。ルキハの 軍勢 = これまでの 強い キャラが 紋つき (・闇) で 出る
+    { id: "kuraiHiroma", label: "喰らいの 城の 大広間", x0: 9, y0: KURAI_Y0 + 16, x1: 38, y1: KURAI_Y0 + 23, max: 3, lv: KURAI_LV, kinds: [{ id: "goukioni", w: 2 }, { id: "kaendaruma", w: 2 }, { id: "shirokumatcho", w: 2 }, { id: "nakatadraco", w: 1 }, { id: "yukionnan", w: 1 }, { id: "dradora", w: 1 }] },
+    { id: "kuraiSoto", label: "喰らいの 城の まわり", x0: 1, y0: KURAI_Y0 + 26, x1: 46, y1: KURAI_Y0 + 33, max: 2, lv: KURAI_LV, kinds: [{ id: "hinotorin", w: 2 }, { id: "onibin", w: 2 }, { id: "youganworm", w: 1 }] },
     // ASOの壺の底 (11 章)。バクエンリュウは 11 章 クリアの あと (clear11) 火山の 底に いる
     { id: "youganDou", label: "溶岩の 大どうくつ", x0: 8, y0: TSUBO_Y0 + 13, x1: 38, y1: TSUBO_Y0 + 19, max: 3, lv: TSUBO_LV, kinds: [{ id: "asohei", w: 3 }, { id: "hinotorin", w: 2 }, { id: "kaendaruma", w: 2 }, { id: "youganworm", w: 2 }, { id: "dradora", w: 1 }] },
     { id: "kazanSoko", label: "火山の 底", x0: 8, y0: TSUBO_Y0 + 3, x1: 28, y1: TSUBO_Y0 + 7, max: 1, lv: TSUBO_LV, kinds: [{ id: "youganworm", w: 1 }, { id: "hinotorin", w: 1 }, { id: "bakuenryu", w: 1, after: "clear11" }] },
@@ -5691,6 +5821,8 @@ body.nopad #pad { display: none; }
     { id: "soutou8", name: "双頭鬼", art: "soutouki", x: 24, y: SHIRO_Y0 + 15, only: "soutou8", scale: 1.4 },
     { id: "kinme8", name: "金滅鬼", art: "kinmetsuki", x: 24, y: SHIRO_Y0 + 11, only: "kinme8", scale: 1.2 },
     { id: "onioni8", name: "おにおに", art: "onioni", x: 24, y: SHIRO_Y0 + 7, only: "onioni8" },
+    // 13 章: 喰らいの 城の 最上階の ルキハ
+    { id: "rukiha13", name: "ルキハ", art: "rukiha", x: 24, y: KURAI_Y0 + 4, only: "rukiha13", scale: 1 },
     // 12 章: 神社に あつまった みんな (話せる) と、勝負を いどむ おにおに
     { id: "onioni12", name: "おにおに", art: "onioni2", x: 8, y: 6, only: "onioni12", scale: 1.2 },
     { id: "g12zumitani", name: "ズミタニ", art: "zumitani", x: 3, y: 7, only: "gather12" },
@@ -5864,6 +5996,14 @@ body.nopad #pad { display: none; }
     { id: "iriguchi", label: "入り口", x: 23.5, y: MOON_Y0 + 25 },
     { id: "moonStation", label: "駅", x: 5, y: MOON_Y0 + 28 }
   ];
+  const KURAI_IN = { x: 5, y: KURAI_Y0 + 31, dir: "down" };
+  const KURAI_PLACES = [
+    { id: "saijou", label: "最上階", x: 24, y: KURAI_Y0 + 3 },
+    { id: "kaidan", label: "階段", x: 23.5, y: KURAI_Y0 + 13 },
+    { id: "hiroma", label: "大広間", x: 16, y: KURAI_Y0 + 20 },
+    { id: "jomon", label: "城門", x: 23.5, y: KURAI_Y0 + 25 },
+    { id: "kuraiStation", label: "黒い 光の 道", x: 5, y: KURAI_Y0 + 28 }
+  ];
   const TSUBO_IN = { x: 5, y: TSUBO_Y0 + 31, dir: "down" };
   const TSUBO_PLACES = [
     { id: "asonoma", label: "ASOの間", x: 35, y: TSUBO_Y0 + 3 },
@@ -5965,8 +6105,8 @@ body.nopad #pad { display: none; }
     { id: "cave", label: "海岸どうくつ", x: 37, y: UMI_Y0 + 13 }
   ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= TSUBO_Y0 ? "tsubo" : y >= KINNIKU_Y0 ? "kinniku" : y >= PARK_Y0 ? "park" : y >= SHIRO_Y0 ? "shiro" : y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
-  const regionOf = (ty) => ty >= TSUBO_Y0 ? [TSUBO_Y0, MAP_H] : ty >= KINNIKU_Y0 ? [KINNIKU_Y0, TSUBO_Y0] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
+  const areaAt = (x, y) => y >= KURAI_Y0 ? "kurai" : y >= TSUBO_Y0 ? "tsubo" : y >= KINNIKU_Y0 ? "kinniku" : y >= PARK_Y0 ? "park" : y >= SHIRO_Y0 ? "shiro" : y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const regionOf = (ty) => ty >= KURAI_Y0 ? [KURAI_Y0, MAP_H] : ty >= TSUBO_Y0 ? [TSUBO_Y0, KURAI_Y0] : ty >= KINNIKU_Y0 ? [KINNIKU_Y0, TSUBO_Y0] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
   const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
@@ -6009,8 +6149,8 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "tsuboe", "tsubo", "clear11", "shuuketsu", "clear12", "invite", "park", "yoru", "clear14"];
-  const MAIN_END = "clear12";
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "tsuboe", "tsubo", "clear11", "shuuketsu", "clear12", "kuraie", "kurai", "clear13", "invite", "park", "yoru", "clear14"];
+  const MAIN_END = "clear13";
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -6104,11 +6244,14 @@ body.nopad #pad { display: none; }
   }
   const DARK10_LV = [33, 37];
   const DARK10_GOAL = 5;
-  const darkTown = (g, source) => g.story === "shuugeki" && ["ishinokawa", "shoutengai"].includes(areaAt(source.x0 ?? source.x, source.y0 ?? source.y));
+  const darkTown = (g, source) => {
+    const area = areaAt(source.x0 ?? source.x, source.y0 ?? source.y);
+    return g.story === "shuugeki" && ["ishinokawa", "shoutengai"].includes(area) || area === "kurai";
+  };
   function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
     const dark = darkTown(g, source);
-    const [lo, hi] = dark ? DARK10_LV : source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
+    const [lo, hi] = dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === "kurai" ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
     const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
@@ -6246,6 +6389,11 @@ body.nopad #pad { display: none; }
         out.oniSpecial = true;
       }
       if (bossId === "aso15") g.flags.aso15 = true;
+      if (bossId === "rukiha13") {
+        g.story = "clear13";
+        g.chapter = 14;
+        out.ending = true;
+      }
       if (bossId === BOSS14[g.version]) {
         g.story = "clear14";
         g.chapter = 15;
@@ -6361,6 +6509,12 @@ body.nopad #pad { display: none; }
         return !g.flags.oni12 ? "神社に 行こう。みんなが あつまっている" : "家に 帰って ねよう (出発の 前の 夜)";
       case "clear12":
         return "家の 前の ともいしと 話そう";
+      case "kuraie":
+        return "石の川駅から、黒い 光の 道で 喰らいの 城へ 行こう";
+      case "kurai":
+        return "喰らいの 城の 最上階で ルキハを たおそう";
+      case "clear13":
+        return "家の 前の ともいしと 話そう";
       case "invite":
         return `石の川駅から、電車で ${g.version === "menkyo" ? "メンキョシティ" : "ナイテイパーク"}へ 行こう`;
       case "park":
@@ -6386,7 +6540,7 @@ body.nopad #pad { display: none; }
     return true;
   }
   const canRideTrain = (g) => reached(g, "umi");
-  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : [], ...reached(g, "clear7") ? ["shiro"] : [], ...reached(g, "onijoin") ? ["kinniku"] : [], ...reached(g, "tsuboe") ? ["tsubo"] : [], ...reached(g, "invite") ? ["park"] : []];
+  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : [], ...reached(g, "clear7") ? ["shiro"] : [], ...reached(g, "onijoin") ? ["kinniku"] : [], ...reached(g, "tsuboe") ? ["tsubo"] : [], ...reached(g, "kuraie") ? ["kurai"] : [], ...reached(g, "invite") ? ["park"] : []];
   function startChapter9(g) {
     if (g.story !== "clear8") return null;
     g.story = "onijoin";
@@ -6417,6 +6571,16 @@ body.nopad #pad { display: none; }
     if (g.story !== "tsubo" || !g.flags.baku11) return false;
     g.story = "clear11";
     g.chapter = 12;
+    return true;
+  }
+  function startChapter13(g) {
+    if (g.story !== "clear12") return false;
+    g.story = "kuraie";
+    return true;
+  }
+  function arriveKurai(g) {
+    if (g.story !== "kuraie") return false;
+    g.story = "kurai";
     return true;
   }
   function startChapter12(g) {
@@ -6585,6 +6749,14 @@ body.nopad #pad { display: none; }
       phase2Def: sp2.phase2 || null,
       phase: 1,
       bound: false,
+      huge: Boolean(sp2.huge),
+      chimera: null,
+      headOut: false,
+      headT: 0,
+      enrageDef: null,
+      enraged: false,
+      stolen: [],
+      eaten: null,
       regenDef: sp2.regen || null,
       magma: Boolean(sp2.magma),
       throwDef: sp2.throws || null,
@@ -6645,6 +6817,7 @@ body.nopad #pad { display: none; }
     if (p.when === "shell") return u.shell > 0 && !(b.chance && b.chance.uid === u.uid);
     if (p.when === "oni") return u.oni;
     if (p.when === "chant") return Boolean(b.chant && b.chant.uid === u.uid);
+    if (p.when === "exposed") return u.headOut;
     return true;
   }
   const openGims = (b, u) => u.gims ? Object.keys(u.gims).filter((k) => gimOpen(b, u, k)) : [];
@@ -6666,6 +6839,12 @@ body.nopad #pad { display: none; }
     }
     if (key2 === "ring") {
       releaseBind(b);
+      return;
+    }
+    if (part.chimeraPart && Object.values(u.gims).filter((p) => p.chimeraPart).every((p) => p.broken)) {
+      u.headOut = true;
+      u.headT = u.chimera.regrow;
+      emit(b, "headOut", { actor: u.uid });
       return;
     }
     if (key2 === "horn") {
@@ -6930,9 +7109,44 @@ body.nopad #pad { display: none; }
     u.bigMove = p2.bigMove;
     u.buffs = {};
     u.status = {};
+    u.huge = Boolean(p2.huge);
+    if (p2.gims) u.gims = Object.fromEntries(Object.entries(p2.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(u.max * p.hp)), hp: Math.max(1, Math.round(u.max * p.hp)), broken: false }]));
+    u.chimera = p2.chimera || null;
+    u.enrageDef = p2.enrage || null;
     b.bossTimer = 0;
     b.warned = false;
     emit(b, "transform", { actor: u.uid, name: p2.name });
+  }
+  const EAT_LABEL = { attack: "こうげき", waza: "わざ", jutsu: "術", guard: "まもり" };
+  function enrage(b, u) {
+    const d = u.enrageDef;
+    u.enraged = true;
+    u.buffs.atk = { amount: d.atk, t: 99999 };
+    u.buffs.spd = { amount: d.spd, t: 99999 };
+    u.bossMoves = [...u.bossMoves, { ...d.eat, eat: true }];
+    emit(b, "enrage", { actor: u.uid });
+  }
+  function eatCommand(b, u) {
+    const targets = b.frontAlive().filter((a) => !a.eaten);
+    if (!targets.length) return false;
+    const to = b.rng.pick(targets);
+    const cmd = b.rng.pick(["attack", "waza", "jutsu", "guard"]);
+    to.eaten = cmd;
+    damage(b, u, to, 1);
+    const effects = cmd === "waza" ? to.waza.effects : cmd === "jutsu" ? to.jutsu.effects : cmd === "guard" ? [{ kind: "buff", target: "self", stat: "def", amount: 0.6, time: 10 }] : [atk1(1.3)];
+    const move = { name: `喰らった ${to.name}の ${cmd === "waza" ? to.waza.name : cmd === "jutsu" ? to.jutsu.name : EAT_LABEL[cmd]}`, w: 2.5, effects, stolenFrom: to.uid };
+    u.bossMoves = [...u.bossMoves, move];
+    u.stolen.push({ uid: to.uid, cmd, name: move.name });
+    emit(b, "eat", { actor: u.uid, target: to.uid, cmd, label: EAT_LABEL[cmd] });
+    return true;
+  }
+  const atk1 = (power) => ({ kind: "attack", target: "one", power });
+  function regain(b, u) {
+    const s = u.stolen.shift();
+    const to = b.wheel.find((a) => a && a.uid === s.uid);
+    if (to) to.eaten = null;
+    u.bossMoves = u.bossMoves.filter((m) => m.name !== s.name);
+    emit(b, "regain", { target: s.uid, label: EAT_LABEL[s.cmd] });
   }
   const THROW_SLOTS = ["left", "right"];
   const THROW_POS = { left: [-2.3, -0.35], right: [2.3, -0.35] };
@@ -7047,6 +7261,11 @@ body.nopad #pad { display: none; }
       clearClones(b, "found");
     }
     const gim = from.side === "ally" && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
+    const chimeraBlock = to.chimera && from.side === "ally" && !to.headOut;
+    if (chimeraBlock && !(gim && to.gims[gim].chimeraPart)) {
+      emit(b, "immune", { target: to.uid, actor: from.uid, chimera: true });
+      return 0;
+    }
     if (to.magma && from.side === "ally") {
       if (gim && to.gims[gim].thrown) {
         useThrown(b, to, gim);
@@ -7075,7 +7294,14 @@ body.nopad #pad { display: none; }
     const burstGuard = burstOn && b.burst.guard ? to.bigMove.guardCut : 1;
     let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell * burstGuard;
     dmg = Math.max(1, Math.round(dmg));
+    if (chimeraBlock) {
+      emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, part: gim });
+      hitGim(b, to, gim, dmg);
+      return dmg;
+    }
+    if (to.chimera && from.side === "ally" && gim === "head" && to.stolen.length) regain(b, to);
     to.hp = Math.max(0, to.hp - dmg);
+    if (to.enrageDef && !to.enraged && to.hp > 0 && to.hp <= to.max * to.enrageDef.at) enrage(b, to);
     if (to.status.sleep > 0) to.status.sleep = 0;
     if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
     emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1 || burstGuard < 1, weak: weak && !headGuard, headGuard, part: gim });
@@ -7153,7 +7379,8 @@ body.nopad #pad { display: none; }
       }
       for (const to of targets) {
         if (fx.kind === "attack") {
-          for (let h = 0; h < (fx.hits || 1); h++) {
+          const hits = fx.hitsMax ? fx.hitsMin + b.rng.int(fx.hitsMax - fx.hitsMin + 1) : fx.hits || 1;
+          for (let h = 0; h < hits; h++) {
             const dmg = damage(b, user, to, fx.power, { magic: fx.magic, mult, element: fx.element, unguardable: fx.unguardable });
             if (fx.drain) heal(b, user, user, dmg * fx.drain);
           }
@@ -7181,6 +7408,7 @@ body.nopad #pad { display: none; }
   function chooseCommand(b, u) {
     if (!u.hero && !u.boss && b.rng.chance(LOAF)) return "loaf";
     const w = { ...u.boss ? BOSS_W : ACTION_W[u.role] || ACTION_W.attacker };
+    if (u.eaten) w[u.eaten] = 0;
     const hurt = friends(b, u.side).some((f) => f.hp < f.max * 0.6);
     if (u.role === "healer") w.waza = hurt ? 200 : 0;
     if (u.jutsu && u.jutsu.type === "heal") w.jutsu = hurt ? w.jutsu + 20 : 0;
@@ -7234,7 +7462,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const move = b.rng.weighted(list.map((m) => ({ m, w: m.w }))).m;
-      emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss" });
+      emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss", morph: Boolean(move.morph) });
       if (move.summon) summonIdol(b, u);
       else if (move.shell) {
         u.shell = move.shell;
@@ -7242,7 +7470,9 @@ body.nopad #pad { display: none; }
       } else if (move.clones) summonClones(b, u);
       else if (move.drain) drainSummon(b, u);
       else if (move.bind) bindOne(b, u);
-      else if (move.melt) {
+      else if (move.eat) {
+        if (!eatCommand(b, u)) applyEffects(b, u, [atk1(1.2)]);
+      } else if (move.melt) {
         applyEffects(b, u, move.effects);
         meltThrown(b, u);
       } else {
@@ -7382,6 +7612,19 @@ body.nopad #pad { display: none; }
           u.armDmg = 0;
           emit(b, "armShrink", { target: u.uid, lv: u.armLv });
         }
+      }
+    }
+    for (const e of b.enemies) {
+      if (e.ko || !e.headOut) continue;
+      e.headT -= dt;
+      if (e.headT <= 0) {
+        e.headOut = false;
+        for (const p of Object.values(e.gims)) if (p.chimeraPart) {
+          p.hp = p.max;
+          p.broken = false;
+        }
+        if (b.lock === e.uid) b.lockPart = null;
+        emit(b, "regrow", { actor: e.uid });
       }
     }
     for (const e of b.enemies) {
@@ -16939,6 +17182,62 @@ body.nopad #pad { display: none; }
         ".....oaaa.aaa.aaa.aaa.aao.....",
         ".....aa...aa...aa...aa..a....."
       ])
+    },
+    // ルキハ・ニオニオーテン (13 章。ルキハの 第 2 形態。新キャラ・2026-10-30): 喰らってきた 生き物の つぎはぎの キメラ。
+    //   左に 竜の 翼・右に 大きな 鬼の 腕・うろこの 体 (むらさきの 紋)・けものの 足・鳥の くちばし。上の まんなかに ぐちゃぐちゃの ルキハの 顔。
+    //   部位 (翼・腕・体・足・頭) は この 絵の 上で ねらう (nakama.js の rect)
+    niolioten: {
+      w: 32,
+      h: 28,
+      palette: {
+        o: "#0a0408",
+        w: "#3a1a4a",
+        W: "#6a3a8a",
+        h: "#2a2438",
+        s: "#c8a898",
+        S: "#8a5a6a",
+        r: "#e02040",
+        m: "#3a0a10",
+        y: "#e0a020",
+        b: "#2a2a3a",
+        B: "#4a4a6a",
+        c: "#a040e0",
+        a: "#a02020",
+        A: "#ffd040",
+        l: "#5a3a2a",
+        L: "#8a5a3a",
+        k: "#e0e0e0"
+      },
+      frames: bob$1([
+        "........oo......................",
+        ".......owWo.oooooooo............",
+        "......owwWoohhhhhhhho...........",
+        ".....oWWWWoohhhhhhhho...........",
+        "....owwwwWoohssssssso...........",
+        "...owwwwwWoosrrsssshoo..........",
+        "..owwwwwwWoosSsssrssyyo.........",
+        ".oWWWWWWWWoossmmmmssyooooooo....",
+        "owwwwwwwwWoosssmssSsooaaaaaao...",
+        "wwwwwwwwwWbbBbbBbbBbbBaaaaaao...",
+        "wwwwwwwwwWbBbbBbbBbbBbaaaaaAo...",
+        "WWWWWWWWWWBbbBbbBbbBbbaaaaaao...",
+        "wwwwwwwwwWbbBbbBbbBbbBaaaaaao...",
+        "wwwwwwwwwWbBbbBcccbbBbaaaaaaooo.",
+        "wwwwwwwwwWBbbBcccbbBbbaaaaaaaaao",
+        "oooooooooobbBbbBbbBbbBaaaaaaaaao",
+        ".........obBbbBbbBbbBboaaaaaaaao",
+        ".........oBbbBbbBbbBbboaaaaaaaao",
+        ".........obbBbbBbbBbbBoaaaaaaaao",
+        ".........obBbbBbbBbbBbooAoAoAoAo",
+        ".........oBbbBbbBbbBbbo.o.o.o.o.",
+        "........ollLllloollLlllo........",
+        "........olLlllLoolLlllLo........",
+        "........oLlllLlooLlllLlo........",
+        "........olllLlloolllLllo........",
+        "........ollLllloollLlllo........",
+        "........olLlllLoolLlllLo........",
+        "........okokoko.okokoko........."
+      ])
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -17425,7 +17724,8 @@ body.nopad #pad { display: none; }
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
     p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
     p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu" || // 8 章: 大鬼 → 双頭鬼 → 金滅鬼 → おにおに。たおした 幹部は いなくなり、次の 戸口が あく
-    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 12 章: 神社に あつまった みんなと おにおに・鬼神 (勝つまで)
+    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 13 章: 喰らいの 城の 最上階の ルキハ
+    p.only === "rukiha13" && g.story === "kurai" || // 12 章: 神社に あつまった みんなと おにおに・鬼神 (勝つまで)
     p.only === "gather12" && g.story === "shuuketsu" || p.only === "onioni12" && g.story === "shuuketsu" && !g.flags.oni12 || // 11 章: 火山の 底の バクエンリュウ → (勝つと) ASO の 間の 大魔王ASO
     p.only === "bakuen11" && g.story === "tsubo" && !g.flags.baku11 || p.only === "aso11" && reached(g, "tsubo") && g.flags.baku11 || // 10 章: 紋つきを 5 回 助けると 家の 前に 幹部 タシケダ
     p.only === "tashikeda10" && g.story === "shuugeki" && (g.flags.dark10 || 0) >= 5 || // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
@@ -18738,7 +19038,8 @@ body.nopad #pad { display: none; }
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
-    const inTsubo = () => g.pos.y >= TSUBO_Y0 * TILE;
+    const inKurai = () => g.pos.y >= KURAI_Y0 * TILE;
+    const inTsubo = () => between(TSUBO_Y0, KURAI_Y0);
     const inKinniku = () => between(KINNIKU_Y0, TSUBO_Y0);
     const inPark = () => between(PARK_Y0, KINNIKU_Y0);
     const darkHere = () => g.story === "shuugeki" && g.pos.y < SCHOOL_Y0 * TILE;
@@ -18853,6 +19154,9 @@ body.nopad #pad { display: none; }
           clear11: ["ASOさんって 人に 会えたと？ ……こおり、なんか 顔つきが かわったね。"],
           shuuketsu: ["神社に みんな あつまっとるらしいよ。……こおり、あんた いつのまに こんなに ともだちが できたと？"],
           clear12: ["……ほら、ふるカワちゃんが また 来とるよ。"],
+          kuraie: ["こおり、おべんとう もった？ ……ちゃんと 帰って きなさいよ。"],
+          kurai: ["こおり……。お母さん、ここで まっとるけんね。"],
+          clear13: ["おかえり、こおり。……ほんとに よう がんばったね。"],
           invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
           park: ["遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。"],
           yoru: ["ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！"],
@@ -18866,6 +19170,16 @@ body.nopad #pad { display: none; }
             nar("おにおにが なかまに なった！"),
             furu("ルキハと 戦うには、もっと 強く ならなきゃ。……筋肉の山の ノゾエマさんに 修行を つけて もらおう！"),
             nar("石の川駅から、電車で 筋肉の山へ 行けるように なった！")
+          ], { done: () => app2.save() });
+          return;
+        }
+        if (startChapter13(g)) {
+          say([
+            nar("朝。黒い 空の むこうに、ルキハの 城が うかんでいる。"),
+            tomo("……行って らっしゃい、こおり。"),
+            furu("石の川駅から、城へ つづく 黒い 光の 道が のびてるって！"),
+            by("onioni", "みんな 先に 行って まっとるぞ。……さあ、終わらせに 行くか。"),
+            nar("石の川駅から、喰らいの 城へ 行けるように なった！")
           ], { done: () => app2.save() });
           return;
         }
@@ -19033,6 +19347,14 @@ body.nopad #pad { display: none; }
           furu("投げられた 道具を ねらって 攻撃すると 使えるよ！ 剣なら 力が 上がって、実なら 回復、水爆弾なら 体が かたまるはず！"),
           furu("マグマの 波で 道具が とけちゃうから、いそいで！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("bakuen11"), kind: "boss", place: "tsubo" }) });
+      } else if (p.id === "rukiha13") {
+        const rk = (text2) => ({ who: "ルキハ", art: "rukiha", text: text2 });
+        say([
+          rk("来たか、こおり族の 子。王冠の 味が、まだ 舌に のこっているぞ。"),
+          rk("おまえも、おまえの なかまも、みんな オレの 中で ひとつに なれば いい。"),
+          { who: "こおりくん", art: "koori", text: "（そんな こと させない！）" },
+          furu("ルキハは 体を 変形させて 攻撃してくるよ！ 気を つけて！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("rukiha13"), kind: "boss", place: "kurai" }) });
       } else if (p.id === "aso11") {
         if (canFightAso(g)) {
           say([
@@ -19160,7 +19482,7 @@ body.nopad #pad { display: none; }
                 tomo("……ちゃんと 帰って きなさい！ 借金も 返さんまま いなくなるのは ゆるさんけんね！"),
                 nar("こおりくんは しずかに ねむった。"),
                 nar("１２章 クリア！"),
-                nar("―― １３章は つぎの アップデートで。")
+                nar("つぎの 朝、家の 前の ともいしと 話そう。")
               ], { done: () => app2.save() });
             } else if (i === 0) {
               advanceTime(g, app2.rng);
@@ -19183,6 +19505,16 @@ body.nopad #pad { display: none; }
         rideTrain();
       } else if (b.id === "attrA" || b.id === "attrB" || b.id === "attrC") {
         lookAttraction(b.id);
+      } else if (b.id === "kuraiStation") {
+        say([nar("黒い 光の 道。石の川駅に つながっている。")], {
+          choices: ["石の川へ もどる", "やめる"],
+          done: (i) => {
+            if (i === 0) {
+              sfx("watch");
+              warp(STATION_OUT);
+            }
+          }
+        });
       } else if (b.id === "tsuboStation") {
         say([nar("ASOの壺前駅。石の川 行きの 電車が とまっている。")], {
           choices: ["石の川へ もどる", "やめる"],
@@ -19396,7 +19728,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const lines = trainLines(g);
-      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く", shiro: "金色のSE城へ 行く", kinniku: "筋肉の山へ 行く", tsubo: "ASOの壺の底へ 行く", park: `${parkName()}へ 行く` };
+      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く", shiro: "金色のSE城へ 行く", kinniku: "筋肉の山へ 行く", tsubo: "ASOの壺の底へ 行く", kurai: "喰らいの 城へ 行く", park: `${parkName()}へ 行く` };
       say([nar(`石の川駅。${lines.length > 1 ? "どこへ 行こうか？" : lines[0] === "tera" ? "ネット寺 行きの 電車が とまっている。" : "海辺の 町 行きの 電車が とまっている。"}`)], {
         choices: [...lines.map((l) => names[l]), "やめる"],
         done: (i) => {
@@ -19431,6 +19763,10 @@ body.nopad #pad { display: none; }
             goTsubo();
             return;
           }
+          if (dest === "kurai") {
+            goKurai();
+            return;
+          }
           warp(UMI_IN);
           if (!arriveUmi(g)) return;
           const L = rivalLines();
@@ -19451,6 +19787,17 @@ body.nopad #pad { display: none; }
         by("daishi", "よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。"),
         by("daishi", "寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。"),
         nar("境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。")
+      ], { done: () => app2.save() });
+    }
+    function goKurai() {
+      warp(KURAI_IN);
+      if (!arriveKurai(g)) return;
+      say([
+        nar("黒い 光の 道を ぬけると、喰らいの 城の 前に 出た。"),
+        nar("城の まわりを、紋つきの 軍勢が うめつくしている。"),
+        by("onioni", "ここは おれたち 鬼鬼団が 引き受ける！ 行け、こおり！"),
+        { who: "ズミタニ", art: "zumitani", text: "ほらほら、早く 行って！ ここで 負けたら、77代目の 名が なくからね♪" },
+        furu("城の 中も 紋つきで いっぱい……。最上階まで 一気に 行こう！")
       ], { done: () => app2.save() });
     }
     function goTsubo() {
@@ -19653,6 +20000,27 @@ body.nopad #pad { display: none; }
           nar("おにおにの 必殺技が「鬼の王の金棒」に 進化した！"),
           furu("これで ルキハの 城へ 行けるね……！ 今夜は 家に 帰って ゆっくり ねよう。")
         ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "rukiha13") {
+        const ending = [
+          nar("ルキハの 顔が くずれ、喰らわれた 光が 空へ かえっていく。"),
+          nar("世界じゅうの 紋が、しずかに 消えた。"),
+          by("onioni", "終わったな、こおり。……よくやった。"),
+          furu("こおりくん、帰ろう。石の川タウンに！")
+        ];
+        say(ending, {
+          done: () => {
+            warp({ x: 6, y: 24, dir: "up" });
+            g.time = 0;
+            say([
+              tomo(`おかえり、こおり。……さ、つぎは ${g.version === "menkyo" ? "免許" : "内定"} とりなさい！`),
+              nar("―― こおりくんの 大冒険 ～大集合だヨ！おともだち！～ ――"),
+              nar("ストーリー: こおりくんの 作者　／　キャラ: こおりくんシリーズの みんな　／　プログラム・音楽: Claude"),
+              nar(`なかま ${friendCount(g)} 人と いっしょに 世界を すくった。ありがとう！`),
+              nar("１３章 クリア！ ―― おわり ――"),
+              nar("……でも、こおりくんの 毎日は つづく。家の 前の ともいしと 話そう。")
+            ], { done: () => app2.save() });
+          }
+        });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "aso15") {
         say([
           { who: "大魔王ASO", art: "maou", text: "……見事だ。この 我を 二度も 地に つけるとはな。" },
@@ -20067,7 +20435,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: darkTown(g, source) ? "town" : inTsubo() ? "tsubo" : inKinniku() ? inHyouga() ? "hyouga" : "kinniku" : inPark() ? "yuen" : inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inKurai() ? "kurai" : darkTown(g, source) ? "town" : inTsubo() ? "tsubo" : inKinniku() ? inHyouga() ? "hyouga" : "kinniku" : inPark() ? "yuen" : inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
         }
       });
     }
@@ -20312,7 +20680,7 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = inTsubo() ? TSUBO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inKinniku() ? KINNIKU_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inPark() ? PARK_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = inKurai() ? KURAI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTsubo() ? TSUBO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inKinniku() ? KINNIKU_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inPark() ? PARK_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -20327,7 +20695,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" || g.story === "clear10" || g.story === "clear11" || g.story === "clear12" ? { x: 8, y: 24 } : g.story === "shuuketsu" ? !g.flags.oni12 ? { x: 8, y: 6 } : { x: 6, y: 23 } : g.story === "tsuboe" ? { x: 5, y: 40 } : g.story === "tsubo" ? !g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 } : g.story === "invite" || g.story === "onijoin" ? { x: 5, y: 40 } : g.story === "shuugeki" ? (g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null : g.story === "kinniku" ? !g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" || g.story === "clear10" || g.story === "clear11" || g.story === "clear12" || g.story === "clear13" ? { x: 8, y: 24 } : g.story === "shuuketsu" ? !g.flags.oni12 ? { x: 8, y: 6 } : { x: 6, y: 23 } : g.story === "kuraie" ? { x: 5, y: 40 } : g.story === "kurai" ? { x: 24, y: KURAI_Y0 + 4 } : g.story === "tsuboe" ? { x: 5, y: 40 } : g.story === "tsubo" ? !g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 } : g.story === "invite" || g.story === "onijoin" ? { x: 5, y: 40 } : g.story === "shuugeki" ? (g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null : g.story === "kinniku" ? !g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -21822,6 +22190,7 @@ body.nopad #pad { display: none; }
     let mg = null;
     let drag = null;
     let banner = null;
+    const bannerQueue = [];
     let warn = null;
     const pops = [];
     let introIndex = 0;
@@ -21836,7 +22205,7 @@ body.nopad #pad { display: none; }
       const e = battle.enemies[k];
       if (e && e.idol) return { x: e.slot === "left" ? 76 : 324, y: 140, scale: 3 };
       const main = battle.enemies.filter((x) => !x.idol), n = main.length, i = main.indexOf(e);
-      if (n === 1 && main[0].parts) return { x: 200, y: 156, scale: 6.5 };
+      if (n === 1 && (main[0].parts || main[0].huge)) return main[0].huge ? { x: 200, y: 172, scale: 4.6 } : { x: 200, y: 156, scale: 6.5 };
       if (n === 1) return main[0].boss ? { x: 200, y: 142, scale: ART[main[0].art].h > 24 ? 3.6 : 5 } : { x: 200, y: 132, scale: 3.5 };
       if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
       return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];
@@ -21965,6 +22334,10 @@ body.nopad #pad { display: none; }
           const label = e.type === "skill" ? e.name : e.type === "guard" ? "まもり" : "さぼり…";
           const color = e.type === "skill" ? e.cmd === "jutsu" ? "#c8a8ff" : "#ffe08a" : e.type === "guard" ? "#8ad0ff" : "#a0a0b0";
           if (p) pops.push({ x: p.x, y: p.y - 62, text: label, color, small: true, until: t + 1.1 });
+          if (e.morph && p) {
+            pops.push({ x: p.x, y: p.y - 110, text: "体を 変形させた！", color: "#ff8ab8", small: true, until: t + 1.1 });
+            effects.push({ kind: "wave", x: p.x, y: p.y - 50, start: t, dur: 0.5, color: "#a040e0" });
+          }
           if (e.type === "guard") {
             const c = centerOf(e.actor);
             if (c) effects.push({ kind: "shield", x: c.x, y: c.y, start: t, dur: 0.5 });
@@ -22034,6 +22407,13 @@ body.nopad #pad { display: none; }
           }
         } else if (e.type === "transform") {
           banner = { text: `${e.name}に すがたを かえた！`, color: "#ff6a6a", until: t + 2.2 };
+          if (e.name === "ルキハ・ニオニオーテン") {
+            let at2 = t + 2.2;
+            for (const [text2, color] of [["ルキハ「くく……ああ、もう 人の まねは あきた。」", "#ff8ab8"], ["ニオニオーテン「ゼンブ……オレノ……モノ……！」", "#ff6a6a"], ["ふるカワ「部位を ぜんぶ こわして、顔を ねらって！」", COLORS.accent]]) {
+              bannerQueue.push({ text: text2, color, at: at2, until: at2 + 2.2 });
+              at2 += 2.2;
+            }
+          }
           sfx("big");
           const p = posOf(e.actor);
           if (p) for (let i = 0; i < 4; i++) effects.push({ kind: "wave", x: p.x, y: p.y - 40, start: t + i * 0.15, dur: 0.7, color: "#c88aff" });
@@ -22052,8 +22432,27 @@ body.nopad #pad { display: none; }
           if (t - guardTold > 1.2) {
             guardTold = t;
             const p = posOf(e.target);
-            if (p) pops.push({ x: p.x, y: p.y - 120, text: "マグマの 体で きかない！", color: "#ffb080", small: true, until: t + 1.1 });
+            if (p) pops.push({ x: p.x, y: p.y - 120, text: e.chimera ? "キメラの 体に はじかれた！ 部位を ねらえ！" : "マグマの 体で きかない！", color: "#ffb080", small: true, until: t + 1.1 });
           }
+        } else if (e.type === "headOut") {
+          banner = { text: "部位を ぜんぶ こわした！ ルキハの 顔が 出た！ ねらえ！", color: COLORS.accent, until: t + 2 };
+          sfx("big");
+        } else if (e.type === "regrow") {
+          banner = { text: "キメラの 体が また ふくれあがった……！", color: "#ff6a6a", until: t + 1.8 };
+          sfx("cancel");
+        } else if (e.type === "enrage") {
+          banner = { text: "体が 紅く どす黒く そまった！ 攻撃が はげしく なる！", color: "#ff3a4a", until: t + 2.2 };
+          sfx("big");
+          const p = posOf(e.actor);
+          if (p) for (let i = 0; i < 4; i++) effects.push({ kind: "wave", x: p.x, y: p.y - 60, start: t + i * 0.15, dur: 0.7, color: "#a0001a" });
+        } else if (e.type === "eat") {
+          banner = { text: `オオグライノカミツキ！ ${nameOf(e.target)}の「${e.label}」が 喰われた！`, color: "#ff6a6a", until: t + 2.2 };
+          sfx("cancel");
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x, y: p.y - 70, text: `${e.label}が 使えない！`, color: "#ff9ad8", until: t + 1.6 });
+        } else if (e.type === "regain") {
+          banner = { text: `顔に 当てた！ ${nameOf(e.target)}の「${e.label}」を 取りもどした！`, color: COLORS.accent, until: t + 2 };
+          sfx("heal");
         } else if (e.type === "drain") {
           banner = { text: `${nameOf(e.target)}の レベルが 吸われた！ Lv${e.from} → Lv${e.to}`, color: "#ff6a9a", until: t + 2 };
           sfx("cancel");
@@ -22744,6 +23143,26 @@ body.nopad #pad { display: none; }
         ctx.fillRect(150, 46, 100, 6);
         ctx.fillRect(160, 40, 8, HORIZON - 40);
         ctx.fillRect(232, 40, 8, HORIZON - 40);
+      } else if (place === "kurai") {
+        ctx.fillStyle = "#1a0a24";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        for (let i = 0; i < 7; i++) {
+          ctx.fillStyle = `rgba(90, 30, 120, ${0.3 + 0.1 * Math.sin(t * 1.5 + i)})`;
+          ctx.beginPath();
+          ctx.ellipse((i * 71 + t * 22) % 480 - 40, 16 + i % 3 * 16, 64, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        if (Math.floor(t * 3) % 11 === 0) {
+          ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+          ctx.fillRect(0, 0, 400, HORIZON);
+        }
+        [[20, "#3a2a4a"], [96, "#4a2a3a"], [290, "#2a3a4a"], [366, "#3a2a4a"]].forEach(([x, c]) => {
+          ctx.fillStyle = c;
+          ctx.fillRect(x, 20, 18, HORIZON - 20);
+          ctx.fillStyle = "#5a3a6a";
+          ctx.fillRect(x, 44, 18, 4);
+          ctx.fillRect(x, 70, 18, 4);
+        });
       } else if (place === "tsubo") {
         ctx.fillStyle = "#1a0c0a";
         ctx.fillRect(0, 0, 400, HORIZON);
@@ -22868,7 +23287,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "tsubo" ? ["#4a1a10", "#7a3a20"] : place === "shrine" ? ["#8a8070", "#b0a890"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "tsubo" ? ["#4a1a10", "#7a3a20"] : place === "kurai" ? ["#2a1a34", "#4a3058"] : place === "shrine" ? ["#8a8070", "#b0a890"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -22916,6 +23335,10 @@ body.nopad #pad { display: none; }
         ctx.fill();
       }
       drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? "#ffffff" : null, sx, sy });
+      if (u.enraged && !u.ko) {
+        drawArt(ctx, art, Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: 0.42 + 0.1 * Math.sin(t * 6), tint: "#7a0010", sx, sy });
+      }
+      if (u.eaten && !u.ko) text(ctx, `${{ attack: "こうげき", waza: "わざ", jutsu: "術", guard: "まもり" }[u.eaten]}× 喰われた`, p.x, p.y + 12, { size: 9, align: "center", bold: true, color: "#ff6a6a" });
       if (!u.ko && u.bound) {
         const fk = scale * artFit(art);
         ctx.strokeStyle = "#ffd040";
@@ -22931,6 +23354,24 @@ body.nopad #pad { display: none; }
       if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
       const w = u.parts || u.boss && u.side === "enemy" ? battle.enemies.filter((x) => !x.idol && !x.ko).length > 1 ? 100 : 150 : 44, head = p.y - art.h * scale * artFit(art);
       const barY = head - 10, nameY = head - 14;
+      if (!u.ko && battle.chance && battle.chance.uid === u.uid && !battle.outcome) {
+        const rx = Math.min(70, art.w * scale * artFit(art) * 0.32 + 14), cy = head + 14;
+        for (let i = 0; i < 6; i++) {
+          const a = t * 3 + i * Math.PI / 3, front = Math.sin(a) > 0;
+          const x = p.x + Math.cos(a) * rx, y = cy + Math.sin(a) * 7;
+          if (i % 2) {
+            ctx.fillStyle = "#ffe85a";
+            ctx.beginPath();
+            ctx.arc(x, y, front ? 4.5 : 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#ff9a3a";
+            ctx.fillRect(x + 3, y - 1, 3, 2);
+            ctx.fillStyle = "#000";
+            ctx.fillRect(x + 1, y - 2, 1, 1);
+          } else text(ctx, "★", x, y + 4, { size: front ? 13 : 10, align: "center", color: front ? "#ffe85a" : "#c8a83a" });
+        }
+        text(ctx, "ピヨピヨ", p.x + rx + 8, cy - 6, { size: 9, bold: true, color: "#ffe85a" });
+      }
       bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
       text(ctx, u.idol ? u.name : `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
       if (u.side === "enemy" && g.zukan.friends[u.id]) drawFriendMark(ctx, p.x + w / 2 + 8, barY + 3, 5);
@@ -22989,7 +23430,7 @@ body.nopad #pad { display: none; }
       const label = (key2, q, dy = 22) => {
         const pt = e.gims[key2];
         if (!gimOpen(battle, e, key2)) return;
-        if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, "#ffb84a");
+        if (!pt.noBody && !pt.face) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, "#ffb84a");
         text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
       };
       if (e.magma) {
@@ -22999,6 +23440,10 @@ body.nopad #pad { display: none; }
         ctx.ellipse(p.x, p.y - h / 2, w * 0.55, h * 0.55, 0, 0, Math.PI * 2);
         ctx.fill();
         text(ctx, hard ? "かたまった！ 攻撃が きく！" : "マグマの 体", p.x, p.y - h - 22, { size: 10, align: "center", bold: true, color: hard ? "#e0e0e0" : "#ffb080" });
+      }
+      if (e.chimera) {
+        const left = Object.values(e.gims).filter((pt) => pt.chimeraPart && !pt.broken).length;
+        text(ctx, e.headOut ? `顔が 出ている！ (${Math.max(0, e.headT).toFixed(1)})` : `キメラの 部位 のこり ${left}`, p.x + w / 2 + 6, p.y - h * 0.15, { size: 10, bold: true, color: e.headOut ? "#ffe85a" : "#ffb0c0" });
       }
       if (e.shell > 0 && e.gims.signal) {
         ctx.strokeStyle = `rgba(255, 40, 40, ${0.5 + 0.3 * Math.sin(t * 10)})`;
@@ -23279,10 +23724,11 @@ body.nopad #pad { display: none; }
         text(ctx, p.text, p.x, p.y - k * 14, { size: p.big ? 16 : p.small ? 10.5 : 13, align: "center", bold: true, color: p.color });
       }
       if (battle.chance && !battle.outcome) {
-        panel(ctx, 90, 6, 220, 46, { fill: "rgba(90, 40, 0, 0.88)", edge: "#ffe85a" });
-        text(ctx, "チャンスタイム！", 200, 32, { size: 24, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
-        text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: "center", bold: true });
-      } else if (battle.armCharge && !battle.outcome) {
+        panel(ctx, 4, 4, 112, 20, { fill: "rgba(90, 40, 0, 0.85)", edge: "#ffe85a" });
+        text(ctx, `チャンス！ あと ${battle.chance.left} 回`, 60, 18, { size: 10, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
+      }
+      if (bannerQueue.length && bannerQueue[0].at <= t && !(banner && banner.until > t)) banner = bannerQueue.shift();
+      if (battle.armCharge && !battle.outcome) {
         const moonBoss = (_b = (_a = battle.enemies.find((x) => x.uid === battle.armCharge.uid)) == null ? void 0 : _a.gims) == null ? void 0 : _b.moon;
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.92)", edge: "#ffb84a" });
         text(ctx, moonBoss ? `!! 満月！「${warn ? warn.name : ""}」を ためている！` : `!! 防御不能「${warn ? warn.name : ""}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
@@ -24384,14 +24830,16 @@ body.nopad #pad { display: none; }
   window.__app = app;
   window.__bgm = currentBgm;
   function wantedBgm() {
-    var _a;
     const sc = app.scene;
     const b = sc.battle;
     return bgmFor({
       scene: sc.name,
       area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
       story: app.g ? app.g.story : null,
-      battle: b ? { kind: b.kind, outcome: b.outcome, bossId: ((_a = b.enemies.find((e) => BOSSES[e.id])) == null ? void 0 : _a.id) ?? null } : null
+      battle: b ? (() => {
+        const boss = b.enemies.find((e) => BOSSES[e.id]);
+        return { kind: b.kind, outcome: b.outcome, bossId: (boss == null ? void 0 : boss.id) ?? null, phase: (boss == null ? void 0 : boss.phase) ?? 1, enraged: Boolean(boss == null ? void 0 : boss.enraged) };
+      })() : null
     });
   }
   let last = performance.now(), saveTimer = 0;

@@ -17,14 +17,15 @@
 //   火山の 底の バクエンリュウ・闇 (flags.baku11) → ASO の 間の 大魔王ASO と 話す) → clear11
 // 12 章「集結」: clear11 → shuuketsu (ともいしの 家で 黒い 空。神社に みんなが あつまる。おにおにが 勝負を いどむ) →
 //   flags.oni12 (おにおに・鬼神に 勝つ。おにおにの 必殺技が 進化) → 家で ねると 出発の 前の 夜 → clear12
-// (13 章は まだ。本編の さいごは MAIN_END)
+// 13 章「喰らいの 城」: clear12 → kuraie (朝、ともいしに 見送られて 出発。石の川駅から 黒い 光の 道で 行ける) → kurai (城に 着いた。
+//   なかまが 軍勢を ひきうける。紋つきの 軍勢を こえて 最上階の ルキハ → ニオニオーテン) → clear13 (エンディング)
 // 14 章 (バージョンで ちがう。内定「ナイテイパークにご招待！」/ 免許「メンキョシティにご招待！」):
 //   MAIN_END → invite (ともいしの 家で ふるカワから 招待券。電車で 行ける) → park (遊園地に 着いた。昼) →
 //   yoru (帰ろうとしたら ふるカワが いない。夜の 遊園地で 手がかり 3 つ → 残党の ボス) → clear14
 // 15 章「新たなる１日」: clear14 から。無限回廊・強化ボス・ライバル探検隊の 仲間クエスト (エンドコンテンツ)
 // reached(g, 'clear') は「1 章 クリアの あと」(2 章の あいだも ふくむ)
 // =====================================================================
-export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2', 'yama', 'clear3', 'umi', 'umibe', 'clear4', 'tera', 'netdera', 'clear5', 'shinobi', 'yashiki', 'clear6', 'meikyu', 'clear7', 'oshiro', 'clear8', 'onijoin', 'kinniku', 'clear9', 'shuugeki', 'clear10', 'tsuboe', 'tsubo', 'clear11', 'shuuketsu', 'clear12', 'invite', 'park', 'yoru', 'clear14'];
-// 本編 (ルキハを たおす 13 章) の さいご。14・15 章は ここから。13 章が できたら 'clear13' に する (2026-10-30)
-export const MAIN_END = 'clear12';
+export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2', 'yama', 'clear3', 'umi', 'umibe', 'clear4', 'tera', 'netdera', 'clear5', 'shinobi', 'yashiki', 'clear6', 'meikyu', 'clear7', 'oshiro', 'clear8', 'onijoin', 'kinniku', 'clear9', 'shuugeki', 'clear10', 'tsuboe', 'tsubo', 'clear11', 'shuuketsu', 'clear12', 'kuraie', 'kurai', 'clear13', 'invite', 'park', 'yoru', 'clear14'];
+// 本編 (ルキハを たおす 13 章) の さいご。14・15 章は ここから
+export const MAIN_END = 'clear13';
 export const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);

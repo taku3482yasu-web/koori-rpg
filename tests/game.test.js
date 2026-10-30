@@ -564,7 +564,7 @@ test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごと�
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
     assert.ok(kairouEnemies(g)[0].lv > lvs[0], '上の 階ほど 強い');
     // さいごの 階は その バージョンの 14 章の ボス
-    g.kairou.floor = 19;
+    g.kairou.floor = 20;
     assert.equal(kairouEnemies(g)[0].id, 'rihama14');
 });
 
@@ -693,7 +693,7 @@ test('12 章: 黒い 空 → 神社で おにおに・鬼神と 勝負 → 家�
     assert.match(objective(g), /ねよう/);
     assert.ok(nightBefore(g));
     assert.equal(g.story, 'clear12');
-    assert.ok(startChapter14(g), '本編の さいご (いまは 12 章) の あとで 14 章');
+    assert.ok(!startChapter14(g), '14 章は 13 章の あと');
 });
 
 test('大魔王ASO: 14 章 クリアの あと ASO の 間で 勝負できて、勝つと なかまに なる', async () => {
@@ -711,4 +711,28 @@ test('大魔王ASO: 14 章 クリアの あと ASO の 間で 勝負できて、
     assert.equal(out.befriend.id, 'aso');
     assert.ok(!canFightAso(g));
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
+});
+
+test('13 章: ともいしに 見送られ → 石の川駅から 喰らいの 城 → 最上階の ルキハに 勝つと 13 章 クリア (本編の さいご)。そのあと 14 章 (2026-10-30)', async () => {
+    const { startChapter13, arriveKurai, startChapter14, trainLines, darkTown } = await import('../src/logic/game.js');
+    const { KURAI_Y0 } = await import('../src/data/map.js');
+    const g = newGame('menkyo');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const here = id => peopleHere(g).some(p => p.id === id);
+    g.story = 'clear12';
+    assert.ok(!trainLines(g).includes('kurai'));
+    assert.ok(startChapter13(g));
+    assert.ok(trainLines(g).includes('kurai'), '電車で 行ける');
+    assert.ok(!here('rukiha13'));
+    assert.ok(arriveKurai(g));
+    assert.ok(here('rukiha13'));
+    assert.ok(darkTown(g, { x: 20, y: KURAI_Y0 + 20 }), '城の 軍勢は ぜんぶ 紋つき');
+    assert.match(objective(g), /ルキハ/);
+    assert.ok(!startChapter14(g));
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('rukiha13'), 'boss'), rng);
+    assert.ok(out.ending);
+    assert.equal(g.story, 'clear13');
+    assert.ok(!here('rukiha13'));
+    assert.ok(startChapter14(g), '13 章の あとで 14 章');
 });

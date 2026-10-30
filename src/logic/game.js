@@ -34,7 +34,10 @@
 //   tsubo    ASOの壺の底に 着いた。火山の 底の バクエンリュウ・闇 (flags.baku11) → ASO の 間の 大魔王ASO と 話す
 //   clear11  11 章 クリア。ここから 12 章「集結」: ともいしの 家で 黒い 空
 //   shuuketsu 神社に みんなが あつまる。おにおに・鬼神が 勝負を いどむ (flags.oni12) → 家で ねると 出発の 前の 夜
-//   clear12  12 章 クリア。(13 章は まだ。本編の さいご = MAIN_END)
+//   clear12  12 章 クリア。ここから 13 章「喰らいの 城」: ともいしに 見送られて 出発
+//   kuraie   石の川駅から 黒い 光の 道で 喰らいの 城へ 行ける
+//   kurai    喰らいの 城に 着いた。紋つきの 軍勢を こえて 最上階の ルキハ (第 1 形態 → ニオニオーテン)
+//   clear13  13 章 クリア (エンディング。本編の さいご = MAIN_END)
 //   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
 //   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
@@ -168,11 +171,15 @@ export const MAX_ENEMIES = 3;
 // 10 章: 石の川タウンと 商店街の キャラは ぜんぶ 紋つき (「・闇」)。Lv も 上がる
 export const DARK10_LV = [33, 37];
 export const DARK10_GOAL = 5;
-export const darkTown = (g, source) => g.story === 'shuugeki' && ['ishinokawa', 'shoutengai'].includes(areaAt(source.x0 ?? source.x, source.y0 ?? source.y));
+// 13 章: 喰らいの 城の 軍勢も ぜんぶ 紋つき
+export const darkTown = (g, source) => {
+    const area = areaAt(source.x0 ?? source.x, source.y0 ?? source.y);
+    return (g.story === 'shuugeki' && ['ishinokawa', 'shoutengai'].includes(area)) || area === 'kurai';
+};
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
     const dark = darkTown(g, source);
-    const [lo, hi] = dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
+    const [lo, hi] = dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === 'kurai' ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
     const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
@@ -286,6 +293,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'bakuen11') g.flags.baku11 = true;
         if (bossId === 'onioni12') { g.flags.oni12 = true; out.oniSpecial = true; }
         if (bossId === 'aso15') g.flags.aso15 = true;
+        if (bossId === 'rukiha13') { g.story = 'clear13'; g.chapter = 14; out.ending = true; }
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
     }
@@ -397,6 +405,10 @@ export function objective(g) {
         // 12 章「集結」
         case 'shuuketsu': return !g.flags.oni12 ? '神社に 行こう。みんなが あつまっている' : '家に 帰って ねよう (出発の 前の 夜)';
         case 'clear12': return '家の 前の ともいしと 話そう';
+        // 13 章「喰らいの 城」
+        case 'kuraie': return '石の川駅から、黒い 光の 道で 喰らいの 城へ 行こう';
+        case 'kurai': return '喰らいの 城の 最上階で ルキハを たおそう';
+        case 'clear13': return '家の 前の ともいしと 話そう';
         // 14 章 (バージョンで ちがう)
         case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
         case 'park': return 'アトラクションで 遊ぼう。帰るときは 遊園地前駅へ';
@@ -427,7 +439,7 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'tsuboe') ? ['tsubo'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'tsuboe') ? ['tsubo'] : []), ...(reached(g, 'kuraie') ? ['kurai'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
 
 // ----- 9 章 (2026-10-30) -----
 // 8 章 クリアの あと ともいしの 家で: おにおにが なかまに なる。はじめて なら おにおにの メダル
@@ -465,6 +477,17 @@ export function meetAso(g) {
     if (g.story !== 'tsubo' || !g.flags.baku11) return false;
     g.story = 'clear11';
     g.chapter = 12;
+    return true;
+}
+// ----- 13 章 (2026-10-30) -----
+export function startChapter13(g) {
+    if (g.story !== 'clear12') return false;
+    g.story = 'kuraie';
+    return true;
+}
+export function arriveKurai(g) {
+    if (g.story !== 'kuraie') return false;
+    g.story = 'kurai';
     return true;
 }
 // ----- 12 章 (2026-10-30) -----

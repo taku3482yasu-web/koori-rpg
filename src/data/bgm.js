@@ -85,6 +85,12 @@ export const SONGS = {
         melody: "1 . 3 . 5 . 3 . | 7, - - - . . . . | 1 . 3 . 6 . 5 . | 4 - 3 - . . . . | 6 . 5 . 4 . 3 . | 2 - 1 - 7, - . . | 1 . 2 . 3 . 4 . | 5 - - - 7, - - .",
         chords: '1 5 1 4 6 5 1 5', bass: 'r - - - r - - -', arp: '0 1 2 1 0 1 2 1', drums: 'k . . . s . . .'
     },
+    // 13 章 喰らいの 城: 低い 音で ゆっくり、ときどき 不協和
+    kurai: {
+        name: '喰らいの 城', bpm: 84, root: 60, mode: 'harmonic', lead: 'triangle',
+        melody: "1 - - - 7, - - . | 1 - 2 - 3 - - . | 2 - - - 1 - 7, . | 6, - - - - - - . | 3 - - - 2 - - . | 3 - 4 - 5 - - . | 4 - 3 - 2 - 7, . | 1 - - - - - - .",
+        chords: '1 1 4 5 6 4 5 1', bass: 'r - - - r - - -', drums: 'k . . . . . s .'
+    },
     tsubo: {
         name: 'ASOの壺の底', bpm: 88, root: 62, mode: 'phrygian', lead: 'sawtooth',
         melody: "1 - - 2 1 - - . | 5, - - - . . . . | 1 - - 2 4 - 2 . | 1 - - - . . . . | 4 - - 5 6 - 5 . | 4 - 2 - 1 - . . | 2 - 1 - 7, - 6, . | 1 - - - . . . .",
@@ -189,6 +195,12 @@ export const SONGS = {
         melody: "1 1 1 . 5 . 4 . | 7, 7, 7, . 4 . 3 . | 1 1 1 . 5 . 6 . | 7 - 6 - 5 - . . | 1' . 7 . 6 . 5 . | 4 . 3 . 2 . 1 . | 4 4 4 . 5 5 5 . | 6 - 7 - 1' - 5 -",
         chords: '1 7 1 5 4 1 4 5', bass: 'r r o r r r o r', drums: 'x h s h x h s s'
     },
+    // 13 章: 嵐の 予兆 + つぎはぎ (とちゅうで 音階や ノリが いきなり かわる)
+    rukiha13: {
+        name: '嵐の 予兆 (ルキハ)', bpm: 120, root: 62, mode: 'phrygian', lead: 'sawtooth',
+        melody: "1 - - - 2 - - . | 1 - - - 7, - - . | 1 . 1 2 . 4 5 . | 6 . 5 4 2 . 1 . | 5 - - - 6 - - . | 5 4 2 1 7, 1 2 4 | 1' . 7 . 1' . 7 . | 6 - 5 - 2 - 1 -",
+        chords: '1 1 2 6 4 2 6 1', bass: 'r - - - r - - -', arp: '. . . . 0 1 2 3', drums: 'k . . . . . s . '
+    },
     onioni12: {
         name: '鬼の王 (おにおに・鬼神)', bpm: 170, root: 65, mode: 'harmonic', lead: 'sawtooth',
         melody: "1 . 1 3 5 . 1' . | 7 . 6 . 5 4 3 . | 4 . 4 6 1' . 3' . | 2' - 1' - 7 - . . | 6 . 6 7 1' . 2' 1' | 7 . 5 . 6 . 7 . | 1' . 7 6 5 . 4 3 | 2 - 5 - 7 - 2' -",
@@ -219,7 +231,7 @@ export const SONGS = {
         melody: "1 . 1 . 1 2 3 . | 5 - 4 - 3 - 2 . | 1 . 1 . 1 2 3 . | 7, - - - 5, - . . | 6 . 6 . 6 7 1' . | 2' - 1' - 7 - 6 . | 5 . 5 6 7 . 1' 2' | 7 - - - 5 - 7 -",
         chords: '1 4 1 5 6 2 4 5', bass: 'r r o r r r o r', drums: 'x h s h x h s s'
     },
-    // 曲が まだ ない ボス (10 章 から 先) は これ
+    // 曲が まだ ない ボス は これ
     boss: {
         name: 'ボス バトル', bpm: 150, root: 69, mode: 'harmonic', lead: 'square',
         melody: "1 . 3 . 5 . 1' . | 7 - 6 - 5 - . . | 4 . 6 . 1' . 3' . | 2' - 1' - 7 - . . | 1' . 7 6 5 . 6 7 | 1' - 5 - 3 - . . | 4 . 4 5 6 . 7 1' | 7 - - - 5 - 7 -",
@@ -228,6 +240,22 @@ export const SONGS = {
 };
 
 const tokens = s => (s || '').split(/\s+/).filter(t => t && t !== '|');
+
+// 13 章: ニオニオーテンの 曲は これまでの 曲を 2 小節ずつ つぎはぎ (キメラ)。最終決戦は こおりくんの テーマ (タイトル) を 決戦用に
+const bars = (id, from, n = 2) => { const t = tokens(SONGS[id].melody), st = SONGS[id].steps || 8; return Array.from({ length: n }, (_, i) => t.slice((from + i) * st, (from + i + 1) * st).join(' ')).join(' | '); };
+const chordsOf = (id, from, n = 2) => tokens(SONGS[id].chords).slice(from, from + n).join(' ');
+const PATCH = [['ishinokawa', 0], ['kage', 0], ['himuro', 4], ['onioni8', 0]];
+SONGS.niolioten13 = {
+    name: 'つぎはぎの 獣 (ルキハ・ニオニオーテン)', bpm: 150, root: 64, mode: 'harmonic', lead: 'sawtooth',
+    melody: PATCH.map(([id, f]) => bars(id, f)).join(' | '),
+    chords: PATCH.map(([id, f]) => chordsOf(id, f)).join(' '),
+    bass: 'r o r o r . r o', arp: '0 . 2 . 1 . 3 .', drums: 'k h s h k k s .'
+};
+SONGS.final13 = {
+    name: 'こおりくんの テーマ・最終決戦', bpm: 172, root: 72, mode: 'major', lead: 'square',
+    melody: SONGS.title.melody, chords: SONGS.title.chords,
+    bass: 'r o r o r o r o', arp: '0 1 2 3 2 1 0 1', drums: 'x h s h x h s s'
+};
 
 // 度数 → 半音の 数 (1 = 0)
 function degree(tok, mode) {
@@ -293,6 +321,8 @@ export function bgmFor({ scene, area, battle, story = null }) {
     if (scene === 'field' || scene === 'menu' || scene === 'fusion') return SONGS[area] ? area : 'ishinokawa';
     if (scene === 'battle' && battle) {
         if (battle.outcome) return null;
+        // 13 章: ルキハ → ニオニオーテン (第 2 形態) → HP 半分から 最終決戦
+        if (battle.bossId === 'rukiha13' && battle.phase === 2) return battle.enraged ? 'final13' : 'niolioten13';
         if (battle.kind === 'boss' || battle.kind === 'kairou') return SONGS[battle.bossId] ? battle.bossId : 'boss';
         if (battle.kind === 'rival' || battle.kind === 'team') return 'rival';
         return 'battle';

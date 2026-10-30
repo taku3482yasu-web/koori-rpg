@@ -54,6 +54,7 @@ export function createBattleView(app, battle, place) {
     let mg = null;                 // 必殺技 (コマンド → カットイン → 動き)
     let drag = null;
     let banner = null;             // { text, color, until }
+    const bannerQueue = [];        // 順に 出す バナー (13 章の 変身の セリフ)
     let warn = null;               // ボスの 予告 { name, until }
     const pops = [];               // ダメージの 数字
     let introIndex = 0;            // はじまりの コマンドの カーソル
@@ -72,7 +73,7 @@ export function createBattleView(app, battle, place) {
         if (e && e.idol) return { x: e.slot === 'left' ? 76 : 324, y: 140, scale: 3 };
         const main = battle.enemies.filter(x => !x.idol), n = main.length, i = main.indexOf(e);
         // 部位の ある ボス (2 章の 影) は とても 大きい
-        if (n === 1 && main[0].parts) return { x: 200, y: 156, scale: 6.5 };
+        if (n === 1 && (main[0].parts || main[0].huge)) return main[0].huge ? { x: 200, y: 172, scale: 4.6 } : { x: 200, y: 156, scale: 6.5 };   // 13 章の ニオニオーテンは 名前と HP が 入る 大きさ
         // 人の 絵の ように 背の 高い ボス (4 章の 浦の島重蔵) は 名前と HP が 画面に 入るように 少し 小さく
         if (n === 1) return main[0].boss ? { x: 200, y: 142, scale: ART[main[0].art].h > 24 ? 3.6 : 5 } : { x: 200, y: 132, scale: 3.5 };
         if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
@@ -212,6 +213,8 @@ export function createBattleView(app, battle, place) {
                 const label = e.type === 'skill' ? e.name : e.type === 'guard' ? 'まもり' : 'さぼり…';
                 const color = e.type === 'skill' ? (e.cmd === 'jutsu' ? '#c8a8ff' : '#ffe08a') : e.type === 'guard' ? '#8ad0ff' : '#a0a0b0';
                 if (p) pops.push({ x: p.x, y: p.y - 62, text: label, color, small: true, until: t + 1.1 });
+                // 13 章の ルキハ: 体を 変形させて こうげき
+                if (e.morph && p) { pops.push({ x: p.x, y: p.y - 110, text: '体を 変形させた！', color: '#ff8ab8', small: true, until: t + 1.1 }); effects.push({ kind: 'wave', x: p.x, y: p.y - 50, start: t, dur: 0.5, color: '#a040e0' }); }
                 if (e.type === 'guard') { const c = centerOf(e.actor); if (c) effects.push({ kind: 'shield', x: c.x, y: c.y, start: t, dur: 0.5 }); }
             }
             if (e.type === 'damage') {
@@ -268,6 +271,13 @@ export function createBattleView(app, battle, place) {
                 if (t - guardTold > 1) { guardTold = t; banner = { text: '拘束のリングで 輪が 回せない！ リングを ねらえ！', color: '#ffd040', until: t + 1.4 }; sfx('cancel'); }
             } else if (e.type === 'transform') {
                 banner = { text: `${e.name}に すがたを かえた！`, color: '#ff6a6a', until: t + 2.2 };
+                if (e.name === 'ルキハ・ニオニオーテン') {
+                    let at2 = t + 2.2;
+                    for (const [text2, color] of [['ルキハ「くく……ああ、もう 人の まねは あきた。」', '#ff8ab8'], ['ニオニオーテン「ゼンブ……オレノ……モノ……！」', '#ff6a6a'], ['ふるカワ「部位を ぜんぶ こわして、顔を ねらって！」', COLORS.accent]]) {
+                        bannerQueue.push({ text: text2, color, at: at2, until: at2 + 2.2 });
+                        at2 += 2.2;
+                    }
+                }
                 sfx('big');
                 const p = posOf(e.actor);
                 if (p) for (let i = 0; i < 4; i++) effects.push({ kind: 'wave', x: p.x, y: p.y - 40, start: t + i * 0.15, dur: 0.7, color: '#c88aff' });
@@ -287,8 +297,28 @@ export function createBattleView(app, battle, place) {
                 if (t - guardTold > 1.2) {
                     guardTold = t;
                     const p = posOf(e.target);
-                    if (p) pops.push({ x: p.x, y: p.y - 120, text: 'マグマの 体で きかない！', color: '#ffb080', small: true, until: t + 1.1 });
+                    if (p) pops.push({ x: p.x, y: p.y - 120, text: e.chimera ? 'キメラの 体に はじかれた！ 部位を ねらえ！' : 'マグマの 体で きかない！', color: '#ffb080', small: true, until: t + 1.1 });
                 }
+            } else if (e.type === 'headOut') {
+                // 13 章: キメラの 部位を ぜんぶ こわした → 顔が 出る
+                banner = { text: '部位を ぜんぶ こわした！ ルキハの 顔が 出た！ ねらえ！', color: COLORS.accent, until: t + 2 };
+                sfx('big');
+            } else if (e.type === 'regrow') {
+                banner = { text: 'キメラの 体が また ふくれあがった……！', color: '#ff6a6a', until: t + 1.8 };
+                sfx('cancel');
+            } else if (e.type === 'enrage') {
+                banner = { text: '体が 紅く どす黒く そまった！ 攻撃が はげしく なる！', color: '#ff3a4a', until: t + 2.2 };
+                sfx('big');
+                const p = posOf(e.actor);
+                if (p) for (let i = 0; i < 4; i++) effects.push({ kind: 'wave', x: p.x, y: p.y - 60, start: t + i * 0.15, dur: 0.7, color: '#a0001a' });
+            } else if (e.type === 'eat') {
+                banner = { text: `オオグライノカミツキ！ ${nameOf(e.target)}の「${e.label}」が 喰われた！`, color: '#ff6a6a', until: t + 2.2 };
+                sfx('cancel');
+                const p = posOf(e.target);
+                if (p) pops.push({ x: p.x, y: p.y - 70, text: `${e.label}が 使えない！`, color: '#ff9ad8', until: t + 1.6 });
+            } else if (e.type === 'regain') {
+                banner = { text: `顔に 当てた！ ${nameOf(e.target)}の「${e.label}」を 取りもどした！`, color: COLORS.accent, until: t + 2 };
+                sfx('heal');
             } else if (e.type === 'drain') {
                 // 10 章の タシケダ: レベル ドレイン → 紋つきの 味方
                 banner = { text: `${nameOf(e.target)}の レベルが 吸われた！ Lv${e.from} → Lv${e.to}`, color: '#ff6a9a', until: t + 2 };
@@ -863,6 +893,12 @@ export function createBattleView(app, battle, place) {
             ctx.fillStyle = '#2a0a12'; ctx.fillRect(0, 0, 400, HORIZON);
             for (let i = 0; i < 6; i++) { ctx.fillStyle = `rgba(80, 10, 30, ${0.3 + 0.1 * Math.sin(t + i)})`; ctx.beginPath(); ctx.ellipse((i * 79 + t * 8) % 480 - 40, 20 + (i % 3) * 18, 60, 12, 0, 0, Math.PI * 2); ctx.fill(); }
             ctx.fillStyle = '#c03a2a'; ctx.fillRect(140, 30, 120, 10); ctx.fillRect(150, 46, 100, 6); ctx.fillRect(160, 40, 8, HORIZON - 40); ctx.fillRect(232, 40, 8, HORIZON - 40);
+        } else if (place === 'kurai') {
+            // 13 章 喰らいの 城の 最上階: 嵐の 空と つぎはぎの 柱
+            ctx.fillStyle = '#1a0a24'; ctx.fillRect(0, 0, 400, HORIZON);
+            for (let i = 0; i < 7; i++) { ctx.fillStyle = `rgba(90, 30, 120, ${0.3 + 0.1 * Math.sin(t * 1.5 + i)})`; ctx.beginPath(); ctx.ellipse((i * 71 + t * 22) % 480 - 40, 16 + (i % 3) * 16, 64, 12, 0, 0, Math.PI * 2); ctx.fill(); }
+            if (Math.floor(t * 3) % 11 === 0) { ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; ctx.fillRect(0, 0, 400, HORIZON); }
+            [[20, '#3a2a4a'], [96, '#4a2a3a'], [290, '#2a3a4a'], [366, '#3a2a4a']].forEach(([x, c]) => { ctx.fillStyle = c; ctx.fillRect(x, 20, 18, HORIZON - 20); ctx.fillStyle = '#5a3a6a'; ctx.fillRect(x, 44, 18, 4); ctx.fillRect(x, 70, 18, 4); });
         } else if (place === 'tsubo') {
             // 11 章 ASOの壺の底: くらい どうくつと 下から 光る 溶岩
             ctx.fillStyle = '#1a0c0a'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -936,7 +972,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'tsubo' ? ['#4a1a10', '#7a3a20'] : place === 'shrine' ? ['#8a8070', '#b0a890'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'tsubo' ? ['#4a1a10', '#7a3a20'] : place === 'kurai' ? ['#2a1a34', '#4a3058'] : place === 'shrine' ? ['#8a8070', '#b0a890'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -981,6 +1017,12 @@ export function createBattleView(app, battle, place) {
             ctx.beginPath(); ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2); ctx.fill();
         }
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
+        // 13 章の ニオニオーテン: HP 半分から 体全体が 紅く どす黒く なる
+        if (u.enraged && !u.ko) {
+            drawArt(ctx, art, Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: 0.42 + 0.1 * Math.sin(t * 6), tint: '#7a0010', sx, sy });
+        }
+        // 喰われた コマンドの ある なかま: 歯がたの しるし
+        if (u.eaten && !u.ko) text(ctx, `${{ attack: 'こうげき', waza: 'わざ', jutsu: '術', guard: 'まもり' }[u.eaten]}× 喰われた`, p.x, p.y + 12, { size: 9, align: 'center', bold: true, color: '#ff6a6a' });
         // 拘束のリング (大魔王ASO) で うごけない なかま: 金色の 輪で しばられる
         if (!u.ko && u.bound) {
             const fk = scale * artFit(art);
@@ -996,6 +1038,21 @@ export function createBattleView(app, battle, place) {
         const w = u.parts || (u.boss && u.side === 'enemy') ? (battle.enemies.filter(x => !x.idol && !x.ko).length > 1 ? 100 : 150) : 44, head = p.y - art.h * scale * artFit(art);
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
         const barY = head - 10, nameY = head - 14;
+        // チャンスタイムで うごけない ボス: 頭の まわりを 星が ぐるぐる (ピヨピヨの わっか。おわると 消える。2026-10-30 ユーザー指定)
+        if (!u.ko && battle.chance && battle.chance.uid === u.uid && !battle.outcome) {
+            const rx = Math.min(70, art.w * scale * artFit(art) * 0.32 + 14), cy = head + 14;
+            for (let i = 0; i < 6; i++) {
+                const a = t * 3 + i * Math.PI / 3, front = Math.sin(a) > 0;
+                const x = p.x + Math.cos(a) * rx, y = cy + Math.sin(a) * 7;
+                if (i % 2) {
+                    // ひよこ
+                    ctx.fillStyle = '#ffe85a'; ctx.beginPath(); ctx.arc(x, y, front ? 4.5 : 3.5, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#ff9a3a'; ctx.fillRect(x + 3, y - 1, 3, 2);
+                    ctx.fillStyle = '#000'; ctx.fillRect(x + 1, y - 2, 1, 1);
+                } else text(ctx, '★', x, y + 4, { size: front ? 13 : 10, align: 'center', color: front ? '#ffe85a' : '#c8a83a' });
+            }
+            text(ctx, 'ピヨピヨ', p.x + rx + 8, cy - 6, { size: 9, bold: true, color: '#ffe85a' });
+        }
         bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
         text(ctx, u.idol ? u.name : `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: 'center' });
         // もう 仲間に した 敵は HP の 右に 金の メダル (2026-10-28 ユーザー指定)
@@ -1061,7 +1118,7 @@ export function createBattleView(app, battle, place) {
         const label = (key, q, dy = 22) => {
             const pt = e.gims[key];
             if (!gimOpen(battle, e, key)) return;
-            if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, '#ffb84a');
+            if (!pt.noBody && !pt.face) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, '#ffb84a');   // 顔 (13 章) は ボスの HP で
             text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
         };
         // マグマの 体 (11 章の バクエンリュウ): ふだんは だいだいに ゆらめき、水爆弾で かたまると 灰色の 岩
@@ -1070,6 +1127,11 @@ export function createBattleView(app, battle, place) {
             ctx.fillStyle = hard ? 'rgba(110, 110, 120, 0.55)' : `rgba(255, 110, 30, ${0.14 + 0.08 * Math.sin(t * 5)})`;
             ctx.beginPath(); ctx.ellipse(p.x, p.y - h / 2, w * 0.55, h * 0.55, 0, 0, Math.PI * 2); ctx.fill();
             text(ctx, hard ? 'かたまった！ 攻撃が きく！' : 'マグマの 体', p.x, p.y - h - 22, { size: 10, align: 'center', bold: true, color: hard ? '#e0e0e0' : '#ffb080' });
+        }
+        // キメラ (13 章): 部位の のこり / 顔が 出ている 時間
+        if (e.chimera) {
+            const left = Object.values(e.gims).filter(pt => pt.chimeraPart && !pt.broken).length;
+            text(ctx, e.headOut ? `顔が 出ている！ (${Math.max(0, e.headT).toFixed(1)})` : `キメラの 部位 のこり ${left}`, p.x + w / 2 + 6, p.y - h * 0.15, { size: 10, bold: true, color: e.headOut ? '#ffe85a' : '#ffb0c0' });
         }
         // 赤信号 (14 章の リハマ): 体が 赤く 光る
         if (e.shell > 0 && e.gims.signal) {
@@ -1275,12 +1337,14 @@ export function createBattleView(app, battle, place) {
             const k = 1 - (p.until - t) / 0.9;
             text(ctx, p.text, p.x, p.y - k * 14, { size: p.big ? 16 : p.small ? 10.5 : 13, align: 'center', bold: true, color: p.color });
         }
-        // チャンスタイム (ボスが うごけない あいだ ずっと 出す。2026-10-28 ユーザー指定)
+        // チャンスタイム: 左上に 小さく (ボスの HP が 見えるように。うごけない ことは 頭の ピヨピヨで。2026-10-30 ユーザー指定)
         if (battle.chance && !battle.outcome) {
-            panel(ctx, 90, 6, 220, 46, { fill: 'rgba(90, 40, 0, 0.88)', edge: '#ffe85a' });
-            text(ctx, 'チャンスタイム！', 200, 32, { size: 24, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
-            text(ctx, `ボスが うごけない！ あと ${battle.chance.left} 回`, 200, 47, { size: 10.5, align: 'center', bold: true });
-        } else if (battle.armCharge && !battle.outcome) {
+            panel(ctx, 4, 4, 112, 20, { fill: 'rgba(90, 40, 0, 0.85)', edge: '#ffe85a' });
+            text(ctx, `チャンス！ あと ${battle.chance.left} 回`, 60, 18, { size: 10, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
+        }
+        // 予約した バナー (変身の セリフ)
+        if (bannerQueue.length && bannerQueue[0].at <= t && !(banner && banner.until > t)) banner = bannerQueue.shift();
+        if (battle.armCharge && !battle.outcome) {
             // 右腕が 限界 (6 章): 防御不能の 大技を ためている
             const moonBoss = battle.enemies.find(x => x.uid === battle.armCharge.uid)?.gims?.moon;
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.92)', edge: '#ffb84a' });
