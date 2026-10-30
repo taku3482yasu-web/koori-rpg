@@ -245,6 +245,10 @@ const tokens = s => (s || '').split(/\s+/).filter(t => t && t !== '|');
 const bars = (id, from, n = 2) => { const t = tokens(SONGS[id].melody), st = SONGS[id].steps || 8; return Array.from({ length: n }, (_, i) => t.slice((from + i) * st, (from + i + 1) * st).join(' ')).join(' | '); };
 const chordsOf = (id, from, n = 2) => tokens(SONGS[id].chords).slice(from, from + n).join(' ');
 const PATCH = [['ishinokawa', 0], ['kage', 0], ['himuro', 4], ['onioni8', 0]];
+// 13 章の 3〜7 階の 紋つきの 幹部は 前に 戦った ときの 曲を すこし はやく・ギザギザの 音で (紋つきの 版)
+for (const [id, from] of [['tomooka13', 'tomooka6'], ['ooni13', 'ooni8'], ['soutou13', 'soutou8'], ['kinme13', 'kinme8'], ['tashikeda13', 'tashikeda10']]) {
+    SONGS[id] = { ...SONGS[from], name: `${SONGS[from].name}・闇`, bpm: SONGS[from].bpm + 10, lead: 'sawtooth' };
+}
 SONGS.niolioten13 = {
     name: 'つぎはぎの 獣 (ルキハ・ニオニオーテン)', bpm: 150, root: 64, mode: 'harmonic', lead: 'sawtooth',
     melody: PATCH.map(([id, f]) => bars(id, f)).join(' | '),

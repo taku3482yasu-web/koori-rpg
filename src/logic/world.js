@@ -36,7 +36,9 @@ export function peopleHere(g) {
         (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
         (p.only === 'onioni8' && g.story === 'oshiro') ||
         // 13 章: 喰らいの 城の 最上階の ルキハ
-        (p.only === 'rukiha13' && g.story === 'kurai') ||
+        (p.only === 'rukiha13' && g.story === 'kurai' && (g.flags.fl13 || 0) >= 5) ||
+        (p.only === 'floor13' && g.story === 'kurai' && (g.flags.fl13 || 0) < p.floor - 2) ||
+        (p.only === 'hyouga13' && reached(g, 'kuraie') && !reached(g, 'clear13')) ||
         // 12 章: 神社に あつまった みんなと おにおに・鬼神 (勝つまで)
         (p.only === 'gather12' && g.story === 'shuuketsu') ||
         (p.only === 'onioni12' && g.story === 'shuuketsu' && !g.flags.oni12) ||

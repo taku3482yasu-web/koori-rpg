@@ -2014,3 +2014,16 @@ Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
 export const unitArtKey = id => (NAKAMA[id] ? NAKAMA[id].art : BOSSES[id] ? BOSSES[id].art : RIVALS[id] ? RIVALS[id].art : id);
 // なかま・こおりくん・ボス・ライバル探検隊の どれでも
 export const unitOf = id => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
+
+// ----- 13 章「喰らいの 城」の 3〜7 階 (2026-10-30 ユーザー指定) -----
+//   たおしたはずの 幹部が 紋つき (・闇) に なって 1 階に 1 体ずつ まっている。前より 強い (Lv が 上がり、紋つきで 1.15 倍)
+//   その 階の バトルには ライバル探検隊が 1 チーム 加勢する (階ごとに ちがう チーム。お助けなので 攻撃は 受けない)
+export const FLOOR13 = [['tomooka6', 'ask3'], ['ooni8', 'kemono'], ['soutou8', 'muscle'], ['kinme8', 'bartas'], ['tashikeda10', '5dx']]
+    .map(([from, team], i) => ({ id: from.replace(/\d+$/, '') + '13', from, team, floor: i + 3, lv: 56 + i }));
+for (const f of FLOOR13) {
+    const d = BOSSES[f.from];
+    BOSSES[f.id] = { ...d, id: f.id, name: `${d.name.replace(/・闇$/, '')}・闇`, lv: f.lv, dark: true, befriends: null, place: 'kurai' };
+}
+// 加勢する ライバル探検隊の Lv
+export const HELPER_LV = 58;
+

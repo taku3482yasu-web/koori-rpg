@@ -432,3 +432,33 @@ test('地図: ASOの壺の底 (11 章)。駅から 火山の 底の バクエン
     const t = idsInArea('tsubo');
     assert.equal(t.length, 6);
 });
+
+test('地図: 喰らいの 城 (13 章)。ヒョウガリュウの おりる 野原から 城門 → 1・2 階 → 3〜7 階 (階段の 前に 幹部) → 最上階の ルキハの 前', async () => {
+    const { KURAI_Y0, KURAI_IN, HYOUGA13_AT } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(KURAI_IN.y), [KURAI_Y0, MAP_H]);
+    assert.ok(!BLOCK.has(TILES[HYOUGA13_AT.y][HYOUGA13_AT.x]), '山の ヒョウガリュウの 前に 立てる');
+    const ruk = PEOPLE.find(p => p.id === 'rukiha13');
+    const bosses = PEOPLE.filter(p => p.only === 'floor13').sort((a, b) => a.floor - b.floor);
+    assert.equal(bosses.length, 5);
+    const reach = beaten => {
+        const seen = new Set([`${KURAI_IN.x},${KURAI_IN.y}`]);
+        const q = [[KURAI_IN.x, KURAI_IN.y]];
+        const blockers = [...bosses.slice(beaten), ...PEOPLE.filter(p => p.y >= KURAI_Y0 && p.only !== 'floor13')];
+        const open = (x, y) => y >= KURAI_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !blockers.some(p => p.x === x && p.y === y);
+        while (q.length) {
+            const [x, y] = q.shift();
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const k = `${x + dx},${y + dy}`;
+                if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); }
+            }
+        }
+        return seen;
+    };
+    for (let n = 0; n < 5; n++) {
+        const r = reach(n), b = bosses[n];
+        assert.ok([[0, 1], [1, 0], [-1, 0]].some(([dx, dy]) => r.has(`${b.x + dx},${b.y + dy}`)), `${b.floor} 階の 幹部の 前まで`);
+        assert.ok(!r.has(`${ruk.x},${ruk.y + 1}`), `${b.floor} 階の 幹部が いる あいだは 最上階へ 行けない`);
+        if (n < 4) assert.ok(!r.has(`${bosses[n + 1].x},${bosses[n + 1].y + 1}`) || bosses[n + 1].y + 1 === b.y, 'つぎの 階へは 行けない');
+    }
+    assert.ok(reach(5).has(`${ruk.x},${ruk.y + 1}`), 'ぜんぶ たおすと 最上階の ルキハの 前まで');
+});

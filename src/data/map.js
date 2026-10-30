@@ -46,6 +46,8 @@ export const PARK_Y0 = 300;     // ここから 下が 14 章の 遊園地 (ナ�
 export const KINNIKU_Y0 = 336;  // ここから 下が 筋肉の山 (9 章)
 export const TSUBO_Y0 = 372;    // ここから 下が ASOの壺の底 (11 章)
 export const KURAI_Y0 = 408;    // ここから 下が 喰らいの 城 (13 章)
+// 喰らいの 城の 2〜7 階: [階の 上の 行 (KURAI_Y0 から), 上への 階段の x]。下から 2 階・3 階 … 7 階 の 順
+export const FLOORS13 = [[21, 10], [18, 37], [15, 10], [12, 37], [9, 10], [6, 24]];
 export const BLOCK = new Set(['T', 'W', 'X', 'Q', 'I', 'J', 'Z', 'V', 'k', 'm']);
 export const WET = new Set(['D', 'E', 'I']);   // 3 章 クリアで 水に もどる マス
 
@@ -281,18 +283,22 @@ function build() {
     [[3, A + 28], [12, A + 29], [30, A + 29], [40, A + 30], [44, A + 28], [17, A + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
 
     // ----- 喰らいの 城 (y 408〜443。13 章「喰らいの 城」) -----
-    //   南の 駅 (黒い 光の 道の 先) から 城門 → 軍勢の いる 大広間 → 北の 階段 → 最上階 (ルキハ)
+    //   南の 野原 (ヒョウガリュウが おりる) から 城門 → 1 階 大広間 → 2 階 → 3〜7 階 (階段の 前に 紋つきの 幹部) → 最上階 (ルキハ)
+    //   階段は 東と 西に かわりばんこ
     const R = KURAI_Y0;
     fill(0, R, MAP_W - 1, MAP_H - 1, 'T');
     fill(1, R + 1, MAP_W - 2, R + 34, 'G');
-    fill(6, R + 1, 41, R + 25, 'V');                                     // 城の かべ
-    fill(9, R + 16, 38, R + 23, 'v');                                    // 大広間
-    fill(23, R + 24, 24, R + 25, 'v');                                   // 城門
-    fill(23, R + 11, 24, R + 15, 'v');                                   // 階段
-    fill(12, R + 2, 35, R + 10, 'v');                                    // 最上階
-    fill(23, R + 26, 24, R + 31, 'K');
-    fill(4, R + 31, 6, R + 31, 'K'); fill(4, R + 32, 24, R + 33, 'K');
-    [[3, R + 28], [12, R + 29], [30, R + 29], [40, R + 30], [44, R + 28], [17, R + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
+    fill(6, R + 1, 41, R + 29, 'V');                                     // 城の かべ
+    fill(12, R + 2, 35, R + 4, 'v');                                     // 最上階
+    for (const [y0, sx] of FLOORS13) {                                   // 2〜7 階と 上への 階段
+        fill(9, R + y0, 38, R + y0 + 1, 'v');
+        fill(sx, R + y0 - 1, sx, R + y0 - 1, 'v');
+    }
+    fill(9, R + 24, 38, R + 27, 'v');                                    // 1 階 大広間
+    fill(37, R + 23, 37, R + 23, 'v');                                   // 1 階 → 2 階
+    fill(23, R + 28, 24, R + 29, 'v');                                   // 城門
+    fill(23, R + 30, 24, R + 32, 'K');
+    [[3, R + 31], [12, R + 32], [32, R + 31], [40, R + 33], [44, R + 30], [8, R + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
     return t.map(row => row.join(''));
 }
 export const TILES = build();
@@ -342,7 +348,6 @@ export const BUILDINGS = [
     { id: 'attrA', label: 'コースター', x: 8, y: PARK_Y0 + 11, w: 6, h: 4, wall: '#ffd0e0', roof: '#e04a8a', door: { x: 11, y: PARK_Y0 + 14 } },
     { id: 'attrB', label: 'かんらん車', x: 20, y: PARK_Y0 + 3, w: 8, h: 4, wall: '#d0f0ff', roof: '#3a8ae0', door: { x: 24, y: PARK_Y0 + 6 } },
     { id: 'attrC', label: 'おばけ屋敷', x: 34, y: PARK_Y0 + 11, w: 6, h: 4, wall: '#d8d0e8', roof: '#4a3a6a', door: { x: 37, y: PARK_Y0 + 14 } },
-    { id: 'kuraiStation', label: '黒い 光の 道', x: 2, y: KURAI_Y0 + 27, w: 6, h: 4, wall: '#3a2a4a', roof: '#1a0a2a', door: { x: 5, y: KURAI_Y0 + 30 } },
     { id: 'tsuboStation', label: 'ASOの壺前駅', x: 2, y: TSUBO_Y0 + 27, w: 6, h: 4, wall: '#d8c8b8', roof: '#4a2a5a', door: { x: 5, y: TSUBO_Y0 + 30 } },
     { id: 'kinnikuStation', label: '筋肉の山 登山口駅', x: 2, y: KINNIKU_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#6a4a2a', door: { x: 5, y: KINNIKU_Y0 + 30 } },
     { id: 'parkStation', label: '遊園地前駅', x: 2, y: PARK_Y0 + 27, w: 6, h: 4, wall: '#fff0d0', roof: '#e08a2a', door: { x: 5, y: PARK_Y0 + 30 } }
@@ -487,8 +492,9 @@ export const ROAMS = [
     { id: 'hiroma', label: '大広間', x0: 9, y0: SHIRO_Y0 + 20, x1: 38, y1: SHIRO_Y0 + 23, max: 2, lv: SHIRO_LV, kinds: [{ id: 'tsunodaruma', w: 2 }, { id: 'onibin', w: 2 }, { id: 'onigirin', w: 1 }] },
     { id: 'gyokuza', label: '玉座の 間', x0: 12, y0: SHIRO_Y0 + 7, x1: 35, y1: SHIRO_Y0 + 9, max: 1, lv: SHIRO_LV, kinds: [{ id: 'goukioni', w: 1, after: 'clear8' }, { id: 'kinmetsuki', w: 1, after: 'clear8' }] },
     // 喰らいの 城 (13 章)。ルキハの 軍勢 = これまでの 強い キャラが 紋つき (・闇) で 出る
-    { id: 'kuraiHiroma', label: '喰らいの 城の 大広間', x0: 9, y0: KURAI_Y0 + 16, x1: 38, y1: KURAI_Y0 + 23, max: 3, lv: KURAI_LV, kinds: [{ id: 'goukioni', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'shirokumatcho', w: 2 }, { id: 'nakatadraco', w: 1 }, { id: 'yukionnan', w: 1 }, { id: 'dradora', w: 1 }] },
-    { id: 'kuraiSoto', label: '喰らいの 城の まわり', x0: 1, y0: KURAI_Y0 + 26, x1: 46, y1: KURAI_Y0 + 33, max: 2, lv: KURAI_LV, kinds: [{ id: 'hinotorin', w: 2 }, { id: 'onibin', w: 2 }, { id: 'youganworm', w: 1 }] },
+    //   紋つきの 敵は なかまに ならない (外の 軍勢は 元四天王が ひきうけて くれる)
+    { id: 'kuraiHiroma', label: '喰らいの 城の 大広間', x0: 9, y0: KURAI_Y0 + 24, x1: 38, y1: KURAI_Y0 + 27, max: 3, lv: KURAI_LV, kinds: [{ id: 'goukioni', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'shirokumatcho', w: 2 }, { id: 'nakatadraco', w: 1 }, { id: 'yukionnan', w: 1 }, { id: 'dradora', w: 1 }] },
+    { id: 'kurai2f', label: '喰らいの 城の 2 階', x0: 9, y0: KURAI_Y0 + 21, x1: 38, y1: KURAI_Y0 + 22, max: 2, lv: KURAI_LV, kinds: [{ id: 'hinotorin', w: 2 }, { id: 'onibin', w: 2 }, { id: 'youganworm', w: 1 }] },
     // ASOの壺の底 (11 章)。バクエンリュウは 11 章 クリアの あと (clear11) 火山の 底に いる
     { id: 'youganDou', label: '溶岩の 大どうくつ', x0: 8, y0: TSUBO_Y0 + 13, x1: 38, y1: TSUBO_Y0 + 19, max: 3, lv: TSUBO_LV, kinds: [{ id: 'asohei', w: 3 }, { id: 'hinotorin', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'youganworm', w: 2 }, { id: 'dradora', w: 1 }] },
     { id: 'kazanSoko', label: '火山の 底', x0: 8, y0: TSUBO_Y0 + 3, x1: 28, y1: TSUBO_Y0 + 7, max: 1, lv: TSUBO_LV, kinds: [{ id: 'youganworm', w: 1 }, { id: 'hinotorin', w: 1 }, { id: 'bakuenryu', w: 1, after: 'clear11' }] },
@@ -576,7 +582,16 @@ export const PEOPLE = [
     { id: 'kinme8', name: '金滅鬼', art: 'kinmetsuki', x: 24, y: SHIRO_Y0 + 11, only: 'kinme8', scale: 1.2 },
     { id: 'onioni8', name: 'おにおに', art: 'onioni', x: 24, y: SHIRO_Y0 + 7, only: 'onioni8' },
     // 13 章: 喰らいの 城の 最上階の ルキハ
-    { id: 'rukiha13', name: 'ルキハ', art: 'rukiha', x: 24, y: KURAI_Y0 + 4, only: 'rukiha13', scale: 1 },
+    { id: 'rukiha13', name: 'ルキハ', art: 'rukiha', x: 24, y: KURAI_Y0 + 2, only: 'rukiha13', scale: 1 },
+    // 13 章: 3〜7 階の 階段の 前で まつ 紋つきの 幹部 (boss = BOSSES の id)
+    { id: 'f13_3', boss: 'tomooka13', name: 'トモオカ・闇', art: 'tomooka', x: 37, y: KURAI_Y0 + 18, only: 'floor13', floor: 3, scale: 1 },
+    { id: 'f13_4', boss: 'ooni13', name: '大鬼・闇', art: 'ooni', x: 10, y: KURAI_Y0 + 15, only: 'floor13', floor: 4, scale: 1 },
+    { id: 'f13_5', boss: 'soutou13', name: '双頭鬼・闇', art: 'soutouki', x: 37, y: KURAI_Y0 + 12, only: 'floor13', floor: 5, scale: 1 },
+    { id: 'f13_6', boss: 'kinme13', name: '金滅鬼・闇', art: 'kinmetsuki', x: 10, y: KURAI_Y0 + 9, only: 'floor13', floor: 6, scale: 1 },
+    { id: 'f13_7', boss: 'tashikeda13', name: 'タシケダ・闇', art: 'tashikeda', x: 24, y: KURAI_Y0 + 6, only: 'floor13', floor: 7, scale: 1 },
+    // 13 章: 山の ダムで まつ ヒョウガリュウ (乗せて 城へ 飛んでくれる) と、城の 前で まつ ヒョウガリュウ (帰り)
+    { id: 'hyouga13', name: 'ヒョウガリュウ', art: 'hyougaryu', x: 40, y: YAMA_Y0 + 14, only: 'hyouga13', scale: 1.4 },
+    { id: 'hyougaKurai', name: 'ヒョウガリュウ', art: 'hyougaryu', x: 19, y: KURAI_Y0 + 32, only: 'hyouga13', scale: 1.4 },
     // 12 章: 神社に あつまった みんな (話せる) と、勝負を いどむ おにおに
     { id: 'onioni12', name: 'おにおに', art: 'onioni2', x: 8, y: 6, only: 'onioni12', scale: 1.2 },
     { id: 'g12zumitani', name: 'ズミタニ', art: 'zumitani', x: 3, y: 7, only: 'gather12' },
@@ -685,13 +700,16 @@ export const MOON_PLACES = [
 ];
 
 // ----- 喰らいの 城 (13 章「喰らいの 城」。2026-10-30) -----
-export const KURAI_IN = { x: 5, y: KURAI_Y0 + 31, dir: 'down' };
+export const KURAI_IN = { x: 23, y: KURAI_Y0 + 32, dir: 'up' };
+export const HYOUGA13_AT = { x: 39, y: YAMA_Y0 + 14, dir: 'right' };   // 山で ヒョウガリュウに 話す ところ (帰りも ここに おりる)
 export const KURAI_PLACES = [
     { id: 'saijou', label: '最上階', x: 24, y: KURAI_Y0 + 3 },
-    { id: 'kaidan', label: '階段', x: 23.5, y: KURAI_Y0 + 13 },
-    { id: 'hiroma', label: '大広間', x: 16, y: KURAI_Y0 + 20 },
-    { id: 'jomon', label: '城門', x: 23.5, y: KURAI_Y0 + 25 },
-    { id: 'kuraiStation', label: '黒い 光の 道', x: 5, y: KURAI_Y0 + 28 }
+    { id: 'f7', label: '7 階', x: 16, y: KURAI_Y0 + 6.5 },
+    { id: 'f5', label: '5 階', x: 16, y: KURAI_Y0 + 12.5 },
+    { id: 'f3', label: '3 階', x: 16, y: KURAI_Y0 + 18.5 },
+    { id: 'hiroma', label: '1 階', x: 16, y: KURAI_Y0 + 25.5 },
+    { id: 'jomon', label: '城門', x: 23.5, y: KURAI_Y0 + 29 },
+    { id: 'hyougaKurai', label: 'ヒョウガリュウ', x: 15, y: KURAI_Y0 + 32 }
 ];
 
 // ----- ASOの壺の底 (11 章「ASOの壺の底」。2026-10-30) -----

@@ -293,7 +293,8 @@ function leaveOni(b, u) {
     emit(b, 'phaseEnd', { actor: u.uid, name: u.oniDef.name });
 }
 
-export function createBattle({ allies, enemies, rng, kind = 'wild', intro = false }) {
+// helpers: 13 章の ライバル探検隊の 加勢 { name, members: [id...], lv }。輪にも 前にも 入らないので 攻撃は 受けない
+export function createBattle({ allies, enemies, rng, kind = 'wild', intro = false, helpers = null }) {
     const b = {
         kind, rng, t: 0, rot: 0, waiting: intro,
         wheel: Array.from({ length: 6 }, (_, i) => (allies[i] ? makeUnit(allies[i], 'ally') : null)),
@@ -304,6 +305,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
+    b.helpers = helpers ? { name: helpers.name, team: helpers.team || null, units: helpers.members.map((id, i) => makeUnit({ uid: `help-${i}`, id, lv: helpers.lv }, 'ally')), t: HELP_FIRST, acts: 0 } : null;
     b.front = () => [0, 1, 2].map(i => b.wheel[(b.rot + i) % 6]);
     b.frontAlive = () => b.front().filter(u => u && !u.ko);
     b.enemiesAlive = () => b.enemies.filter(u => !u.ko);
@@ -394,6 +396,28 @@ function transform(b, u) {
     b.bossTimer = 0;
     b.warned = false;
     emit(b, 'transform', { actor: u.uid, name: p2.name });
+}
+// ----- ライバル探検隊の 加勢 (13 章の 3〜7 階) -----
+//   HELP_EVERY 秒ごとに だれか 1 人が 追加攻撃 (ロックオン中は その 敵・部位へ) か サポートアイテム (回復・こうげきアップ・とりつきを はらう)
+const HELP_FIRST = 3, HELP_EVERY = 5;
+function helperAct(b) {
+    const h = b.helpers, u = b.rng.pick(h.units);
+    const team = b.wheel.filter(a => a && !a.ko);
+    const possessed = b.frontAlive().filter(a => Object.keys(a.status).length);
+    const hurt = team.some(a => a.hp < a.max * 0.6);
+    const kind = possessed.length && b.rng.chance(0.5) ? 'cure' : hurt && b.rng.chance(0.4) ? 'heal' : b.rng.chance(0.25) ? 'power' : 'attack';
+    h.acts++;
+    if (kind === 'attack') {
+        const targets = b.enemiesAlive().filter(e => !e.idol);
+        const to = targets.find(e => e.uid === b.lock) || b.rng.pick(targets.length ? targets : b.enemiesAlive());
+        emit(b, 'help', { actor: u.uid, name: u.name, team: h.name, kind, target: to.uid });
+        damage(b, u, to, 1.6);
+        return;
+    }
+    emit(b, 'help', { actor: u.uid, name: u.name, team: h.name, kind });
+    if (kind === 'heal') for (const a of team) { a.hp = Math.min(a.max, a.hp + Math.round(a.max * 0.25)); emit(b, 'heal', { target: a.uid, amount: Math.round(a.max * 0.25) }); }
+    if (kind === 'power') for (const a of b.frontAlive()) a.buffs.atk = { amount: 0.3, t: 8 };
+    if (kind === 'cure') for (const a of possessed) a.status = {};
 }
 // ----- キメラ (13 章の ニオニオーテン) -----
 const EAT_LABEL = { attack: 'こうげき', waza: 'わざ', jutsu: '術', guard: 'まもり' };
@@ -892,6 +916,16 @@ export function step(b, dt) {
                 u.armDmg = 0;
                 emit(b, 'armShrink', { target: u.uid, lv: u.armLv });
             }
+        }
+    }
+    // 13 章: ライバル探検隊の 加勢 (サポートアイテム・追加攻撃)
+    if (b.helpers && b.enemiesAlive().length) {
+        b.helpers.t -= dt;
+        if (b.helpers.t <= 0) {
+            b.helpers.t = HELP_EVERY;
+            helperAct(b);
+            checkOutcome(b);
+            if (b.outcome) return;
         }
     }
     // 13 章: 頭が 出て しばらく すると キメラの 部位が もとに もどる

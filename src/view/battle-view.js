@@ -55,6 +55,7 @@ export function createBattleView(app, battle, place) {
     let drag = null;
     let banner = null;             // { text, color, until }
     const bannerQueue = [];        // 順に 出す バナー (13 章の 変身の セリフ)
+    const helpFlash = {};          // 加勢した 探検隊の キャラが はねる 時間
     let warn = null;               // ボスの 予告 { name, until }
     const pops = [];               // ダメージの 数字
     let introIndex = 0;            // はじまりの コマンドの カーソル
@@ -79,9 +80,13 @@ export function createBattleView(app, battle, place) {
         if (n === 2) return [{ x: 140, y: 126, scale: 3 }, { x: 262, y: 136, scale: 3 }][i];
         return [{ x: 84, y: 132, scale: 2.8 }, { x: 200, y: 120, scale: 2.8 }, { x: 316, y: 132, scale: 2.8 }][i];   // 3 体 (まんなかが 奥)
     };
+    // 13 章: 加勢する ライバル探検隊は 右上に ならぶ (攻撃は 受けない)
+    const helperPos = i => ({ x: 312 + i * 30, y: 74 });
     function posOf(uid) {
         const fi = battle.front().findIndex(u => u && u.uid === uid);
         if (fi >= 0) return ALLY_POS[fi];
+        const hi = battle.helpers ? battle.helpers.units.findIndex(u => u.uid === uid) : -1;
+        if (hi >= 0) return helperPos(hi);
         const ei = battle.enemies.findIndex(u => u.uid === uid);
         return ei >= 0 ? enemyPos(ei) : null;
     }
@@ -299,6 +304,15 @@ export function createBattleView(app, battle, place) {
                     const p = posOf(e.target);
                     if (p) pops.push({ x: p.x, y: p.y - 120, text: e.chimera ? 'キメラの 体に はじかれた！ 部位を ねらえ！' : 'マグマの 体で きかない！', color: '#ffb080', small: true, until: t + 1.1 });
                 }
+            } else if (e.type === 'help') {
+                // 13 章: ライバル探検隊の 加勢
+                const what = { attack: '追加攻撃！', heal: 'サポートアイテム「回復の 実」！', power: 'サポートアイテム「力の 実」！ こうげき アップ', cure: 'サポートアイテム「おはらいの 札」！ とりつきが ぬけた' }[e.kind];
+                banner = { text: `${e.team}の ${e.name}: ${what}`, color: '#8affc8', until: t + 1.5 };
+                helpFlash[e.actor] = t + 0.5;
+                sfx(e.kind === 'attack' ? 'big' : 'heal');
+                const p = posOf(e.actor), q = e.target ? posOf(e.target) : null;
+                if (p) effects.push({ kind: 'wave', x: p.x, y: p.y - 10, start: t, dur: 0.4, color: '#8affc8' });
+                if (q) effects.push({ kind: 'wave', x: q.x, y: q.y - 40, start: t + 0.1, dur: 0.4, color: '#8affc8' });
             } else if (e.type === 'headOut') {
                 // 13 章: キメラの 部位を ぜんぶ こわした → 顔が 出る
                 banner = { text: '部位を ぜんぶ こわした！ ルキハの 顔が 出た！ ねらえ！', color: COLORS.accent, until: t + 2 };
@@ -1262,6 +1276,17 @@ export function createBattleView(app, battle, place) {
         }
         ctx.restore();
     }
+    // 加勢する ライバル探検隊 (右上。チームの 名前と 3 人)
+    function drawHelpers(ctx) {
+        const h = battle.helpers;
+        panel(ctx, 292, 40, 104, 46, { fill: 'rgba(16, 60, 40, 0.75)', edge: '#8affc8' });
+        text(ctx, h.name, 344, 52, { size: 9, align: 'center', bold: true, color: '#8affc8', maxWidth: 98 });
+        h.units.forEach((u, i) => {
+            const p = helperPos(i), jump = (helpFlash[u.uid] || 0) > t ? 6 : 0;
+            drawArt(ctx, ART[u.art], Math.floor(t * 2), p.x, p.y + 6 - jump, { scale: 1.2 });
+        });
+        text(ctx, `加勢まで ${Math.max(0, h.t).toFixed(1)}`, 344, 96, { size: 8.5, align: 'center', color: '#c8ffe0' });
+    }
     const handsBrokenView = e => e.parts.rhand.broken && e.parts.lhand.broken;
     // 右腕 (6 章の トモオカ) の 大きさ: 段が 上がるほど ドット絵の 腕が 大きく なる
     const armScale = e => 1 + (e.armLv || 0) * 0.12;
@@ -1328,6 +1353,7 @@ export function createBattleView(app, battle, place) {
             drawUnit(ctx, u, k < 1 ? { x: p.x, y: p.y + (1 - k) * (1 - k) * 140 - Math.sin(Math.PI * k) * 18 } : p, { scale: ALLY_SCALE, back: true });
         });
         if (mg && mg.phase === 'act') drawAct(ctx);
+        if (battle.helpers) drawHelpers(ctx);
         drawEffects(ctx);
         if (!battle.outcome) drawLock(ctx);
         drawPickArrow(ctx);

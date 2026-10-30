@@ -713,26 +713,48 @@ test('大魔王ASO: 14 章 クリアの あと ASO の 間で 勝負できて、
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
 });
 
-test('13 章: ともいしに 見送られ → 石の川駅から 喰らいの 城 → 最上階の ルキハに 勝つと 13 章 クリア (本編の さいご)。そのあと 14 章 (2026-10-30)', async () => {
-    const { startChapter13, arriveKurai, startChapter14, trainLines, darkTown } = await import('../src/logic/game.js');
+test('13 章: ヒョウガリュウに 乗って 喰らいの 城 → 3〜7 階の 紋つきの 幹部 (探検隊が 加勢) → 最上階の ルキハで 13 章 クリア。そのあと 14 章 (2026-10-30)', async () => {
+    const { startChapter13, arriveKurai, startChapter14, trainLines, darkTown, floor13Next, floor13Helpers } = await import('../src/logic/game.js');
     const { KURAI_Y0 } = await import('../src/data/map.js');
+    const { FLOOR13, BOSSES, TEAMS } = await import('../src/data/nakama.js');
     const g = newGame('menkyo');
     receiveWatch(g);
-    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const rng = { chance: () => true, int: () => 0, next: () => 0, weighted: l => l[0] };
     const here = id => peopleHere(g).some(p => p.id === id);
     g.story = 'clear12';
-    assert.ok(!trainLines(g).includes('kurai'));
     assert.ok(startChapter13(g));
-    assert.ok(trainLines(g).includes('kurai'), '電車で 行ける');
-    assert.ok(!here('rukiha13'));
+    assert.ok(!trainLines(g).includes('kurai'), '電車では 行かない');
+    assert.ok(here('hyouga13'), '山の ダムに ヒョウガリュウ');
+    assert.match(objective(g), /ヒョウガリュウ/);
     assert.ok(arriveKurai(g));
+    assert.ok(darkTown(g, { x: 20, y: KURAI_Y0 + 25 }), '城の 軍勢は ぜんぶ 紋つき');
+    assert.ok(!here('rukiha13'), '幹部を たおすまで 最上階には 行けない');
+    // 3〜7 階: 1 階に 1 体、前より 強い 紋つきの 幹部。階ごとに ちがう 探検隊が 加勢
+    assert.deepEqual(FLOOR13.map(f => f.floor), [3, 4, 5, 6, 7]);
+    assert.equal(new Set(FLOOR13.map(f => f.team)).size, 5, '階ごとに ちがう チーム');
+    assert.ok(FLOOR13.some(f => f.from === 'tashikeda10'));
+    for (const f of FLOOR13) {
+        assert.equal(floor13Next(g).id, f.id);
+        assert.ok(here(`f13_${f.floor}`));
+        assert.ok(BOSSES[f.id].lv > BOSSES[f.from].lv + 10 && BOSSES[f.id].name.endsWith('・闇'), '前より 強い 紋つき');
+        assert.ok(bossEnemies(f.id)[0].dark);
+        assert.deepEqual(floor13Helpers(f).members, TEAMS[f.team].members);
+        assert.match(objective(g), new RegExp(`${f.floor} 階`));
+        const out = applyBattleResult(g, winBattle(g, bossEnemies(f.id), 'boss'), rng);
+        assert.equal(out.floor13, f.floor);
+        assert.equal(out.befriend, null, '幹部は なかまに ならない');
+        assert.ok(!here(`f13_${f.floor}`));
+    }
+    assert.equal(g.story, 'kurai', 'ストーリーは まだ');
     assert.ok(here('rukiha13'));
-    assert.ok(darkTown(g, { x: 20, y: KURAI_Y0 + 20 }), '城の 軍勢は ぜんぶ 紋つき');
     assert.match(objective(g), /ルキハ/);
+    // 紋つきの 敵は なかまに ならない
+    const wild = applyBattleResult(g, winBattle(g, [{ id: 'goukioni', lv: 54, dark: true }]), rng);
+    assert.equal(wild.befriend, null, '紋つきは なかまに ならない');
     assert.ok(!startChapter14(g));
     const out = applyBattleResult(g, winBattle(g, bossEnemies('rukiha13'), 'boss'), rng);
     assert.ok(out.ending);
     assert.equal(g.story, 'clear13');
-    assert.ok(!here('rukiha13'));
+    assert.ok(!here('rukiha13') && !here('hyouga13'));
     assert.ok(startChapter14(g), '13 章の あとで 14 章');
 });

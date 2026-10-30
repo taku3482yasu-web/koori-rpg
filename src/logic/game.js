@@ -35,15 +35,16 @@
 //   clear11  11 章 クリア。ここから 12 章「集結」: ともいしの 家で 黒い 空
 //   shuuketsu 神社に みんなが あつまる。おにおに・鬼神が 勝負を いどむ (flags.oni12) → 家で ねると 出発の 前の 夜
 //   clear12  12 章 クリア。ここから 13 章「喰らいの 城」: ともいしに 見送られて 出発
-//   kuraie   石の川駅から 黒い 光の 道で 喰らいの 城へ 行ける
-//   kurai    喰らいの 城に 着いた。紋つきの 軍勢を こえて 最上階の ルキハ (第 1 形態 → ニオニオーテン)
+//   kuraie   山の ダムの ヒョウガリュウに 乗って 喰らいの 城へ 行ける
+//   kurai    喰らいの 城に 着いた。元四天王が 外の 軍勢を ひきうける。1・2 階は 紋つき、3〜7 階は 紋つきの 幹部 (flags.fl13 = たおした 数。
+//            ライバル探検隊が 加勢) → 最上階で 探検隊が 軍勢を ひきうけ、ルキハ (第 1 形態 → ニオニオーテン)
 //   clear13  13 章 クリア (エンディング。本編の さいご = MAIN_END)
 //   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
 //   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
 //   clear14  14 章 クリア。15 章「新たなる１日」: 無限回廊 (g.kairou)・ライバル探検隊の 仲間クエスト (flags.team_*)
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES, FLOOR13, HELPER_LV } from '../data/nakama.js';
 import { SPOTS, START, areaAt } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
@@ -192,7 +193,11 @@ export function encounter(g, source, rng, first = null) {
 }
 
 // ボス: nushi (1 章・石の川橋) / kage (2 章・学校の ろうか) / himuro (3 章・ダム) / urashima4 (4 章・海岸どうくつ)
-export const bossEnemies = (id = 'nushi') => [{ id, lv: BOSSES[id].lv }];
+export const bossEnemies = (id = 'nushi') => [{ id, lv: BOSSES[id].lv, dark: Boolean(BOSSES[id].dark && FLOOR13.some(f => f.id === id)) }];
+// 13 章: つぎに たおす 階の 幹部 (ぜんぶ たおしたら null)
+export const floor13Next = g => (g.story === 'kurai' ? FLOOR13[g.flags.fl13 || 0] || null : null);
+// その 階で 加勢する ライバル探検隊
+export const floor13Helpers = f => ({ team: f.team, name: TEAMS[f.team].name, members: TEAMS[f.team].members, lv: HELPER_LV });
 // ライバル探検隊 (4 章): バージョンの チーム 3 人 (まんなかが リーダー)
 export const rivalEnemies = g => {
     const team = rivalTeam(g.version);
@@ -293,6 +298,8 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'bakuen11') g.flags.baku11 = true;
         if (bossId === 'onioni12') { g.flags.oni12 = true; out.oniSpecial = true; }
         if (bossId === 'aso15') g.flags.aso15 = true;
+        const fl = FLOOR13.find(f => f.id === bossId);
+        if (fl) { g.flags.fl13 = Math.max(g.flags.fl13 || 0, fl.floor - 2); out.floor13 = fl.floor; }
         if (bossId === 'rukiha13') { g.story = 'clear13'; g.chapter = 14; out.ending = true; }
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
@@ -303,7 +310,8 @@ export function applyBattleResult(g, battle, rng) {
         out.dark = g.flags.dark10;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
-    const ids = [...new Set(battle.enemies.map(e => e.id))];
+    // 紋つき (・闇) の 敵は なかまに ならない (2026-10-30 ユーザー指定)
+    const ids = [...new Set(battle.enemies.filter(e => !e.dark).map(e => e.id))];
     for (const id of ids) {
         if (rng.chance(befriendRate(g, id, battle.food))) {
             out.befriend = { id, lv: battle.enemies.find(e => e.id === id).lv, medal: null };
@@ -406,8 +414,8 @@ export function objective(g) {
         case 'shuuketsu': return !g.flags.oni12 ? '神社に 行こう。みんなが あつまっている' : '家に 帰って ねよう (出発の 前の 夜)';
         case 'clear12': return '家の 前の ともいしと 話そう';
         // 13 章「喰らいの 城」
-        case 'kuraie': return '石の川駅から、黒い 光の 道で 喰らいの 城へ 行こう';
-        case 'kurai': return '喰らいの 城の 最上階で ルキハを たおそう';
+        case 'kuraie': return '山の ダムの ヒョウガリュウに 乗って、喰らいの 城へ 行こう';
+        case 'kurai': return floor13Next(g) ? `城を のぼろう。${floor13Next(g).floor} 階で 幹部が まっている` : '喰らいの 城の 最上階で ルキハを たおそう';
         case 'clear13': return '家の 前の ともいしと 話そう';
         // 14 章 (バージョンで ちがう)
         case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
@@ -439,7 +447,7 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'tsuboe') ? ['tsubo'] : []), ...(reached(g, 'kuraie') ? ['kurai'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'tsuboe') ? ['tsubo'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
 
 // ----- 9 章 (2026-10-30) -----
 // 8 章 クリアの あと ともいしの 家で: おにおにが なかまに なる。はじめて なら おにおにの メダル

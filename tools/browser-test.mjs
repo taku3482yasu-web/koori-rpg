@@ -903,26 +903,42 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear12"'), '家で ねると 出発の 前の 夜 (12 章 クリア)');
 
-    // ----- 13 章: 喰らいの 城 → ルキハ → ルキハ・ニオニオーテン (キメラ) → エンディング (2026-10-30) -----
+    // ----- 13 章: ヒョウガリュウで 喰らいの 城 → 元四天王 → 3〜7 階の 紋つきの 幹部 (探検隊が 加勢) → 最上階で ルキハ → ニオニオーテン → エンディング (2026-10-30) -----
     const K13 = 408;
     await at(8, 25, 'up');
     await key('KeyJ');
     await skipTalk();
     check(await evaluate('window.__app.g.story === "kuraie"'), '12 章の あと ともいしに 見送られて 出発 (13 章)');
-    await at(5, 41, 'up');
+    await at(39, 84 + 14, 'right');
     await key('KeyJ');
     await sleep(1500);
-    for (let i = 0; i < 7; i++) await key('ArrowDown');
     await key('Enter');
     await skipTalk();
     await sleep(200);
     await shot('kurai-arrive');
-    check(await evaluate(`window.__app.g.story === "kurai" && window.__app.g.pos.y > ${K13} * 16 && window.__bgm() === "kurai"`), '黒い 光の 道で 喰らいの 城へ (城の BGM)');
-    await at(24, K13 + 5, 'up');
+    check(await evaluate(`window.__app.g.story === "kurai" && window.__app.g.pos.y > ${K13} * 16 && window.__bgm() === "kurai"`), '山の ヒョウガリュウに 乗って 喰らいの 城へ (城の BGM)');
+    for (const [x, y, floor, id] of [[37, 18, 3, 'tomooka13'], [10, 15, 4, 'ooni13'], [37, 12, 5, 'soutou13'], [10, 9, 6, 'kinme13'], [24, 6, 7, 'tashikeda13']]) {
+        await at(x, K13 + y + 1, 'up');
+        await key('KeyJ');
+        await skipTalk();
+        await sleep(300);
+        check(await evaluate(`window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "${id}" && window.__app.scene.battle.enemies[0].name.endsWith("・闇") && Boolean(window.__app.scene.battle.helpers)`), `${floor} 階: 紋つきの 幹部と バトル (ライバル探検隊が 加勢)`);
+        if (floor === 3) {
+            await key('KeyJ');
+            await evaluate('(() => { const b = window.__app.scene.battle; b.enemies[0].hp = b.enemies[0].max = 99999; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); return true; })()');
+            check(await waitFor('window.__app.scene.battle.helpers.acts > 0', 8000), '探検隊が サポートアイテムや 追加攻撃');
+            await sleep(200);
+            await shot('kurai-helpers');
+        }
+        await winNow();
+        await skipTalk(30);
+        check(await evaluate(`window.__app.g.flags.fl13 === ${floor - 2}`), `${floor} 階を 突破`);
+    }
+    await at(24, K13 + 3, 'up');
     await key('KeyJ');
-    await skipTalk();
+    await skipTalk(40);
     await sleep(300);
-    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "rukiha13" && window.__bgm() === "rukiha13"'), '最上階の ルキハと バトル (嵐の 予兆の BGM)');
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "rukiha13" && window.__bgm() === "rukiha13" && window.__app.g.flags.top13'), '最上階: 探検隊が 軍勢を ひきうけ、ルキハと バトル (嵐の 予兆の BGM)');
     await key('KeyJ');
     await sleep(500);
     // チャンスタイムの 表示: 左上に 小さく + ボスの 頭に ピヨピヨの わっか (HP が 見える)
@@ -961,7 +977,7 @@ try {
     await at(5, 41, 'up');
     await key('KeyJ');
     await sleep(1500);
-    for (let i = 0; i < 8; i++) await key('ArrowDown');
+    for (let i = 0; i < 7; i++) await key('ArrowDown');
     await key('Enter');
     await skipTalk();
     await sleep(200);

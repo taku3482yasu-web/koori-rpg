@@ -1042,3 +1042,24 @@ test('チャンスタイムの のこりは 秒数で 出せる (ボスが う�
     assert.ok(Math.abs(el - t0) < 0.2, `${t0.toFixed(2)} 秒の 予定 → ${el.toFixed(2)} 秒`);
 });
 
+test('13 章: ライバル探検隊の 加勢。サポートアイテムや 追加攻撃を してくれて、敵の 攻撃は 受けない', async () => {
+    const { TEAMS } = await import('../src/data/nakama.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'tomooka13', lv: 56, dark: true }], rng: createRng(3), kind: 'boss', helpers: { name: TEAMS.ask3.name, members: TEAMS.ask3.members, lv: 58 } });
+    const boss = b.enemies[0];
+    assert.equal(boss.name, 'トモオカ・闇');
+    assert.equal(b.helpers.units.length, 3);
+    let hurt = 0;
+    for (let i = 0; i < 1200; i++) {
+        keepAliveNoAct(b);
+        const hp = boss.hp;
+        boss.hp = boss.max;
+        step(b, 0.05);
+        if (boss.hp < boss.max) hurt++;
+        for (const e of b.events.splice(0)) assert.ok(!(e.type === 'damage' && e.target.startsWith('help-')), '探検隊は 攻撃を 受けない');
+        void hp;
+    }
+    assert.ok(b.helpers.acts >= 8, `${b.helpers.acts} 回 加勢`);
+    assert.ok(hurt > 0, '追加攻撃');
+    assert.ok(!b.wheel.some(u => u && u.uid.startsWith('help-')), '輪には 入らない');
+});
+

@@ -21,10 +21,10 @@ import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES, PARK_Y0, PARK_IN, PARK_PLACES, PARK_NAME, PARK_CLUES,
-    KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES } from '../data/map.js';
+    KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
-import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14 } from '../data/nakama.js';
+import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13 } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
@@ -33,7 +33,7 @@ import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -80,6 +80,8 @@ export function createField(app) {
     // 学校の 中・山・海に いるか (町と 学校と 山と 海は つながって いないので、カメラも 地図も べつに する)
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
     const inKurai = () => g.pos.y >= KURAI_Y0 * TILE;
+    // 13 章: 階の 幹部の いる ところ (地図の「!」)
+    const PEOPLE_AT = Object.fromEntries(PEOPLE.filter(p => p.only === 'floor13').map(p => [p.boss, { x: p.x, y: p.y }]));
     const inTsubo = () => between(TSUBO_Y0, KURAI_Y0);
     const inKinniku = () => between(KINNIKU_Y0, TSUBO_Y0);
     const inPark = () => between(PARK_Y0, KINNIKU_Y0);
@@ -221,9 +223,9 @@ export function createField(app) {
                 say([
                     nar('朝。黒い 空の むこうに、ルキハの 城が うかんでいる。'),
                     tomo('……行って らっしゃい、こおり。'),
-                    furu('石の川駅から、城へ つづく 黒い 光の 道が のびてるって！'),
+                    furu('山の ダムの ヒョウガリュウが、城まで 乗せて いって くれるって！'),
                     by('onioni', 'みんな 先に 行って まっとるぞ。……さあ、終わらせに 行くか。'),
-                    nar('石の川駅から、喰らいの 城へ 行けるように なった！')
+                    nar('山の ダムで ヒョウガリュウが まっている。')
                 ], { done: () => app.save() });
                 return;
             }
@@ -405,10 +407,40 @@ export function createField(app) {
                 furu('投げられた 道具を ねらって 攻撃すると 使えるよ！ 剣なら 力が 上がって、実なら 回復、水爆弾なら 体が かたまるはず！'),
                 furu('マグマの 波で 道具が とけちゃうから、いそいで！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('bakuen11'), kind: 'boss', place: 'tsubo' }) });
+        } else if (p.id === 'hyouga13') {
+            // 13 章: ヒョウガリュウに 乗って 喰らいの 城へ (2026-10-30 ユーザー指定。電車では 行かない)
+            say([
+                { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'こおり族の 子よ。わしの 背に 乗れ。ルキハの 城まで ひとっとびだ。' }
+            ], {
+                choices: ['喰らいの 城へ 行く', 'やめる'],
+                done: i => { if (i === 0) { sfx('watch'); goKurai(); } }
+            });
+        } else if (p.id === 'hyougaKurai') {
+            say([{ who: 'ヒョウガリュウ', art: 'hyougaryu', text: '山へ もどるか？' }], {
+                choices: ['山へ もどる', 'やめる'],
+                done: i => { if (i === 0) { sfx('watch'); warp(HYOUGA13_AT); } }
+            });
+        } else if (p.only === 'floor13') {
+            // 13 章 3〜7 階: たおした はずの 幹部が 紋つきで よみがえって いる。ライバル探検隊が 加勢 (階ごとに ちがう チーム)
+            const f = FLOOR13.find(x => x.id === p.boss), team = TEAMS[f.team];
+            say([
+                { who: p.name, art: p.art, text: FLOOR13_LINES[f.id] },
+                nar(`${p.name}の 体に、黒い 紋が どくどくと 脈うっている……！ 前より ずっと 強い！`),
+                by(team.leader, HELPER_LINES[f.team]),
+                nar(`${team.name}が 加勢して くれる！ (サポートアイテムや 追加攻撃を してくれる)`)
+            ], { done: () => app.startBattle({ enemies: bossEnemies(f.id), kind: 'boss', place: 'kurai', helpers: floor13Helpers(f) }) });
         } else if (p.id === 'rukiha13') {
             // 13 章の ボス: ルキハ (ストーリー工房 13 章 場面 2「ルキハ」)。たおすと ニオニオーテンに 変わる (場面 3・4 は バトルの 中)
             const rk = text => ({ who: 'ルキハ', art: 'rukiha', text });
+            // 最上階: 軍勢が あふれだし、ライバル探検隊 ぜんぶが ひきうける (2026-10-30 ユーザー指定)
+            const army = g.flags.top13 ? [] : [
+                nar('最上階に ふみこむと、紋つきの 軍勢が 床から わきだした！'),
+                ...Object.values(TEAMS).map(t => by(t.leader, TOP13_LINES[Object.keys(TEAMS).find(k => TEAMS[k] === t)])),
+                nar('ライバル探検隊 ぜんぶの チームが 軍勢を ひきうけて くれた！')
+            ];
+            g.flags.top13 = true;
             say([
+                ...army,
                 rk('来たか、こおり族の 子。王冠の 味が、まだ 舌に のこっているぞ。'),
                 rk('おまえも、おまえの なかまも、みんな オレの 中で ひとつに なれば いい。'),
                 { who: 'こおりくん', art: 'koori', text: '（そんな こと させない！）' },
@@ -569,11 +601,6 @@ export function createField(app) {
             rideTrain();
         } else if (b.id === 'attrA' || b.id === 'attrB' || b.id === 'attrC') {
             lookAttraction(b.id);
-        } else if (b.id === 'kuraiStation') {
-            say([nar('黒い 光の 道。石の川駅に つながっている。')], {
-                choices: ['石の川へ もどる', 'やめる'],
-                done: i => { if (i === 0) { sfx('watch'); warp(STATION_OUT); } }
-            });
         } else if (b.id === 'tsuboStation') {
             say([nar('ASOの壺前駅。石の川 行きの 電車が とまっている。')], {
                 choices: ['石の川へ もどる', 'やめる'],
@@ -739,7 +766,7 @@ export function createField(app) {
     function rideTrain() {
         if (!canRideTrain(g)) { say([nar('石の川駅。いまは 電車に 乗る 用事が ない。')]); return; }
         const lines = trainLines(g);
-        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く', yashiki: '忍びの屋敷へ 行く', moon: '月の迷宮へ 行く', shiro: '金色のSE城へ 行く', kinniku: '筋肉の山へ 行く', tsubo: 'ASOの壺の底へ 行く', kurai: '喰らいの 城へ 行く', park: `${parkName()}へ 行く` };
+        const names = { umi: '海辺の 町へ 行く', tera: 'ネット寺へ 行く', yashiki: '忍びの屋敷へ 行く', moon: '月の迷宮へ 行く', shiro: '金色のSE城へ 行く', kinniku: '筋肉の山へ 行く', tsubo: 'ASOの壺の底へ 行く', park: `${parkName()}へ 行く` };
         say([nar(`石の川駅。${lines.length > 1 ? 'どこへ 行こうか？' : lines[0] === 'tera' ? 'ネット寺 行きの 電車が とまっている。' : '海辺の 町 行きの 電車が とまっている。'}`)], {
             choices: [...lines.map(l => names[l]), 'やめる'],
             done: i => {
@@ -753,7 +780,6 @@ export function createField(app) {
                 if (dest === 'park') { goPark(); return; }
                 if (dest === 'kinniku') { goKinniku(); return; }
                 if (dest === 'tsubo') { goTsubo(); return; }
-                if (dest === 'kurai') { goKurai(); return; }
                 warp(UMI_IN);
                 if (!arriveUmi(g)) return;
                 const L = rivalLines();
@@ -780,16 +806,43 @@ export function createField(app) {
     }
 
     // ----- 13 章 (喰らいの 城) -----
+    // 3〜7 階の 幹部の ひとこと
+    const FLOOR13_LINES = {
+        tomooka13: 'ルキハさまの 力で よみがえった……。右腕が うずくぜ、こおり！',
+        ooni13: 'グオオ……つぶす……ぜんぶ ふみつぶす……！',
+        soutou13: '右の 頭「また 会えたな」　左の 頭「こんどは 負けない」',
+        kinme13: '金の 体は 紋で さらに かがやいた。……見えるか？ 見えまい。',
+        tashikeda13: 'エラー……修復 完了。こんどこそ あなたの レベル、ぜんぶ いただきます。'
+    };
+    // 加勢する ライバル探検隊の リーダーの ひとこと (チームごと)
+    const HELPER_LINES = {
+        ask3: 'こおり！ ASK-3 が 加勢してやろう！ ひれ伏せ、紋つきども！',
+        kemono: 'チーム・ケモノミチ、参上！ こおり、うしろは まかせて！',
+        muscle: '我が 筋肉も 加勢しよう！ お願いマッスル、出陣！',
+        bartas: 'チームバータスも いるぜ！ サポートは まかせな！',
+        '5dx': 'チーム5DX、ぜんいん そろって 加勢だ！'
+    };
+    const TOP13_LINES = {
+        ask3: 'ここは ASK-3 に 任せろ！',
+        kemono: 'ケモノミチも のこるよ！ ここは 任せて！',
+        muscle: '筋肉の 壁だ！ ここは 任せろ！',
+        bartas: 'バータスも だ！ 行け、こおり！',
+        '5dx': 'ここは 任せろ！ ルキハを たのんだぞ！'
+    };
     function goKurai() {
         warp(KURAI_IN);
         if (!arriveKurai(g)) return;
-        // ストーリー工房 13 章 場面 1「喰らいの 城」
+        // ストーリー工房 13 章 場面 1「喰らいの 城」(2026-10-30 ユーザー指定で 元四天王が 集結)
         say([
-            nar('黒い 光の 道を ぬけると、喰らいの 城の 前に 出た。'),
+            nar('ヒョウガリュウの 背に 乗って 空を かけぬけ、喰らいの 城の 前に おりた。'),
             nar('城の まわりを、紋つきの 軍勢が うめつくしている。'),
-            by('onioni', 'ここは おれたち 鬼鬼団が 引き受ける！ 行け、こおり！'),
-            { who: 'ズミタニ', art: 'zumitani', text: 'ほらほら、早く 行って！ ここで 負けたら、77代目の 名が なくからね♪' },
-            furu('城の 中も 紋つきで いっぱい……。最上階まで 一気に 行こう！')
+            by('daishi', '……こおりどの。ここは 拙僧らが 引き受けましょう。'),
+            by('zumitani', 'ほらほら、早く 行って！ ここで 負けたら、77代目の 名が なくからね♪'),
+            by('runaya', 'ここは 引き受けるわ。……引き受けるわよ。わすれないでね？'),
+            by('nozoema', '元四天王 集結だ！ ここは 引き受ける！ 筋肉に 不可能は ない！'),
+            nar('元四天王が、紋つきの 軍勢を つぎつぎと なぎはらっていく！'),
+            furu('城の 中にも 紋つきが いるよ。紋つきは なかまに ならないから、気を つけて！'),
+            nar('城を のぼって 最上階の ルキハの もとへ 行こう。')
         ], { done: () => app.save() });
     }
 
@@ -1009,6 +1062,13 @@ export function createField(app) {
                 by('onioni', 'だが おれも 負けっぱなしじゃ おらん。……見とけ、これが 鬼の 王の 力だ！'),
                 nar('おにおにの 必殺技が「鬼の王の金棒」に 進化した！'),
                 furu('これで ルキハの 城へ 行けるね……！ 今夜は 家に 帰って ゆっくり ねよう。')
+            ], { done: () => app.save() });
+        } else if (result.floor13 && result.outcome === 'win') {
+            const f = FLOOR13.find(x => x.floor === result.floor13), team = TEAMS[f.team];
+            say([
+                nar(`${BOSSES[f.id].name}の 紋が くだけ、黒い 霧に なって 消えた。`),
+                by(team.leader, f.floor < 7 ? 'つぎの 階へ 行け、こおり！' : 'あとは 最上階だけだ！ 行け、こおり！'),
+                nar(`${f.floor} 階を 突破した！`)
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'rukiha13') {
             // 13 章 クリア: エンディング (ストーリー工房 13 章 場面 5)
@@ -1700,7 +1760,7 @@ export function createField(app) {
             : g.story === 'oshiro' ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) }
             : g.story === 'clear8' || g.story === 'clear10' || g.story === 'clear11' || g.story === 'clear12' || g.story === 'clear13' ? { x: 8, y: 24 }
             : g.story === 'shuuketsu' ? (!g.flags.oni12 ? { x: 8, y: 6 } : { x: 6, y: 23 })
-            : g.story === 'kuraie' ? { x: 5, y: 40 } : g.story === 'kurai' ? { x: 24, y: KURAI_Y0 + 4 }
+            : g.story === 'kuraie' ? HYOUGA13_AT : g.story === 'kurai' ? (floor13Next(g) ? PEOPLE_AT[floor13Next(g).id] : { x: 24, y: KURAI_Y0 + 2 })
             : g.story === 'tsuboe' ? { x: 5, y: 40 } : g.story === 'tsubo' ? (!g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 }) : g.story === 'invite' || g.story === 'onijoin' ? { x: 5, y: 40 }
             : g.story === 'shuugeki' ? ((g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null)
             : g.story === 'kinniku' ? (!g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 })
