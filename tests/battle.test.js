@@ -220,7 +220,7 @@ test('ダムの主: 偶像を こわさないと ため の あと 必殺技 (�
     assert.equal(idolsOf(b, boss).length, 0);
 });
 
-test('とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おたすけ できて、成功で 治る (2 章)', () => {
+test('いたずらの とりつき: なまけたり 味方を 攻めたり する。後ろに 回すと おはらい できて、成功で 治る (2 章)', () => {
     const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 8 }));
     const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(2) });
     b.enemies[0].timer = -999;
@@ -244,6 +244,31 @@ test('とりつき: なまけたり 味方を 攻めたり する。後ろに �
     assert.ok(canRescue(b, u.uid));
     resolveRescue(b, startRescue(b, u.uid), true);
     assert.ok(!u.status.possess, '成功で 治る');
+});
+
+test('とりつき: ねむり・のろい・こんらん・どく・めくらまし も ぜんぶ とりつき。おはらいで まとめて ぬける (2026-10-30)', async () => {
+    const { isPossessed, toritsukiName, STATUS_NAMES, BLIND_MISS } = await import('../src/logic/battle.js');
+    assert.deepEqual(Object.keys(STATUS_NAMES).sort(), ['blind', 'confuse', 'poison', 'possess', 'sleep', 'slow']);
+    assert.equal(toritsukiName('slow'), 'のろいの とりつき');
+    const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 8 }));
+    const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(4) });
+    const u = b.wheel[3];   // 後ろ
+    u.status = { sleep: 9, slow: 9, confuse: 9, poison: 9, blind: 9 };
+    assert.ok(isPossessed(u) && canRescue(b, u.uid), 'いたずら いがいの とりつきも おはらい できる');
+    resolveRescue(b, startRescue(b, u.uid), true);
+    assert.deepEqual(u.status, {}, 'ぜんぶ ぬける');
+    // めくらまし: 攻撃が 4 わりほど 当たらない
+    let miss = 0, n = 0;
+    for (let seed = 1; seed <= 60; seed++) {
+        const c = createBattle({ allies: [{ id: 'haribaby', lv: 20 }], enemies: [{ id: 'ishikoron', lv: 1 }], rng: createRng(seed) });
+        c.enemies[0].hp = c.enemies[0].max = 99999;
+        c.enemies[0].timer = -999;
+        c.wheel[0].status.blind = 999;
+        run(c, 20);
+        n += c.events.filter(e => e.type === 'attack' || (e.type === 'skill' && e.actor === c.wheel[0].uid)).length;
+        miss += c.events.filter(e => e.type === 'miss' && e.blind).length;
+    }
+    assert.ok(miss > 0 && miss / n > BLIND_MISS * 0.5 && miss / n < BLIND_MISS * 1.6, `めくらましで ミス ${miss}/${n}`);
 });
 
 test('ロックオン: 味方の 1 体ねらいは ねらった 敵へ。弱点の 光の あいだは ダメージ +20% (設計書 3.2)', async () => {

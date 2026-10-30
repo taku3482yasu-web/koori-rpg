@@ -4498,8 +4498,11 @@ body.nopad #pad { display: none; }
     return friend.gift;
   }
   const GAUGE_MAX = 100;
-  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
-  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "とりつき" };
+  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10 };
+  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "いたずら", blind: "めくらまし" };
+  const toritsukiName = (k) => `${STATUS_NAMES[k]}の とりつき`;
+  const isPossessed = (u) => Object.keys(u.status).length > 0;
+  const BLIND_MISS = 0.4;
   const RESCUE_COOLDOWN = 3;
   const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
   const PART_ORDER = ["rhand", "lhand", "head"];
@@ -4811,6 +4814,10 @@ body.nopad #pad { display: none; }
   const effectOf = (element, target) => CHART[element] && CHART[element][target] || 1;
   function damage(b, from, to, power, { magic = false, mult = 1, element = null, unguardable = false } = {}) {
     if (to.ko) return 0;
+    if (from.status && from.status.blind > 0 && from !== to && b.rng.chance(BLIND_MISS)) {
+      emit(b, "miss", { actor: from.uid, target: to.uid, blind: true });
+      return 0;
+    }
     if (from.side === "ally" && to.side === "enemy" && b.smoke && b.rng.chance(b.smoke.miss)) {
       emit(b, "miss", { actor: from.uid, target: to.uid });
       return 0;
@@ -5232,7 +5239,7 @@ body.nopad #pad { display: none; }
   const unitByUid = (b, uid) => b.wheel.find((u) => u && u.uid === uid) || null;
   function canRescue(b, uid) {
     const u = unitByUid(b, uid);
-    return Boolean(u && !u.ko && u.status.possess > 0 && !b.front().includes(u) && !b.outcome && !b.paused && b.rescueCooldown <= 0);
+    return Boolean(u && !u.ko && isPossessed(u) && !b.front().includes(u) && !b.outcome && !b.paused && b.rescueCooldown <= 0);
   }
   const rescueTargets = (b) => b.wheel.filter((u) => u && canRescue(b, u.uid));
   function startRescue(b, uid) {
@@ -5243,7 +5250,7 @@ body.nopad #pad { display: none; }
   function resolveRescue(b, unit, ok) {
     b.paused = false;
     if (!unit) return;
-    if (ok) delete unit.status.possess;
+    if (ok) unit.status = {};
     else b.rescueCooldown = RESCUE_COOLDOWN;
     emit(b, "rescue", { target: unit.uid, ok });
   }
@@ -13290,9 +13297,9 @@ body.nopad #pad { display: none; }
         furu("夜の 学校って、なんだか ドキドキするね。この 学校には「七不思議」が あるって うわさなんだ。"),
         furu("理科室の 動く ガイコツ、音楽室で 夜中に 鳴る 音、図書室の わすれられた 本、おどり場の 大鏡、体育倉庫の かけ声、開かずの ロッカー、プールの 手……。"),
         furu("あやしい ところを 調べて、ぜんぶ たしかめよう！ 七つ ぜんぶ 知ると、なにかが おこるんだって……。"),
-        furu("それと、学校の キャラは なかまに「とりつく」ことが あるよ。とりつかれた なかまは なまけたり、味方を 攻めたり しちゃうの。"),
-        furu(`そのときは 輪を 回して 後ろに さげて、まんなかの「おたすけ」(${btn("help")}) で 助けてあげて！`),
-        { who: "", text: "「おたすけ」が つかえるように なった！ げた箱の マットに のると 外に 出られる。" }
+        furu("それと、学校の キャラは なかまに「とりつく」ことが あるよ。ねむり・のろい・こんらん・どく……ぜんぶ とりつきの しわざ。なまけたり、味方を 攻めたり する とりつきも あるの。"),
+        furu(`そのときは 輪を 回して 後ろに さげて、まんなかの「おはらい」(${btn("help")}) で はらって あげて！`),
+        { who: "", text: "「おはらい」が つかえるように なった！ げた箱の マットに のると 外に 出られる。" }
       ], { done: () => app2.save() });
     }
     function enterYama() {
@@ -15626,7 +15633,7 @@ body.nopad #pad { display: none; }
         } else if (e.type === "status") {
           const p = posOf(e.target);
           at(actor ? kind === "skill" ? skillHit : HIT_DELAY[kind] : 0, () => {
-            if (p) pops.push({ x: p.x, y: p.y - 56, text: STATUS_NAMES[e.status], color: "#ff9ad8", until: t + 1 });
+            if (p) pops.push({ x: p.x, y: p.y - 56, text: toritsukiName(e.status), color: "#ff9ad8", until: t + 1 });
           });
         } else if (e.type === "special") {
           banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === "ally" ? COLORS.accent : "#ff6a6a", until: t + 1.4 };
@@ -15678,7 +15685,7 @@ body.nopad #pad { display: none; }
           banner = { text: "けむりが 晴れた！", color: COLORS.accent, until: t + 1.2 };
         } else if (e.type === "miss") {
           const p = posOf(e.target);
-          if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: e.clone ? "どれが 本物？" : "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
+          if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: e.clone ? "どれが 本物？" : e.blind ? "めくらまし で ミス" : "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
         } else if (e.type === "shell") {
           banner = { text: "こうらに こもった！ 頭を ねらえ！", color: "#9ae08a", until: t + 1.8 };
           sfx("cancel");
@@ -15709,9 +15716,9 @@ body.nopad #pad { display: none; }
           }
         } else if (e.type === "possessed") {
           const p = posOf(e.actor);
-          if (p) pops.push({ x: p.x, y: p.y - 62, text: e.mode === "lazy" ? "とりつかれて なまけている…" : "とりつかれて 味方を こうげき！", color: "#c88aff", small: true, until: t + 1.2 });
+          if (p) pops.push({ x: p.x, y: p.y - 62, text: e.mode === "lazy" ? "いたずらの とりつき: なまけている…" : "いたずらの とりつき: 味方を こうげき！", color: "#c88aff", small: true, until: t + 1.2 });
         } else if (e.type === "rescue") {
-          banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}が もとに もどった！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
+          banner = { text: e.ok ? `おはらい せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : "おはらい しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
           warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm) };
@@ -16364,7 +16371,7 @@ body.nopad #pad { display: none; }
       bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
       text(ctx, u.idol ? u.name : `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
       if (u.side === "enemy" && g.zukan.friends[u.id]) drawFriendMark(ctx, p.x + w / 2 + 8, barY + 3, 5);
-      const marks = Object.keys(u.status).map((k) => STATUS_NAMES[k]);
+      const marks = Object.keys(u.status).map((k) => `とりつき:${STATUS_NAMES[k]}`);
       if (u.ko) marks.push("たおれた");
       if (marks.length) text(ctx, marks.join(" "), p.x, head - 26, { size: 9.5, align: "center", color: "#ff9ad8", bold: true });
       if (u.ko) return;
@@ -16675,7 +16682,7 @@ body.nopad #pad { display: none; }
       }
       ctx.stroke();
       drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
-      text(ctx, mg.rescue ? `おたすけ: ${u.name}を もとに もどせ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: "center", bold: true, color: mg.rescue ? "#e0b0ff" : COLORS.accent });
+      text(ctx, mg.rescue ? `おはらい: ${u.name}の とりつきを はらえ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: "center", bold: true, color: mg.rescue ? "#e0b0ff" : COLORS.accent });
       text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: "center", bold: true });
       if (mg.phase === "result") text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: "center", bold: true, color: mg.mult > 1 ? COLORS.accent : "#ffffff" });
     }
@@ -16703,7 +16710,7 @@ body.nopad #pad { display: none; }
       text(ctx, "まえ", WHEEL.x, WHEEL.y - WHEEL.r - 12, { size: 10, align: "center", color: COLORS.accent, bold: true });
       if (rescueTargets(battle).length) {
         panel(ctx, RESCUE_BTN.x, RESCUE_BTN.y, RESCUE_BTN.w, RESCUE_BTN.h, { fill: Math.floor(t * 4) % 2 ? "#7a3aa8" : "#5a2a88", edge: "#e0b0ff", r: 20 });
-        text(ctx, "おたすけ！", WHEEL.x, WHEEL.y + 2, { size: 11, align: "center", bold: true });
+        text(ctx, "おはらい！", WHEEL.x, WHEEL.y + 2, { size: 11, align: "center", bold: true });
         text(ctx, btn("help"), WHEEL.x, WHEEL.y + 15, { size: 9, align: "center", color: "#e0d0ff" });
       } else {
         panel(ctx, WHEEL.x - 34, WHEEL.y - 22, 68, 44, { fill: "#1b3a6b", edge: "#bff0ff", r: 20 });
@@ -16726,7 +16733,7 @@ body.nopad #pad { display: none; }
         drawArt(ctx, ART[u.art], 0, x, y + 13, { scale: 1.6, alpha: u.ko ? 0.3 : front ? 1 : 0.7 });
         bar(ctx, x - 16, y + 15, 32, 3, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
         if (u.ko) text(ctx, "×", x, y + 6, { size: 22, align: "center", bold: true, color: "#ff6a6a" });
-        if (!u.ko && u.status.possess > 0) {
+        if (!u.ko && isPossessed(u)) {
           ctx.strokeStyle = "#c88aff";
           ctx.lineWidth = 2;
           ctx.beginPath();

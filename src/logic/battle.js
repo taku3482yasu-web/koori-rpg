@@ -9,7 +9,9 @@
 //   なかまは spd で 決まる 間かくで 動く。ゲージ (100) が たまると 必殺技が 打てる (ミニゲームの 結果で 威力が 変わる)
 //   後ろの なかまは 少しずつ HP が 戻る。前の 3 体が 全員 たおれたら 2 秒後に 自動で 半分 回す
 //   ボスは 大技の 前に 予告 (telegraph) を 出す。そのあいだに 輪を 回して 守りの 強い なかまを 前に 出せる
-//   とりつき (2 章。設計書 3.4): なまけたり 味方を 攻めたり する。輪で 後ろに 回して「おたすけ」(ミニゲーム) で 治す
+//   とりつき (2 章。設計書 3.4): ねむり・のろい・こんらん・どく・いたずら・めくらまし は ぜんぶ「とりつき」(2026-10-30 ユーザー指定)。
+//     いたずらの とりつきは なまけたり 味方を 攻めたり する。めくらましの とりつきは 攻撃が 当たりにくい。
+//     輪で 後ろに 回して「おはらい」(ミニゲーム) で ぜんぶ 治す。時間でも ぬける
 //   ロックオン (設計書 3.2): プレイヤーが ねらう 敵を えらぶ。味方の 1 体ねらいの 攻撃は その 敵へ。
 //     ねらった 敵には 6 秒ごとに 2 秒「弱点の 光」が 出て、そのあいだに 当てると ダメージ +20%
 //   はじまり (2026-10-29 ユーザー指定): intro の バトルは「○○が あらわれた！」で 止まって 待つ (waiting)。
@@ -38,9 +40,13 @@ import { ITEMS } from '../data/items.js';
 import { speciesOf, statsAt } from './units.js';
 
 export const GAUGE_MAX = 100;
-const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25 };
-export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'とりつき' };
-const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
+const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10 };
+// とりつきの 種類 (どれも おはらいで 治る)
+export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'いたずら', blind: 'めくらまし' };
+export const toritsukiName = k => `${STATUS_NAMES[k]}の とりつき`;
+export const isPossessed = u => Object.keys(u.status).length > 0;
+export const BLIND_MISS = 0.4;  // めくらましの とりつき: 攻撃が 4 わり 当たらない
+const RESCUE_COOLDOWN = 3;     // おはらいに しっぱい したら 3 秒 待つ
 export const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
 export const PART_ORDER = ['rhand', 'lhand', 'head'];
 export const HEAD_GUARD = 0.15;   // 手が のこっている うちに 頭を ねらうと 手で ガードされる (ダメージ 15%。2026-10-28 ユーザー指定)
@@ -290,6 +296,11 @@ const effectOf = (element, target) => (CHART[element] && CHART[element][target])
 // element: わざの 属性 (なければ 術は 自分の 属性・ふつうの 攻撃は ふつう)
 function damage(b, from, to, power, { magic = false, mult = 1, element = null, unguardable = false } = {}) {
     if (to.ko) return 0;
+    // めくらましの とりつき (8 章の 金滅鬼など): 攻撃が 当たりにくい
+    if (from.status && from.status.blind > 0 && from !== to && b.rng.chance(BLIND_MISS)) {
+        emit(b, 'miss', { actor: from.uid, target: to.uid, blind: true });
+        return 0;
+    }
     // けむり (4 章の 玉手箱を こわした あと): 味方の 攻撃が ときどき 当たらない
     if (from.side === 'ally' && to.side === 'enemy' && b.smoke && b.rng.chance(b.smoke.miss)) {
         emit(b, 'miss', { actor: from.uid, target: to.uid });
@@ -452,7 +463,7 @@ function act(b, u) {
         emit(b, 'confused', { actor: u.uid });
         return;
     }
-    // とりつかれている: 4 わり なまける・3 わり 味方を 攻める
+    // いたずらの とりつき: 4 わり なまける・3 わり 味方を 攻める
     if (u.status.possess > 0) {
         const r = b.rng.next();
         if (r < 0.4) { emit(b, 'possessed', { actor: u.uid, mode: 'lazy' }); return; }
@@ -719,11 +730,11 @@ export function lockOn(b, uid, part = null) {
 // 弱点の 光が 出ているか (ねらって 4 秒後から 2 秒、6 秒ごと)
 export const weakActive = b => Boolean(b.lock) && b.weakT % WEAK_EVERY >= WEAK_EVERY - WEAK_TIME;
 
-// おたすけ: 後ろに いる とりつかれた なかまを ミニゲームで 治す (ミニゲームの あいだは 止める)
+// おはらい: 後ろに いる とりつかれた なかまを ミニゲームで 治す (ミニゲームの あいだは 止める)。とりつきは ぜんぶ ぬける
 const unitByUid = (b, uid) => b.wheel.find(u => u && u.uid === uid) || null;
 export function canRescue(b, uid) {
     const u = unitByUid(b, uid);
-    return Boolean(u && !u.ko && u.status.possess > 0 && !b.front().includes(u) && !b.outcome && !b.paused && b.rescueCooldown <= 0);
+    return Boolean(u && !u.ko && isPossessed(u) && !b.front().includes(u) && !b.outcome && !b.paused && b.rescueCooldown <= 0);
 }
 export const rescueTargets = b => b.wheel.filter(u => u && canRescue(b, u.uid));
 export function startRescue(b, uid) {
@@ -735,7 +746,7 @@ export function startRescue(b, uid) {
 export function resolveRescue(b, unit, ok) {
     b.paused = false;
     if (!unit) return;
-    if (ok) delete unit.status.possess;
+    if (ok) unit.status = {};
     else b.rescueCooldown = RESCUE_COOLDOWN;
     emit(b, 'rescue', { target: unit.uid, ok });
 }
