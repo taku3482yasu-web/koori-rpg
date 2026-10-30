@@ -25,7 +25,7 @@
 //            (flags.soutou8) → 金の間の 金滅鬼 (flags.kinme8) → 玉座の 間の おにおに (ボス)
 //   clear8   8 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
@@ -134,8 +134,9 @@ export function advanceTime(g, rng) {
 }
 
 // ----- 出会い -----
+// バージョン限定の キャラは その バージョンでしか 出ない (2026-10-30)
 export function spotKinds(g, spot) {
-    return spot.kinds.filter(k =>
+    return spot.kinds.filter(k => inVersion(k.id, g.version) &&
         (!k.time || k.time.includes(timeId(g))) &&
         (!k.weather || k.weather === g.weather) &&
         (!k.after || reached(g, k.after)));
@@ -330,8 +331,9 @@ export function objective(g) {
             : !g.flags.kinme8 ? '金の間で 幹部の 金滅鬼を たおそう' : '玉座の 間で おにおにを とりもどそう';
         default: {
             // 8 章 クリアの あと: なかま あつめ
-            const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
-            const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
+            const here = area => idsInArea(area).filter(id => inVersion(id, g.version));   // ほかの バージョンの キャラは 数えない
+            const got = area => here(area).filter(id => g.zukan.friends[id]).length;
+            const part = (area, name) => `${name} ${got(area)}/${here(area).length}`;
             return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}・${part('yashiki', '屋敷')}・${part('moon', '月')}・${part('shiro', '城')}`;
         }
     }

@@ -356,7 +356,7 @@ export const ROAMS = [
     // 商店街 (夕方・夜に ふえる。ヤタイマンは 夜の 屋台だけ)
     { id: 'arcadeW', label: '商店街の大通り', x0: 1, y0: 45, x1: 27, y1: 47, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: 'spamdama', w: 2 }, { id: 'kinmenkoinu', w: 2 }, { id: 'saikoron', w: 1 }] },
     { id: 'arcadeE', label: '商店街の大通り (東)', x0: 36, y0: 45, x1: 46, y1: 47, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'netkozou', w: 2 }, { id: 'makibishimushi', w: 1 }] },
-    { id: 'pachinkoMae', label: 'パチンコ店の跡の前', x0: 14, y0: 37, x1: 21, y1: 41, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'pachinkodaman', w: 2 }, { id: 'richibou', w: 1 }] },
+    { id: 'pachinkoMae', label: 'パチンコ店の跡の前', x0: 21, y0: 37, x1: 26, y1: 41, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'pachinkodaman', w: 2 }, { id: 'richibou', w: 1 }] },
     { id: 'backW', label: 'うら通り', x0: 1, y0: 54, x1: 27, y1: 55, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: 'gomibakon', w: 2 }, { id: 'yopparaigarasu', w: 2, time: ['evening', 'night'] }, { id: 'maikumbo', w: 1 }] },
     { id: 'hiroba', label: '商店街の広場', x0: 14, y0: 56, x1: 26, y1: 58, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: 'popupn', w: 2 }, { id: 'hoshikuzun', w: 2, time: ['night'] }, { id: 'chouchinbura', w: 2, time: ['evening', 'night'] }, { id: 'yataiman', w: 1, time: ['night'] }] },
     { id: 'backE', label: 'うら通り (東)', x0: 36, y0: 54, x1: 46, y1: 55, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: 'neonkurage', w: 2, time: ['evening', 'night'] }, { id: 'maikumbo', w: 1 }] },
@@ -424,7 +424,22 @@ export const FRIENDS = [
     { id: 'f_kinmenkoinu', kind: 'kinmenkoinu', label: '交番の前', x0: 42, y0: 48, x1: 46, y1: 49,
         lines: ['ワン！ 八百屋の 横の ガチャ、ときどき ひとりでに ガタガタ ゆれるんだって。', 'これ、きんピカの チョコ。あげる！'], gift: { item: 'choco', n: 1 } },
     { id: 'f_gomibakon', kind: 'gomibakon', label: '商店街の広場', x0: 20, y0: 56, x1: 26, y1: 58,
-        lines: ['もえるゴミは 火曜日！ ……あ、まだ 飲める サイダーが すててあった。', 'もったいないから あげる。'], gift: { item: 'cider', n: 1 } }
+        lines: ['もえるゴミは 火曜日！ ……あ、まだ 飲める サイダーが すててあった。', 'もったいないから あげる。'], gift: { item: 'cider', n: 1 } },
+    // 2 章から 先の 地区にも 話せる キャラ (2026-10-30。依頼を 40 個に ふやした ときに 足した)
+    { id: 'f_mirrormuscle', kind: 'mirrormuscle', label: '体育館', x0: 14, y0: 75, x1: 20, y1: 78, after: 'school',
+        lines: ['見よ、この 大胸筋！ ……夜の 体育館は 鏡が よく 見えるんだ。', 'ポーズの 合間に プロテイン……じゃなくて サイダー、いるかい？'], gift: { item: 'cider', n: 1 } },
+    { id: 'f_fubukipenguin', kind: 'fubukipenguin', label: '雪渓', x0: 39, y0: 99, x1: 45, y1: 103, after: 'yama',
+        lines: ['ペンペン！ 雪渓は すべって 遊べるペン。', 'ダムの 氷の 城、いまでも ときどき キラキラ 光ってるペン。'] },
+    { id: 'f_asedakku', kind: 'asedakku', label: '海辺の 町の 通り', x0: 10, y0: 127, x1: 20, y1: 131, after: 'umibe',
+        lines: ['あせだっく～。海の 町は あついダック……。', '浜辺で にぼしを ひろったダック。あげるダック。'], gift: { item: 'niboshi', n: 1 } },
+    { id: 'f_loadingu', kind: 'loadingu', label: 'ネット寺の 境内', x0: 30, y0: 165, x1: 38, y1: 168, after: 'netdera',
+        lines: ['よみこみちゅう……よみこみちゅう……。', '……あ、こんにちは。お寺の Wi-Fi、さいきん 速くなったんですよ。'] },
+    { id: 'f_aoonibo', kind: 'aoonibo', label: '屋敷の まわり', x0: 30, y0: 217, x1: 44, y1: 224, after: 'yashiki',
+        lines: ['あおくて わるいか。……忍者屋敷の まわりの 見はりを してるんだ。', '鬼鬼団の 鬼は、ほんとは みんな 気の いい やつなんだぞ。'] },
+    { id: 'f_tsukiusagi', kind: 'tsukiusagi', label: '迷宮の 南の 横道', x0: 26, y0: 248, x1: 34, y1: 249, after: 'meikyu',
+        lines: ['ぺったん ぺったん。月の 迷宮で おもちを ついてるの。', 'ひとつ どうぞ。……あ、おにぎりしか なかった。'], gift: { item: 'onigiri', n: 1 } },
+    { id: 'f_onigirin', kind: 'onigirin', label: '城の まわり', x0: 28, y0: 291, x1: 40, y1: 296, after: 'oshiro',
+        lines: ['のりは パリパリ派！ 鬼鬼団の まかないは おれに まかせろ。', 'できたての おにぎり、ひとつ もってけ！'], gift: { item: 'onigiri', n: 1 } }
 ];
 
 // 人 (通れない)。art は 絵の 名前。only: そのときだけ いる

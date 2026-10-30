@@ -1614,6 +1614,7 @@ body.nopad #pad { display: none; }
       name: "ネットコゾウ",
       from: "ダンジョン 015",
       area: "shoutengai",
+      version: "naitei",
       rank: "E",
       element: "ふしぎ",
       role: "jammer",
@@ -1674,6 +1675,7 @@ body.nopad #pad { display: none; }
       name: "マキビシムシ",
       from: "ダンジョン 025",
       area: "shoutengai",
+      version: "menkyo",
       rank: "E",
       element: "ふつう",
       role: "supporter",
@@ -2130,6 +2132,7 @@ body.nopad #pad { display: none; }
       name: "オバケカボチャ",
       from: "ダンジョン 087",
       area: "yama",
+      version: "naitei",
       rank: "D",
       element: "しぜん",
       role: "jammer",
@@ -2145,6 +2148,7 @@ body.nopad #pad { display: none; }
       name: "ハエトリグサーン",
       from: "ダンジョン 088",
       area: "yama",
+      version: "menkyo",
       rank: "D",
       element: "しぜん",
       role: "defender",
@@ -2253,6 +2257,7 @@ body.nopad #pad { display: none; }
       name: "アセダック",
       from: "ダンジョン 040",
       area: "umi",
+      version: "menkyo",
       rank: "D",
       element: "みず",
       role: "supporter",
@@ -2268,6 +2273,7 @@ body.nopad #pad { display: none; }
       name: "ウニハリー",
       from: "ダンジョン 139",
       area: "umi",
+      version: "naitei",
       rank: "D",
       element: "みず",
       role: "defender",
@@ -2466,6 +2472,7 @@ body.nopad #pad { display: none; }
       name: "ウイルスン",
       from: "ダンジョン 112",
       area: "tera",
+      version: "naitei",
       rank: "C",
       element: "ふしぎ",
       role: "jammer",
@@ -2481,6 +2488,7 @@ body.nopad #pad { display: none; }
       name: "ファイアウォール",
       from: "ダンジョン 113",
       area: "tera",
+      version: "menkyo",
       rank: "C",
       element: "ほのお",
       role: "defender",
@@ -2528,6 +2536,7 @@ body.nopad #pad { display: none; }
       name: "シュリケンボー",
       from: "ダンジョン 026",
       area: "yashiki",
+      version: "naitei",
       rank: "D",
       element: "かぜ",
       role: "attacker",
@@ -2558,6 +2567,7 @@ body.nopad #pad { display: none; }
       name: "コオニン",
       from: "ダンジョン V11",
       area: "yashiki",
+      version: "menkyo",
       rank: "D",
       element: "ほのお",
       role: "attacker",
@@ -2710,6 +2720,7 @@ body.nopad #pad { display: none; }
       name: "ワタゲボウシ",
       from: "ダンジョン 092",
       area: "moon",
+      version: "menkyo",
       rank: "D",
       element: "かぜ",
       role: "supporter",
@@ -2725,6 +2736,7 @@ body.nopad #pad { display: none; }
       name: "タツマキツネ",
       from: "ダンジョン 090",
       area: "moon",
+      version: "naitei",
       rank: "D",
       element: "かぜ",
       role: "jammer",
@@ -3439,6 +3451,8 @@ body.nopad #pad { display: none; }
     NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || "ishinokawa", base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
   });
   const NAKAMA_IDS = LIST.map((n) => n.id);
+  const VERSION_ONLY = { naitei: "内定版", menkyo: "免許版" };
+  const inVersion = (id, version) => !NAKAMA[id] || !NAKAMA[id].version || NAKAMA[id].version === version;
   const idsInArea = (area) => NAKAMA_IDS.filter((id) => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
   const EVOLVE = {
     haribaby: { to: "harigeneral", lv: 22 },
@@ -4233,7 +4247,7 @@ body.nopad #pad { display: none; }
     // 商店街 (夕方・夜に ふえる。ヤタイマンは 夜の 屋台だけ)
     { id: "arcadeW", label: "商店街の大通り", x0: 1, y0: 45, x1: 27, y1: 47, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: "spamdama", w: 2 }, { id: "kinmenkoinu", w: 2 }, { id: "saikoron", w: 1 }] },
     { id: "arcadeE", label: "商店街の大通り (東)", x0: 36, y0: 45, x1: 46, y1: 47, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "netkozou", w: 2 }, { id: "makibishimushi", w: 1 }] },
-    { id: "pachinkoMae", label: "パチンコ店の跡の前", x0: 14, y0: 37, x1: 21, y1: 41, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "pachinkodaman", w: 2 }, { id: "richibou", w: 1 }] },
+    { id: "pachinkoMae", label: "パチンコ店の跡の前", x0: 21, y0: 37, x1: 26, y1: 41, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "pachinkodaman", w: 2 }, { id: "richibou", w: 1 }] },
     { id: "backW", label: "うら通り", x0: 1, y0: 54, x1: 27, y1: 55, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: "gomibakon", w: 2 }, { id: "yopparaigarasu", w: 2, time: ["evening", "night"] }, { id: "maikumbo", w: 1 }] },
     { id: "hiroba", label: "商店街の広場", x0: 14, y0: 56, x1: 26, y1: 58, max: 2, lv: SHOUTENGAI_LV, kinds: [{ id: "popupn", w: 2 }, { id: "hoshikuzun", w: 2, time: ["night"] }, { id: "chouchinbura", w: 2, time: ["evening", "night"] }, { id: "yataiman", w: 1, time: ["night"] }] },
     { id: "backE", label: "うら通り (東)", x0: 36, y0: 54, x1: 46, y1: 55, max: 1, lv: SHOUTENGAI_LV, kinds: [{ id: "neonkurage", w: 2, time: ["evening", "night"] }, { id: "maikumbo", w: 1 }] },
@@ -4382,6 +4396,88 @@ body.nopad #pad { display: none; }
       y1: 58,
       lines: ["もえるゴミは 火曜日！ ……あ、まだ 飲める サイダーが すててあった。", "もったいないから あげる。"],
       gift: { item: "cider", n: 1 }
+    },
+    // 2 章から 先の 地区にも 話せる キャラ (2026-10-30。依頼を 40 個に ふやした ときに 足した)
+    {
+      id: "f_mirrormuscle",
+      kind: "mirrormuscle",
+      label: "体育館",
+      x0: 14,
+      y0: 75,
+      x1: 20,
+      y1: 78,
+      after: "school",
+      lines: ["見よ、この 大胸筋！ ……夜の 体育館は 鏡が よく 見えるんだ。", "ポーズの 合間に プロテイン……じゃなくて サイダー、いるかい？"],
+      gift: { item: "cider", n: 1 }
+    },
+    {
+      id: "f_fubukipenguin",
+      kind: "fubukipenguin",
+      label: "雪渓",
+      x0: 39,
+      y0: 99,
+      x1: 45,
+      y1: 103,
+      after: "yama",
+      lines: ["ペンペン！ 雪渓は すべって 遊べるペン。", "ダムの 氷の 城、いまでも ときどき キラキラ 光ってるペン。"]
+    },
+    {
+      id: "f_asedakku",
+      kind: "asedakku",
+      label: "海辺の 町の 通り",
+      x0: 10,
+      y0: 127,
+      x1: 20,
+      y1: 131,
+      after: "umibe",
+      lines: ["あせだっく～。海の 町は あついダック……。", "浜辺で にぼしを ひろったダック。あげるダック。"],
+      gift: { item: "niboshi", n: 1 }
+    },
+    {
+      id: "f_loadingu",
+      kind: "loadingu",
+      label: "ネット寺の 境内",
+      x0: 30,
+      y0: 165,
+      x1: 38,
+      y1: 168,
+      after: "netdera",
+      lines: ["よみこみちゅう……よみこみちゅう……。", "……あ、こんにちは。お寺の Wi-Fi、さいきん 速くなったんですよ。"]
+    },
+    {
+      id: "f_aoonibo",
+      kind: "aoonibo",
+      label: "屋敷の まわり",
+      x0: 30,
+      y0: 217,
+      x1: 44,
+      y1: 224,
+      after: "yashiki",
+      lines: ["あおくて わるいか。……忍者屋敷の まわりの 見はりを してるんだ。", "鬼鬼団の 鬼は、ほんとは みんな 気の いい やつなんだぞ。"]
+    },
+    {
+      id: "f_tsukiusagi",
+      kind: "tsukiusagi",
+      label: "迷宮の 南の 横道",
+      x0: 26,
+      y0: 248,
+      x1: 34,
+      y1: 249,
+      after: "meikyu",
+      lines: ["ぺったん ぺったん。月の 迷宮で おもちを ついてるの。", "ひとつ どうぞ。……あ、おにぎりしか なかった。"],
+      gift: { item: "onigiri", n: 1 }
+    },
+    {
+      id: "f_onigirin",
+      kind: "onigirin",
+      label: "城の まわり",
+      x0: 28,
+      y0: 291,
+      x1: 40,
+      y1: 296,
+      after: "oshiro",
+      lines: ["のりは パリパリ派！ 鬼鬼団の まかないは おれに まかせろ。", "できたての おにぎり、ひとつ もってけ！"],
+      gift: { item: "onigiri", n: 1 }
     }
   ];
   const PEOPLE = [
@@ -4761,7 +4857,7 @@ body.nopad #pad { display: none; }
     }
   }
   function spotKinds(g, spot) {
-    return spot.kinds.filter((k) => (!k.time || k.time.includes(timeId(g))) && (!k.weather || k.weather === g.weather) && (!k.after || reached(g, k.after)));
+    return spot.kinds.filter((k) => inVersion(k.id, g.version) && (!k.time || k.time.includes(timeId(g))) && (!k.weather || k.weather === g.weather) && (!k.after || reached(g, k.after)));
   }
   function spotActive(g, spot, now) {
     return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
@@ -4957,8 +5053,9 @@ body.nopad #pad { display: none; }
       case "oshiro":
         return !g.flags.ooni8 ? "SE城の 大広間で 幹部の 大鬼を たおそう" : !g.flags.soutou8 ? "双頭の間で 幹部の 双頭鬼を たおそう" : !g.flags.kinme8 ? "金の間で 幹部の 金滅鬼を たおそう" : "玉座の 間で おにおにを とりもどそう";
       default: {
-        const got = (area) => idsInArea(area).filter((id) => g.zukan.friends[id]).length;
-        const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
+        const here = (area) => idsInArea(area).filter((id) => inVersion(id, g.version));
+        const got = (area) => here(area).filter((id) => g.zukan.friends[id]).length;
+        const part = (area, name) => `${name} ${got(area)}/${here(area).length}`;
         return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}・${part("yashiki", "屋敷")}・${part("moon", "月")}・${part("shiro", "城")}`;
       }
     }
@@ -13613,6 +13710,335 @@ body.nopad #pad { display: none; }
       reward: { item: "onigiri", n: 5 },
       ask: "夜の 学校から へんな 音が するって、ゴミ出しの ときに 聞いたよ。七不思議を 3 つ たしかめたら おしえて！",
       thanks: "ほんとうに 七不思議が いたんだ！ こわかった？ お礼の おにぎり！"
+    },
+    // ----- 2026-10-30 に 32 個 足して 40 個 (ユーザー指定)。合体の館の キャラ・合成アイテムの 依頼も ある -----
+    // 石の川タウン・商店街の キャラ (2 つ目・3 つ目の 依頼)
+    {
+      id: "q_mizukirin",
+      from: "f_ishikoron",
+      after: "friends",
+      title: "ミズキリンを なかまに",
+      need: { kind: "befriend", id: "mizukirin" },
+      reward: { money: 100, item: "kyuuri", n: 3 },
+      ask: "川原の ミズキリンと、どっちが よく はねるか 勝負したい。なかまに して つれてきて くれ。",
+      thanks: "よし、勝負だ！ ……ぴょん、ぽちゃ。……まけた。お礼の きゅうりだ。"
+    },
+    {
+      id: "q_iwaharry",
+      from: "f_ishikoron",
+      after: "clear",
+      title: "岩の ハリー",
+      need: { kind: "befriend", id: "iwaharry" },
+      reward: { money: 500, item: "kesshou", n: 1 },
+      ask: "岩みたいに かたい ハリーが いるらしい。ハリーベビーと おれみたいな 石を 合体の館で 合わせると……？",
+      thanks: "おお、ゴロゴロ ころがってる！ 石の なかまが ふえて うれしいぞ。"
+    },
+    {
+      id: "q_twenty",
+      from: "f_donguriko",
+      after: "clear",
+      title: "なかまを 20 種類",
+      need: { kind: "friends", n: 20 },
+      reward: { money: 800 },
+      ask: "コロコロ～。なかまを 20 種類 あつめたら、ドングリ 貯金を わけて あげる！",
+      thanks: "20 種類！ すごーい！ ドングリ 貯金……は お金に かえておいたよ。"
+    },
+    {
+      id: "q_kokemusha",
+      from: "f_donguriko",
+      after: "yama",
+      title: "コケムシャを なかまに",
+      need: { kind: "befriend", id: "kokemusha" },
+      reward: { money: 300, item: "onigiri", n: 3 },
+      ask: "山の 森に、コケの よろいの 武者が いるんだって。会って みたいなあ……。",
+      thanks: "わあ、ふかふかの コケ！ お礼の おにぎり！"
+    },
+    {
+      id: "q_hyougame",
+      from: "f_kogame",
+      after: "clear3",
+      title: "こおりの コガメ",
+      need: { kind: "befriend", id: "hyougame" },
+      reward: { money: 600 },
+      ask: "ぼくも いつか こおりの こうらに なれるかな。ヒョウガメに 会わせて！ 合体の館でも なれるって うわさだよ。",
+      thanks: "これが ぼくの 未来……！ ひんやりして かっこいい！"
+    },
+    {
+      id: "q_pekorisuking",
+      from: "f_pekorisu",
+      after: "clear4",
+      title: "森の 大盗賊",
+      need: { kind: "befriend", id: "pekorisuking" },
+      reward: { item: "choco", n: 5 },
+      ask: "おれも いつか ペコリスキングに なるんだ！ 見本を 見せて くれよ。ラッキーコインが あれば なれるらしいぞ。",
+      thanks: "うおお、王冠！ ……おれの メロンパンは わたさないからな！ チョコは やる！"
+    },
+    {
+      id: "q_nemuridakeou",
+      from: "f_nemuridake",
+      after: "clear2",
+      title: "不眠症の 王",
+      need: { kind: "befriend", id: "nemuridakeou" },
+      reward: { money: 300, item: "melonpan", n: 3 },
+      ask: "ふぁ～……。ネムリダケオウさまに、よく ねむれる こつを 聞きたい……。",
+      thanks: "……王さまも 一度も ねむれた ことが ないって……。（メロンパンを もらった）"
+    },
+    {
+      id: "q_thirty",
+      from: "f_kunaisuzume",
+      after: "clear3",
+      title: "なかまを 30 種類",
+      need: { kind: "friends", n: 30 },
+      reward: { money: 1500 },
+      ask: "チュンッ！ 修行 第二段！ なかまを 30 種類 あつめるのだ！",
+      thanks: "チュンッ！ 見事！ 修行の しあげの おこづかいだ！"
+    },
+    {
+      id: "q_fifty",
+      from: "f_kunaisuzume",
+      after: "clear5",
+      title: "なかまを 50 種類",
+      need: { kind: "friends", n: 50 },
+      reward: { money: 3e3, item: "gattaidango", n: 3 },
+      ask: "チュンッ！ 最後の 修行だ！ なかまを 50 種類 あつめてみせよ！",
+      thanks: "チュチュンッ！ おぬしは 本物の なかまマスターだ！ 秘伝の 合体だんごを やろう！"
+    },
+    {
+      id: "q_pachinkodaman",
+      from: "f_saikoron",
+      after: "clear",
+      title: "パチンコダマンを なかまに",
+      need: { kind: "befriend", id: "pachinkodaman" },
+      reward: { money: 400 },
+      ask: "ころころ～。パチンコ店の 跡で ジャラジャラ 音が するの。正体を なかまに して 見せて！",
+      thanks: "やっぱり 玉の 子だった！ むかしを 思い出すなあ。お礼！"
+    },
+    {
+      id: "q_luckycoin",
+      from: "f_saikoron",
+      after: "clear4",
+      title: "ラッキーコインを 1 まい",
+      need: { kind: "item", item: "luckycoin", n: 1 },
+      reward: { money: 1500 },
+      ask: "ころころ～。ラッキーコインって 知ってる？ 合体の館で 作れるんだって。1 まい ほしいなあ。",
+      thanks: "わあ、ピカピカ！ これで サイコロの 目が よく なるかも！ お礼！"
+    },
+    {
+      id: "q_hitodamaou",
+      from: "f_mokugyoro",
+      after: "clear3",
+      title: "青い 炎の 王",
+      need: { kind: "befriend", id: "hitodamaou" },
+      reward: { item: "onigiri", n: 5 },
+      ask: "ポク……。ロウソクビが 青い 火の 王に なると 聞いた。ひとめ 見たいのう。",
+      thanks: "おお……りっぱに なって。お寺の 火も これで 安心じゃ。お礼じゃ。"
+    },
+    {
+      id: "q_daishi",
+      from: "f_mokugyoro",
+      after: "clear5",
+      title: "ネット寺の ダイシ",
+      need: { kind: "befriend", id: "daishi" },
+      reward: { money: 800 },
+      ask: "ポク……。ネット寺の ダイシどのとは 古い なかまでな。元気か どうか、なかまに して つれてきて おくれ。",
+      thanks: "ダイシどの！ 配信の お経、毎晩 聞いて おりますぞ。……お礼じゃ。"
+    },
+    {
+      id: "q_kinkomimic",
+      from: "f_kinmenkoinu",
+      after: "clear2",
+      title: "金庫の ミミック",
+      need: { kind: "befriend", id: "kinkomimic" },
+      reward: { money: 800 },
+      ask: "ワン！ 交番に「暗証番号を 聞いてくる 金庫」の 通報が あったんだ。なかまに して つれてきて！",
+      thanks: "ワン！ この 金庫、暗証番号を 答えても かむんだね……。お礼！"
+    },
+    {
+      id: "q_ougonmame",
+      from: "f_kinmenkoinu",
+      after: "clear3",
+      title: "黄金の豆を 1 こ",
+      need: { kind: "item", item: "ougonmame", n: 1 },
+      reward: { money: 1e3, item: "choco", n: 3 },
+      ask: "ワン！ きんピカの 豆が ほしいワン。合体の館で 鬼の角と メロンパンを 合わせると できるって。",
+      thanks: "きんピカ！ ……食べられないワン？ でも うれしい！ お礼！"
+    },
+    {
+      id: "q_allmysteries",
+      from: "f_gomibakon",
+      after: "school",
+      title: "七不思議を ぜんぶ",
+      need: { kind: "mysteries", n: 7 },
+      reward: { money: 500, item: "onigiri", n: 5 },
+      ask: "のこりの 七不思議も ぜんぶ 知りたい！ 7 つ たしかめたら おしえて！",
+      thanks: "ぜんぶ ほんとうだったなんて……！ ゴミ出しの 夜が こわく なったよ。お礼！"
+    },
+    // 学校の キャラ
+    {
+      id: "q_proteingolem",
+      from: "f_mirrormuscle",
+      after: "school",
+      title: "プロテインゴーレムを なかまに",
+      need: { kind: "befriend", id: "proteingolem" },
+      reward: { money: 400, item: "cider", n: 3 },
+      ask: "体育館に プロテインで できた ゴーレムが いるんだ。いっしょに きたえたい！ なかまに して くれ！",
+      thanks: "見よ、この 筋肉の そろい ぶみ！ お礼の サイダーだ！"
+    },
+    {
+      id: "q_muscletitan",
+      from: "f_mirrormuscle",
+      after: "clear3",
+      title: "プロテインの 巨人",
+      need: { kind: "befriend", id: "muscletitan" },
+      reward: { money: 1200 },
+      ask: "プロテインゴーレムが きたえぬくと 巨人に なると 聞いた。その すがた、ひとめ 見たい！",
+      thanks: "で、でかい……！ 鏡に ぜんぶ うつらない！ お礼だ！"
+    },
+    // 山の キャラ
+    {
+      id: "q_yukimidango",
+      from: "f_fubukipenguin",
+      after: "yama",
+      title: "ユキミダンゴを なかまに",
+      need: { kind: "befriend", id: "yukimidango" },
+      reward: { money: 300, item: "kyuuri", n: 3 },
+      ask: "ペンペン！ 雪渓の ユキミダンゴと お月見したいペン。なかまに して つれてきてペン！",
+      thanks: "お月見だペン！ ……だんごは 食べちゃ だめペン？ お礼ペン。"
+    },
+    {
+      id: "q_kesshou",
+      from: "f_fubukipenguin",
+      after: "clear3",
+      title: "氷の結晶を 2 こ",
+      need: { kind: "item", item: "kesshou", n: 2 },
+      reward: { money: 800 },
+      ask: "雪渓に かざる 氷の結晶が ほしいペン。サイダーと きゅうりを 合体の館で 合わせると できるペン！",
+      thanks: "きれいだペン！ とけない 氷、たからものに するペン！"
+    },
+    {
+      id: "q_koorimodokishin",
+      from: "f_fubukipenguin",
+      after: "clear3",
+      title: "コオリモドキ・真",
+      need: { kind: "befriend", id: "koorimodokishin" },
+      reward: { money: 1500 },
+      ask: "山の コオリモドキが「真」の すがたに なると 聞いたペン。会って みたいペン……！",
+      thanks: "これが 真の すがた……！ こおりくんに そっくりペン！ お礼ペン。"
+    },
+    // 海の キャラ
+    {
+      id: "q_niboshi5",
+      from: "f_asedakku",
+      after: "umibe",
+      title: "にぼしを 5 こ",
+      need: { kind: "item", item: "niboshi", n: 5 },
+      reward: { money: 500, item: "cider", n: 2 },
+      ask: "あせだっく～。浜辺の ネコたちに にぼしを あげたいダック。5 こ ほしいダック。",
+      thanks: "ネコたち よろこんでるダック！ お礼の サイダーダック！"
+    },
+    {
+      id: "q_ryuuguudai",
+      from: "f_asedakku",
+      after: "clear4",
+      title: "竜宮の タイ",
+      need: { kind: "befriend", id: "ryuuguudai" },
+      reward: { money: 1e3 },
+      ask: "海の 底の 竜宮から 来た タイが いるダック。会って みたいダック……。",
+      thanks: "おお、竜宮の かおり……。あせが ひいたダック。お礼ダック！"
+    },
+    {
+      id: "q_harrymimic",
+      from: "f_asedakku",
+      after: "clear4",
+      title: "宝箱の ハリー",
+      need: { kind: "befriend", id: "harrymimic" },
+      reward: { money: 500, item: "ougonmame", n: 1 },
+      ask: "宝箱に 化けた ハリーが いるって うわさダック。ハリーベビーと タカラミミックを 合体させると……？",
+      thanks: "あけたら トゲが ささったダック……！ でも うれしいダック。お礼ダック。"
+    },
+    // 寺の キャラ
+    {
+      id: "q_bugmushi",
+      from: "f_loadingu",
+      after: "netdera",
+      title: "バグムシを なかまに",
+      need: { kind: "befriend", id: "bugmushi" },
+      reward: { money: 600 },
+      ask: "よみこみが おそいのは、境内の バグムシの せいかも……。なかまに して つかまえて ください。",
+      thanks: "あ、よみこみが はやく なった……ような 気が します。お礼です。"
+    },
+    {
+      id: "q_tsukishizuku",
+      from: "f_loadingu",
+      after: "clear5",
+      title: "月のしずくを 1 こ",
+      need: { kind: "item", item: "tsukishizuku", n: 1 },
+      reward: { money: 1500 },
+      ask: "月のしずくで 回線を みがくと はやく なるって 聞いたんです。合体の館で 作れるそうです。",
+      thanks: "よみこみ……かんりょう！ はじめて 言えました！ お礼です！"
+    },
+    // 屋敷の キャラ
+    {
+      id: "q_kagebunshin",
+      from: "f_aoonibo",
+      after: "clear6",
+      title: "分身の 達人",
+      need: { kind: "befriend", id: "kagebunshin" },
+      reward: { money: 1500 },
+      ask: "カワリミダヌキが 分身の 達人に なったら、見はりが ふえて たすかるんだ。つれてきて くれ。",
+      thanks: "おお、見はりが 100 人に！ ……どれが 本物だ？ お礼だ。"
+    },
+    {
+      id: "q_onitsuno",
+      from: "f_aoonibo",
+      after: "clear6",
+      title: "鬼の角を 2 こ",
+      need: { kind: "item", item: "onitsuno", n: 2 },
+      reward: { money: 1200, item: "gattaidango", n: 1 },
+      ask: "あおくて わるいか。……角が ほしいんだ。鬼の角を 2 こ。おにぎりと にぼしを 合体の館で 合わせると できるらしい。",
+      thanks: "これで おれも りっぱな 鬼だ！ 合体だんご、食べてくれ。"
+    },
+    // 月の迷宮の キャラ
+    {
+      id: "q_kaguyausagi",
+      from: "f_tsukiusagi",
+      after: "clear7",
+      title: "月に 帰る 兎",
+      need: { kind: "befriend", id: "kaguyausagi" },
+      reward: { money: 2e3 },
+      ask: "ぺったん。いつか 月の お姫さまの おともに なりたいの。カグヤウサギに 会わせて！",
+      thanks: "すてき……！ わたしも 月のしずくで がんばる！ お礼です。"
+    },
+    {
+      id: "q_haridora",
+      from: "f_tsukiusagi",
+      after: "clear7",
+      title: "トゲの 竜",
+      need: { kind: "befriend", id: "haridora" },
+      reward: { money: 1e3, item: "makimono", n: 1 },
+      ask: "月の 空を とぶ トゲの 竜を 見たの。ハリーナイトと ハリーメイジを 合体させると 生まれるって……。",
+      thanks: "ほんとうに 竜だ！ 背中が かゆそう……。お礼に 伝説の巻物を どうぞ。"
+    },
+    // SE城の キャラ
+    {
+      id: "q_onigiri10",
+      from: "f_onigirin",
+      after: "oshiro",
+      title: "おにぎりを 10 こ",
+      need: { kind: "item", item: "onigiri", n: 10 },
+      reward: { money: 1e3, item: "gattaidango", n: 3 },
+      ask: "鬼鬼団の まかないが たりない！ おにぎりを 10 こ たのむ！ のりは パリパリで！",
+      thanks: "たすかった！ お礼に 合体だんごを やろう。のりは ないけどな！"
+    },
+    {
+      id: "q_metalking",
+      from: "f_onigirin",
+      after: "clear8",
+      title: "メタルキングハリー",
+      need: { kind: "befriend", id: "metalkingharry" },
+      reward: { money: 5e3 },
+      ask: "ハリー王国の 先代の 王を 知ってるか？ メタルハリーと キングハリーを 合体させると……伝説の 王が よみがえる らしい。",
+      thanks: "キィィィン……！ ほんとうに いたのか……！ 約束の 大金だ！"
     }
   ];
   const questState = (g, id) => g.quests && g.quests[id] || null;
@@ -18838,7 +19264,7 @@ body.nopad #pad { display: none; }
         text(ctx, "まだ 会っていない", 170, 56, { size: 12, color: COLORS.sub });
         return;
       }
-      text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
+      text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}${n.version ? `　${VERSION_ONLY[n.version]}だけ` : ""}`, 170, 50, { size: 11.5, color: n.version && n.version !== g.version ? "#ff9a9a" : COLORS.sub, maxWidth: 225 });
       text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
       const ds = fitSize(ctx, n.desc, 215, 11.5, 4, 9);
       wrap(ctx, n.desc, 215, ds).slice(0, 4).forEach((r2, i) => text(ctx, r2, 170, 90 + i * (ds + 3.5), { size: ds }));
@@ -18855,7 +19281,9 @@ body.nopad #pad { display: none; }
         bar(ctx, 170, 218, 210, 4, (medal.exp - expFor(medal.lv)) / need, COLORS.ice);
       } else {
         const where = [...SPOTS, ...ROAMS].filter((s) => s.kinds.some((k) => k.id === id)).map((s) => s.label);
-        text(ctx, `いる場所: ${g.zukan.friends[id] || g.zukan.seen[id] ? where.join("・") : "？？？"}`, 170, 200, { size: 11, maxWidth: 220 });
+        const known2 = g.zukan.friends[id] || g.zukan.seen[id];
+        const place = n.fuse ? "合体の館で 合体" : n.evo ? "進化" : known2 ? where.join("・") : "？？？";
+        text(ctx, `いる場所: ${place}`, 170, 200, { size: 11, maxWidth: 220 });
       }
     }
     function drawTop(ctx) {

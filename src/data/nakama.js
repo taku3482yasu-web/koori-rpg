@@ -416,7 +416,7 @@ const LIST = [
         special: sp('とじられない広告', [atk('all', 0.5), { kind: 'status', target: 'all', status: 'slow', chance: 0.7 }])
     },
     {
-        id: 'netkozou', name: 'ネットコゾウ', from: 'ダンジョン 015', area: 'shoutengai', rank: 'E', element: 'ふしぎ', role: 'jammer', mul: {},
+        id: 'netkozou', name: 'ネットコゾウ', from: 'ダンジョン 015', area: 'shoutengai', version: 'naitei', rank: 'E', element: 'ふしぎ', role: 'jammer', mul: {},
         line: 'ご視聴ありがとうございます', favorite: 'melonpan',
         title: 'ネットの坊主', desc: 'ネットに進出した小僧。最近の動画は「池の水全部抜いてみた。」',
         special: sp('ライブ配信', [atk('all', 0.5), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
@@ -440,7 +440,7 @@ const LIST = [
         special: sp('般若の一喝', [atk('one', 2.7)])
     },
     {
-        id: 'makibishimushi', name: 'マキビシムシ', from: 'ダンジョン 025', area: 'shoutengai', rank: 'E', element: 'ふつう', role: 'supporter', mul: { def: 1.1 },
+        id: 'makibishimushi', name: 'マキビシムシ', from: 'ダンジョン 025', area: 'shoutengai', version: 'menkyo', rank: 'E', element: 'ふつう', role: 'supporter', mul: { def: 1.1 },
         line: 'チクチク', favorite: 'kyuuri',
         title: 'まきびし型の虫', desc: 'まきびしの形をした虫。実際に殺傷力もある。',
         special: sp('まきびし まき', [atk('all', 0.8), { kind: 'status', target: 'all', status: 'slow', chance: 0.5 }])
@@ -626,13 +626,13 @@ const LIST = [
         special: sp('ぜっきょう', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.7 }])
     },
     {
-        id: 'obakekabocha', name: 'オバケカボチャ', from: 'ダンジョン 087', area: 'yama', rank: 'D', element: 'しぜん', role: 'jammer', mul: { hp: 1.05 },
+        id: 'obakekabocha', name: 'オバケカボチャ', from: 'ダンジョン 087', area: 'yama', version: 'naitei', rank: 'D', element: 'しぜん', role: 'jammer', mul: { hp: 1.05 },
         line: 'トリック オア トリート！', favorite: 'choco',
         title: 'トリックオアトリート', desc: 'かぼちゃのお化け。人間に友好的で、お菓子をくれる。',
         special: sp('ハロウィン ナイト', [atk('all', 1.0), { kind: 'status', target: 'all', status: 'sleep', chance: 0.4 }])
     },
     {
-        id: 'haetorigusan', name: 'ハエトリグサーン', from: 'ダンジョン 088', area: 'yama', rank: 'D', element: 'しぜん', role: 'defender', mul: { atk: 1.15 },
+        id: 'haetorigusan', name: 'ハエトリグサーン', from: 'ダンジョン 088', area: 'yama', version: 'menkyo', rank: 'D', element: 'しぜん', role: 'defender', mul: { atk: 1.15 },
         line: 'パクッ', favorite: 'niboshi',
         title: 'はえとりの達人', desc: '蠅をとって１００年のベテラン。今まで食らった蠅は数知れず。',
         special: sp('百年の ひとのみ', [atk('one', 2.4, { drain: 0.5 })])
@@ -677,13 +677,13 @@ const LIST = [
         special: sp('乙姫の 大舞台', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }])
     },
     {
-        id: 'asedakku', name: 'アセダック', from: 'ダンジョン 040', area: 'umi', rank: 'D', element: 'みず', role: 'supporter', mul: { hp: 1.05 },
+        id: 'asedakku', name: 'アセダック', from: 'ダンジョン 040', area: 'umi', version: 'menkyo', rank: 'D', element: 'みず', role: 'supporter', mul: { hp: 1.05 },
         line: 'あせあせ！', favorite: 'cider',
         title: '汗だくの鳥', desc: '汗腺が崩壊した鳥。いつもびしょびしょ。',
         special: sp('汗だく スプラッシュ', [atk('all', 1.3, { element: 'みず' })])
     },
     {
-        id: 'uniharry', name: 'ウニハリー', from: 'ダンジョン 139', area: 'umi', rank: 'D', element: 'みず', role: 'defender', mul: { def: 1.15 },
+        id: 'uniharry', name: 'ウニハリー', from: 'ダンジョン 139', area: 'umi', version: 'naitei', rank: 'D', element: 'みず', role: 'defender', mul: { def: 1.15 },
         line: 'うにうに', favorite: 'cider',
         title: '海のハリー', desc: '海で暮らすことを選んだハリー。ウニと間違えられて食べられそうになるのが悩み。',
         special: sp('うにうに ニードル', [atk('one', 0.9, { hits: 3 }), { kind: 'status', target: 'one', status: 'poison', chance: 0.6 }])
@@ -764,13 +764,13 @@ const LIST = [
         special: sp('404 の 闇', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
     },
     {
-        id: 'virusn', name: 'ウイルスン', from: 'ダンジョン 112', area: 'tera', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: {},
+        id: 'virusn', name: 'ウイルスン', from: 'ダンジョン 112', area: 'tera', version: 'naitei', rank: 'C', element: 'ふしぎ', role: 'jammer', mul: {},
         line: 'ぞうしょく します', favorite: 'melonpan',
         title: '増える厄介者', desc: 'パソコンからパソコンへ渡り歩き、勝手に増える。ファイアウォールとは犬猿の仲。',
         special: sp('パンデミック', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
     },
     {
-        id: 'firewall', name: 'ファイアウォール', from: 'ダンジョン 113', area: 'tera', rank: 'C', element: 'ほのお', role: 'defender', mul: {},
+        id: 'firewall', name: 'ファイアウォール', from: 'ダンジョン 113', area: 'tera', version: 'menkyo', rank: 'C', element: 'ほのお', role: 'defender', mul: {},
         line: 'ここは とおしません', favorite: 'cider',
         title: '炎の門番', desc: '燃える壁で怪しい者を通さない門番。たまに味方まで通さないのが玉にきず。',
         special: sp('炎の 防壁', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
@@ -790,7 +790,7 @@ const LIST = [
         special: sp('下忍の 百本手裏剣', [atk('all', 1.7)])
     },
     {
-        id: 'shurikenbo', name: 'シュリケンボー', from: 'ダンジョン 026', area: 'yashiki', rank: 'D', element: 'かぜ', role: 'attacker', mul: {},
+        id: 'shurikenbo', name: 'シュリケンボー', from: 'ダンジョン 026', area: 'yashiki', version: 'naitei', rank: 'D', element: 'かぜ', role: 'attacker', mul: {},
         line: 'シュルルル！', favorite: 'choco',
         title: '手裏剣の妖怪。', desc: '手裏剣の付喪神。最近は手裏剣戦隊ニンニンジャーにあこがれている。',
         special: sp('大回転 しゅりけん', [atk('all', 1.7)])
@@ -802,7 +802,7 @@ const LIST = [
         special: sp('あとは まかせた 大爆発', [atk('all', 1.7)])
     },
     {
-        id: 'konin', name: 'コオニン', from: 'ダンジョン V11', area: 'yashiki', rank: 'D', element: 'ほのお', role: 'attacker', mul: {},
+        id: 'konin', name: 'コオニン', from: 'ダンジョン V11', area: 'yashiki', version: 'menkyo', rank: 'D', element: 'ほのお', role: 'attacker', mul: {},
         line: 'オニ！ オニ！', favorite: 'cider',
         title: '見習いの鬼', desc: '鬼鬼団の見習い。いつかゴウキオニのような一番槍になりたい。',
         special: sp('こおに 連打', [atk('all', 1.7)])
@@ -864,13 +864,13 @@ const LIST = [
         special: sp('満月の 遠ぼえ', [atk('all', 1.7)])
     },
     {
-        id: 'watageboushi', name: 'ワタゲボウシ', from: 'ダンジョン 092', area: 'moon', rank: 'D', element: 'かぜ', role: 'supporter', mul: {},
+        id: 'watageboushi', name: 'ワタゲボウシ', from: 'ダンジョン 092', area: 'moon', version: 'menkyo', rank: 'D', element: 'かぜ', role: 'supporter', mul: {},
         line: 'ふわふわ～', favorite: 'choco',
         title: '正体不明の綿毛', desc: 'いつか見たあの景色に向かうため、今日も風に乗る。',
         special: sp('わたげ ふぶき', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, atk('all', 0.8)])
     },
     {
-        id: 'tatsumakitsune', name: 'タツマキツネ', from: 'ダンジョン 090', area: 'moon', rank: 'D', element: 'かぜ', role: 'jammer', mul: {},
+        id: 'tatsumakitsune', name: 'タツマキツネ', from: 'ダンジョン 090', area: 'moon', version: 'naitei', rank: 'D', element: 'かぜ', role: 'jammer', mul: {},
         line: 'コーン！（ぐるぐる）', favorite: 'choco',
         title: '竜巻の卵', desc: 'しっぽで竜巻を育てている狐。この竜巻はやがて独り立ちし、災害として、地球を練り歩く。',
         special: sp('大たつまき', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
@@ -1166,6 +1166,10 @@ LIST.forEach((n, i) => {
     NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || 'ishinokawa', base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
 });
 export const NAKAMA_IDS = LIST.map(n => n.id);
+// バージョン限定の なかま (2026-10-30。設計書 4.4「バージョンで 仲間に なる キャラが 変わる」。どれに するかは Claude の 案)
+//   version: 'naitei' / 'menkyo' の キャラは その バージョンでしか 町に 出ない。同じ 地区・同じ ランクで 1 組ずつ
+export const VERSION_ONLY = { naitei: '内定版', menkyo: '免許版' };
+export const inVersion = (id, version) => !NAKAMA[id] || !NAKAMA[id].version || NAKAMA[id].version === version;
 // 地区で 出会う キャラ (進化で なる キャラ・合体でしか 会えない キャラは 入れない)
 export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
 

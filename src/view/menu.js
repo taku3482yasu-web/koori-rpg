@@ -8,7 +8,7 @@
 // 一覧は 十字キー・マウスホイール で スクロール
 // =====================================================================
 import { ART } from '../art/index.js';
-import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf, evolveOf } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, ROLES, JUTSU_RANK_NAMES, unitOf, evolveOf, VERSION_ONLY } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRect } from '../core/draw.js';
@@ -141,7 +141,7 @@ export function createMenu(app) {
             text(ctx, 'まだ 会っていない', 170, 56, { size: 12, color: COLORS.sub });
             return;
         }
-        text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}`, 170, 50, { size: 11.5, color: COLORS.sub });
+        text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}${n.version ? `　${VERSION_ONLY[n.version]}だけ` : ''}`, 170, 50, { size: 11.5, color: n.version && n.version !== g.version ? '#ff9a9a' : COLORS.sub, maxWidth: 225 });
         text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
         const ds = fitSize(ctx, n.desc, 215, 11.5, 4, 9);
         wrap(ctx, n.desc, 215, ds).slice(0, 4).forEach((r, i) => text(ctx, r, 170, 90 + i * (ds + 3.5), { size: ds }));
@@ -160,7 +160,9 @@ export function createMenu(app) {
             bar(ctx, 170, 218, 210, 4, (medal.exp - expFor(medal.lv)) / need, COLORS.ice);
         } else {
             const where = [...SPOTS, ...ROAMS].filter(s => s.kinds.some(k => k.id === id)).map(s => s.label);
-            text(ctx, `いる場所: ${g.zukan.friends[id] || g.zukan.seen[id] ? where.join('・') : '？？？'}`, 170, 200, { size: 11, maxWidth: 220 });
+            const known = g.zukan.friends[id] || g.zukan.seen[id];
+            const place = n.fuse ? '合体の館で 合体' : n.evo ? '進化' : known ? where.join('・') : '？？？';
+            text(ctx, `いる場所: ${place}`, 170, 200, { size: 11, maxWidth: 220 });
         }
     }
 

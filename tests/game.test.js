@@ -476,3 +476,30 @@ test('8 章: 電車で SE城 → 大鬼 → 双頭鬼 → 金滅鬼 (なかま�
     assert.equal(g.chapter, 9);
     assert.ok(!here('onioni8'));
 });
+
+test('バージョン限定の なかま (2026-10-30): その バージョンでしか 出ない。同じ 地区・同じ ランクで 1 組ずつ', async () => {
+    const { NAKAMA, NAKAMA_IDS } = await import('../src/data/nakama.js');
+    const only = v => NAKAMA_IDS.filter(id => NAKAMA[id].version === v);
+    const nai = only('naitei'), men = only('menkyo');
+    assert.ok(nai.length >= 5 && nai.length === men.length, `内定 ${nai.length}・免許 ${men.length}`);
+    nai.forEach((id, i) => {
+        assert.equal(NAKAMA[id].area, NAKAMA[men[i]].area, `${id} と ${men[i]} の 地区`);
+        assert.equal(NAKAMA[id].rank, NAKAMA[men[i]].rank, `${id} と ${men[i]} の ランク`);
+    });
+    for (const version of ['naitei', 'menkyo']) {
+        const g = newGame(version);
+        receiveWatch(g);
+        g.story = 'clear8';
+        g.time = 3;
+        const other = version === 'naitei' ? men : nai;
+        for (const s of [...SPOTS, ...ROAMS]) {
+            for (const k of spotKinds(g, s)) assert.ok(!other.includes(k.id), `${version} で ${k.id} が 出ない (${s.id})`);
+        }
+        // もくてきの 数にも 入らない
+        assert.ok(!objective(g).includes('undefined'));
+    }
+    // 同じ 場所でも バージョンで 出る キャラが ちがう
+    const roam = ROAMS.find(r => r.kinds.some(k => nai.includes(k.id)));
+    const ids = v => { const g = newGame(v); receiveWatch(g); g.story = 'clear8'; g.time = 3; return spotKinds(g, roam).map(k => k.id).join(); };
+    assert.notEqual(ids('naitei'), ids('menkyo'));
+});

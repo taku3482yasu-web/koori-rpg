@@ -54,3 +54,20 @@ test('依頼: なかまに する 依頼は 図鑑で 決まる', () => {
     g.zukan.friends.donguriko = true;
     assert.ok(questReady(g, q));
 });
+
+test('依頼は 40 個 (2026-10-30 ユーザー指定)。たのむ キャラは どの 地区にも いて、立つ 場所が ある', async () => {
+    const { TILES, BLOCK, areaAt } = await import('../src/data/map.js');
+    assert.equal(QUESTS.length, 40);
+    const areas = new Set();
+    for (const f of FRIENDS) {
+        let free = 0;
+        for (let y = f.y0; y <= f.y1; y++) for (let x = f.x0; x <= f.x1; x++) if (!BLOCK.has(TILES[y][x])) free++;
+        assert.ok(free > 0, `${f.id} の 立つ 場所`);
+        assert.ok(NAKAMA[f.kind], `${f.id} の 絵`);
+        areas.add(areaAt(f.x0, f.y0));
+    }
+    for (const a of ['ishinokawa', 'shoutengai', 'school', 'yama', 'umi', 'tera', 'yashiki', 'moon', 'shiro']) assert.ok(areas.has(a), `${a} に たのむ キャラ`);
+    // 合体の館の キャラ・合成アイテムの 依頼も ある
+    assert.ok(QUESTS.some(q => q.need.kind === 'befriend' && NAKAMA[q.need.id].fuse));
+    assert.ok(QUESTS.some(q => q.need.kind === 'item' && ITEMS[q.need.item].material));
+});
