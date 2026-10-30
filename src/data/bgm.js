@@ -80,6 +80,11 @@ export const SONGS = {
         chords: '1 4 6 5 3 7 4 1', bass: 'r . o . r . o .', drums: 'k . k s . k s .'
     },
 
+    shuugeki: {
+        name: '黒い 霧の 町', bpm: 96, root: 67, mode: 'harmonic', lead: 'triangle',
+        melody: "1 . 3 . 5 . 3 . | 7, - - - . . . . | 1 . 3 . 6 . 5 . | 4 - 3 - . . . . | 6 . 5 . 4 . 3 . | 2 - 1 - 7, - . . | 1 . 2 . 3 . 4 . | 5 - - - 7, - - .",
+        chords: '1 5 1 4 6 5 1 5', bass: 'r - - - r - - -', arp: '0 1 2 1 0 1 2 1', drums: 'k . . . s . . .'
+    },
     kinniku: {
         name: '筋肉の山', bpm: 108, root: 62, mode: 'mixolydian', lead: 'square',
         melody: "1 . 1 5, 1 . 2 3 | 4 - 3 - 2 - . . | 5 . 5 4 5 . 6 7 | 1' - - - 7 - 5 . | 6 . 6 5 4 . 3 4 | 5 - 4 - 3 - 1 . | 2 . 3 4 5 . 4 3 | 2 - - - 5, - - .",
@@ -179,6 +184,11 @@ export const SONGS = {
         melody: "1 1 1 . 5 . 4 . | 7, 7, 7, . 4 . 3 . | 1 1 1 . 5 . 6 . | 7 - 6 - 5 - . . | 1' . 7 . 6 . 5 . | 4 . 3 . 2 . 1 . | 4 4 4 . 5 5 5 . | 6 - 7 - 1' - 5 -",
         chords: '1 7 1 5 4 1 4 5', bass: 'r r o r r r o r', drums: 'x h s h x h s s'
     },
+    tashikeda10: {
+        name: '私はハッキングが好きだ！ (タシケダ)', bpm: 160, root: 64, mode: 'phrygian', lead: 'square',
+        melody: "1 1 2 1 5 . 4 . | 2 2 1 2 1 - . . | 1 1 2 1 6 . 5 . | 4 4 2 4 5 - . . | 1' . 7 . 6 6 5 . | 4 . 2 . 1 1 2 . | 4 4 5 6 5 4 2 1 | 2 - 1 - 2 - 5, -",
+        chords: '1 2 1 2 6 4 2 1', bass: 'r o r o r o r o', drums: 'x h s h x h s s'
+    },
     harukirin9: {
         name: '春の 目ざめ (ハル麒麟)', bpm: 140, root: 69, mode: 'lydian', lead: 'triangle',
         melody: "5 . 3 . 5 6 5 . | 4 - 3 - 2 - . . | 1' . 7 . 6 5 6 . | 7 - - - . . . . | 3' . 2' . 1' 7 6 . | 5 - 4 - 3 - 2 . | 1 . 2 . 3 4 5 . | 6 - 7 - 1' - 5 -",
@@ -256,8 +266,10 @@ export function compileSong(song) {
 
 // いま 鳴らす 曲。scene: 場面の 名前 / area: 町の 地区 / battle: バトル (kind・ボスの id・おわったか)
 //   バトルが おわったら 止める (勝ち・負けの 効果音を 聞かせる)。結果画面も 止める
-export function bgmFor({ scene, area, battle }) {
+export function bgmFor({ scene, area, battle, story = null }) {
     if (scene === 'title') return 'title';
+    // 10 章: 黒い 霧の 町 (石の川タウン・商店街)
+    if (story === 'shuugeki' && (area === 'ishinokawa' || area === 'shoutengai') && scene !== 'battle') return 'shuugeki';
     if (scene === 'field' || scene === 'menu' || scene === 'fusion') return SONGS[area] ? area : 'ishinokawa';
     if (scene === 'battle' && battle) {
         if (battle.outcome) return null;

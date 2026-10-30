@@ -104,6 +104,7 @@ function wantedBgm() {
     return bgmFor({
         scene: sc.name,
         area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
+        story: app.g ? app.g.story : null,
         battle: b ? { kind: b.kind, outcome: b.outcome, bossId: b.enemies.find(e => BOSSES[e.id])?.id ?? null } : null
     });
 }

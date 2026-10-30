@@ -257,6 +257,16 @@ export function createBattleView(app, battle, place) {
                 if (e.why === 'cage') banner = { text: 'おりが こわれた！ ふるカワが にげだした！ チャンス！', color: COLORS.accent, until: t + 2 };
                 if (e.why === 'signal') banner = { text: '信号機を こわした！ リハマが とまった！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
+            } else if (e.type === 'drain') {
+                // 10 章の タシケダ: レベル ドレイン → 紋つきの 味方
+                banner = { text: `${nameOf(e.target)}の レベルが 吸われた！ Lv${e.from} → Lv${e.to}`, color: '#ff6a9a', until: t + 2 };
+                sfx('cancel');
+                const p = posOf(e.target);
+                if (p) pops.push({ x: p.x, y: p.y - 70, text: `Lv${e.from}→${e.to}`, color: '#ff9ad8', until: t + 1.4 });
+            } else if (e.type === 'restore') {
+                const p = posOf(e.target);
+                if (p) pops.push({ x: p.x, y: p.y - 70, text: `レベルが もどった！ Lv${e.lv}`, color: '#7aff8a', until: t + 1.6 });
+                sfx('heal');
             } else if (e.type === 'regenHeal') {
                 banner = { text: `${nameOf(e.actor)}の HP が ぜんぶ もどった……！`, color: '#ff6a6a', until: t + 2 };
                 sfx('heal');
@@ -341,7 +351,7 @@ export function createBattleView(app, battle, place) {
                 banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
-                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen) };
+                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack) };
                 sfx('cancel');
             } else if (e.type === 'summon') {
                 // 氷の 偶像が できた (3 章の ダムの主)
@@ -352,7 +362,8 @@ export function createBattleView(app, battle, place) {
             } else if (e.type === 'bigCancel') {
                 warn = null;
                 const armName = e.arm ? Object.values(battle.enemies.find(x => x.uid === e.actor)?.gims || {}).find(g2 => g2.arm)?.name : null;
-                banner = { text: e.arm ? (armName === '月' ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！`) : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+                if (e.hack) banner = { text: 'となりの 紋つきを たおした！ ハッキングを 止めた！', color: COLORS.accent, until: t + 2 };
+                else banner = { text: e.arm ? (armName === '月' ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！`) : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
                 sfx('big');
             } else if (e.type === 'food') {
                 banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: '#ff9ad8', until: t + 1.6 };
@@ -803,6 +814,12 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'town') {
+            // 10 章 黒い 霧の 石の川タウン: むらさきの 空と 家の かげ
+            ctx.fillStyle = '#2a1a3a'; ctx.fillRect(0, 0, 400, HORIZON);
+            ctx.fillStyle = '#1a1028';
+            [[10, 40, 60], [90, 30, 50], [170, 46, 70], [260, 34, 56], [330, 44, 64]].forEach(([x, y, w]) => { ctx.fillRect(x, y, w, HORIZON - y); ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + w / 2, y - 16); ctx.lineTo(x + w + 4, y); ctx.fill(); });
+            for (let i = 0; i < 8; i++) { ctx.fillStyle = `rgba(140, 60, 180, ${0.15 + 0.08 * Math.sin(t + i)})`; ctx.beginPath(); ctx.ellipse((i * 67 + t * 12) % 460 - 30, 30 + (i % 3) * 22, 50, 14, 0, 0, Math.PI * 2); ctx.fill(); }
         } else if (place === 'kinniku' || place === 'hyouga') {
             // 9 章 筋肉の山 / 雪どけの 氷河: 青空と 雪の のこる 山
             ctx.fillStyle = place === 'hyouga' ? '#9ad0f0' : '#7ab8e8'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -862,7 +879,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -900,6 +917,12 @@ export function createBattleView(app, battle, place) {
         ctx.fill();
         // うしろ姿: 描いた 絵 (back-art.js) が なければ 顔を 消して 作る (back.js)
         const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
+        // 紋つき (「・闇」): むらさきの もや
+        if (u.dark && !u.ko) {
+            const fk = scale * artFit(art);
+            ctx.fillStyle = `rgba(110, 30, 150, ${0.3 + 0.12 * Math.sin(t * 4 + p.x)})`;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2); ctx.fill();
+        }
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
         // 氷の 偶像: 水色の 氷を 重ねる
         if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: '#cdf2ff', sx, sy });
@@ -917,7 +940,7 @@ export function createBattleView(app, battle, place) {
         if (u.ko) return;
         const guards = [];
         if (u.guarding) guards.push('まもり');
-        for (const [k, b] of Object.entries(u.buffs)) if (b.t > 0 && BUFF_NAMES[k]) guards.push(BUFF_NAMES[k]);
+        for (const [k, b] of Object.entries(u.buffs)) if (b.t > 0 && BUFF_NAMES[k]) guards.push(b.amount < 0 ? BUFF_NAMES[k].replace('↑', '↓') : BUFF_NAMES[k]);
         if (u.guarding) {
             // 体を つつむ 青い 光と、名前の 左に 盾の マーク
             ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 5);
@@ -1166,6 +1189,11 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(90, 20, 90, 0.9)', edge: '#ffe85a' });
             text(ctx, `お経を となえている……「${warn ? warn.name : ''}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffe0a0' });
+        } else if (battle.hack && !battle.outcome) {
+            // 10 章の タシケダ: 左右に 紋つきが そろうと ハッキング。予告の あいだに 1 体 たおせば 止まる
+            panel(ctx, 30, 8, 340, 40, { fill: 'rgba(20, 60, 30, 0.92)', edge: '#4aff8a' });
+            text(ctx, `!! 「${warn ? warn.name : ''}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
+            text(ctx, `となりの 紋つきを 1 体 たおせば 止まる！ (${Math.max(0, battle.hack.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#c8ffd8' });
         } else if (battle.regen && !battle.outcome) {
             // 9 章の ハル麒麟: ためおわると 角が のこっていれば 全回復
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(40, 110, 60, 0.92)', edge: '#ffb0c8' });
@@ -1187,7 +1215,7 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
-        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && warn.until > t) {
+        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && !warn.hack && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });

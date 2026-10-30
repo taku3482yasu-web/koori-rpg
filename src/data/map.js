@@ -526,6 +526,8 @@ export const PEOPLE = [
     { id: 'soutou8', name: '双頭鬼', art: 'soutouki', x: 24, y: SHIRO_Y0 + 15, only: 'soutou8', scale: 1.4 },
     { id: 'kinme8', name: '金滅鬼', art: 'kinmetsuki', x: 24, y: SHIRO_Y0 + 11, only: 'kinme8', scale: 1.2 },
     { id: 'onioni8', name: 'おにおに', art: 'onioni', x: 24, y: SHIRO_Y0 + 7, only: 'onioni8' },
+    // 10 章: 家の 前で ともいしを ねらう 幹部 タシケダ
+    { id: 'tashikeda10', name: 'タシケダ', art: 'tashikeda', x: 10, y: 24, only: 'tashikeda10', scale: 1.2 },
     // 9 章: 雪どけの 氷河の ハル麒麟 (北への 細道の 前) → 山頂の 道場の ノゾエマ
     { id: 'harukirin9', name: 'ハル麒麟', art: 'harukirin', x: 13, y: KINNIKU_Y0 + 10, only: 'harukirin9', scale: 1.3 },
     { id: 'nozoema9', name: 'ノゾエマ', art: 'nozoema', x: 34, y: KINNIKU_Y0 + 2, only: 'nozoema9', scale: 1.3 },

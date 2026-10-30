@@ -26,14 +26,17 @@
 //   clear8   8 章 クリア。ここから 9 章「筋肉の山と 新しい なかま」: ともいしの 家で おにおにが なかまに
 //   onijoin  石の川駅から 電車で 筋肉の山へ 行ける
 //   kinniku  筋肉の山に 着いた。雪どけの 氷河の ハル麒麟 (flags.kirin9) → 山頂の 道場の ノゾエマ
-//   clear9   9 章 クリア。こおりくんの 必殺技が「絶対殺すソード・レクイエム」に 進化。(10〜13 章は まだ。本編の さいご = MAIN_END)
+//   clear9   9 章 クリア。こおりくんの 必殺技が「絶対殺すソード・レクイエム」に 進化
+//   shuugeki 10 章「石の川タウン しゅうげき」: 町に もどると 黒い 霧。石の川タウンと 商店街の キャラは ぜんぶ 紋つき (「・闇」)。
+//            紋つきに 5 回 勝つ (flags.dark10) と 家の 前に 幹部 タシケダ
+//   clear10  10 章 クリア。(11〜13 章は まだ。本編の さいご = MAIN_END)
 //   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
 //   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
 //   clear14  14 章 クリア。15 章「新たなる１日」: 無限回廊 (g.kairou)・ライバル探検隊の 仲間クエスト (flags.team_*)
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES } from '../data/nakama.js';
-import { SPOTS, START } from '../data/map.js';
+import { SPOTS, START, areaAt } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached, MAIN_END } from './story.js';
@@ -157,17 +160,22 @@ export function spotActive(g, spot, now) {
 // 話しかけた キャラ (first: { id, lv }) と 戦う。ときどき 同じ 場所の キャラが もう 1 体・2 体 出る (3 体まで。2026-10-29 ユーザー指定)
 //   3 体の ときは 話しかけた キャラが まんなか
 export const MAX_ENEMIES = 3;
+// 10 章: 石の川タウンと 商店街の キャラは ぜんぶ 紋つき (「・闇」)。Lv も 上がる
+export const DARK10_LV = [33, 37];
+export const DARK10_GOAL = 5;
+export const darkTown = (g, source) => g.story === 'shuugeki' && ['ishinokawa', 'shoutengai'].includes(areaAt(source.x0 ?? source.x, source.y0 ?? source.y));
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
-    const [lo, hi] = source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
-    const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
+    const dark = darkTown(g, source);
+    const [lo, hi] = dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
+    const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
     if (kinds.length && rng.chance(0.25)) {
         enemies.push(more());
         if (rng.chance(0.4)) enemies.unshift(more());
     }
-    enemies.forEach(e => { g.zukan.seen[e.id] = true; });
+    enemies.forEach(e => { g.zukan.seen[e.id] = true; if (dark) e.dark = true; });
     return enemies;
 }
 
@@ -269,8 +277,14 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'onioni8') { g.story = 'clear8'; g.chapter = 9; }
         if (bossId === 'harukirin9') g.flags.kirin9 = true;
         if (bossId === 'nozoema9') { g.story = 'clear9'; g.chapter = 10; out.heroSpecial = true; }
+        if (bossId === 'tashikeda10') { g.story = 'clear10'; g.chapter = 11; }
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
+    }
+    // 10 章: 紋つきに 勝つと 紋が とける (5 回で 幹部が 出る)
+    if (g.story === 'shuugeki' && battle.enemies.some(e => e.dark)) {
+        g.flags.dark10 = (g.flags.dark10 || 0) + 1;
+        out.dark = g.flags.dark10;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
     const ids = [...new Set(battle.enemies.map(e => e.id))];
@@ -363,7 +377,11 @@ export function objective(g) {
         case 'clear8': return '家の 前の ともいしと 話そう';
         case 'onijoin': return '石の川駅から、電車で 筋肉の山へ 行こう';
         case 'kinniku': return !g.flags.kirin9 ? '雪どけの 氷河の ハル麒麟を こえよう' : '山頂の 道場で ノゾエマに 会おう';
-        case 'clear9': return '家の 前の ともいしと 話そう';
+        case 'clear9': return '石の川タウンへ 帰ろう';
+        // 10 章「石の川タウン しゅうげき」
+        case 'shuugeki': return (g.flags.dark10 || 0) < DARK10_GOAL
+            ? `紋つきの なかまを 助けよう (${g.flags.dark10 || 0}/${DARK10_GOAL})` : '家の 前の 幹部から ともいしを まもろう';
+        case 'clear10': return '家の 前の ともいしと 話そう';
         // 14 章 (バージョンで ちがう)
         case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
         case 'park': return 'アトラクションで 遊ぼう。帰るときは 遊園地前駅へ';
@@ -406,6 +424,13 @@ export function startChapter9(g) {
 export function arriveKinniku(g) {
     if (g.story !== 'onijoin') return false;
     g.story = 'kinniku';
+    return true;
+}
+// 10 章の はじまり: 9 章 クリアの あと 石の川タウンに もどると 黒い 霧。はじめて なら true
+export function startChapter10(g) {
+    if (g.story !== 'clear9') return false;
+    g.story = 'shuugeki';
+    g.flags.dark10 = 0;
     return true;
 }
 // こおりくんの 必殺技が 進化しているか (9 章 クリアから「絶対殺すソード・レクイエム」)

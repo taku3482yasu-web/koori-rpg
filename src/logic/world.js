@@ -35,6 +35,8 @@ export function peopleHere(g) {
         (p.only === 'soutou8' && g.story === 'oshiro' && !g.flags.soutou8) ||
         (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
         (p.only === 'onioni8' && g.story === 'oshiro') ||
+        // 10 章: 紋つきを 5 回 助けると 家の 前に 幹部 タシケダ
+        (p.only === 'tashikeda10' && g.story === 'shuugeki' && (g.flags.dark10 || 0) >= 5) ||
         // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
         (p.only === 'harukirin9' && g.story === 'kinniku' && !g.flags.kirin9) ||
         (p.only === 'nozoema9' && g.story === 'kinniku' && g.flags.kirin9) ||

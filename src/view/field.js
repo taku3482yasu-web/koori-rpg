@@ -7,6 +7,7 @@
 // 6 章: ともいし → 電車で 忍びの屋敷 → 庭の ズミタニ (影分身) → 奥の 間で ルキハ と おにおに → 東の 蔵の 幹部 トモオカ (右腕)
 // 7 章: 電車で 月の迷宮 (ルナヤに まねかれる) → 迷宮の 奥の 月の 鏡で 回想 → ルナヤ (満ちていく 月)
 // 8 章: 電車で 金色のSE城 (ライバル探検隊が 門を こじあける) → 幹部 大鬼・双頭鬼・金滅鬼 → 玉座の 間の おにおに → ルキハ
+// 10 章: 町に もどると 黒い 霧 → 石の川タウンと 商店街の キャラは ぜんぶ 紋つき「・闇」→ 5 回 助けると 家の 前に 幹部 タシケダ
 // 9 章: ともいしの 家で おにおにが なかまに → 電車で 筋肉の山 → 雪どけの 氷河の ハル麒麟 (角) → 山頂の ノゾエマ → 必殺技が 進化
 // 14 章 (バージョンで ちがう): ともいしの 家で 招待券 → 電車で 遊園地 → 駅で 帰ろうとすると ふるカワが いない → 夜の 手がかり 3 つ →
 //   残党の ボス (内定 サアラハ / 免許 リハマ)。セリフは ストーリー工房の 14 章の あらすじから Claude が 書いた 仮組
@@ -29,7 +30,7 @@ import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -77,6 +78,7 @@ export function createField(app) {
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
     const inKinniku = () => g.pos.y >= KINNIKU_Y0 * TILE;
     const inPark = () => between(PARK_Y0, KINNIKU_Y0);
+    const darkHere = () => g.story === 'shuugeki' && g.pos.y < SCHOOL_Y0 * TILE;   // 10 章の 黒い 霧 (町と 商店街)
     const inHyouga = () => between(KINNIKU_Y0 + 10, KINNIKU_Y0 + 16);   // 雪どけの 氷河 (バトルの 背景)
     const inShiro = () => between(SHIRO_Y0, PARK_Y0);
     const inMoon = () => between(MOON_Y0, SHIRO_Y0);
@@ -181,7 +183,9 @@ export function createField(app) {
                 oshiro: ['SE城？ 金ピカの お城なんて、おにおにくんも 出世したもんやね。……え、ちがうと？'],
                 onijoin: ['筋肉の山？ おにおにくんも いっしょなら 安心やね。……こおり、ちゃんと 修行してきなさいよ。'],
                 kinniku: ['ノゾエマさんって、鏡に むかって 筋肉と 話す 人やろ？ ……こおり、まねしたら いかんよ。'],
-                clear9: ['こおり、なんか たくましく なったんやない？ ……ほら、ふるカワちゃんが また 来とるよ。'],
+                clear9: ['こおり、なんか たくましく なったんやない？'],
+                shuugeki: [(g.flags.dark10 || 0) >= DARK10_GOAL ? 'こおり！ 来たら いかん！' : 'こおり！ 町じゅう 紋つきだらけよ！ ……お母さんは だいじょうぶ、家で まっとるけん。'],
+                clear10: ['こおり、ありがとね。……ほら、ふるカワちゃんが また 来とるよ。'],
                 invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
                 park: ['遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。'],
                 yoru: ['ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！'],
@@ -323,6 +327,15 @@ export function createField(app) {
                 nar('おにおにの 胸の 黒い 紋が、どくん、と 脈うった。'),
                 furu('大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('onioni8'), kind: 'boss', place: 'shiro' }) });
+        } else if (p.id === 'tashikeda10') {
+            // 10 章の ボス: ともいしを ねらう 幹部 タシケダ (ストーリー工房 10 章 場面 2)
+            say([
+                tomo('こおり！ 来たら いかん！'),
+                { who: 'タシケダ', art: 'tashikeda', text: 'こおり族の 母か。ルキハさまへの いい みやげに なる。' },
+                { who: 'こおりくん', art: 'koori', text: '（おかあさんに さわるな！）' },
+                { who: 'タシケダ', art: 'tashikeda', text: 'ワタシは ルキハさまの 軍勢の 幹部、タシケダ。……きみの なかまの レベル、ぜんぶ いただくよ。' },
+                furu('レベルを 吸われたら、出てきた 紋つきを たおせば もどるよ！ 左右に 2 体 そろうと 大技が くる！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('tashikeda10'), kind: 'boss', place: 'town' }) });
         } else if (p.id === 'harukirin9') {
             // 9 章 1 回目: 雪どけの 氷河の ハル麒麟 (セリフは ダンジョンの ハル麒麟から)
             say([
@@ -728,7 +741,7 @@ export function createField(app) {
         const n = NAKAMA[m.nakama];
         g.zukan.seen[m.nakama] = true;
         say([...m.lines.map(text => nar(text)), { who: n.name, art: n.art, text: '「……ウ……ア……」' }, nar(`黒い 紋に とりつかれた ${n.name}が おそいかかってきた！`)], {
-            done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: 'wild', place: 'tera', mystery: m.id })
+            done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv, dark: true }], kind: 'wild', place: 'tera', mystery: m.id })
         });
     }
 
@@ -825,6 +838,24 @@ export function createField(app) {
                 nar('―― １５章「新たなる１日」 ――'),
                 nar('こおりくんの 旅は 終わらない。この 世界の キャラを ぜんぶ なかまに しよう！'),
                 nar('石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！')
+            ], { done: () => app.save() });
+        } else if (result.dark && result.outcome === 'win') {
+            // 10 章: 紋つきに 勝つと 紋が とける
+            const lines = [nar(`紋が とけた！ (${Math.min(result.dark, DARK10_GOAL)}/${DARK10_GOAL})`)];
+            if (result.dark === DARK10_GOAL) lines.push(nar('家の ほうから、いやな 気配が する……！'), furu('ともいしさんが あぶない！ 家へ 行こう！'));
+            say(lines, { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'tashikeda10') {
+            // 10 章 クリア: 町の 夜明け (ストーリー工房 10 章 場面 3)
+            say([
+                { who: 'タシケダ', art: 'tashikeda', text: 'エラー……エラー……。ルキハさまに 報告……しなきゃ……。' },
+                nar('タシケダは 黒い 霧に なって 消えた。'),
+                nar('霧が はれ、町に 朝が もどった。'),
+                by('daichouenkin', 'こおりくーん！ おなか、ぐるぐるだけど、みんな ぶじだよー！'),
+                by('ishikoron', 'ふん、石の川の 石は 紋なんかに まけないぞ。'),
+                by('hashishita', '……ひとつ、ふたつ、みっつ……。橋も ぶじだ。'),
+                tomo('こおり、ありがとね。……ぜったい 帰って きなさいよ！'),
+                nar('１０章 クリア！'),
+                nar('―― １１章は つぎの アップデートで。')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'harukirin9') {
             say([
@@ -1017,6 +1048,16 @@ export function createField(app) {
         wild.update(dt, g.pos);
         if (app.talk.isActive()) return;
         if (lens) { updateLens(dt, input); return; }
+        // 10 章の はじまり: 9 章 クリアの あと 石の川タウン・商店街に もどると 黒い 霧 (ストーリー工房 10 章 場面 1)
+        if (g.story === 'clear9' && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
+            say([
+                nar('町じゅうに 黒い 霧が たちこめている……。'),
+                furu('みんなの 体に 紋が……！ はやく 助けなきゃ！'),
+                by('onioni', 'ルキハの 軍勢の しわざか……！ 町の やつらも 商店街の やつらも、ぜんぶ 紋つきに なっとるぞ。'),
+                furu(`紋つきの なかまに 勝てば 紋が とけるはず！ ${DARK10_GOAL} 回 助けたら、家の ほうを 見に 行こう！`)
+            ], { done: () => app.save() });
+            return;
+        }
 
         // 下画面の ボタン
         if (input.touch.justDown) {
@@ -1147,7 +1188,7 @@ export function createField(app) {
             done: () => {
                 fighting = c;
                 const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inKinniku() ? (inHyouga() ? 'hyouga' : 'kinniku') : inPark() ? 'yuen' : inShiro() ? 'shiro' : inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
+                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: darkTown(g, source) ? 'town' : inKinniku() ? (inHyouga() ? 'hyouga' : 'kinniku') : inPark() ? 'yuen' : inShiro() ? 'shiro' : inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
             }
         });
     }
@@ -1176,6 +1217,11 @@ export function createField(app) {
                 ctx.fill();
                 const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
                 drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
+                // 10 章: 紋つき (町と 商店街の キャラ) は むらさきの もや
+                if (!c.friendly && darkHere()) {
+                    ctx.fillStyle = `rgba(120, 40, 160, ${0.28 + 0.12 * Math.sin(t * 4 + c.x)})`;
+                    ctx.beginPath(); ctx.ellipse(x, y - 7, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
+                }
                 // 戦える キャラには 赤い「！」(2026-10-28 ユーザー指定)。話せる キャラには なにも つけない
                 if (!c.friendly) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: '#ff3a3a' });
                 // 依頼が ある (たのみたい・できた) 話せる キャラには 小さな ふきだし
@@ -1246,6 +1292,15 @@ export function createField(app) {
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
+        // 10 章: 黒い 霧の 町
+        if (darkHere()) {
+            ctx.fillStyle = 'rgba(30, 6, 50, 0.5)';
+            ctx.fillRect(0, 0, 400, 240);
+            for (let i = 0; i < 7; i++) {
+                ctx.fillStyle = `rgba(20, 10, 30, ${0.25 + 0.1 * Math.sin(t * 0.8 + i)})`;
+                ctx.beginPath(); ctx.ellipse((i * 83 + t * 10) % 520 - 60, 20 + (i * 47) % 220, 70, 22, 0, 0, Math.PI * 2); ctx.fill();
+            }
+        }
         if (g.weather === 'rain' && !inSchool() && !inCave() && !inMoon()) {
             ctx.fillStyle = 'rgba(40, 60, 100, 0.15)';
             ctx.fillRect(0, 0, 400, 240);
@@ -1430,7 +1485,8 @@ export function createField(app) {
             : g.story === 'clear6' ? { x: 5, y: 40 } : g.story === 'meikyu' ? { x: 24, y: MOON_Y0 + 2 }
             : g.story === 'clear7' ? { x: 5, y: 40 }
             : g.story === 'oshiro' ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) }
-            : g.story === 'clear8' || g.story === 'clear9' ? { x: 8, y: 24 } : g.story === 'invite' || g.story === 'onijoin' ? { x: 5, y: 40 }
+            : g.story === 'clear8' || g.story === 'clear10' ? { x: 8, y: 24 } : g.story === 'invite' || g.story === 'onijoin' ? { x: 5, y: 40 }
+            : g.story === 'shuugeki' ? ((g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null)
             : g.story === 'kinniku' ? (!g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 })
             : g.story === 'park' ? (g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 })
             : g.story === 'yoru' ? (PARK_CLUES.map(c => BUILDINGS.find(x => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 }) : null;

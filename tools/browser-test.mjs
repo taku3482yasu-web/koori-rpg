@@ -804,6 +804,41 @@ try {
     await winNow();
     await skipTalk(30);
 
+    // ----- 10 章: 黒い 霧の 町 → 紋つき (・闇) → 家の 前の タシケダ (レベル ドレイン) (2026-10-30) -----
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "shuugeki" && window.__bgm() === "shuugeki"'), '9 章の あと 町に もどると 黒い 霧 (10 章・霧の BGM)');
+    await sleep(200);
+    await shot('town-dark');
+    await evaluate('window.__app.g.flags.dark10 = 4; true');
+    await evaluate('window.__app.startBattle({ enemies: [{ id: "ishikoron", lv: 34, dark: true }], kind: "wild", place: "town" }); true');
+    await sleep(300);
+    check(await evaluate('window.__app.scene.battle.enemies[0].name === "イシコロン・闇"'), '紋つきの 敵は「○○・闇」');
+    await key('KeyJ');
+    await sleep(500);
+    await shot('town-dark-battle');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.flags.dark10 === 5'), '紋つきに 勝つと 紋が とける (5/5)');
+    await at(10, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "tashikeda10" && window.__bgm() === "tashikeda10"'), '家の 前の 幹部 タシケダと バトル');
+    await key('KeyJ');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.enemies[0].hp = b.enemies[0].max = 99999; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); return true; })()');
+    let drained = false;
+    for (let i = 0; i < 120 && !drained; i++) {
+        await evaluate('(() => { const b = window.__app.scene.battle; b.wheel.forEach(u => { if (u) u.timer = -999; }); b.enemies[0].timer = 99; return true; })()');
+        await sleep(150);
+        drained = await evaluate('window.__app.scene.battle.enemies.some(e => e.drainOf) && window.__app.scene.battle.wheel.some(u => u && u.drained)');
+    }
+    check(drained, 'タシケダ: レベルを 吸って 紋つきを 作る');
+    await sleep(800);
+    await shot('town-tashikeda-drain');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "clear10"'), 'タシケダに 勝つと 10 章 クリア');
+
     // ----- 14 章 (内定版): 招待券 → ナイテイパーク → ふるカワが いない → 夜の 手がかり → サアラハ (おり) (2026-10-30) -----
     const P14 = 300;
     await at(8, 25, 'up');

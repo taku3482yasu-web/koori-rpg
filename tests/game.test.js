@@ -564,7 +564,7 @@ test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごと�
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
     assert.ok(kairouEnemies(g)[0].lv > lvs[0], '上の 階ほど 強い');
     // さいごの 階は その バージョンの 14 章の ボス
-    g.kairou.floor = 16;
+    g.kairou.floor = 17;
     assert.equal(kairouEnemies(g)[0].id, 'rihama14');
 });
 
@@ -617,5 +617,37 @@ test('9 章: おにおにが なかまに → 電車で 筋肉の山 → ハル�
     assert.equal(g.story, 'clear9');
     assert.equal(g.chapter, 10);
     assert.ok(heroUpgraded(g), '必殺技が 進化');
-    assert.ok(startChapter14(g), '9 章の あとで 14 章 (いまの 本編の さいご)');
+    assert.ok(!startChapter14(g), '14 章は 本編の さいご (いまは 10 章) の あと');
+});
+
+test('10 章: 町に もどると 黒い 霧。町と 商店街の キャラは ぜんぶ 紋つき (・闇)。5 回 助けると タシケダ → 10 章 クリア (2026-10-30)', async () => {
+    const { startChapter10, darkTown, DARK10_GOAL, DARK10_LV, startChapter14 } = await import('../src/logic/game.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = createRng(4);
+    const fixed = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const here = id => peopleHere(g).some(p => p.id === id);
+    g.story = 'clear9';
+    assert.ok(startChapter10(g));
+    assert.ok(!startChapter10(g));
+    const town = ROAMS.find(r => r.id === 'park'), shop = ROAMS.find(r => r.id === 'arcadeW'), yama = ROAMS.find(r => r.y0 >= YAMA_Y0 && r.y0 < UMI_Y0);
+    assert.ok(darkTown(g, town) && darkTown(g, shop), '石の川タウンと 商店街は 紋つき');
+    assert.ok(!darkTown(g, yama), 'ほかの 地区は ふつう');
+    const es = encounter(g, town, rng);
+    assert.ok(es.every(e => e.dark && e.lv >= DARK10_LV[0] && e.lv <= DARK10_LV[1]));
+    for (let i = 0; i < DARK10_GOAL; i++) {
+        assert.ok(!here('tashikeda10'));
+        const b = winBattle(g, [{ id: 'nemuridake', lv: 34, dark: true }]);
+        b.enemies.forEach(e => { e.dark = true; });
+        const out = applyBattleResult(g, b, fixed);
+        assert.equal(out.dark, i + 1);
+    }
+    assert.ok(here('tashikeda10'));
+    assert.match(objective(g), /ともいし/);
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('tashikeda10'), 'boss'), fixed);
+    assert.equal(out.befriend, null);
+    assert.equal(g.story, 'clear10');
+    assert.ok(!here('tashikeda10'));
+    assert.ok(!darkTown(g, town), '霧が はれる');
+    assert.ok(startChapter14(g), '本編の さいご (いまは 10 章) の あとで 14 章');
 });

@@ -684,6 +684,18 @@ body.nopad #pad { display: none; }
       bass: "r . o . r . o .",
       drums: "k . k s . k s ."
     },
+    shuugeki: {
+      name: "黒い 霧の 町",
+      bpm: 96,
+      root: 67,
+      mode: "harmonic",
+      lead: "triangle",
+      melody: "1 . 3 . 5 . 3 . | 7, - - - . . . . | 1 . 3 . 6 . 5 . | 4 - 3 - . . . . | 6 . 5 . 4 . 3 . | 2 - 1 - 7, - . . | 1 . 2 . 3 . 4 . | 5 - - - 7, - - .",
+      chords: "1 5 1 4 6 5 1 5",
+      bass: "r - - - r - - -",
+      arp: "0 1 2 1 0 1 2 1",
+      drums: "k . . . s . . ."
+    },
     kinniku: {
       name: "筋肉の山",
       bpm: 108,
@@ -903,6 +915,17 @@ body.nopad #pad { display: none; }
       bass: "r r o r r r o r",
       drums: "x h s h x h s s"
     },
+    tashikeda10: {
+      name: "私はハッキングが好きだ！ (タシケダ)",
+      bpm: 160,
+      root: 64,
+      mode: "phrygian",
+      lead: "square",
+      melody: "1 1 2 1 5 . 4 . | 2 2 1 2 1 - . . | 1 1 2 1 6 . 5 . | 4 4 2 4 5 - . . | 1' . 7 . 6 6 5 . | 4 . 2 . 1 1 2 . | 4 4 5 6 5 4 2 1 | 2 - 1 - 2 - 5, -",
+      chords: "1 2 1 2 6 4 2 1",
+      bass: "r o r o r o r o",
+      drums: "x h s h x h s s"
+    },
     harukirin9: {
       name: "春の 目ざめ (ハル麒麟)",
       bpm: 140,
@@ -992,8 +1015,9 @@ body.nopad #pad { display: none; }
     }
     return { steps, total, stepSec, notes, hits };
   }
-  function bgmFor({ scene, area, battle }) {
+  function bgmFor({ scene, area, battle, story = null }) {
     if (scene === "title") return "title";
+    if (story === "shuugeki" && (area === "ishinokawa" || area === "shoutengai") && scene !== "battle") return "shuugeki";
     if (scene === "field" || scene === "menu" || scene === "fusion") return SONGS[area] ? area : "ishinokawa";
     if (scene === "battle" && battle) {
       if (battle.outcome) return null;
@@ -1394,6 +1418,7 @@ body.nopad #pad { display: none; }
     fukinoton: W$1("ふきのとうボム", "しぜん", "front", 1.1, "poison", 0.4),
     harukirin: W$1("春をよぶ角", "しぜん", "around", 1.3, "slow", 0.4),
     nozoema: W$1("兜割り", "ふつう", "front", 2.2),
+    tashikeda10: W$1("ウイルス さんぷ", "ふしぎ", "around", 0.6, "poison", 0.4),
     harukirin9: W$1("麒麟のいかずち", "かぜ", "line", 1.5, "slow", 0.3),
     nozoema9: W$1("刀の一振り", "ふつう", "around", 1.6),
     ooni8: W$1("ふみつけ", "ふつう", "around", 1),
@@ -4193,7 +4218,8 @@ body.nopad #pad { display: none; }
     //   gims の pos: 絵の どこに 出すか [横 (絵の 半分の はばで), たて (絵の 高さで。足元が 0)]
     urashima4: {
       id: "urashima4",
-      name: "浦の島重蔵 (黒い紋)",
+      name: "浦の島重蔵・闇",
+      dark: true,
       element: "みず",
       role: "defender",
       art: "urashima",
@@ -4227,7 +4253,8 @@ body.nopad #pad { display: none; }
     //       となえている あいだ だけ うしろの 鐘を ねらえる。だれかが 当てると 鐘が 鳴り、おどろいて チャンスタイム (お経も 止まる)
     daishi5: {
       id: "daishi5",
-      name: "ダイシ (黒い紋)",
+      name: "ダイシ・闇",
+      dark: true,
       element: "ふしぎ",
       role: "jammer",
       art: "daishi",
@@ -4384,7 +4411,8 @@ body.nopad #pad { display: none; }
     // 大鬼: 体が でかく、わざは ぜんぶ 全体攻撃。足を ねらえて、当てつづけて こわすと 転んで チャンスタイム (おわると 足は もとに もどる)
     ooni8: {
       id: "ooni8",
-      name: "大鬼",
+      name: "大鬼・闇",
+      dark: true,
       element: "ふつう",
       role: "attacker",
       art: "ooni",
@@ -4407,7 +4435,8 @@ body.nopad #pad { display: none; }
     //   両方 こわすと チャンスタイム → おわると 頭は もとに もどる
     soutou8: {
       id: "soutou8",
-      name: "双頭鬼",
+      name: "双頭鬼・闇",
+      dark: true,
       element: "ふしぎ",
       role: "jammer",
       art: "soutouki",
@@ -4435,7 +4464,8 @@ body.nopad #pad { display: none; }
     // 金滅鬼: 金の 体で、めくらましの とりつき (攻撃が 当たりにくい) を かける。チャンスタイムは なく、ただの なぐりあい。幹部で いちばん 強い
     kinme8: {
       id: "kinme8",
-      name: "金滅鬼",
+      name: "金滅鬼・闇",
+      dark: true,
       element: "ほのお",
       role: "attacker",
       art: "kinmetsuki",
@@ -4458,7 +4488,8 @@ body.nopad #pad { display: none; }
     //   (味方に ダメージ・おにおには チャンスタイム)。2 回目からの ため では ガードして、うける ダメージが 40% に へる
     onioni8: {
       id: "onioni8",
-      name: "おにおに (黒い紋)",
+      name: "おにおに・闇",
+      dark: true,
       element: "ほのお",
       role: "attacker",
       art: "onioni",
@@ -4485,6 +4516,38 @@ body.nopad #pad { display: none; }
       befriends: null,
       lv: 35,
       place: "shiro"
+    },
+    // ----- 10 章「石の川タウン しゅうげき」の ボス (2026-10-30 ユーザー指定) -----
+    // タシケダ (ルキハの 軍勢の 幹部): 戦う 力は ひくい。行動不能の とりつき (stun)。
+    //   レベル ドレイン: なかま 1 体の レベルを 吸って Lv10 に する (Lv10 いかなら Lv1)。吸った レベルで 紋つきの 味方を 作る
+    //   (CSSパックン・闇 → ムゲンループ・闇 → ファイアウォール・闇 の 順。自分の 左右に 1 体ずつ)。作った 敵を たおすと レベルが もどる
+    //   となりに 2 体 そろうと 必殺技「私はハッキングが好きだ！」(予告つき): 相手 全員の こうげき 大ダウン + 中ダメージ
+    tashikeda10: {
+      id: "tashikeda10",
+      name: "タシケダ",
+      element: "ふしぎ",
+      role: "jammer",
+      art: "tashikeda",
+      scale: 1.8,
+      rank: "A",
+      base: { hp: 620, atk: 10, def: 11, spd: 13, mag: 14 },
+      moves: [
+        { name: "行動不能の とりつき", w: 2.5, effects: [{ kind: "status", target: "one", status: "stun", chance: 0.85 }] },
+        { name: "レベル ドレイン", w: 3, drain: true },
+        { name: "ウイルス さんぷ", w: 2, effects: [atk("all", 0.5, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "poison", chance: 0.35 }] },
+        { name: "エンターキー連打", w: 2, effects: [atk("one", 0.9)] }
+      ],
+      summons: ["csspakkun", "mugenloop", "firewall"],
+      bigMove: {
+        name: "私はハッキングが好きだ！",
+        trigger: "hack",
+        warn: 2.5,
+        cool: 9,
+        effects: [{ kind: "buff", target: "all", stat: "atk", amount: -0.5, time: 12 }, atk("all", 1.1, { magic: true, element: "ふしぎ" })]
+      },
+      befriends: null,
+      lv: 44,
+      place: "town"
     },
     // ----- 9 章「筋肉の山と 新しい なかま」の ボス 2 体 (2026-10-30 ユーザー指定) -----
     // ハル麒麟 (雪どけの 氷河): HP が 半分に なると「春の 目ざめ」を ためる。ためおわった とき 角が のこっていたら HP を 全回復。
@@ -4584,7 +4647,7 @@ body.nopad #pad { display: none; }
     }
   };
   const BOSS14 = { naitei: "saaraha14", menkyo: "rihama14" };
-  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "boss14"];
+  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "tashikeda10", "boss14"];
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
   const rival = (id, name, element, role, rank, mul, line2, special, extra = {}) => {
     const base = {};
@@ -5285,6 +5348,8 @@ body.nopad #pad { display: none; }
     { id: "soutou8", name: "双頭鬼", art: "soutouki", x: 24, y: SHIRO_Y0 + 15, only: "soutou8", scale: 1.4 },
     { id: "kinme8", name: "金滅鬼", art: "kinmetsuki", x: 24, y: SHIRO_Y0 + 11, only: "kinme8", scale: 1.2 },
     { id: "onioni8", name: "おにおに", art: "onioni", x: 24, y: SHIRO_Y0 + 7, only: "onioni8" },
+    // 10 章: 家の 前で ともいしを ねらう 幹部 タシケダ
+    { id: "tashikeda10", name: "タシケダ", art: "tashikeda", x: 10, y: 24, only: "tashikeda10", scale: 1.2 },
     // 9 章: 雪どけの 氷河の ハル麒麟 (北への 細道の 前) → 山頂の 道場の ノゾエマ
     { id: "harukirin9", name: "ハル麒麟", art: "harukirin", x: 13, y: KINNIKU_Y0 + 10, only: "harukirin9", scale: 1.3 },
     { id: "nozoema9", name: "ノゾエマ", art: "nozoema", x: 34, y: KINNIKU_Y0 + 2, only: "nozoema9", scale: 1.3 },
@@ -5583,8 +5648,8 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "invite", "park", "yoru", "clear14"];
-  const MAIN_END = "clear9";
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "invite", "park", "yoru", "clear14"];
+  const MAIN_END = "clear10";
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -5676,10 +5741,14 @@ body.nopad #pad { display: none; }
   function spotActive(g, spot, now) {
     return hasWatch(g) && spotKinds(g, spot).length > 0 && !((g.spotCooldown[spot.id] || 0) > now);
   }
+  const DARK10_LV = [33, 37];
+  const DARK10_GOAL = 5;
+  const darkTown = (g, source) => g.story === "shuugeki" && ["ishinokawa", "shoutengai"].includes(areaAt(source.x0 ?? source.x, source.y0 ?? source.y));
   function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
-    const [lo, hi] = source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
-    const lead = first || { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
+    const dark = darkTown(g, source);
+    const [lo, hi] = dark ? DARK10_LV : source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
+    const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
     if (kinds.length && rng.chance(0.25)) {
@@ -5688,6 +5757,7 @@ body.nopad #pad { display: none; }
     }
     enemies.forEach((e) => {
       g.zukan.seen[e.id] = true;
+      if (dark) e.dark = true;
     });
     return enemies;
   }
@@ -5805,11 +5875,19 @@ body.nopad #pad { display: none; }
         g.chapter = 10;
         out.heroSpecial = true;
       }
+      if (bossId === "tashikeda10") {
+        g.story = "clear10";
+        g.chapter = 11;
+      }
       if (bossId === BOSS14[g.version]) {
         g.story = "clear14";
         g.chapter = 15;
       }
       return out;
+    }
+    if (g.story === "shuugeki" && battle.enemies.some((e) => e.dark)) {
+      g.flags.dark10 = (g.flags.dark10 || 0) + 1;
+      out.dark = g.flags.dark10;
     }
     const ids = [...new Set(battle.enemies.map((e) => e.id))];
     for (const id of ids) {
@@ -5901,6 +5979,10 @@ body.nopad #pad { display: none; }
       case "kinniku":
         return !g.flags.kirin9 ? "雪どけの 氷河の ハル麒麟を こえよう" : "山頂の 道場で ノゾエマに 会おう";
       case "clear9":
+        return "石の川タウンへ 帰ろう";
+      case "shuugeki":
+        return (g.flags.dark10 || 0) < DARK10_GOAL ? `紋つきの なかまを 助けよう (${g.flags.dark10 || 0}/${DARK10_GOAL})` : "家の 前の 幹部から ともいしを まもろう";
+      case "clear10":
         return "家の 前の ともいしと 話そう";
       case "invite":
         return `石の川駅から、電車で ${g.version === "menkyo" ? "メンキョシティ" : "ナイテイパーク"}へ 行こう`;
@@ -5936,6 +6018,12 @@ body.nopad #pad { display: none; }
   function arriveKinniku(g) {
     if (g.story !== "onijoin") return false;
     g.story = "kinniku";
+    return true;
+  }
+  function startChapter10(g) {
+    if (g.story !== "clear9") return false;
+    g.story = "shuugeki";
+    g.flags.dark10 = 0;
     return true;
   }
   const heroUpgraded = (g) => reached(g, "clear9");
@@ -6031,8 +6119,8 @@ body.nopad #pad { display: none; }
     return friend.gift;
   }
   const GAUGE_MAX = 100;
-  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10 };
-  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "いたずら", blind: "めくらまし" };
+  const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10, stun: 7 };
+  const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "いたずら", blind: "めくらまし", stun: "行動不能" };
   const toritsukiName = (k) => `${STATUS_NAMES[k]}の とりつき`;
   const isPossessed = (u) => Object.keys(u.status).length > 0;
   const BLIND_MISS = 0.4;
@@ -6044,16 +6132,20 @@ body.nopad #pad { display: none; }
   const ROTATE_COOLDOWN = 0.35;
   const ITEM_COOLDOWN = 4;
   let uidSeq = 0;
-  function makeUnit({ uid, id, lv, bond = 0, upgrade = false }, side) {
+  const DARK_K = 1.15;
+  function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side) {
     const sp2 = speciesOf(id);
     const st = statsAt(id, lv);
+    const isDark = dark || Boolean(sp2.dark);
+    if (dark) for (const k of ["hp", "atk", "def"]) st[k] = Math.round(st[k] * DARK_K);
     return {
       uid: uid ?? `${side}-${++uidSeq}`,
       id,
       lv,
       side,
       bond,
-      name: sp2.name,
+      name: dark && !sp2.dark ? `${sp2.name}・闇` : sp2.name,
+      dark: isDark,
       element: sp2.element,
       role: sp2.role,
       art: sp2.art,
@@ -6084,6 +6176,10 @@ body.nopad #pad { display: none; }
       baseMoves: null,
       shellCut: sp2.shellCut ?? 0.15,
       regenDef: sp2.regen || null,
+      summonDef: sp2.summons || null,
+      summonNo: 0,
+      drained: null,
+      drainOf: null,
       cloneDef: sp2.clones || null,
       armDef: sp2.arm || null,
       armLv: sp2.arm ? sp2.arm.start : 0,
@@ -6323,7 +6419,8 @@ body.nopad #pad { display: none; }
       clones: null,
       armCharge: null,
       burst: null,
-      regen: null
+      regen: null,
+      hack: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -6370,6 +6467,65 @@ body.nopad #pad { display: none; }
     if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
     if (b.burst && b.burst.uid === u.uid) b.burst = null;
     if (b.regen && b.regen.uid === u.uid) b.regen = null;
+    if (u.drainOf) restoreLevel(b, u);
+    if (u.summonDef) {
+      for (const m of minionsOf(b, u)) {
+        m.hp = 0;
+        m.ko = true;
+        emit(b, "ko", { target: m.uid, side: "enemy" });
+        restoreLevel(b, m);
+      }
+    }
+    if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
+  }
+  const minionsOf = (b, boss) => b.enemies.filter((e) => e.owner === boss.uid && e.drainOf !== null && !e.ko);
+  const MINION_SLOTS = ["left", "right"];
+  function drainSummon(b, boss) {
+    const used = minionsOf(b, boss).map((m2) => m2.slot);
+    const slot = MINION_SLOTS.find((s) => !used.includes(s));
+    const targets = b.frontAlive().filter((u) => !u.drained);
+    if (!slot || !targets.length) return false;
+    const to = b.rng.pick(targets);
+    const from = to.lv, lv = from > 10 ? 10 : 1;
+    const ratio = to.hp / to.max;
+    to.drained = { lv: from, s: to.s, max: to.max };
+    to.lv = lv;
+    to.s = statsAt(to.id, lv);
+    to.max = to.s.hp;
+    to.hp = Math.max(1, Math.round(to.max * ratio));
+    const kind = boss.summonDef[boss.summonNo++ % boss.summonDef.length];
+    const m = makeUnit({ id: kind, lv: Math.max(5, Math.min(boss.lv, from - lv)), dark: true }, "enemy");
+    Object.assign(m, { owner: boss.uid, drainOf: to.uid, slot, timer: -1 });
+    b.enemies = b.enemies.filter((e) => !(e.owner === boss.uid && e.ko));
+    const i = b.enemies.indexOf(boss);
+    b.enemies.splice(slot === "left" ? i : i + 1, 0, m);
+    emit(b, "drain", { actor: boss.uid, target: to.uid, from, to: lv, minion: m.uid });
+    return true;
+  }
+  function restoreLevel(b, minion) {
+    const to = b.wheel.find((u) => u && u.uid === minion.drainOf);
+    minion.drainOf = null;
+    if (!to || !to.drained) return;
+    const ratio = to.max ? to.hp / to.max : 0;
+    const back = to.drained;
+    to.drained = null;
+    to.lv = back.lv;
+    to.s = back.s;
+    to.max = back.max;
+    to.hp = to.ko ? 0 : Math.max(1, Math.round(to.max * ratio));
+    emit(b, "restore", { target: to.uid, lv: to.lv });
+  }
+  const hackReady = (b, boss) => {
+    const ms = minionsOf(b, boss);
+    return MINION_SLOTS.every((s) => ms.some((m) => m.slot === s));
+  };
+  function cancelHack(b) {
+    const boss = b.enemies.find((e) => e.uid === b.hack.uid);
+    b.hack = null;
+    if (boss) {
+      boss.hackCool = boss.bigMove.cool;
+      emit(b, "bigCancel", { actor: boss.uid, name: boss.bigMove.name, hack: true });
+    }
   }
   const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
   const buffOf = (u, stat) => u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0;
@@ -6567,7 +6723,7 @@ body.nopad #pad { display: none; }
         emit(b, "charging", { actor: u.uid });
         return;
       }
-      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.drain || minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some((f) => !f.drained)) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
       if (!list.length) {
         emit(b, "stunned", { actor: u.uid, left: 0 });
         return;
@@ -6579,6 +6735,7 @@ body.nopad #pad { display: none; }
         u.shell = move.shell;
         emit(b, "shell", { actor: u.uid, time: move.shell });
       } else if (move.clones) summonClones(b, u);
+      else if (move.drain) drainSummon(b, u);
       else {
         applyEffects(b, u, move.effects || []);
         if (u.repeat && move.effects && move.effects.length && b.rng.chance(u.repeat)) {
@@ -6621,7 +6778,7 @@ body.nopad #pad { display: none; }
     if (u.status.poison > 0) {
       u.hp = Math.max(1, u.hp - u.max * 0.03 * dt);
     }
-    if (!acting || u.status.sleep > 0) return;
+    if (!acting || u.status.sleep > 0 || u.status.stun > 0) return;
     u.timer += dt;
     if (u.timer >= interval(u)) {
       u.timer = 0;
@@ -6765,6 +6922,27 @@ body.nopad #pad { display: none; }
         idol.hp = 0;
         idol.ko = true;
         emit(b, "ko", { target: idol.uid, side: "enemy" });
+      }
+      return;
+    }
+    if (m.trigger === "hack") {
+      e.hackCool = Math.max(0, (e.hackCool || 0) - dt);
+      if (b.hack && b.hack.uid === e.uid) {
+        if (!hackReady(b, e)) {
+          cancelHack(b);
+          return;
+        }
+        b.hack.left -= dt;
+        if (b.hack.left > 0) return;
+        b.hack = null;
+        e.hackCool = m.cool;
+        emit(b, "special", { actor: e.uid, name: m.name, side: "enemy", big: true });
+        applyEffects(b, e, m.effects);
+        return;
+      }
+      if (e.hackCool <= 0 && hackReady(b, e)) {
+        b.hack = { uid: e.uid, left: m.warn };
+        emit(b, "telegraph", { actor: e.uid, name: m.name, warn: m.warn, hack: true });
       }
       return;
     }
@@ -15619,6 +15797,34 @@ body.nopad #pad { display: none; }
         "......kkk.kkk.....",
         ".....bbbb.bbbb...."
       ])
+    },
+    // タシケダ (10 章の ボス。ルキハの 軍勢の 幹部。新キャラ・2026-10-30): フードを かぶった ハッカー。緑に 光る めがねと ノートパソコン、むねに むらさきの 紋
+    tashikeda: {
+      w: 18,
+      h: 20,
+      palette: { o: "#0a0a14", h: "#3a2a5a", s: "#e8d0c0", G: "#4aff8a", m: "#8a3040", k: "#2a2a34", p: "#a040e0", l: "#c0c8d0", c: "#103020", b: "#000000" },
+      frames: blink$1([
+        "......oooooo......",
+        "....oohhhhhhoo....",
+        "...ohhhhhhhhhho...",
+        "..ohhsssssssshho..",
+        "..ohhsGGssGGshho..",
+        "..ohhsssssssshho..",
+        "..ohhsssmmssshho..",
+        "...ohssssssssho...",
+        "....oohhhhhhoo....",
+        "...okkkkkkkkkko...",
+        "..okkkkpkkpkkkko..",
+        "..okkkkkppkkkkko..",
+        ".ollllllllllllllo.",
+        ".olcccccccccccclo.",
+        ".olcGcGcGcGcGcclo.",
+        ".ollllllllllllllo.",
+        "....kkkk..kkkk....",
+        "....kkkk..kkkk....",
+        "...bbbbb..bbbbb...",
+        ".................."
+      ], "G", "s")
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -16104,7 +16310,8 @@ body.nopad #pad { display: none; }
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
     p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
     p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu" || // 8 章: 大鬼 → 双頭鬼 → 金滅鬼 → おにおに。たおした 幹部は いなくなり、次の 戸口が あく
-    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
+    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 10 章: 紋つきを 5 回 助けると 家の 前に 幹部 タシケダ
+    p.only === "tashikeda10" && g.story === "shuugeki" && (g.flags.dark10 || 0) >= 5 || // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
     p.only === "harukirin9" && g.story === "kinniku" && !g.flags.kirin9 || p.only === "nozoema9" && g.story === "kinniku" && g.flags.kirin9 || // 14 章: おにおには 遊園地に いっしょに 来ている。夜に 手がかりが そろうと 広場に 残党の ボス
     p.only === "park14" && (g.story === "park" || g.story === "yoru") || p.only === "boss14" && g.story === "yoru" && PARK_CLUES.every((c) => g.flags.clue14 && g.flags.clue14[c.id]) || // 15 章: 無限回廊の 番人・まだ 勝って いない ライバル探検隊
     p.only === "clear14" && reached(g, "clear14") || p.only === "team" && reached(g, "clear14") && !g.flags[`team_${p.team}`]));
@@ -17410,6 +17617,7 @@ body.nopad #pad { display: none; }
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
     const inKinniku = () => g.pos.y >= KINNIKU_Y0 * TILE;
     const inPark = () => between(PARK_Y0, KINNIKU_Y0);
+    const darkHere = () => g.story === "shuugeki" && g.pos.y < SCHOOL_Y0 * TILE;
     const inHyouga = () => between(KINNIKU_Y0 + 10, KINNIKU_Y0 + 16);
     const inShiro = () => between(SHIRO_Y0, PARK_Y0);
     const inMoon = () => between(MOON_Y0, SHIRO_Y0);
@@ -17513,7 +17721,9 @@ body.nopad #pad { display: none; }
           oshiro: ["SE城？ 金ピカの お城なんて、おにおにくんも 出世したもんやね。……え、ちがうと？"],
           onijoin: ["筋肉の山？ おにおにくんも いっしょなら 安心やね。……こおり、ちゃんと 修行してきなさいよ。"],
           kinniku: ["ノゾエマさんって、鏡に むかって 筋肉と 話す 人やろ？ ……こおり、まねしたら いかんよ。"],
-          clear9: ["こおり、なんか たくましく なったんやない？ ……ほら、ふるカワちゃんが また 来とるよ。"],
+          clear9: ["こおり、なんか たくましく なったんやない？"],
+          shuugeki: [(g.flags.dark10 || 0) >= DARK10_GOAL ? "こおり！ 来たら いかん！" : "こおり！ 町じゅう 紋つきだらけよ！ ……お母さんは だいじょうぶ、家で まっとるけん。"],
+          clear10: ["こおり、ありがとね。……ほら、ふるカワちゃんが また 来とるよ。"],
           invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
           park: ["遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。"],
           yoru: ["ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！"],
@@ -17645,6 +17855,14 @@ body.nopad #pad { display: none; }
           nar("おにおにの 胸の 黒い 紋が、どくん、と 脈うった。"),
           furu("大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni8"), kind: "boss", place: "shiro" }) });
+      } else if (p.id === "tashikeda10") {
+        say([
+          tomo("こおり！ 来たら いかん！"),
+          { who: "タシケダ", art: "tashikeda", text: "こおり族の 母か。ルキハさまへの いい みやげに なる。" },
+          { who: "こおりくん", art: "koori", text: "（おかあさんに さわるな！）" },
+          { who: "タシケダ", art: "tashikeda", text: "ワタシは ルキハさまの 軍勢の 幹部、タシケダ。……きみの なかまの レベル、ぜんぶ いただくよ。" },
+          furu("レベルを 吸われたら、出てきた 紋つきを たおせば もどるよ！ 左右に 2 体 そろうと 大技が くる！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("tashikeda10"), kind: "boss", place: "town" }) });
       } else if (p.id === "harukirin9") {
         say([
           nar("とけかけた 氷河の 上に、桜の 花びらを まとった 麒麟が 立っていた。"),
@@ -18092,7 +18310,7 @@ body.nopad #pad { display: none; }
       const n = NAKAMA[m.nakama];
       g.zukan.seen[m.nakama] = true;
       say([...m.lines.map((text2) => nar(text2)), { who: n.name, art: n.art, text: "「……ウ……ア……」" }, nar(`黒い 紋に とりつかれた ${n.name}が おそいかかってきた！`)], {
-        done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: "wild", place: "tera", mystery: m.id })
+        done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv, dark: true }], kind: "wild", place: "tera", mystery: m.id })
       });
     }
     function shop(greet = "いらっしゃい。なにに するかね？", OBA = "駄菓子屋の おばあちゃん") {
@@ -18185,6 +18403,22 @@ body.nopad #pad { display: none; }
           nar("―― １５章「新たなる１日」 ――"),
           nar("こおりくんの 旅は 終わらない。この 世界の キャラを ぜんぶ なかまに しよう！"),
           nar("石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！")
+        ], { done: () => app2.save() });
+      } else if (result2.dark && result2.outcome === "win") {
+        const lines = [nar(`紋が とけた！ (${Math.min(result2.dark, DARK10_GOAL)}/${DARK10_GOAL})`)];
+        if (result2.dark === DARK10_GOAL) lines.push(nar("家の ほうから、いやな 気配が する……！"), furu("ともいしさんが あぶない！ 家へ 行こう！"));
+        say(lines, { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "tashikeda10") {
+        say([
+          { who: "タシケダ", art: "tashikeda", text: "エラー……エラー……。ルキハさまに 報告……しなきゃ……。" },
+          nar("タシケダは 黒い 霧に なって 消えた。"),
+          nar("霧が はれ、町に 朝が もどった。"),
+          by("daichouenkin", "こおりくーん！ おなか、ぐるぐるだけど、みんな ぶじだよー！"),
+          by("ishikoron", "ふん、石の川の 石は 紋なんかに まけないぞ。"),
+          by("hashishita", "……ひとつ、ふたつ、みっつ……。橋も ぶじだ。"),
+          tomo("こおり、ありがとね。……ぜったい 帰って きなさいよ！"),
+          nar("１０章 クリア！"),
+          nar("―― １１章は つぎの アップデートで。")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "harukirin9") {
         say([
@@ -18380,6 +18614,15 @@ body.nopad #pad { display: none; }
         updateLens(dt, input2);
         return;
       }
+      if (g.story === "clear9" && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
+        say([
+          nar("町じゅうに 黒い 霧が たちこめている……。"),
+          furu("みんなの 体に 紋が……！ はやく 助けなきゃ！"),
+          by("onioni", "ルキハの 軍勢の しわざか……！ 町の やつらも 商店街の やつらも、ぜんぶ 紋つきに なっとるぞ。"),
+          furu(`紋つきの なかまに 勝てば 紋が とけるはず！ ${DARK10_GOAL} 回 助けたら、家の ほうを 見に 行こう！`)
+        ], { done: () => app2.save() });
+        return;
+      }
       if (input2.touch.justDown) {
         if (hasWatch(g) && hit(BTN.lens, input2.touch.x, input2.touch.y)) {
           startLens();
@@ -18561,7 +18804,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inKinniku() ? inHyouga() ? "hyouga" : "kinniku" : inPark() ? "yuen" : inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: darkTown(g, source) ? "town" : inKinniku() ? inHyouga() ? "hyouga" : "kinniku" : inPark() ? "yuen" : inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
         }
       });
     }
@@ -18590,6 +18833,12 @@ body.nopad #pad { display: none; }
           ctx.fill();
           const hop = c.target ? Math.abs(Math.sin(c.walkT * 10)) * -1.5 : 0;
           drawArt(ctx, ART[n.art], c.target ? Math.floor(c.walkT * 6) : Math.floor(t * 1.5 + c.x), x, y + hop - (1 - born) * 10, { flip: c.flip, alpha: born });
+          if (!c.friendly && darkHere()) {
+            ctx.fillStyle = `rgba(120, 40, 160, ${0.28 + 0.12 * Math.sin(t * 4 + c.x)})`;
+            ctx.beginPath();
+            ctx.ellipse(x, y - 7, 10, 11, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
           if (!c.friendly) text(ctx, "!", x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: "center", bold: true, color: "#ff3a3a" });
           else if (c !== talkable) {
             const q = questOf(g, c.friend);
@@ -18652,6 +18901,16 @@ body.nopad #pad { display: none; }
       if (TINT[g.time]) {
         ctx.fillStyle = TINT[g.time];
         ctx.fillRect(0, 0, 400, 240);
+      }
+      if (darkHere()) {
+        ctx.fillStyle = "rgba(30, 6, 50, 0.5)";
+        ctx.fillRect(0, 0, 400, 240);
+        for (let i = 0; i < 7; i++) {
+          ctx.fillStyle = `rgba(20, 10, 30, ${0.25 + 0.1 * Math.sin(t * 0.8 + i)})`;
+          ctx.beginPath();
+          ctx.ellipse((i * 83 + t * 10) % 520 - 60, 20 + i * 47 % 220, 70, 22, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
       if (g.weather === "rain" && !inSchool() && !inCave() && !inMoon()) {
         ctx.fillStyle = "rgba(40, 60, 100, 0.15)";
@@ -18801,7 +19060,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" || g.story === "clear9" ? { x: 8, y: 24 } : g.story === "invite" || g.story === "onijoin" ? { x: 5, y: 40 } : g.story === "kinniku" ? !g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" || g.story === "clear10" ? { x: 8, y: 24 } : g.story === "invite" || g.story === "onijoin" ? { x: 5, y: 40 } : g.story === "shuugeki" ? (g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null : g.story === "kinniku" ? !g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -20478,6 +20737,15 @@ body.nopad #pad { display: none; }
           if (e.why === "cage") banner = { text: "おりが こわれた！ ふるカワが にげだした！ チャンス！", color: COLORS.accent, until: t + 2 };
           if (e.why === "signal") banner = { text: "信号機を こわした！ リハマが とまった！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           sfx("special");
+        } else if (e.type === "drain") {
+          banner = { text: `${nameOf(e.target)}の レベルが 吸われた！ Lv${e.from} → Lv${e.to}`, color: "#ff6a9a", until: t + 2 };
+          sfx("cancel");
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x, y: p.y - 70, text: `Lv${e.from}→${e.to}`, color: "#ff9ad8", until: t + 1.4 });
+        } else if (e.type === "restore") {
+          const p = posOf(e.target);
+          if (p) pops.push({ x: p.x, y: p.y - 70, text: `レベルが もどった！ Lv${e.lv}`, color: "#7aff8a", until: t + 1.6 });
+          sfx("heal");
         } else if (e.type === "regenHeal") {
           banner = { text: `${nameOf(e.actor)}の HP が ぜんぶ もどった……！`, color: "#ff6a6a", until: t + 2 };
           sfx("heal");
@@ -20561,7 +20829,7 @@ body.nopad #pad { display: none; }
           banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
-          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen) };
+          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack) };
           sfx("cancel");
         } else if (e.type === "summon") {
           banner = { text: `${nameOf(e.target)}が あらわれた！`, color: "#bfeaff", until: t + 1.4 };
@@ -20571,7 +20839,8 @@ body.nopad #pad { display: none; }
         } else if (e.type === "bigCancel") {
           warn = null;
           const armName = e.arm ? (_h = Object.values(((_g = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _g.gims) || {}).find((g2) => g2.arm)) == null ? void 0 : _h.name : null;
-          banner = { text: e.arm ? armName === "月" ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
+          if (e.hack) banner = { text: "となりの 紋つきを たおした！ ハッキングを 止めた！", color: COLORS.accent, until: t + 2 };
+          else banner = { text: e.arm ? armName === "月" ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
           sfx("big");
         } else if (e.type === "food") {
           banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: "#ff9ad8", until: t + 1.6 };
@@ -21132,6 +21401,24 @@ body.nopad #pad { display: none; }
           ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
           ctx.fill();
         }
+      } else if (place === "town") {
+        ctx.fillStyle = "#2a1a3a";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        ctx.fillStyle = "#1a1028";
+        [[10, 40, 60], [90, 30, 50], [170, 46, 70], [260, 34, 56], [330, 44, 64]].forEach(([x, y, w]) => {
+          ctx.fillRect(x, y, w, HORIZON - y);
+          ctx.beginPath();
+          ctx.moveTo(x - 4, y);
+          ctx.lineTo(x + w / 2, y - 16);
+          ctx.lineTo(x + w + 4, y);
+          ctx.fill();
+        });
+        for (let i = 0; i < 8; i++) {
+          ctx.fillStyle = `rgba(140, 60, 180, ${0.15 + 0.08 * Math.sin(t + i)})`;
+          ctx.beginPath();
+          ctx.ellipse((i * 67 + t * 12) % 460 - 30, 30 + i % 3 * 22, 50, 14, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       } else if (place === "kinniku" || place === "hyouga") {
         ctx.fillStyle = place === "hyouga" ? "#9ad0f0" : "#7ab8e8";
         ctx.fillRect(0, 0, 400, HORIZON);
@@ -21222,7 +21509,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -21262,6 +21549,13 @@ body.nopad #pad { display: none; }
       ctx.ellipse(ground.x, ground.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
       ctx.fill();
       const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
+      if (u.dark && !u.ko) {
+        const fk = scale * artFit(art);
+        ctx.fillStyle = `rgba(110, 30, 150, ${0.3 + 0.12 * Math.sin(t * 4 + p.x)})`;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? "#ffffff" : null, sx, sy });
       if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
       const w = u.parts ? 150 : 44, head = p.y - art.h * scale * artFit(art);
@@ -21275,7 +21569,7 @@ body.nopad #pad { display: none; }
       if (u.ko) return;
       const guards = [];
       if (u.guarding) guards.push("まもり");
-      for (const [k, b] of Object.entries(u.buffs)) if (b.t > 0 && BUFF_NAMES[k]) guards.push(BUFF_NAMES[k]);
+      for (const [k, b] of Object.entries(u.buffs)) if (b.t > 0 && BUFF_NAMES[k]) guards.push(b.amount < 0 ? BUFF_NAMES[k].replace("↑", "↓") : BUFF_NAMES[k]);
       if (u.guarding) {
         ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 5);
         ctx.strokeStyle = "#8ad0ff";
@@ -21602,6 +21896,10 @@ body.nopad #pad { display: none; }
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(90, 20, 90, 0.9)", edge: "#ffe85a" });
         text(ctx, `お経を となえている……「${warn ? warn.name : ""}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffe0a0" });
+      } else if (battle.hack && !battle.outcome) {
+        panel(ctx, 30, 8, 340, 40, { fill: "rgba(20, 60, 30, 0.92)", edge: "#4aff8a" });
+        text(ctx, `!! 「${warn ? warn.name : ""}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `となりの 紋つきを 1 体 たおせば 止まる！ (${Math.max(0, battle.hack.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#c8ffd8" });
       } else if (battle.regen && !battle.outcome) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(40, 110, 60, 0.92)", edge: "#ffb0c8" });
         text(ctx, `!! 「${warn ? warn.name : "春の 目ざめ"}」を ためている！ 全回復される！`, 200, 25, { size: 13, align: "center", bold: true });
@@ -21620,7 +21918,7 @@ body.nopad #pad { display: none; }
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
-      } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && warn.until > t) {
+      } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && !warn.hack && warn.until > t) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
@@ -22689,6 +22987,7 @@ body.nopad #pad { display: none; }
     return bgmFor({
       scene: sc.name,
       area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
+      story: app.g ? app.g.story : null,
       battle: b ? { kind: b.kind, outcome: b.outcome, bossId: ((_a = b.enemies.find((e) => BOSSES[e.id])) == null ? void 0 : _a.id) ?? null } : null
     });
   }

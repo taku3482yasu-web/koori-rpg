@@ -344,5 +344,32 @@ export const NEW_ART = {
             '......kkk.kkk.....',
             '.....bbbb.bbbb....'
         ])
+    },
+    // タシケダ (10 章の ボス。ルキハの 軍勢の 幹部。新キャラ・2026-10-30): フードを かぶった ハッカー。緑に 光る めがねと ノートパソコン、むねに むらさきの 紋
+    tashikeda: {
+        w: 18, h: 20,
+        palette: { o: '#0a0a14', h: '#3a2a5a', s: '#e8d0c0', G: '#4aff8a', m: '#8a3040', k: '#2a2a34', p: '#a040e0', l: '#c0c8d0', c: '#103020', b: '#000000' },
+        frames: blink([
+            '......oooooo......',
+            '....oohhhhhhoo....',
+            '...ohhhhhhhhhho...',
+            '..ohhsssssssshho..',
+            '..ohhsGGssGGshho..',
+            '..ohhsssssssshho..',
+            '..ohhsssmmssshho..',
+            '...ohssssssssho...',
+            '....oohhhhhhoo....',
+            '...okkkkkkkkkko...',
+            '..okkkkpkkpkkkko..',
+            '..okkkkkppkkkkko..',
+            '.ollllllllllllllo.',
+            '.olcccccccccccclo.',
+            '.olcGcGcGcGcGcclo.',
+            '.ollllllllllllllo.',
+            '....kkkk..kkkk....',
+            '....kkkk..kkkk....',
+            '...bbbbb..bbbbb...',
+            '..................'
+        ], 'G', 's')
     }
 };

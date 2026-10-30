@@ -39,6 +39,9 @@
 //     双頭鬼: 右の 頭 (とりつき) と 左の 頭 (術)。頭を こわすと その 頭の わざ (move の gim) が 使えない。
 //       両方 こわす (gims の group が ぜんぶ こわれる) と チャンスタイム → おわると 頭は もとに もどる
 //     金滅鬼: めくらましの とりつき を つかう。チャンスタイムは ない
+//   紋つき (dark。2026-10-30 ユーザー指定): 名前は「○○・闇」。少し 強い (HP・こうげき・ぼうぎょ 1.15 倍)
+//   10 章の タシケダ (2026-10-30 ユーザー指定): 行動不能の とりつき (stun)・レベル ドレイン (なかまを Lv10 / Lv1 に して
+//     左右に 紋つきの 味方を 作る。たおすと レベルが もどる)・左右に 2 体 そろうと「私はハッキングが好きだ！」(b.hack)
 //   9 章 (2026-10-30 ユーザー指定):
 //     ハル麒麟: HP が 半分に なると「春の 目ざめ」を ためる (b.regen)。ためおわった とき 角 (gims.horn) が のこっていたら 全回復。
 //       角を こわすと ため が 止まり、もう ためない。チャンスタイムは なし
@@ -51,9 +54,9 @@ import { ITEMS } from '../data/items.js';
 import { speciesOf, statsAt } from './units.js';
 
 export const GAUGE_MAX = 100;
-const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10 };
+const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10, stun: 7 };
 // とりつきの 種類 (どれも おたすけで 治る)
-export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'いたずら', blind: 'めくらまし' };
+export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: 'こんらん', poison: 'どく', possess: 'いたずら', blind: 'めくらまし', stun: '行動不能' };
 export const toritsukiName = k => `${STATUS_NAMES[k]}の とりつき`;
 export const isPossessed = u => Object.keys(u.status).length > 0;
 export const BLIND_MISS = 0.4;  // めくらましの とりつき: 攻撃が 4 わり 当たらない
@@ -66,14 +69,17 @@ const ROTATE_COOLDOWN = 0.35;
 const ITEM_COOLDOWN = 4;
 
 let uidSeq = 0;
-// upgrade: こおりくんの 必殺技が 進化している (9 章 クリアから)
-function makeUnit({ uid, id, lv, bond = 0, upgrade = false }, side) {
+// upgrade: こおりくんの 必殺技が 進化している (9 章 クリアから)。dark: 紋つき (「・闇」)
+export const DARK_K = 1.15;
+function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side) {
     const sp = speciesOf(id);
     const st = statsAt(id, lv);
+    const isDark = dark || Boolean(sp.dark);
+    if (dark) for (const k of ['hp', 'atk', 'def']) st[k] = Math.round(st[k] * DARK_K);
     return {
         uid: uid ?? `${side}-${++uidSeq}`,
         id, lv, side, bond,
-        name: sp.name, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
+        name: dark && !sp.dark ? `${sp.name}・闇` : sp.name, dark: isDark, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
         waza: sp.waza, jutsu: sp.jutsu, special: (upgrade && sp.special2) || sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
@@ -81,7 +87,7 @@ function makeUnit({ uid, id, lv, bond = 0, upgrade = false }, side) {
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
         gims: sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
-        regenDef: sp.regen || null,
+        regenDef: sp.regen || null, summonDef: sp.summons || null, summonNo: 0, drained: null, drainOf: null,
         cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
@@ -274,7 +280,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null, hack: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -319,6 +325,59 @@ function afterKo(b, u) {
     if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
     if (b.burst && b.burst.uid === u.uid) b.burst = null;
     if (b.regen && b.regen.uid === u.uid) b.regen = null;
+    // 10 章: タシケダが 作った 敵を たおすと、吸われた レベルが もどる。タシケダが たおれたら 作った 敵も きえる
+    if (u.drainOf) restoreLevel(b, u);
+    if (u.summonDef) {
+        for (const m of minionsOf(b, u)) { m.hp = 0; m.ko = true; emit(b, 'ko', { target: m.uid, side: 'enemy' }); restoreLevel(b, m); }
+    }
+    if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
+}
+
+// ----- レベル ドレイン (10 章の タシケダ) -----
+export const minionsOf = (b, boss) => b.enemies.filter(e => e.owner === boss.uid && e.drainOf !== null && !e.ko);
+const MINION_SLOTS = ['left', 'right'];
+// なかま 1 体の レベルを 吸って Lv10 (Lv10 いかなら Lv1) に し、吸った レベルで 紋つきの 味方を 左右の あいた 方に 作る
+function drainSummon(b, boss) {
+    const used = minionsOf(b, boss).map(m => m.slot);
+    const slot = MINION_SLOTS.find(s => !used.includes(s));
+    const targets = b.frontAlive().filter(u => !u.drained);
+    if (!slot || !targets.length) return false;
+    const to = b.rng.pick(targets);
+    const from = to.lv, lv = from > 10 ? 10 : 1;
+    const ratio = to.hp / to.max;
+    to.drained = { lv: from, s: to.s, max: to.max };
+    to.lv = lv;
+    to.s = statsAt(to.id, lv);
+    to.max = to.s.hp;
+    to.hp = Math.max(1, Math.round(to.max * ratio));
+    const kind = boss.summonDef[boss.summonNo++ % boss.summonDef.length];
+    const m = makeUnit({ id: kind, lv: Math.max(5, Math.min(boss.lv, from - lv)), dark: true }, 'enemy');
+    Object.assign(m, { owner: boss.uid, drainOf: to.uid, slot, timer: -1 });
+    b.enemies = b.enemies.filter(e => !(e.owner === boss.uid && e.ko));   // たおれた 味方の あとに 作る
+    const i = b.enemies.indexOf(boss);
+    b.enemies.splice(slot === 'left' ? i : i + 1, 0, m);
+    emit(b, 'drain', { actor: boss.uid, target: to.uid, from, to: lv, minion: m.uid });
+    return true;
+}
+function restoreLevel(b, minion) {
+    const to = b.wheel.find(u => u && u.uid === minion.drainOf);
+    minion.drainOf = null;
+    if (!to || !to.drained) return;
+    const ratio = to.max ? to.hp / to.max : 0;
+    const back = to.drained;
+    to.drained = null;
+    to.lv = back.lv;
+    to.s = back.s;
+    to.max = back.max;
+    to.hp = to.ko ? 0 : Math.max(1, Math.round(to.max * ratio));
+    emit(b, 'restore', { target: to.uid, lv: to.lv });
+}
+// となり (左右) に 作った 敵が 2 体 そろっているか
+const hackReady = (b, boss) => { const ms = minionsOf(b, boss); return MINION_SLOTS.every(s => ms.some(m => m.slot === s)); };
+function cancelHack(b) {
+    const boss = b.enemies.find(e => e.uid === b.hack.uid);
+    b.hack = null;
+    if (boss) { boss.hackCool = boss.bigMove.cool; emit(b, 'bigCancel', { actor: boss.uid, name: boss.bigMove.name, hack: true }); }
 }
 
 const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
@@ -537,13 +596,15 @@ function act(b, u) {
     if (u.bossMoves) {
         if (b.chant && b.chant.uid === u.uid) { emit(b, 'chanting', { actor: u.uid }); return; }   // お経を となえている あいだは ほかの ことを しない
         if (b.burst && b.burst.uid === u.uid) { emit(b, 'charging', { actor: u.uid }); return; }   // 必殺技を ためている あいだも (8 章の おにおに)
-        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) &&
+            (!m.drain || (minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some(f => !f.drained))) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
         if (!list.length) { emit(b, 'stunned', { actor: u.uid, left: 0 }); return; }
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
         if (move.summon) summonIdol(b, u);
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
         else if (move.clones) summonClones(b, u);
+        else if (move.drain) drainSummon(b, u);
         else {
             applyEffects(b, u, move.effects || []);
             // もの忘れ (7 章の ルナヤ): ときどき 同じ わざを もう いちど
@@ -588,7 +649,7 @@ function tickUnit(b, u, dt, acting) {
     if (u.status.poison > 0) {
         u.hp = Math.max(1, u.hp - u.max * 0.03 * dt);   // どくでは たおれない
     }
-    if (!acting || u.status.sleep > 0) return;
+    if (!acting || u.status.sleep > 0 || u.status.stun > 0) return;   // 行動不能の とりつき (10 章) は たたかれても うごけない
     u.timer += dt;
     if (u.timer >= interval(u)) {
         u.timer = 0;
@@ -716,6 +777,25 @@ function bossTick(b, e, dt) {
         emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
         applyEffects(b, e, m.effects);
         for (const idol of idolsOf(b, e)) { idol.hp = 0; idol.ko = true; emit(b, 'ko', { target: idol.uid, side: 'enemy' }); }
+        return;
+    }
+    // 左右に 作った 敵が 2 体 そろうと「私はハッキングが好きだ！」(10 章の タシケダ)。予告の あいだに 1 体 たおすと 止まる
+    if (m.trigger === 'hack') {
+        e.hackCool = Math.max(0, (e.hackCool || 0) - dt);
+        if (b.hack && b.hack.uid === e.uid) {
+            if (!hackReady(b, e)) { cancelHack(b); return; }
+            b.hack.left -= dt;
+            if (b.hack.left > 0) return;
+            b.hack = null;
+            e.hackCool = m.cool;
+            emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
+            applyEffects(b, e, m.effects);
+            return;
+        }
+        if (e.hackCool <= 0 && hackReady(b, e)) {
+            b.hack = { uid: e.uid, left: m.warn };
+            emit(b, 'telegraph', { actor: e.uid, name: m.name, warn: m.warn, hack: true });
+        }
         return;
     }
     // 必殺技を ためる あいだに 攻撃を うけきると 紋が 暴発する (8 章の おにおに)

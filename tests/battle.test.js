@@ -248,7 +248,7 @@ test('いたずらの とりつき: なまけたり 味方を 攻めたり す�
 
 test('とりつき: ねむり・のろい・こんらん・どく・めくらまし も ぜんぶ とりつき。おたすけで まとめて ぬける (2026-10-30)', async () => {
     const { isPossessed, toritsukiName, STATUS_NAMES, BLIND_MISS } = await import('../src/logic/battle.js');
-    assert.deepEqual(Object.keys(STATUS_NAMES).sort(), ['blind', 'confuse', 'poison', 'possess', 'sleep', 'slow']);
+    assert.deepEqual(Object.keys(STATUS_NAMES).sort(), ['blind', 'confuse', 'poison', 'possess', 'sleep', 'slow', 'stun']);
     assert.equal(toritsukiName('slow'), 'のろいの とりつき');
     const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron'].map(id => ({ id, lv: 8 }));
     const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(4) });
@@ -531,6 +531,8 @@ test('7 章の ルナヤ: 月が 時間で 満ち、満月で ムーンビーム
 // 8 章の ボス (2026-10-30 ユーザー指定)
 const strongParty = () => ['koori', 'kogame', 'haribaby', 'kozarappa', 'ishikoron', 'mizukirin'].map((id, i) => ({ uid: `a${i}`, id, lv: 70 }));
 const keepAlive = b => b.wheel.forEach(u => { if (u) { u.hp = u.max; u.ko = false; } });
+// なかまは 動かさず (攻撃しない) に HP だけ 保つ
+const keepAliveNoAct = b => b.wheel.forEach(u => { if (u) { u.hp = u.max; u.ko = false; u.timer = -9999; } });
 
 test('8 章の 大鬼: わざは ぜんぶ 全体攻撃。足に 当てつづけて こわすと 転んで チャンスタイム → 足は もとに もどる', async () => {
     const { lockOn } = await import('../src/logic/battle.js');
@@ -702,4 +704,92 @@ test('こおりくんの 必殺技は 9 章 クリアで「絶対殺すソード
     const b2 = createBattle({ allies: [{ uid: 'a', id: 'koori', lv: 30, upgrade: true }, { uid: 'b', id: 'kogame', lv: 30, upgrade: true }], enemies: [{ id: 'ishikoron', lv: 1 }], rng: createRng(1) });
     assert.equal(b2.wheel[0].special.name, '絶対殺すソード・レクイエム');
     assert.equal(b2.wheel[1].special.name, NAKAMA.kogame.special.name, 'ほかの なかまは かわらない');
+});
+
+test('紋つきは「○○・闇」で 少し 強い。黒い紋の ボスも ・闇', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const b = createBattle({ allies: [{ id: 'kogame', lv: 10 }], enemies: [{ id: 'haribaby', lv: 10, dark: true }, { id: 'haribaby', lv: 10 }], rng: createRng(1) });
+    assert.equal(b.enemies[0].name, 'ハリベビー・闇');
+    assert.ok(b.enemies[0].dark && !b.enemies[1].dark);
+    assert.ok(b.enemies[0].max > b.enemies[1].max && b.enemies[0].s.atk > b.enemies[1].s.atk);
+    for (const id of ['urashima4', 'daishi5', 'onioni8', 'ooni8', 'soutou8', 'kinme8']) assert.match(BOSSES[id].name, /・闇$/, id);
+});
+
+test('10 章の タシケダ: レベル ドレインで なかまを Lv10 (Lv10 いかは Lv1) に して 紋つきを 作る。たおすと レベルが もどる', async () => {
+    const { minionsOf } = await import('../src/logic/battle.js');
+    const allies = [{ uid: 'a', id: 'koori', lv: 45 }, { uid: 'b', id: 'kogame', lv: 8 }, { uid: 'c', id: 'haribaby', lv: 40 }];
+    const b = createBattle({ allies, enemies: [{ id: 'tashikeda10', lv: 44 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    b.wheel.forEach(u => { if (u) u.timer = -9999; });
+    for (let i = 0; i < 4000 && minionsOf(b, boss).length < 2; i++) { keepAliveNoAct(b); step(b, 0.05); }
+    const ms = minionsOf(b, boss);
+    assert.equal(ms.length, 2, '左右に 2 体');
+    assert.deepEqual(ms.map(m => m.slot).sort(), ['left', 'right']);
+    assert.deepEqual(ms.map(m => m.id).sort(), ['csspakkun', 'mugenloop'], 'CSSパックン → ムゲンループ の 順');
+    assert.ok(ms.every(m => m.dark && m.name.endsWith('・闇')));
+    assert.equal(b.enemies.indexOf(boss), 1, 'タシケダは まんなか (左右が となり)');
+    for (const m of ms) {
+        const to = b.wheel.find(u => u && u.uid === m.drainOf);
+        assert.equal(to.lv, to.drained.lv > 10 ? 10 : 1, 'Lv10 (Lv10 いかは Lv1)');
+    }
+    const m0 = ms[0], victim = b.wheel.find(u => u.uid === m0.drainOf), before = victim.drained.lv;
+    m0.hp = 1;
+    b.wheel.forEach(u => { if (u) { u.timer = 0; } });
+    b.lock = m0.uid;
+    for (let i = 0; i < 400 && !m0.ko; i++) step(b, 0.05);
+    assert.ok(m0.ko);
+    assert.equal(victim.lv, before, 'たおすと レベルが もどる');
+    assert.ok(!victim.drained);
+    assert.ok(b.events.some(e => e.type === 'restore' && e.target === victim.uid));
+});
+
+test('10 章の タシケダ: 左右に 紋つきが そろうと「私はハッキングが好きだ！」(こうげき 大ダウン + 中ダメージ)。予告中に 1 体 たおすと 止まる', async () => {
+    const { minionsOf } = await import('../src/logic/battle.js');
+    const allies = [{ uid: 'a', id: 'koori', lv: 45 }, { uid: 'b', id: 'kogame', lv: 45 }, { uid: 'c', id: 'haribaby', lv: 45 }];
+    const b = createBattle({ allies, enemies: [{ id: 'tashikeda10', lv: 44 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    b.wheel.forEach(u => { if (u) u.timer = -9999; });
+    for (let i = 0; i < 4000 && !b.hack; i++) { keepAliveNoAct(b); step(b, 0.05); }
+    assert.ok(b.hack, 'となりに 2 体 そろうと 予告');
+    for (let i = 0; i < 200 && b.hack; i++) { keepAliveNoAct(b); step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'special' && e.name === '私はハッキングが好きだ！'));
+    assert.ok(b.wheel.filter(u => u && !u.ko).every(u => u.buffs.atk && u.buffs.atk.amount <= -0.5 + 1e-9), 'こうげき 大ダウン');
+    // もう 1 回: 予告中に となりを 1 体 たおすと 止まる
+    boss.hackCool = 0;
+    for (let i = 0; i < 400 && !b.hack; i++) { keepAliveNoAct(b); step(b, 0.05); }
+    assert.ok(b.hack);
+    const m = minionsOf(b, boss)[0];
+    m.hp = 0; m.ko = true;
+    const n = b.events.filter(e => e.type === 'special' && e.name === '私はハッキングが好きだ！').length;
+    step(b, 0.05);
+    assert.ok(!b.hack, '止まる');
+    for (let i = 0; i < 60; i++) { keepAliveNoAct(b); step(b, 0.05); }
+    assert.equal(b.events.filter(e => e.type === 'special' && e.name === '私はハッキングが好きだ！').length, n);
+});
+
+test('行動不能の とりつき: たたかれても うごけない。おたすけで ぬける', async () => {
+    const { toritsukiName } = await import('../src/logic/battle.js');
+    assert.equal(toritsukiName('stun'), '行動不能の とりつき');
+    const b = createBattle({ allies: [{ uid: 'a', id: 'haribaby', lv: 20 }], enemies: [{ id: 'ishikoron', lv: 20 }], rng: createRng(2) });
+    const u = b.wheel[0];
+    u.status.stun = 5;
+    const from = b.events.length;
+    for (let i = 0; i < 60; i++) step(b, 0.05);
+    assert.ok(!b.events.slice(from).some(e => e.actor === u.uid && ['attack', 'skill', 'guard', 'loaf'].includes(e.type)), 'うごけない');
+});
+
+test('タシケダが たおれると 作った 紋つきも きえて、レベルが もどる', async () => {
+    const { minionsOf } = await import('../src/logic/battle.js');
+    const allies = [{ uid: 'a', id: 'koori', lv: 45 }, { uid: 'b', id: 'kogame', lv: 45 }, { uid: 'c', id: 'haribaby', lv: 45 }];
+    const b = createBattle({ allies, enemies: [{ id: 'tashikeda10', lv: 44 }], rng: createRng(7), kind: 'boss' });
+    const boss = b.enemies[0];
+    b.wheel.forEach(u => { if (u) u.timer = -9999; });
+    for (let i = 0; i < 4000 && !minionsOf(b, boss).length; i++) { keepAliveNoAct(b); step(b, 0.05); }
+    assert.ok(minionsOf(b, boss).length);
+    boss.hp = 1;
+    b.lock = boss.uid;
+    b.wheel.forEach(u => { if (u) u.timer = 0; });
+    for (let i = 0; i < 400 && !b.outcome; i++) step(b, 0.05);
+    assert.equal(b.outcome, 'win');
+    assert.ok(b.wheel.every(u => !u || (!u.drained && u.lv === 45)), 'レベルが ぜんぶ もどる');
 });

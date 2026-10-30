@@ -283,6 +283,7 @@ export const WAZA = {
     fukinoton: W('ふきのとうボム', 'しぜん', 'front', 1.1, 'poison', 0.4),
     harukirin: W('春をよぶ角', 'しぜん', 'around', 1.3, 'slow', 0.4),
     nozoema: W('兜割り', 'ふつう', 'front', 2.2),
+    tashikeda10: W('ウイルス さんぷ', 'ふしぎ', 'around', 0.6, 'poison', 0.4),
     harukirin9: W('麒麟のいかずち', 'かぜ', 'line', 1.5, 'slow', 0.3),
     nozoema9: W('刀の一振り', 'ふつう', 'around', 1.6),
     ooni8: W('ふみつけ', 'ふつう', 'around', 1),
@@ -1506,7 +1507,7 @@ export const BOSSES = {
     //       頭を こわすと ひっくり返って チャンスタイム
     //   gims の pos: 絵の どこに 出すか [横 (絵の 半分の はばで), たて (絵の 高さで。足元が 0)]
     urashima4: {
-        id: 'urashima4', name: '浦の島重蔵 (黒い紋)', element: 'みず', role: 'defender', art: 'urashima', scale: 1.5, rank: 'B',
+        id: 'urashima4', name: '浦の島重蔵・闇', dark: true, element: 'みず', role: 'defender', art: 'urashima', scale: 1.5, rank: 'B',
         base: { hp: 700, atk: 14, def: 15, spd: 10, mag: 14 },
         moves: [
             { name: '玉手箱', w: 3, box: true, effects: [atk('all', 0.7, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.35 }] },
@@ -1531,7 +1532,7 @@ export const BOSSES = {
     //     お経: 仏の顔でも 鬼の顔でも、13 秒ごとに お経を 6 秒 となえ、となえきると 必殺技 (鬼の顔なら もっと 強い)。
     //       となえている あいだ だけ うしろの 鐘を ねらえる。だれかが 当てると 鐘が 鳴り、おどろいて チャンスタイム (お経も 止まる)
     daishi5: {
-        id: 'daishi5', name: 'ダイシ (黒い紋)', element: 'ふしぎ', role: 'jammer', art: 'daishi', scale: 1.5, rank: 'B',
+        id: 'daishi5', name: 'ダイシ・闇', dark: true, element: 'ふしぎ', role: 'jammer', art: 'daishi', scale: 1.5, rank: 'B',
         base: { hp: 820, atk: 15, def: 14, spd: 10, mag: 16 },
         moves: [
             { name: '説法', w: 2, effects: [{ kind: 'status', target: 'all', status: 'sleep', chance: 0.35 }] },
@@ -1622,7 +1623,7 @@ export const BOSSES = {
     // ----- 8 章 金色のSE城の ボス 4 体 (2026-10-30 ユーザー指定)。幹部 3 体 (大鬼 → 双頭鬼 → 金滅鬼) → 玉座の 間の おにおに -----
     // 大鬼: 体が でかく、わざは ぜんぶ 全体攻撃。足を ねらえて、当てつづけて こわすと 転んで チャンスタイム (おわると 足は もとに もどる)
     ooni8: {
-        id: 'ooni8', name: '大鬼', element: 'ふつう', role: 'attacker', art: 'ooni', scale: 2, rank: 'B',
+        id: 'ooni8', name: '大鬼・闇', dark: true, element: 'ふつう', role: 'attacker', art: 'ooni', scale: 2, rank: 'B',
         base: { hp: 900, atk: 15, def: 14, spd: 8, mag: 10 },
         moves: [
             { name: 'ふみつけ', w: 3, effects: [atk('all', 0.7)] },
@@ -1637,7 +1638,7 @@ export const BOSSES = {
     // 双頭鬼: 右の 頭 (見ている 人の 左) は とりつき、左の 頭 は 術を 使う。頭を こわすと その 頭の わざが 使えない。
     //   両方 こわすと チャンスタイム → おわると 頭は もとに もどる
     soutou8: {
-        id: 'soutou8', name: '双頭鬼', element: 'ふしぎ', role: 'jammer', art: 'soutouki', scale: 2, rank: 'B',
+        id: 'soutou8', name: '双頭鬼・闇', dark: true, element: 'ふしぎ', role: 'jammer', art: 'soutouki', scale: 2, rank: 'B',
         base: { hp: 860, atk: 14, def: 13, spd: 11, mag: 16 },
         moves: [
             { name: 'かみつき', w: 2, effects: [atk('one', 1.2)] },
@@ -1657,7 +1658,7 @@ export const BOSSES = {
     },
     // 金滅鬼: 金の 体で、めくらましの とりつき (攻撃が 当たりにくい) を かける。チャンスタイムは なく、ただの なぐりあい。幹部で いちばん 強い
     kinme8: {
-        id: 'kinme8', name: '金滅鬼', element: 'ほのお', role: 'attacker', art: 'kinmetsuki', scale: 1.6, rank: 'A',
+        id: 'kinme8', name: '金滅鬼・闇', dark: true, element: 'ほのお', role: 'attacker', art: 'kinmetsuki', scale: 1.6, rank: 'A',
         base: { hp: 1000, atk: 18, def: 17, spd: 12, mag: 13 },
         moves: [
             { name: '金滅の一閃', w: 3, effects: [atk('one', 1.7, { element: 'ほのお' })] },
@@ -1672,7 +1673,7 @@ export const BOSSES = {
     //   必殺技「鬼神 金棒くだき」は 6 秒 ためてから 打つ。ためている あいだに 最大HP の 9% ぶん ダメージを あたえると 紋が 暴発して 自爆
     //   (味方に ダメージ・おにおには チャンスタイム)。2 回目からの ため では ガードして、うける ダメージが 40% に へる
     onioni8: {
-        id: 'onioni8', name: 'おにおに (黒い紋)', element: 'ほのお', role: 'attacker', art: 'onioni', scale: 2, rank: 'A',
+        id: 'onioni8', name: 'おにおに・闇', dark: true, element: 'ほのお', role: 'attacker', art: 'onioni', scale: 2, rank: 'A',
         base: { hp: 1050, atk: 19, def: 15, spd: 12, mag: 15 },
         moves: [
             { name: '金棒 大ぶり', w: 3, effects: [atk('all', 0.9)] },
@@ -1684,6 +1685,25 @@ export const BOSSES = {
             burst: { name: '紋の 暴発', effects: [atk('all', 0.7, { element: 'ほのお' })] } },
         chanceTurns: 4,
         befriends: null, lv: 35, place: 'shiro'
+    },
+    // ----- 10 章「石の川タウン しゅうげき」の ボス (2026-10-30 ユーザー指定) -----
+    // タシケダ (ルキハの 軍勢の 幹部): 戦う 力は ひくい。行動不能の とりつき (stun)。
+    //   レベル ドレイン: なかま 1 体の レベルを 吸って Lv10 に する (Lv10 いかなら Lv1)。吸った レベルで 紋つきの 味方を 作る
+    //   (CSSパックン・闇 → ムゲンループ・闇 → ファイアウォール・闇 の 順。自分の 左右に 1 体ずつ)。作った 敵を たおすと レベルが もどる
+    //   となりに 2 体 そろうと 必殺技「私はハッキングが好きだ！」(予告つき): 相手 全員の こうげき 大ダウン + 中ダメージ
+    tashikeda10: {
+        id: 'tashikeda10', name: 'タシケダ', element: 'ふしぎ', role: 'jammer', art: 'tashikeda', scale: 1.8, rank: 'A',
+        base: { hp: 620, atk: 10, def: 11, spd: 13, mag: 14 },
+        moves: [
+            { name: '行動不能の とりつき', w: 2.5, effects: [{ kind: 'status', target: 'one', status: 'stun', chance: 0.85 }] },
+            { name: 'レベル ドレイン', w: 3, drain: true },
+            { name: 'ウイルス さんぷ', w: 2, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'poison', chance: 0.35 }] },
+            { name: 'エンターキー連打', w: 2, effects: [atk('one', 0.9)] }
+        ],
+        summons: ['csspakkun', 'mugenloop', 'firewall'],
+        bigMove: { name: '私はハッキングが好きだ！', trigger: 'hack', warn: 2.5, cool: 9,
+            effects: [{ kind: 'buff', target: 'all', stat: 'atk', amount: -0.5, time: 12 }, atk('all', 1.1, { magic: true, element: 'ふしぎ' })] },
+        befriends: null, lv: 44, place: 'town'
     },
     // ----- 9 章「筋肉の山と 新しい なかま」の ボス 2 体 (2026-10-30 ユーザー指定) -----
     // ハル麒麟 (雪どけの 氷河): HP が 半分に なると「春の 目ざめ」を ためる。ためおわった とき 角が のこっていたら HP を 全回復。
@@ -1753,7 +1773,7 @@ export const BOSSES = {
 // 14 章の ボスは バージョンで ちがう
 export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
 // 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
-export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'boss14'];
+export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'boss14'];
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)
