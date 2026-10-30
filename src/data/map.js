@@ -362,40 +362,50 @@ export const GATES = [
 ];
 
 // 動かない 飾り (通れない): 鳥居の 柱
+// 13 章: 喰らいの 城 4〜6 階の 宝箱 (1 回だけ。2026-10-30)
+export const CHESTS13 = [
+    { id: 'c4', x: 24, y: KURAI_Y0 + 15, item: 'hoshikakera', n: 3 },
+    { id: 'c4b', x: 34, y: KURAI_Y0 + 16, item: 'melonpan', n: 3 },
+    { id: 'c5', x: 16, y: KURAI_Y0 + 12, item: 'ougonmame', n: 2 },
+    { id: 'c5b', x: 30, y: KURAI_Y0 + 13, item: 'cider', n: 3 },
+    { id: 'c6', x: 30, y: KURAI_Y0 + 9, item: 'luckycoin', n: 1 },
+    { id: 'c6b', x: 20, y: KURAI_Y0 + 10, item: 'makimono', n: 1 }
+];
 export const PROPS = [
     { id: 'torii-l', kind: 'torii', x: 5, y: 9 },
     { id: 'torii-r', kind: 'torii', x: 8, y: 9 },
     // 7 章: 月の迷宮の 月の 鏡
     { id: 'moonMirror', kind: 'mirror', x: 24, y: MOON_Y0 + 1 },
     // 8 章: SE城の 玉座 (玉座の 間の 北の かべ ぎわ)
-    { id: 'throne', kind: 'throne', x: 24, y: SHIRO_Y0 + 6 }
+    { id: 'throne', kind: 'throne', x: 24, y: SHIRO_Y0 + 6 },
+    ...CHESTS13.map(c => ({ id: `chest-${c.id}`, kind: 'chest', x: c.x, y: c.y }))
 ];
 
 // 商店街の キャラの Lv (1 章 クリアの ころの なかまは Lv7〜9 くらい)
-export const SHOUTENGAI_LV = [6, 10];
+export const SHOUTENGAI_LV = [11, 15];
 // 小学校の 中の キャラの Lv (2 章)
-export const SCHOOL_LV = [9, 13];
+export const SCHOOL_LV = [14, 18];
 // 山の キャラの Lv (3 章)
-export const YAMA_LV = [12, 16];
+export const YAMA_LV = [18, 22];
 // 海辺の 町の キャラの Lv (4 章)。どうくつの 中は 少し 強い
-export const UMI_LV = [15, 18];
-export const CAVE_LV = [17, 20];
+export const UMI_LV = [21, 24];
+export const CAVE_LV = [23, 26];
 // ネット寺の キャラの Lv (5 章)
-export const TERA_LV = [19, 22];
+export const TERA_LV = [26, 29];
 // 忍びの屋敷の キャラの Lv (6 章)
-export const YASHIKI_LV = [22, 25];
+export const YASHIKI_LV = [29, 32];
 // 月の迷宮の キャラの Lv (7 章)
-export const MOON_LV = [25, 28];
+export const MOON_LV = [32, 35];
 // 金色のSE城の キャラの Lv (8 章)
-export const SHIRO_LV = [28, 31];
+export const SHIRO_LV = [36, 39];
 // 14 章の 遊園地の キャラの Lv
-export const PARK_LV = [36, 40];
+export const PARK_LV = [80, 84];
 // 筋肉の山の キャラの Lv (9 章)
-export const KINNIKU_LV = [31, 35];
+export const KINNIKU_LV = [39, 43];
 // ASOの壺の底の キャラの Lv (11 章)
-export const TSUBO_LV = [38, 42];
+export const TSUBO_LV = [46, 50];
 // 喰らいの 城の 軍勢の Lv (13 章。ぜんぶ 紋つき)
-export const KURAI_LV = [52, 56];
+export const KURAI_LV = [60, 64];
 
 // かくれている キャラ (レンズで さがす。2026-10-26 ユーザー指定: ふだんの 画面でも「なにか へん」と わかるように 化けている)
 //   x, y はマス。cue: ふだんの 画面に 出す 違和感の 絵 (view/field.js の drawCue)
@@ -414,7 +424,7 @@ export const SPOTS = [
     { id: 'omenMae', label: 'お面屋の屋根の上', x: 37, y: 41, cue: 'maskEyes', lv: SHOUTENGAI_LV, kinds: [{ id: 'hannyamen', w: 1 }] },
     { id: 'jansouKanban', label: '雀荘の看板', x: 7, y: 53, cue: 'tileFlip', lv: SHOUTENGAI_LV, kinds: [{ id: 'hakupai', w: 1 }] },
     { id: 'neonKanban', label: '銭湯の裏のネオン看板', x: 46, y: 49, cue: 'nightEyes', lv: SHOUTENGAI_LV, kinds: [{ id: 'neontanuki', w: 1, time: ['evening', 'night'] }] },
-    { id: 'gacha', label: '八百屋の横のガチャ', x: 27, y: 45, cue: 'gachaShake', lv: [8, 11], kinds: [{ id: 'gachapon', w: 1 }] },
+    { id: 'gacha', label: '八百屋の横のガチャ', x: 27, y: 45, cue: 'gachaShake', lv: [13, 16], kinds: [{ id: 'gachapon', w: 1 }] },
     // 山 (3 章)
     { id: 'okunoinNoki', label: '奥の院の のき下', x: 11, y: YAMA_Y0 + 4, cue: 'nightEyes', lv: YAMA_LV, kinds: [{ id: 'tsuraracomori', w: 1 }] },
     { id: 'hatakeDaikon', label: '山の畑の 大根', x: 9, y: YAMA_Y0 + 27, cue: 'leafShake', lv: YAMA_LV, kinds: [{ id: 'mandoragon', w: 1 }] },
@@ -494,6 +504,9 @@ export const ROAMS = [
     // 喰らいの 城 (13 章)。ルキハの 軍勢 = これまでの 強い キャラが 紋つき (・闇) で 出る
     //   紋つきの 敵は なかまに ならない (外の 軍勢は 元四天王が ひきうけて くれる)
     { id: 'kuraiHiroma', label: '喰らいの 城の 大広間', x0: 9, y0: KURAI_Y0 + 24, x1: 38, y1: KURAI_Y0 + 27, max: 3, lv: KURAI_LV, kinds: [{ id: 'goukioni', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'shirokumatcho', w: 2 }, { id: 'nakatadraco', w: 1 }, { id: 'yukionnan', w: 1 }, { id: 'dradora', w: 1 }] },
+    { id: 'kurai4f', label: '喰らいの 城の 4 階', x0: 9, y0: KURAI_Y0 + 15, x1: 38, y1: KURAI_Y0 + 16, max: 2, lv: KURAI_LV, kinds: [{ id: 'goukioni', w: 2 }, { id: 'nakatadraco', w: 1 }, { id: 'hinotorin', w: 1 }] },
+    { id: 'kurai5f', label: '喰らいの 城の 5 階', x0: 9, y0: KURAI_Y0 + 12, x1: 38, y1: KURAI_Y0 + 13, max: 2, lv: KURAI_LV, kinds: [{ id: 'yukionnan', w: 2 }, { id: 'dradora', w: 1 }, { id: 'shirokumatcho', w: 1 }] },
+    { id: 'kurai6f', label: '喰らいの 城の 6 階', x0: 9, y0: KURAI_Y0 + 9, x1: 38, y1: KURAI_Y0 + 10, max: 2, lv: KURAI_LV, kinds: [{ id: 'kaendaruma', w: 2 }, { id: 'youganworm', w: 1 }, { id: 'onibin', w: 1 }] },
     { id: 'kurai2f', label: '喰らいの 城の 2 階', x0: 9, y0: KURAI_Y0 + 21, x1: 38, y1: KURAI_Y0 + 22, max: 2, lv: KURAI_LV, kinds: [{ id: 'hinotorin', w: 2 }, { id: 'onibin', w: 2 }, { id: 'youganworm', w: 1 }] },
     // ASOの壺の底 (11 章)。バクエンリュウは 11 章 クリアの あと (clear11) 火山の 底に いる
     { id: 'youganDou', label: '溶岩の 大どうくつ', x0: 8, y0: TSUBO_Y0 + 13, x1: 38, y1: TSUBO_Y0 + 19, max: 3, lv: TSUBO_LV, kinds: [{ id: 'asohei', w: 3 }, { id: 'hinotorin', w: 2 }, { id: 'kaendaruma', w: 2 }, { id: 'youganworm', w: 2 }, { id: 'dradora', w: 1 }] },
@@ -584,11 +597,8 @@ export const PEOPLE = [
     // 13 章: 喰らいの 城の 最上階の ルキハ
     { id: 'rukiha13', name: 'ルキハ', art: 'rukiha', x: 24, y: KURAI_Y0 + 2, only: 'rukiha13', scale: 1 },
     // 13 章: 3〜7 階の 階段の 前で まつ 紋つきの 幹部 (boss = BOSSES の id)
-    { id: 'f13_3', boss: 'tomooka13', name: 'トモオカ・闇', art: 'tomooka', x: 37, y: KURAI_Y0 + 18, only: 'floor13', floor: 3, scale: 1 },
-    { id: 'f13_4', boss: 'ooni13', name: '大鬼・闇', art: 'ooni', x: 10, y: KURAI_Y0 + 15, only: 'floor13', floor: 4, scale: 1 },
-    { id: 'f13_5', boss: 'soutou13', name: '双頭鬼・闇', art: 'soutouki', x: 37, y: KURAI_Y0 + 12, only: 'floor13', floor: 5, scale: 1 },
-    { id: 'f13_6', boss: 'kinme13', name: '金滅鬼・闇', art: 'kinmetsuki', x: 10, y: KURAI_Y0 + 9, only: 'floor13', floor: 6, scale: 1 },
-    { id: 'f13_7', boss: 'tashikeda13', name: 'タシケダ・闇', art: 'tashikeda', x: 24, y: KURAI_Y0 + 6, only: 'floor13', floor: 7, scale: 1 },
+    { id: 'f13_3', boss: 'tomooka13', name: 'トモオカ・闇', art: 'tomooka', x: 37, y: KURAI_Y0 + 18, only: 'floor13', floor: 3, step: 0, scale: 1 },
+    { id: 'f13_7', boss: 'tashikeda13', name: 'タシケダ・闇', art: 'tashikeda', x: 24, y: KURAI_Y0 + 6, only: 'floor13', floor: 7, step: 1, scale: 1 },
     // 13 章: 山の ダムで まつ ヒョウガリュウ (乗せて 城へ 飛んでくれる) と、城の 前で まつ ヒョウガリュウ (帰り)
     { id: 'hyouga13', name: 'ヒョウガリュウ', art: 'hyougaryu', x: 40, y: YAMA_Y0 + 14, only: 'hyouga13', scale: 1.4 },
     { id: 'hyougaKurai', name: 'ヒョウガリュウ', art: 'hyougaryu', x: 19, y: KURAI_Y0 + 32, only: 'hyouga13', scale: 1.4 },
@@ -641,19 +651,19 @@ export const SCHOOL_ROOMS = [
 // 七不思議: 調べると 正体の キャラと バトル。勝つと たしかめた ことに なる (g.mysteries)。7 つ たしかめると 8 つ目 (ボス) が 出る
 //   x, y: 調べる 物の マス (通れない)。lines: 調べた ときの 文。done: たしかめた あとに 調べた ときの 文
 export const MYSTERIES = [
-    { id: 'rika', label: '理科室の 動く ガイコツ', x: 3, y: 62, prop: 'skeleton', nakama: 'fusaiyougaikotsu', lv: 10,
+    { id: 'rika', label: '理科室の 動く ガイコツ', x: 3, y: 62, prop: 'skeleton', nakama: 'fusaiyougaikotsu', lv: 15,
         lines: ['ガイコツの 標本が ある。……いま、こっちを 見た？', 'カタカタカタ……！ 標本が 動きだした！'], done: 'ふつうの 標本だ。もう 動かない。' },
-    { id: 'ongaku', label: '音楽室で 夜中に 鳴る 音', x: 18, y: 62, prop: 'piano', nakama: 'mikazukibat', lv: 10,
+    { id: 'ongaku', label: '音楽室で 夜中に 鳴る 音', x: 18, y: 62, prop: 'piano', nakama: 'mikazukibat', lv: 15,
         lines: ['だれも いないのに、ピアノの 中から キーキー 音が する……。', 'ふたを あけたら、なにかが 飛びだしてきた！'], done: 'ピアノは しずかだ。' },
-    { id: 'tosho', label: '図書室の わすれられた 本', x: 30, y: 62, prop: 'books', nakama: 'wasurekurage', lv: 10,
+    { id: 'tosho', label: '図書室の わすれられた 本', x: 30, y: 62, prop: 'books', nakama: 'wasurekurage', lv: 15,
         lines: ['読んだ 人が 中身を ぜんぶ わすれる、という 本が ある。', '……あれ？ なにを しに 来たんだっけ？ 本の すきまから なにかが ふわふわ 出てきた！'], done: 'ふつうの 本だ。ちゃんと おぼえて いられる。' },
-    { id: 'kagami', label: 'おどり場の 大鏡', x: 5, y: 74, prop: 'mirror', nakama: 'mirrormuscle', lv: 11,
+    { id: 'kagami', label: 'おどり場の 大鏡', x: 5, y: 74, prop: 'mirror', nakama: 'mirrormuscle', lv: 16,
         lines: ['夜中に のぞくと、ちがう 自分が うつる という 大鏡。', '鏡の 中の こおりくんが、ムキムキの ポーズを とっている！'], done: 'こおりくんが うつっている。ふつうの 鏡だ。' },
-    { id: 'souko', label: '体育倉庫の かけ声', x: 28, y: 80, prop: 'crates', nakama: 'proteingolem', lv: 11,
+    { id: 'souko', label: '体育倉庫の かけ声', x: 28, y: 80, prop: 'crates', nakama: 'proteingolem', lv: 16,
         lines: ['体育倉庫から「ふんっ！ ふんっ！」と かけ声が 聞こえる。', 'とびばこの うしろで、だれかが 筋トレを している！'], done: 'とびばこが きちんと ならんでいる。' },
-    { id: 'locker', label: '開かずの ロッカー', x: 46, y: 70, prop: 'locker', nakama: 'takaramimic', lv: 11,
+    { id: 'locker', label: '開かずの ロッカー', x: 46, y: 70, prop: 'locker', nakama: 'takaramimic', lv: 16,
         lines: ['ずっと 開かない という そうじ用具入れ。', 'カギは かかって いない……。あけた しゅんかん、ロッカーが かみついてきた！'], done: 'ほうきと ちりとりが 入っている。' },
-    { id: 'pool', label: 'プールの 手', x: 39, y: 75, prop: 'ladder', nakama: 'umibozun', lv: 12,
+    { id: 'pool', label: 'プールの 手', x: 39, y: 75, prop: 'ladder', nakama: 'umibozun', lv: 17,
         lines: ['夜の プールから 手が 出てきて、足を つかむ という うわさ。', 'ザバァ！ 水の 中から 大きな 黒い 頭が 出てきた！'], done: 'しずかな 水面に 月が うつっている。' }
 ];
 
@@ -674,11 +684,11 @@ export const YAMA_PLACES = [
 // 氷の 封印 (3 章): 奥の院で 言いつたえを 読むと 調べられる。調べると 封印を まもる キャラと バトル。
 //   勝つと 封印が とける (g.mysteries に 入る。七不思議と 同じ しくみ)。3 つ とくと 氷の 城の 前に ボスが 出る
 export const SEALS = [
-    { id: 'sealMori', label: '森の 氷の柱', x: 15, y: YAMA_Y0 + 23, prop: 'icepillar', nakama: 'kokemusha', lv: 14,
+    { id: 'sealMori', label: '森の 氷の柱', x: 15, y: YAMA_Y0 + 23, prop: 'icepillar', nakama: 'kokemusha', lv: 20,
         lines: ['原っぱの まんなかに、大きな 氷の 柱が 立っている。夏なのに とけない……。', '柱の うしろから、コケだらけの よろいが ぬっと 出てきた！'], done: '氷の 柱が あった ところに、水たまりが できている。' },
-    { id: 'sealSekkei', label: '雪渓の 氷の柱', x: 43, y: YAMA_Y0 + 18, prop: 'icepillar', nakama: 'koorinokagami', lv: 14,
+    { id: 'sealSekkei', label: '雪渓の 氷の柱', x: 43, y: YAMA_Y0 + 18, prop: 'icepillar', nakama: 'koorinokagami', lv: 20,
         lines: ['雪渓の おくに、鏡のように ぴかぴかの 氷の 柱が ある。', '柱に こおりくんが うつった……と 思ったら、柱が しゃべった！'], done: 'とけた 氷の 柱から、水が ちょろちょろ 流れている。' },
-    { id: 'sealIwa', label: '岩場の 氷の柱', x: 40, y: YAMA_Y0 + 29, prop: 'icepillar', nakama: 'yukidarumuscle', lv: 15,
+    { id: 'sealIwa', label: '岩場の 氷の柱', x: 40, y: YAMA_Y0 + 29, prop: 'icepillar', nakama: 'yukidarumuscle', lv: 21,
         lines: ['岩の あいだに、ひときわ 大きな 氷の 柱が ある。', '「この 柱は 通さん！」 ムキムキの 雪だるまが 立ちふさがった！'], done: '岩の すきまに 水が しみこんで いく。' }
 ];
 
@@ -705,7 +715,7 @@ export const HYOUGA13_AT = { x: 39, y: YAMA_Y0 + 14, dir: 'right' };   // 山で
 export const KURAI_PLACES = [
     { id: 'saijou', label: '最上階', x: 24, y: KURAI_Y0 + 3 },
     { id: 'f7', label: '7 階', x: 16, y: KURAI_Y0 + 6.5 },
-    { id: 'f5', label: '5 階', x: 16, y: KURAI_Y0 + 12.5 },
+    { id: 'f5', label: '4〜6 階', x: 16, y: KURAI_Y0 + 12.5 },
     { id: 'f3', label: '3 階', x: 16, y: KURAI_Y0 + 18.5 },
     { id: 'hiroma', label: '1 階', x: 16, y: KURAI_Y0 + 25.5 },
     { id: 'jomon', label: '城門', x: 23.5, y: KURAI_Y0 + 29 },
@@ -788,11 +798,11 @@ export const TERA_PLACES = [
 // 黒い 紋に とりつかれた なかま (5 章): 話しかけると バトル。勝つと 紋が 消えて なかまに なる (g.mysteries に 入る)。
 //   3 体 ぜんぶ 助けると 本堂の うらに 鬼の 角の かげ → ダイシが 紋に のまれる (ボス)
 export const MONS = [
-    { id: 'monShouro', label: '鐘楼の 紋つき', x: 12, y: TERA_Y0 + 11, nakama: 'htmlmokkun', lv: 20,
+    { id: 'monShouro', label: '鐘楼の 紋つき', x: 12, y: TERA_Y0 + 11, nakama: 'htmlmokkun', lv: 27,
         lines: ['鐘楼の 前に、体に 黒い 紋の うかんだ キャラが 立っている……。'], done: '鐘楼の 鐘が しずかに ゆれている。' },
-    { id: 'monShoko', label: '書庫の 紋つき', x: 35, y: TERA_Y0 + 11, nakama: 'loadingu', lv: 20,
+    { id: 'monShoko', label: '書庫の 紋つき', x: 35, y: TERA_Y0 + 11, nakama: 'loadingu', lv: 27,
         lines: ['書庫の 前で、黒い 紋の キャラが ぐるぐる 回りつづけている……。'], done: '書庫の とびらが あいている。' },
-    { id: 'monSandou', label: '参道の 紋つき', x: 23, y: TERA_Y0 + 20, nakama: 'enjoubouzu', lv: 21,
+    { id: 'monSandou', label: '参道の 紋つき', x: 23, y: TERA_Y0 + 20, nakama: 'enjoubouzu', lv: 28,
         lines: ['参道の まんなかで、黒い 紋の 坊主が 火を ふいている……。'], done: '参道に こげあとが のこっている。' }
 ];
 

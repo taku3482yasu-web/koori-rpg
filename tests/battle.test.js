@@ -574,7 +574,11 @@ test('8 章の 金滅鬼: めくらましの とりつきを かける。チャ�
     assert.ok(def.moves.some(m => m.effects.some(fx => fx.status === 'blind')));
     assert.ok(!def.gims && !def.parts, 'ねらえる 部位は ない');
     const others = ['ooni8', 'soutou8'].map(id => BOSSES[id]);
-    for (const o of others) assert.ok(def.base.hp > o.base.hp && def.base.atk > o.base.atk && def.lv > o.lv, `${o.name}より 強い`);
+    // いちばん 強い = 適正レベルでの 撃破率が いちばん ひくい (tools/balance.mjs。大鬼・双頭鬼は しかけで チャンスタイムが ある ぶん 能力は 高め)
+    const { simulate } = await import('../tools/balance.mjs');
+    const rate = id => { let w = 0; for (let s = 1; s <= 80; s++) if (simulate(id, s * 7919)) w++; return w / 80; };
+    const mine = rate('kinme8');
+    for (const o of others) assert.ok(mine < rate(o.id) && def.lv > o.lv, `${o.name}より 強い`);
     const b = createBattle({ allies: strongParty(), enemies: [{ id: 'kinme8', lv: 33 }], rng: createRng(8), kind: 'boss' });
     for (let i = 0; i < 1200; i++) { b.enemies[0].hp = b.enemies[0].max; keepAlive(b); step(b, 0.05); }
     assert.ok(b.events.some(e => e.type === 'status' && e.status === 'blind'), 'めくらましの とりつき');
@@ -864,7 +868,9 @@ test('11 章の バクエンリュウ: マグマの 波で 投げた 道具が �
 test('12 章の おにおに・鬼神: 8 章より ずっと 強い。ため の あいだに ダメージで 暴発 → チャンスタイム (2 回目から ガード)', async () => {
     const { BOSSES } = await import('../src/data/nakama.js');
     const o8 = BOSSES.onioni8, o12 = BOSSES.onioni12;
-    assert.ok(o12.base.atk > o8.base.atk * 1.2 && o12.base.hp > o8.base.hp && o12.lv > o8.lv + 15, '8 章とは くらべものに ならない');
+    const { statsAt } = await import('../src/logic/units.js');
+    const s8 = statsAt('onioni8', o8.lv), s12 = statsAt('onioni12', o12.lv);
+    assert.ok(s12.atk > s8.atk * 1.2 && s12.hp > s8.hp && o12.lv > o8.lv + 15, '8 章とは くらべものに ならない');
     assert.equal(o12.bigMove.trigger, 'burst');
     assert.ok(o12.bigMove.guardCut, '2 回目から ガード');
     const b = createBattle({ allies: strongParty(), enemies: [{ id: 'onioni12', lv: 55 }], rng: createRng(2), kind: 'boss' });
@@ -910,7 +916,7 @@ test('大魔王ASO: 拘束のリングで 味方 1 体が うごけず 輪も �
 test('大魔王ASO: 第 1 形態の HP が なくなると 第 2 形態 (術 ぜんぶ・破壊の腕輪)。ため の あいだに ダメージで チャンスタイム', async () => {
     const { BOSSES, JUTSU } = await import('../src/data/nakama.js');
     const def = BOSSES.aso15;
-    assert.equal(def.lv, 90, '推奨 Lv90');
+    assert.equal(def.lv, 95, '推奨 Lv95 (14 章 Lv85 の あと)');
     const names = def.phase2.moves.map(m => m.name);
     for (const el of Object.keys(JUTSU)) assert.ok(names.includes(JUTSU[el][2]), `${JUTSU[el][2]}`);
     assert.ok(def.phase2.moves.some(m => m.name === '破壊の腕輪' && m.effects[0].stat === 'atk' && m.effects[0].amount >= 1));
@@ -1061,5 +1067,14 @@ test('13 章: ライバル探検隊の 加勢。サポートアイテムや 追�
     assert.ok(b.helpers.acts >= 8, `${b.helpers.acts} 回 加勢`);
     assert.ok(hurt > 0, '追加攻撃');
     assert.ok(!b.wheel.some(u => u && u.uid.startsWith('help-')), '輪には 入らない');
+});
+
+test('むずかしい 章 (6・8・13 章) の ボスは 適正レベルで 撃破率 5 割くらい (2026-10-30 ユーザー指定)', async () => {
+    const { simulate } = await import('../tools/balance.mjs');
+    for (const id of ['zumitani6', 'onioni6', 'tomooka6', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'tomooka13', 'tashikeda13', 'rukiha13']) {
+        let w = 0;
+        for (let s = 1; s <= 60; s++) if (simulate(id, s * 7919)) w++;
+        assert.ok(w / 60 >= 0.25 && w / 60 <= 0.75, `${id}: ${Math.round(w / 60 * 100)}%`);
+    }
 });
 

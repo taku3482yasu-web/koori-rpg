@@ -170,7 +170,7 @@ export function spotActive(g, spot, now) {
 //   3 体の ときは 話しかけた キャラが まんなか
 export const MAX_ENEMIES = 3;
 // 10 章: 石の川タウンと 商店街の キャラは ぜんぶ 紋つき (「・闇」)。Lv も 上がる
-export const DARK10_LV = [33, 37];
+export const DARK10_LV = [41, 45];
 export const DARK10_GOAL = 5;
 // 13 章: 喰らいの 城の 軍勢も ぜんぶ 紋つき
 export const darkTown = (g, source) => {
@@ -180,7 +180,7 @@ export const darkTown = (g, source) => {
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
     const dark = darkTown(g, source);
-    const [lo, hi] = dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === 'kurai' ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [4, 9] : [2, 5]);
+    const [lo, hi] = dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === 'kurai' ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [8, 13] : [2, 5]);
     const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
@@ -197,7 +197,16 @@ export const bossEnemies = (id = 'nushi') => [{ id, lv: BOSSES[id].lv, dark: Boo
 // 13 章: つぎに たおす 階の 幹部 (ぜんぶ たおしたら null)
 export const floor13Next = g => (g.story === 'kurai' ? FLOOR13[g.flags.fl13 || 0] || null : null);
 // その 階で 加勢する ライバル探検隊
-export const floor13Helpers = f => ({ team: f.team, name: TEAMS[f.team].name, members: TEAMS[f.team].members, lv: HELPER_LV });
+export const floor13Team = (f, version) => f.team[version] || f.team.naitei;
+export const floor13Helpers = (f, version) => { const t = floor13Team(f, version); return { team: t, name: TEAMS[t].name, members: TEAMS[t].members, lv: HELPER_LV }; };
+// 13 章 4〜6 階の 宝箱 (1 回だけ)
+export function openChest13(g, chest) {
+    g.flags.chest13 = g.flags.chest13 || {};
+    if (g.flags.chest13[chest.id]) return null;
+    g.flags.chest13[chest.id] = true;
+    g.items[chest.item] = Math.min(MAX_ITEM, (g.items[chest.item] || 0) + chest.n);
+    return chest;
+}
 // ライバル探検隊 (4 章): バージョンの チーム 3 人 (まんなかが リーダー)
 export const rivalEnemies = g => {
     const team = rivalTeam(g.version);
@@ -299,7 +308,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'onioni12') { g.flags.oni12 = true; out.oniSpecial = true; }
         if (bossId === 'aso15') g.flags.aso15 = true;
         const fl = FLOOR13.find(f => f.id === bossId);
-        if (fl) { g.flags.fl13 = Math.max(g.flags.fl13 || 0, fl.floor - 2); out.floor13 = fl.floor; }
+        if (fl) { g.flags.fl13 = Math.max(g.flags.fl13 || 0, FLOOR13.indexOf(fl) + 1); out.floor13 = fl.floor; }
         if (bossId === 'rukiha13') { g.story = 'clear13'; g.chapter = 14; out.ending = true; }
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;

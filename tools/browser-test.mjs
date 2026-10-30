@@ -917,12 +917,14 @@ try {
     await sleep(200);
     await shot('kurai-arrive');
     check(await evaluate(`window.__app.g.story === "kurai" && window.__app.g.pos.y > ${K13} * 16 && window.__bgm() === "kurai"`), '山の ヒョウガリュウに 乗って 喰らいの 城へ (城の BGM)');
-    for (const [x, y, floor, id] of [[37, 18, 3, 'tomooka13'], [10, 15, 4, 'ooni13'], [37, 12, 5, 'soutou13'], [10, 9, 6, 'kinme13'], [24, 6, 7, 'tashikeda13']]) {
+    for (const [x, y, floor, id, n] of [[37, 18, 3, 'tomooka13', 1], [24, 6, 7, 'tashikeda13', 2]]) {
         await at(x, K13 + y + 1, 'up');
         await key('KeyJ');
         await skipTalk();
         await sleep(300);
         check(await evaluate(`window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "${id}" && window.__app.scene.battle.enemies[0].name.endsWith("・闇") && Boolean(window.__app.scene.battle.helpers)`), `${floor} 階: 紋つきの 幹部と バトル (ライバル探検隊が 加勢)`);
+        // 適正レベルが 上がったので、テストの なかまは たおれないように する
+        await evaluate('(() => { const b = window.__app.scene.battle; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); return true; })()');
         if (floor === 3) {
             await key('KeyJ');
             await evaluate('(() => { const b = window.__app.scene.battle; b.enemies[0].hp = b.enemies[0].max = 99999; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); return true; })()');
@@ -932,7 +934,19 @@ try {
         }
         await winNow();
         await skipTalk(30);
-        check(await evaluate(`window.__app.g.flags.fl13 === ${floor - 2}`), `${floor} 階を 突破`);
+        check(await evaluate(`window.__app.g.flags.fl13 === ${n}`), `${floor} 階を 突破`);
+        if (floor === 3) {
+            // 4〜6 階は 探索の 階: 宝箱
+            // (うろついている 紋つきに ぶつかって バトルに なる ことが あるので、なったら 勝って もう いちど)
+            for (let i = 0; i < 3 && !(await evaluate('Boolean(window.__app.g.flags.chest13 && window.__app.g.flags.chest13.c4)')); i++) {
+                if (await sceneIs('battle')) { await winNow(); await skipTalk(10); }
+                await at(24, K13 + 16, 'up');
+                await key('KeyJ');
+                await skipTalk();
+            }
+            await shot('kurai-chest');
+            check(await evaluate('Boolean(window.__app.g.flags.chest13 && window.__app.g.flags.chest13.c4)'), '4 階の 宝箱を あける');
+        }
     }
     await at(24, K13 + 3, 'up');
     await key('KeyJ');

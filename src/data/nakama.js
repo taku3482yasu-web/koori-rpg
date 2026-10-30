@@ -1472,7 +1472,7 @@ export const TEAMS = {
     bartas: { name: 'チームバータス', leader: 'r_yahami', members: ['r_maechokkin', 'r_yahami', 'r_norahan'], version: 'menkyo' },
     '5dx': { name: 'チーム5DX', leader: 'r_okagappa', members: ['r_hibikimakuri', 'r_okagappa', 'r_yamamou'], version: null }
 };
-export const TEAM_LV = 50;
+export const TEAM_LV = 88;   // 15 章の 探検隊 (14 章 Lv85 の あと)
 export const teamsIn = version => Object.keys(TEAMS).filter(k => !TEAMS[k].version || TEAMS[k].version === version);
 
 // 地区で 出会う キャラ (進化で なる キャラ・合体でしか 会えない キャラは 入れない)
@@ -1521,7 +1521,7 @@ export const BOSSES = {
         base: { hp: 340, atk: 14, def: 12, spd: 9, mag: 15 },
         // 大技: 2.5 秒 前に 予告が 出る。そのあいだに 輪を 回して よけられる (設計書 3.5)
         bigMove: { name: '足音 百かぞえ', every: 12, warn: 2.5, effects: [atk('all', 1.6, { magic: true })] },
-        befriends: 'hashishita', lv: 8, place: 'bridge'
+        befriends: 'hashishita', lv: 13, place: 'bridge'
     },
     // 2 章の ボス: 七不思議の 8 つ目「夜の ろうかを 走る 影」(ルナシャドウの 大きな すがた。2026-10-28 ユーザー指定)
     //   HP が とても 多く、体が 大きい。右手・左手・頭を ロックオンで ねらって こわせる (parts。hp は 最大HP に たいする わりあい)
@@ -1547,7 +1547,7 @@ export const BOSSES = {
         ],
         // 必殺技 アンノウン: 敵全体に ふしぎ (中級) の 術の ダメージ × 3
         bigMove: { name: 'アンノウン', every: 14, warn: 2.5, effects: [atk('all', 0.5, { magic: true, element: 'ふしぎ', hits: 3 })] },
-        befriends: 'lunashadow', lv: 13, place: 'school'
+        befriends: 'lunashadow', lv: 18, place: 'school'
     },
     // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)。こおりの 王冠で 目ざめ、ダムの 水を ぜんぶ 氷の 城に した
     //   わざ: ひょうがブレス (全体に こおり 中)・かみつき (1 体に 中)・はばたき (全体に ふつう 中〜小)・大吹雪 (全体に こおり 中〜大)
@@ -1565,7 +1565,7 @@ export const BOSSES = {
         ],
         // 必殺技は 時間では 打たない (偶像が 2 体 そろうと charge 秒 ためて 打つ)。偶像の HP は ボスの 最大HP の idolHp
         bigMove: { name: '氷河の咆哮', trigger: 'idols', charge: 7, idolName: '氷の偶像', idolHp: 0.06, effects: [atk('all', 1.6, { magic: true, element: 'こおり' })] },
-        befriends: 'hyougaryu', lv: 17, place: 'dam'
+        befriends: 'hyougaryu', lv: 23, place: 'dam'
     },
     // 4 章の ボス: 黒い 紋に とりつかれた 浦の島重蔵 (浦の島の海岸どうくつの いちばん 奥)。たおすと 紋が 消えて なかまに なる
     //   わざ: 玉手箱 (全体に ふしぎ 小 + こんらん)・つりざお (1 体に 中)・こうらに こもる・「……なんじゃったかの」(もの忘れ)
@@ -1591,7 +1591,7 @@ export const BOSSES = {
         },
         shellCut: 0.3,   // こもっている あいだの 体への ダメージ (30%)
         chanceTurns: 3,
-        befriends: 'urashima', lv: 20, place: 'cave'
+        befriends: 'urashima', lv: 27, place: 'cave'
     },
     // 5 章の ボス: 黒い 紋に のまれた ダイシ (ネット寺の 本堂の 前)。たおすと 紋が 消えて なかまに なる
     //   仏の顔: 説法 (全体 ねむり)・錫杖 (1 体に 中)・数珠まわし (全体に 小)・配信の お経 (全体 こんらん)
@@ -1624,7 +1624,7 @@ export const BOSSES = {
             bell: { name: '鐘', hp: 0.01, when: 'chant', pos: [-1.9, -0.55], noBody: true, reset: true }
         },
         chanceTurns: 3,
-        befriends: 'daishi', lv: 23, place: 'tera'
+        befriends: 'daishi', lv: 30, place: 'tera'
     },
     // ----- 6 章の ボス 3 体 (2026-10-29 ユーザー指定) -----
     // 屋敷の 門: ズミタニ。かげぶんしんで 2 体の 分身を 出し、4 秒ごとに 瞬間移動で 3 体の 位置を 入れかえる (14 秒で 消える)。
@@ -1640,7 +1640,7 @@ export const BOSSES = {
         ],
         bigMove: { name: '百影 クナイ', every: 16, warn: 2.5, effects: [atk('all', 1.1, { element: 'かぜ' })] },
         clones: { count: 2, life: 14, teleport: 4, bonus: 1.3, counter: [atk('one', 1.5), { kind: 'status', target: 'one', status: 'possess', chance: 1 }] },
-        befriends: 'zumitani', lv: 26, place: 'yashiki'
+        befriends: 'zumitani', lv: 33, place: 'yashiki'
     },
     // 奥の 間: ルキハに あやつられた おにおに (第 1 形態だけ)。ふつうの 攻撃と、予告つきの 凪払い (全体)。なかまには ならない
     onioni6: {
@@ -1652,7 +1652,7 @@ export const BOSSES = {
             { name: 'お金かえせ！', w: 1.5, effects: [{ kind: 'status', target: 'one', status: 'slow', chance: 0.7 }] }
         ],
         bigMove: { name: '凪払い', every: 11, warn: 2.5, effects: [atk('all', 1.3)] },
-        befriends: null, lv: 27, place: 'yashiki'
+        befriends: null, lv: 34, place: 'yashiki'
     },
     // 東の 蔵: 鬼鬼団の 幹部 トモオカ (新キャラ)。体を 攻撃される たびに 右腕が 大きく なり (1 回で 1 段・10 段で 限界)、
     //   限界に なると 4 秒 ためて 防御不能の 必殺技「丘砕きの一撃」。右腕を ロックオンして 当てると、最大HP の 3.5% ごとに 1 段ずつ
@@ -1668,7 +1668,7 @@ export const BOSSES = {
         arm: { max: 10, start: 2, perHit: 1, step: 0.035, bodyCut: 0.4, charge: 4, after: 0,
             move: { name: '丘砕きの一撃', effects: [atk('all', 2.6, { unguardable: true })] } },
         gims: { arm: { name: '右腕', hp: 99, when: 'always', rect: [0, 9, 4, 14], anchor: [4, 10], arm: true } },
-        befriends: null, lv: 28, place: 'yashiki'
+        befriends: null, lv: 35, place: 'yashiki'
     },
     // 7 章の ボス: 月の迷宮の 大魔法使い ルナヤ (「力を ためさせて もらうわ」)。しかけは Claude の 案 (2026-10-29)
     //   満ちていく 月: 5 秒ごとに 空の 月が 1 段 満ちて (5 段で 満月)、満月で 4 秒 ためて「満月の ムーンビーム」(全体に 大)。
@@ -1687,7 +1687,7 @@ export const BOSSES = {
         arm: { max: 5, start: 0, perHit: 0, growEvery: 5, step: 0.03, bodyCut: 0.05, charge: 4, after: 0, afterCancel: 0,
             move: { name: '満月の ムーンビーム', effects: [atk('all', 2.6, { magic: true, element: 'ふしぎ' })] } },
         gims: { moon: { name: '月', hp: 99, when: 'always', pos: [2.8, -0.7], arm: true } },
-        befriends: 'runaya', lv: 30, place: 'moon'
+        befriends: 'runaya', lv: 37, place: 'moon'
     },
     // ----- 8 章 金色のSE城の ボス 4 体 (2026-10-30 ユーザー指定)。幹部 3 体 (大鬼 → 双頭鬼 → 金滅鬼) → 玉座の 間の おにおに -----
     // 大鬼: 体が でかく、わざは ぜんぶ 全体攻撃。足を ねらえて、当てつづけて こわすと 転んで チャンスタイム (おわると 足は もとに もどる)
@@ -1702,7 +1702,7 @@ export const BOSSES = {
         bigMove: { name: '大地 ゆらし', every: 13, warn: 2.5, effects: [atk('all', 1.4)] },
         gims: { legs: { name: '足', hp: 0.12, when: 'always', rect: [4, 20, 19, 23], chance: 'fall', reset: true } },
         chanceTurns: 3,
-        befriends: null, lv: 31, place: 'shiro'
+        befriends: null, lv: 39, place: 'shiro'
     },
     // 双頭鬼: 右の 頭 (見ている 人の 左) は とりつき、左の 頭 は 術を 使う。頭を こわすと その 頭の わざが 使えない。
     //   両方 こわすと チャンスタイム → おわると 頭は もとに もどる
@@ -1723,7 +1723,7 @@ export const BOSSES = {
             lhead: { name: '左の頭', hp: 0.07, when: 'always', rect: [15, 0, 22, 8], group: 'heads', move: '術', reset: true }
         },
         chanceTurns: 3,
-        befriends: null, lv: 32, place: 'shiro'
+        befriends: null, lv: 40, place: 'shiro'
     },
     // 金滅鬼: 金の 体で、めくらましの とりつき (攻撃が 当たりにくい) を かける。チャンスタイムは なく、ただの なぐりあい。幹部で いちばん 強い
     kinme8: {
@@ -1736,7 +1736,7 @@ export const BOSSES = {
             { name: '金の かがやき', w: 2, effects: [{ kind: 'status', target: 'all', status: 'blind', chance: 0.7 }] }
         ],
         bigMove: { name: '金滅 大一閃', every: 12, warn: 2.5, effects: [atk('all', 1.5, { element: 'ほのお' })] },
-        befriends: 'kinmetsuki', lv: 33, place: 'shiro'
+        befriends: 'kinmetsuki', lv: 41, place: 'shiro'
     },
     // 玉座の 間: ルキハに あやつられた おにおに (8 章の 山場)。金滅鬼より はげしい 攻撃: 全体攻撃・全体の のろいの とりつき・大火炎の術
     //   必殺技「鬼神 金棒くだき」は 6 秒 ためてから 打つ。ためている あいだに 最大HP の 9% ぶん ダメージを あたえると 紋が 暴発して 自爆
@@ -1753,7 +1753,7 @@ export const BOSSES = {
         bigMove: { name: '鬼神 金棒くだき', trigger: 'burst', every: 12, charge: 6, need: 0.09, guardCut: 0.4, effects: [atk('all', 2.2)],
             burst: { name: '紋の 暴発', effects: [atk('all', 0.7, { element: 'ほのお' })] } },
         chanceTurns: 4,
-        befriends: null, lv: 35, place: 'shiro'
+        befriends: null, lv: 43, place: 'shiro'
     },
     // ----- 13 章「喰らいの 城」の ボス: ルキハ → ルキハ・ニオニオーテン (2026-10-30 ユーザー指定) -----
     // 第 1 形態 ルキハ: 体を 変形させて トリノツバサ (全体)・ウシノツノ (1 体)・ヘビノメ (全体 行動不能の とりつき)。チャンスタイムは なし。
@@ -1796,7 +1796,7 @@ export const BOSSES = {
             chimera: { regrow: 16 },
             enrage: { at: 0.5, atk: 0.5, spd: 0.3, eat: { name: 'オオグライノカミツキ', w: 3 } }
         },
-        befriends: null, lv: 62, place: 'kurai'
+        befriends: null, lv: 70, place: 'kurai'
     },
     // ----- 12 章「集結」の ボス (2026-10-30 ユーザー指定) -----
     // おにおに・鬼神: ルキハとの 決戦の 前に こおりくんに 勝負を いどむ。最初から 第 2 形態 (鬼神)。8 章とは くらべものに ならない 攻撃。
@@ -1811,10 +1811,10 @@ export const BOSSES = {
             { name: '大火炎の術', w: 2.5, effects: [atk('all', 1.3, { magic: true, element: 'ほのお' })] },
             { name: '地獄の 業火', w: 1.5, effects: [atk('all', 0.9, { magic: true, element: 'ほのお' }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }] }
         ],
-        bigMove: { name: '鬼神 金棒くだき・極', trigger: 'burst', every: 11, charge: 6, need: 0.09, guardCut: 0.4, effects: [atk('all', 2.8)],
+        bigMove: { name: '鬼神 金棒くだき・極', trigger: 'burst', every: 11, charge: 6, need: 0.065, guardCut: 0.4, effects: [atk('all', 2.8)],
             burst: { name: '鬼神の 力の 暴発', effects: [atk('all', 0.9, { element: 'ほのお' })] } },
         chanceTurns: 4,
-        befriends: null, lv: 55, place: 'shrine'
+        befriends: null, lv: 63, place: 'shrine'
     },
     // ----- 大魔王ASO (14 章 クリアの あと。推奨 Lv90。2026-10-30 ユーザー指定) -----
     // 第 1 形態: 武器や アイテムを 生みだして 攻撃。「拘束のリング」: 味方 1 体を 拘束し (うごけない)、ウォッチの 輪も 回せなく なる。
@@ -1852,7 +1852,7 @@ export const BOSSES = {
                 burst: { name: '力が みだれた', effects: [] } }
         },
         chanceTurns: 4,
-        befriends: 'aso', lv: 90, place: 'tsubo'
+        befriends: 'aso', lv: 95, place: 'tsubo'
     },
     // ----- 11 章「ASOの壺の底」の ボス (2026-10-30 ユーザー指定) -----
     // バクエンリュウ・闇 (火山の 底に ねむる 竜。紋で あやつられている): 体が マグマで ふだんは 攻撃が きかない (magma)。
@@ -1876,7 +1876,7 @@ export const BOSSES = {
                 water: { name: '水爆弾', hp: 0.05 }
             } },
         chanceTurns: 4,
-        befriends: 'bakuenryu', lv: 46, place: 'tsubo'
+        befriends: 'bakuenryu', lv: 54, place: 'tsubo'
     },
     // ----- 10 章「石の川タウン しゅうげき」の ボス (2026-10-30 ユーザー指定) -----
     // タシケダ (ルキハの 軍勢の 幹部): 戦う 力は ひくい。行動不能の とりつき (stun)。
@@ -1895,7 +1895,7 @@ export const BOSSES = {
         summons: ['csspakkun', 'mugenloop', 'firewall'],
         bigMove: { name: '私はハッキングが好きだ！', trigger: 'hack', warn: 2.5, cool: 9,
             effects: [{ kind: 'buff', target: 'all', stat: 'atk', amount: -0.5, time: 12 }, atk('all', 1.1, { magic: true, element: 'ふしぎ' })] },
-        befriends: null, lv: 44, place: 'town'
+        befriends: null, lv: 52, place: 'town'
     },
     // ----- 9 章「筋肉の山と 新しい なかま」の ボス 2 体 (2026-10-30 ユーザー指定) -----
     // ハル麒麟 (雪どけの 氷河): HP が 半分に なると「春の 目ざめ」を ためる。ためおわった とき 角が のこっていたら HP を 全回復。
@@ -1911,7 +1911,7 @@ export const BOSSES = {
         bigMove: { name: '春麗', every: 14, warn: 2.5, effects: [atk('all', 1.3, { magic: true, element: 'しぜん' }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.4 }] },
         regen: { name: '春の 目ざめ', at: 0.5, charge: 7 },
         gims: { horn: { name: '角', hp: 0.08, when: 'always', rect: [22, 0, 27, 4] } },
-        befriends: 'harukirin', lv: 37, place: 'hyouga'
+        befriends: 'harukirin', lv: 45, place: 'hyouga'
     },
     // ノゾエマ (筋肉の山の 山頂): 1 体への 斬撃・全体の 斬撃。「筋肉の おたすけ」で 自分の こうげきを どんどん 上げる (重なる)。
     //   チャンスタイムは なし。中盤の 鬼門。たおすと なかまに なり、こおりくんの 必殺技が 進化する
@@ -1925,7 +1925,7 @@ export const BOSSES = {
             { name: '筋肉の おたすけ', w: 2, effects: [{ kind: 'buff', target: 'self', stat: 'atk', amount: 0.2, time: 999, stack: true, cap: 1.2 }] }
         ],
         bigMove: { name: '鏡筋一刀斬り', every: 12, warn: 2.5, effects: [atk('all', 1.7)] },
-        befriends: 'nozoema', lv: 40, place: 'kinniku'
+        befriends: 'nozoema', lv: 48, place: 'kinniku'
     },
     // ----- 14 章の ボス (バージョンで ちがう。ルキハの 軍勢の 残党。しかけは Claude の 案・2026-10-30) -----
     // サアラハ (内定版。ナイテイパーク): ふるカワを おりに とじこめている。おりを ねらって こわすと ふるカワが にげて チャンスタイム
@@ -1942,7 +1942,7 @@ export const BOSSES = {
         bigMove: { name: '残党の 闇', every: 13, warn: 2.5, effects: [atk('all', 1.6, { magic: true, element: 'ふしぎ' })] },
         gims: { cage: { name: 'ふるカワの おり', hp: 0.1, when: 'always', pos: [2.4, -0.5], chance: 'cage', move: 'ふるカワを 盾に' } },
         chanceTurns: 4,
-        befriends: null, lv: 42, place: 'yuen'
+        befriends: null, lv: 85, place: 'yuen'
     },
     // リハマ (免許版。メンキョシティ): ときどき「赤信号」で 体を かためる (体への ダメージ 20%)。赤信号の あいだだけ 出る 信号機を
     //   ねらって こわすと 止まって チャンスタイム (信号は もどる)。速い
@@ -1959,7 +1959,7 @@ export const BOSSES = {
         gims: { signal: { name: '信号機', hp: 0.06, when: 'shell', pos: [2.2, -0.9], chance: 'signal', reset: true } },
         shellCut: 0.2,
         chanceTurns: 3,
-        befriends: null, lv: 42, place: 'yuen'
+        befriends: null, lv: 85, place: 'yuen'
     }
 };
 // 14 章の ボスは バージョンで ちがう
@@ -1993,7 +1993,7 @@ export const RIVALS = {
     shibata: rival('shibata', 'シバター', 'ふつう', 'attacker', 'C', {}, 'ぶんぶん！ 撮れ高いただき！ んなああ～', sp('撮れ高 ばっちり', [atk('one', 2.0)])),
     ikekimu: rival('ikekimu', 'イケキム', 'かぜ', 'attacker', 'C', { spd: 1.1 }, 'チッ…邪魔だ。', sp('暗殺術', [atk('one', 1.9)]))
 };
-export const RIVAL_LV = 17;
+export const RIVAL_LV = 24;
 export const rivalTeam = version => RIVAL_TEAMS[version] || RIVAL_TEAMS.naitei;
 
 // こおりくん (2026-10-27 ユーザー指定: バトルに こおりくんも 出られる)。メダル帳の いちばん はじめに いて、ウォッチの 輪に 入れられる
@@ -2016,14 +2016,27 @@ export const unitArtKey = id => (NAKAMA[id] ? NAKAMA[id].art : BOSSES[id] ? BOSS
 export const unitOf = id => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
 
 // ----- 13 章「喰らいの 城」の 3〜7 階 (2026-10-30 ユーザー指定) -----
-//   たおしたはずの 幹部が 紋つき (・闇) に なって 1 階に 1 体ずつ まっている。前より 強い (Lv が 上がり、紋つきで 1.15 倍)
-//   その 階の バトルには ライバル探検隊が 1 チーム 加勢する (階ごとに ちがう チーム。お助けなので 攻撃は 受けない)
-export const FLOOR13 = [['tomooka6', 'ask3'], ['ooni8', 'kemono'], ['soutou8', 'muscle'], ['kinme8', 'bartas'], ['tashikeda10', '5dx']]
-    .map(([from, team], i) => ({ id: from.replace(/\d+$/, '') + '13', from, team, floor: i + 3, lv: 56 + i }));
+//   たおしたはずの 幹部 (トモオカ = 3 階・タシケダ = 7 階) が 紋つき (・闇) に なって まっている。前より 強い (Lv が 上がり、紋つきで 1.15 倍)
+//   4〜6 階は 幹部の いない 探索の 階 (紋つきの 敵と 宝箱)。2026-10-30 ユーザー指定で 幹部は この 2 体だけ
+//   幹部の バトルには ライバル探検隊が 1 チーム 加勢する (階ごとに ちがう チーム。3 階は その バージョンの 探検隊・7 階は 5DX。お助けなので 攻撃は 受けない)
+export const FLOOR13 = [
+    { id: 'tomooka13', from: 'tomooka6', team: { naitei: 'ask3', menkyo: 'muscle' }, floor: 3, lv: 64 },
+    { id: 'tashikeda13', from: 'tashikeda10', team: { naitei: '5dx', menkyo: '5dx' }, floor: 7, lv: 68 }
+];
 for (const f of FLOOR13) {
     const d = BOSSES[f.from];
     BOSSES[f.id] = { ...d, id: f.id, name: `${d.name.replace(/・闇$/, '')}・闇`, lv: f.lv, dark: true, befriends: null, place: 'kurai' };
 }
 // 加勢する ライバル探検隊の Lv
-export const HELPER_LV = 58;
+export const HELPER_LV = 66;
 
+
+// ----- 撃破率の 調整 (2026-10-30 ユーザー指定: 6 章・8 章・13 章は 適正レベルで 5 割くらい) -----
+//   tools/balance.mjs (その 章までの なかま 6 体を 適正レベルで 戦わせる) の 撃破率を 見て 決めた 倍率
+export const BOSS_TUNE = {
+    zumitani6: { hp: 2.7, atk: 1.8, mag: 1.8 }, onioni6: { hp: 1.8, atk: 1.45, mag: 1.45 }, tomooka6: { hp: 1.8, atk: 2.7, mag: 2.7 },
+    ooni8: { hp: 2.7, atk: 1.82, mag: 1.82 }, soutou8: { hp: 2.8, atk: 1.85, mag: 1.85 }, kinme8: { hp: 1.5, atk: 1.28, mag: 1.28 }, onioni8: { hp: 1.7, atk: 1.38, mag: 1.38 },
+    onioni12: { hp: 1.4, atk: 1.15, mag: 1.15 },   // 8 章の おにおに (調整後) より ずっと 強く
+    tomooka13: { hp: 2.0, atk: 3.2, mag: 3.2 }, tashikeda13: { hp: 0.9, atk: 0.93, mag: 0.93 }, rukiha13: { hp: 0.36, atk: 0.54, mag: 0.54 }
+};
+for (const [id, t] of Object.entries(BOSS_TUNE)) BOSSES[id].base = Object.fromEntries(Object.entries(BOSSES[id].base).map(([k, v]) => [k, Math.round(v * (t[k] || 1))]));

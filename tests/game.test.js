@@ -163,7 +163,7 @@ test('商店街へは 1 章 クリアまで 工事中の さくで 行けない'
     assert.ok(!blockedTile(g, 12, 35) && !blockedTile(g, 41, 35));
     // 商店街の キャラは Lv6〜10
     const e = encounter(g, spot('arcadeW'), createRng(3));
-    assert.ok(e[0].lv >= 6 && e[0].lv <= 10, `Lv${e[0].lv}`);
+    assert.ok(e[0].lv >= 11 && e[0].lv <= 15, `Lv${e[0].lv}`);
 });
 
 test('仲間に なる 確率: E は 25%・好物で 2 倍・10 回 勝つと 必ず', () => {
@@ -729,16 +729,17 @@ test('13 章: ヒョウガリュウに 乗って 喰らいの 城 → 3〜7 階�
     assert.ok(arriveKurai(g));
     assert.ok(darkTown(g, { x: 20, y: KURAI_Y0 + 25 }), '城の 軍勢は ぜんぶ 紋つき');
     assert.ok(!here('rukiha13'), '幹部を たおすまで 最上階には 行けない');
-    // 3〜7 階: 1 階に 1 体、前より 強い 紋つきの 幹部。階ごとに ちがう 探検隊が 加勢
-    assert.deepEqual(FLOOR13.map(f => f.floor), [3, 4, 5, 6, 7]);
-    assert.equal(new Set(FLOOR13.map(f => f.team)).size, 5, '階ごとに ちがう チーム');
-    assert.ok(FLOOR13.some(f => f.from === 'tashikeda10'));
+    // 3 階 トモオカ・7 階 タシケダ (前より 強い 紋つき)。4〜6 階は 探索の 階。階ごとに ちがう 探検隊が 加勢
+    assert.deepEqual(FLOOR13.map(f => [f.floor, f.from]), [[3, 'tomooka6'], [7, 'tashikeda10']]);
+    assert.notEqual(floor13Helpers(FLOOR13[0], 'menkyo').team, floor13Helpers(FLOOR13[1], 'menkyo').team, '階ごとに ちがう チーム');
+    assert.equal(floor13Helpers(FLOOR13[0], 'naitei').team, 'ask3');
+    assert.equal(floor13Helpers(FLOOR13[0], 'menkyo').team, 'muscle');
     for (const f of FLOOR13) {
         assert.equal(floor13Next(g).id, f.id);
         assert.ok(here(`f13_${f.floor}`));
         assert.ok(BOSSES[f.id].lv > BOSSES[f.from].lv + 10 && BOSSES[f.id].name.endsWith('・闇'), '前より 強い 紋つき');
         assert.ok(bossEnemies(f.id)[0].dark);
-        assert.deepEqual(floor13Helpers(f).members, TEAMS[f.team].members);
+        assert.deepEqual(floor13Helpers(f, 'menkyo').members, TEAMS[f.team.menkyo].members);
         assert.match(objective(g), new RegExp(`${f.floor} 階`));
         const out = applyBattleResult(g, winBattle(g, bossEnemies(f.id), 'boss'), rng);
         assert.equal(out.floor13, f.floor);
@@ -746,6 +747,13 @@ test('13 章: ヒョウガリュウに 乗って 喰らいの 城 → 3〜7 階�
         assert.ok(!here(`f13_${f.floor}`));
     }
     assert.equal(g.story, 'kurai', 'ストーリーは まだ');
+    // 4〜6 階の 宝箱は 1 回だけ
+    const { openChest13 } = await import('../src/logic/game.js');
+    const { CHESTS13 } = await import('../src/data/map.js');
+    const c = CHESTS13[0], before = g.items[c.item] || 0;
+    assert.ok(openChest13(g, c));
+    assert.equal(g.items[c.item], before + c.n);
+    assert.equal(openChest13(g, c), null, '2 回目は からっぽ');
     assert.ok(here('rukiha13'));
     assert.match(objective(g), /ルキハ/);
     // 紋つきの 敵は なかまに ならない

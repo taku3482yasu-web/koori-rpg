@@ -439,7 +439,7 @@ test('地図: 喰らいの 城 (13 章)。ヒョウガリュウの おりる 野
     assert.ok(!BLOCK.has(TILES[HYOUGA13_AT.y][HYOUGA13_AT.x]), '山の ヒョウガリュウの 前に 立てる');
     const ruk = PEOPLE.find(p => p.id === 'rukiha13');
     const bosses = PEOPLE.filter(p => p.only === 'floor13').sort((a, b) => a.floor - b.floor);
-    assert.equal(bosses.length, 5);
+    assert.equal(bosses.length, 2, '3 階 トモオカ・7 階 タシケダ');
     const reach = beaten => {
         const seen = new Set([`${KURAI_IN.x},${KURAI_IN.y}`]);
         const q = [[KURAI_IN.x, KURAI_IN.y]];
@@ -454,11 +454,15 @@ test('地図: 喰らいの 城 (13 章)。ヒョウガリュウの おりる 野
         }
         return seen;
     };
-    for (let n = 0; n < 5; n++) {
+    for (let n = 0; n < 2; n++) {
         const r = reach(n), b = bosses[n];
         assert.ok([[0, 1], [1, 0], [-1, 0]].some(([dx, dy]) => r.has(`${b.x + dx},${b.y + dy}`)), `${b.floor} 階の 幹部の 前まで`);
         assert.ok(!r.has(`${ruk.x},${ruk.y + 1}`), `${b.floor} 階の 幹部が いる あいだは 最上階へ 行けない`);
-        if (n < 4) assert.ok(!r.has(`${bosses[n + 1].x},${bosses[n + 1].y + 1}`) || bosses[n + 1].y + 1 === b.y, 'つぎの 階へは 行けない');
+        if (n < 1) assert.ok(!r.has(`${bosses[n + 1].x},${bosses[n + 1].y + 1}`) || bosses[n + 1].y + 1 === b.y, 'つぎの 階へは 行けない');
     }
-    assert.ok(reach(5).has(`${ruk.x},${ruk.y + 1}`), 'ぜんぶ たおすと 最上階の ルキハの 前まで');
+    assert.ok(reach(2).has(`${ruk.x},${ruk.y + 1}`), 'ぜんぶ たおすと 最上階の ルキハの 前まで');
+    // 4〜6 階の 宝箱は トモオカを たおすと とどく
+    const { CHESTS13 } = await import('../src/data/map.js');
+    const after = reach(1);
+    for (const c of CHESTS13) assert.ok([[0, 1], [0, -1], [1, 0], [-1, 0]].some(([dx, dy]) => after.has(`${c.x + dx},${c.y + dy}`)), `宝箱 ${c.id}`);
 });

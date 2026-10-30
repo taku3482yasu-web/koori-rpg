@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, PARK_CLUES, tileAt } from '../data/map.js';
+import { CHESTS13, TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, PARK_CLUES, tileAt } from '../data/map.js';
 import { reached } from './story.js';
 
 const HALF_W = 5, BOX_H = 6;
@@ -36,8 +36,8 @@ export function peopleHere(g) {
         (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
         (p.only === 'onioni8' && g.story === 'oshiro') ||
         // 13 章: 喰らいの 城の 最上階の ルキハ
-        (p.only === 'rukiha13' && g.story === 'kurai' && (g.flags.fl13 || 0) >= 5) ||
-        (p.only === 'floor13' && g.story === 'kurai' && (g.flags.fl13 || 0) < p.floor - 2) ||
+        (p.only === 'rukiha13' && g.story === 'kurai' && (g.flags.fl13 || 0) >= 2) ||
+        (p.only === 'floor13' && g.story === 'kurai' && (g.flags.fl13 || 0) <= p.step) ||
         (p.only === 'hyouga13' && reached(g, 'kuraie') && !reached(g, 'clear13')) ||
         // 12 章: 神社に あつまった みんなと おにおに・鬼神 (勝つまで)
         (p.only === 'gather12' && g.story === 'shuuketsu') ||
@@ -134,6 +134,8 @@ export function lookAt(g) {
     if (seal) return { type: 'seal', seal };
     const mon = monsHere(g).find(m => m.x === f.x && m.y === f.y);
     if (mon) return { type: 'mon', mon };
+    const chest = CHESTS13.find(m => m.x === f.x && m.y === f.y);
+    if (chest) return { type: 'chest', chest };
     return null;
 }
 

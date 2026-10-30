@@ -33,7 +33,7 @@ import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -422,13 +422,13 @@ export function createField(app) {
             });
         } else if (p.only === 'floor13') {
             // 13 章 3〜7 階: たおした はずの 幹部が 紋つきで よみがえって いる。ライバル探検隊が 加勢 (階ごとに ちがう チーム)
-            const f = FLOOR13.find(x => x.id === p.boss), team = TEAMS[f.team];
+            const f = FLOOR13.find(x => x.id === p.boss), tk = floor13Team(f, g.version), team = TEAMS[tk];
             say([
                 { who: p.name, art: p.art, text: FLOOR13_LINES[f.id] },
                 nar(`${p.name}の 体に、黒い 紋が どくどくと 脈うっている……！ 前より ずっと 強い！`),
-                by(team.leader, HELPER_LINES[f.team]),
+                by(team.leader, HELPER_LINES[tk]),
                 nar(`${team.name}が 加勢して くれる！ (サポートアイテムや 追加攻撃を してくれる)`)
-            ], { done: () => app.startBattle({ enemies: bossEnemies(f.id), kind: 'boss', place: 'kurai', helpers: floor13Helpers(f) }) });
+            ], { done: () => app.startBattle({ enemies: bossEnemies(f.id), kind: 'boss', place: 'kurai', helpers: floor13Helpers(f, g.version) }) });
         } else if (p.id === 'rukiha13') {
             // 13 章の ボス: ルキハ (ストーリー工房 13 章 場面 2「ルキハ」)。たおすと ニオニオーテンに 変わる (場面 3・4 は バトルの 中)
             const rk = text => ({ who: 'ルキハ', art: 'rukiha', text });
@@ -1064,10 +1064,10 @@ export function createField(app) {
                 furu('これで ルキハの 城へ 行けるね……！ 今夜は 家に 帰って ゆっくり ねよう。')
             ], { done: () => app.save() });
         } else if (result.floor13 && result.outcome === 'win') {
-            const f = FLOOR13.find(x => x.floor === result.floor13), team = TEAMS[f.team];
+            const f = FLOOR13.find(x => x.floor === result.floor13), team = TEAMS[floor13Team(f, g.version)];
             say([
                 nar(`${BOSSES[f.id].name}の 紋が くだけ、黒い 霧に なって 消えた。`),
-                by(team.leader, f.floor < 7 ? 'つぎの 階へ 行け、こおり！' : 'あとは 最上階だけだ！ 行け、こおり！'),
+                by(team.leader, f.floor < 7 ? 'この 先の 階は 幹部は いない。宝箱も あるらしいぞ。気を つけて のぼれ！' : 'あとは 最上階だけだ！ 行け、こおり！'),
                 nar(`${f.floor} 階を 突破した！`)
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'rukiha13') {
@@ -1366,6 +1366,11 @@ export function createField(app) {
             if (target?.type === 'mystery') { sfx('ok'); examineMystery(target.mystery); return; }
             if (target?.type === 'seal') { sfx('ok'); examineSeal(target.seal); return; }
             if (target?.type === 'mon') { sfx('ok'); examineMon(target.mon); return; }
+            if (target?.type === 'chest') {
+                const got = openChest13(g, target.chest);
+                if (got) { sfx('heal'); app.save(); say([nar(`宝箱を あけた！ ${ITEMS[got.item].name}を ${got.n} こ 手に 入れた！`)]); } else say([nar('宝箱は からっぽだ。')]);
+                return;
+            }
             if (target?.type === 'gate' && target.gate.id === 'gateYama') {
                 sfx('ok');
                 say([{ who: '', text: '「この先 山道。落石の ため 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('学校の さわぎが おちついたら 通れるように なるかも。')] : [])]);

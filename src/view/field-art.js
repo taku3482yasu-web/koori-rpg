@@ -229,6 +229,14 @@ function drawBuilding(c, b) {
 }
 
 function drawProp(c, p) {
+    if (p.kind === 'chest') {
+        // 宝箱 (13 章 喰らいの 城)
+        const px = p.x * TILE, py = p.y * TILE;
+        c.fillStyle = '#5a3a1a'; c.fillRect(px + 1, py + 4, 14, 11);
+        c.fillStyle = '#8a5a2a'; c.fillRect(px + 2, py + 5, 12, 4);
+        c.fillStyle = '#e0b040'; c.fillRect(px + 1, py + 8, 14, 1); c.fillRect(px + 7, py + 7, 2, 4);
+        return;
+    }
     if (p.kind === 'mirror') {
         // 月の 鏡 (7 章): 銀の わくに 青白い 鏡
         const px = p.x * TILE, py = p.y * TILE;
