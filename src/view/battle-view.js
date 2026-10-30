@@ -18,7 +18,7 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, artFit, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, toritsukiName, isPossessed, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, begin, flee, canFlee, gimOpen, openGims } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, toritsukiName, isPossessed, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, chanceTime, begin, flee, canFlee, gimOpen, openGims } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -1340,7 +1340,7 @@ export function createBattleView(app, battle, place) {
         // チャンスタイム: 左上に 小さく (ボスの HP が 見えるように。うごけない ことは 頭の ピヨピヨで。2026-10-30 ユーザー指定)
         if (battle.chance && !battle.outcome) {
             panel(ctx, 4, 4, 112, 20, { fill: 'rgba(90, 40, 0, 0.85)', edge: '#ffe85a' });
-            text(ctx, `チャンス！ あと ${battle.chance.left} 回`, 60, 18, { size: 10, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
+            text(ctx, `チャンス！ あと ${chanceTime(battle).toFixed(1)} 秒`, 60, 18, { size: 10, align: 'center', bold: true, color: Math.floor(t * 6) % 2 ? '#ffe85a' : '#ffa83a' });
         }
         // 予約した バナー (変身の セリフ)
         if (bannerQueue.length && bannerQueue[0].at <= t && !(banner && banner.until > t)) banner = bannerQueue.shift();

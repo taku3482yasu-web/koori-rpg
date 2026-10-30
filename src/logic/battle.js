@@ -514,6 +514,14 @@ function cancelHack(b) {
 const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
 const buffOf = (u, stat) => (u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0);
 const interval = u => (3.0 * 20 / (u.s.spd * (1 + buffOf(u, 'spd')) + 10)) * (u.status.slow > 0 ? 1.6 : 1);
+// チャンスタイムの のこり 秒数 (ボスが うごけない 番を のこり left 回 すごす までの 時間。画面に 秒で 出す。2026-10-30 ユーザー指定)
+export function chanceTime(b) {
+    if (!b.chance) return 0;
+    const u = b.enemies.find(e => e.uid === b.chance.uid);
+    if (!u) return 0;
+    const iv = interval(u);
+    return Math.max(0, (b.chance.left - 1) * iv + iv - Math.max(0, Math.min(iv, u.timer)));
+}
 const effectOf = (element, target) => (CHART[element] && CHART[element][target]) || 1;
 
 // ----- 攻撃・回復・状態異常 -----

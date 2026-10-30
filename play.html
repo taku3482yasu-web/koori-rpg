@@ -7235,6 +7235,13 @@ body.nopad #pad { display: none; }
   const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
   const buffOf = (u, stat) => u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0;
   const interval = (u) => 3 * 20 / (u.s.spd * (1 + buffOf(u, "spd")) + 10) * (u.status.slow > 0 ? 1.6 : 1);
+  function chanceTime(b) {
+    if (!b.chance) return 0;
+    const u = b.enemies.find((e) => e.uid === b.chance.uid);
+    if (!u) return 0;
+    const iv = interval(u);
+    return Math.max(0, (b.chance.left - 1) * iv + iv - Math.max(0, Math.min(iv, u.timer)));
+  }
   const effectOf = (element, target) => CHART[element] && CHART[element][target] || 1;
   function damage(b, from, to, power, { magic = false, mult = 1, element = null, unguardable = false } = {}) {
     if (to.ko) return 0;
@@ -23725,7 +23732,7 @@ body.nopad #pad { display: none; }
       }
       if (battle.chance && !battle.outcome) {
         panel(ctx, 4, 4, 112, 20, { fill: "rgba(90, 40, 0, 0.85)", edge: "#ffe85a" });
-        text(ctx, `チャンス！ あと ${battle.chance.left} 回`, 60, 18, { size: 10, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
+        text(ctx, `チャンス！ あと ${chanceTime(battle).toFixed(1)} 秒`, 60, 18, { size: 10, align: "center", bold: true, color: Math.floor(t * 6) % 2 ? "#ffe85a" : "#ffa83a" });
       }
       if (bannerQueue.length && bannerQueue[0].at <= t && !(banner && banner.until > t)) banner = bannerQueue.shift();
       if (battle.armCharge && !battle.outcome) {

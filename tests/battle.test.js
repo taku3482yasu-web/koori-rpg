@@ -1026,3 +1026,19 @@ test('13 章: ニオニオーテンは HP 半分で 紅く なり、オオグラ
     assert.ok(!victim.eaten, '顔に 当てて 取りもどした');
     assert.ok(!boss.bossMoves.some(m => m.stolenFrom === victim.uid));
 });
+
+test('チャンスタイムの のこりは 秒数で 出せる (ボスが うごけない 番が おわるまで)', async () => {
+    const { chanceTime } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'ooni8', lv: 40 }], rng: createRng(1), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.equal(chanceTime(b), 0);
+    b.chance = { uid: boss.uid, left: 3 };
+    boss.timer = 0;
+    const t0 = chanceTime(b);
+    assert.ok(t0 > 0);
+    let el = 0;
+    for (let i = 0; i < 4000 && b.chance; i++) { keepAliveNoAct(b); boss.hp = boss.max; step(b, 0.05); el += 0.05; }
+    assert.ok(!b.chance, 'おわった');
+    assert.ok(Math.abs(el - t0) < 0.2, `${t0.toFixed(2)} 秒の 予定 → ${el.toFixed(2)} 秒`);
+});
+
