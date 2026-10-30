@@ -877,6 +877,32 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear11"'), 'ASO の 間で ASO と 話すと 11 章 クリア');
 
+    // ----- 12 章: 黒い 空 → 神社で おにおに・鬼神 → 家で ねる (2026-10-30) -----
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "shuuketsu"'), '11 章の あと 黒い 空 (12 章)');
+    await at(8, 7, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "onioni12" && window.__bgm() === "onioni12"'), '神社で おにおに・鬼神と 勝負');
+    await key('KeyJ');
+    await sleep(500);
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.max = e.hp = 99999; b.bossTimer = 99; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.burst)'), 'おにおに・鬼神: 必殺技を ためる');
+    await sleep(300);
+    await shot('shrine-onioni12');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.flags.oni12'), 'おにおに・鬼神に 勝つ (必殺技が 鬼の王の金棒に)');
+    await at(6, 24, 'up');
+    await key('KeyJ');
+    await sleep(300);
+    await key('Enter');
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "clear12"'), '家で ねると 出発の 前の 夜 (12 章 クリア)');
+
     // ----- 14 章 (内定版): 招待券 → ナイテイパーク → ふるカワが いない → 夜の 手がかり → サアラハ (おり) (2026-10-30) -----
     const P14 = 300;
     await at(8, 25, 'up');
@@ -940,6 +966,41 @@ try {
     await winNow();
     await skipTalk(30);
     check(await evaluate('["r_okagappa", "r_hibikimakuri", "r_yamamou"].every(id => window.__app.g.zukan.friends[id])'), 'チーム5DX に 勝つと 3 人 なかまに なる');
+
+    // ----- 大魔王ASO (14 章 クリアの あと。ASO の 間で 勝負) (2026-10-30) -----
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    for (let i = 0; i < 6; i++) await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await at(36, 377, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "aso15" && window.__bgm() === "aso15"'), '14 章 クリアの あと ASO と 勝負');
+    await key('KeyJ');
+    await sleep(500);
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); return true; })()');
+    let bound = false;
+    for (let i = 0; i < 160 && !bound; i++) {
+        await evaluate('(() => { const b = window.__app.scene.battle; b.wheel.forEach(u => { if (u) u.timer = -999; }); b.enemies[0].timer = 99; b.enemies[0].hp = b.enemies[0].max; return true; })()');
+        await sleep(120);
+        bound = await evaluate('Boolean(window.__app.scene.battle.bind)');
+    }
+    check(bound, 'ASO: 拘束のリング');
+    await sleep(300);
+    await shot('aso-ring');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.timer = -999; e.gims.ring.hp = 1; b.lock = e.uid; b.lockPart = "ring"; return true; })()');
+    check(await waitFor('!window.__app.scene.battle.bind'), 'ASO: リングを こわすと 拘束が とける');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.hp = 1; b.lock = e.uid; b.lockPart = null; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].phase === 2'), 'ASO: 第 2 形態 (大魔王ASO・真)');
+    await sleep(500);
+    await shot('aso-phase2');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.medals.some(m => m.id === "aso")'), 'ASO に 勝つと なかまに なる');
 
     // ----- ボスの 部位は ドット絵の 上 (2 章の 影: 右手・左手・頭。2026-10-30) -----
     await evaluate('window.__app.startBattle({ enemies: [{ id: "kage", lv: 13 }], kind: "boss", place: "school" }); true');

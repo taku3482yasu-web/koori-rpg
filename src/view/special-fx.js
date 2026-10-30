@@ -156,6 +156,9 @@ export const SPECIALS = {
     setsubunmame: { motion: 'rain', color: '#e0e0e0' },
     goukioni: { motion: 'dash', color: '#ff8a4a' },
     kinmetsuki: { motion: 'beam', color: '#ffd040' },
+    // おにおにの 進化した 必殺技「鬼の王の金棒」(12 章)・大魔王ASO
+    onioni2: { motion: 'multi', color: '#ffd040' },
+    aso: { motion: 'beam', color: '#d8a8ff' },
     // 11 章 ASOの壺の底
     asohei: { motion: 'dash', color: '#e0e0e0' },
     asoshougun: { motion: 'multi', color: '#e0e0e0' },

@@ -384,7 +384,7 @@ export const BACK_ART = {
     ...Object.fromEntries(['harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry'].map(k => [k, auto(k)])),
     // 15 章で なかまに なる ライバル探検隊 (なかまの id は r_ + 絵の 名前。うしろ姿は 絵の 名前で)
     // 11 章 ASOの壺の底
-    ...Object.fromEntries(['asohei', 'asoshougun', 'hinotorin', 'kaendaruma', 'youganworm', 'dradora', 'bakuenryu'].map(k => [k, auto(k)])),
+    ...Object.fromEntries(['asohei', 'asoshougun', 'hinotorin', 'kaendaruma', 'youganworm', 'dradora', 'bakuenryu', 'maou'].map(k => [k, auto(k)])),
     // 9 章 筋肉の山と 雪どけの 氷河
     ...Object.fromEntries(['dumbbellkong', 'magmatcho', 'kazanmatcho', 'yukiusapon', 'tsurarabo', 'kakigoora', 'penguinknight', 'shirokumatcho', 'yukionnan',
         'sakurarisu', 'harukazedori', 'fukinoton', 'harukirin', 'nozoema', 'onioni'].map(k => [k, auto(k)])),

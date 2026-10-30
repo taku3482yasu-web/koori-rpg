@@ -564,7 +564,7 @@ test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごと�
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
     assert.ok(kairouEnemies(g)[0].lv > lvs[0], '上の 階ほど 強い');
     // さいごの 階は その バージョンの 14 章の ボス
-    g.kairou.floor = 18;
+    g.kairou.floor = 19;
     assert.equal(kairouEnemies(g)[0].id, 'rihama14');
 });
 
@@ -672,5 +672,43 @@ test('11 章: ルキハの 城への 道 → 電車で ASOの壺の底 → バ�
     assert.ok(meetAso(g));
     assert.equal(g.story, 'clear11');
     assert.equal(g.chapter, 12);
-    assert.ok(startChapter14(g), '本編の さいご (いまは 11 章) の あとで 14 章');
+    assert.ok(!startChapter14(g), '14 章は 本編の さいご (いまは 12 章) の あと');
+});
+
+test('12 章: 黒い 空 → 神社で おにおに・鬼神と 勝負 → 家で ねると 12 章 クリア。おにおにの 必殺技が 進化 (2026-10-30)', async () => {
+    const { startChapter12, nightBefore, specialUpgraded, startChapter14 } = await import('../src/logic/game.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const here = id => peopleHere(g).some(p => p.id === id);
+    g.story = 'clear11';
+    assert.ok(startChapter12(g));
+    assert.ok(here('onioni12') && here('g12runaya'));
+    assert.ok(!nightBefore(g), 'おにおにに 勝つまで 出発の 夜は こない');
+    assert.ok(!specialUpgraded(g, 'onioni'));
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('onioni12'), 'boss'), rng);
+    assert.equal(out.befriend, null);
+    assert.ok(out.oniSpecial && specialUpgraded(g, 'onioni'), 'おにおにの 必殺技が 進化');
+    assert.ok(!here('onioni12'));
+    assert.match(objective(g), /ねよう/);
+    assert.ok(nightBefore(g));
+    assert.equal(g.story, 'clear12');
+    assert.ok(startChapter14(g), '本編の さいご (いまは 12 章) の あとで 14 章');
+});
+
+test('大魔王ASO: 14 章 クリアの あと ASO の 間で 勝負できて、勝つと なかまに なる', async () => {
+    const { canFightAso } = await import('../src/logic/game.js');
+    const g = newGame('menkyo');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    g.story = 'clear12';
+    g.flags.baku11 = true;
+    assert.ok(!canFightAso(g), '14 章 クリアまでは 戦えない');
+    g.story = 'clear14';
+    assert.ok(canFightAso(g));
+    assert.ok(peopleHere(g).some(p => p.id === 'aso11'));
+    const out = applyBattleResult(g, winBattle(g, bossEnemies('aso15'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'aso');
+    assert.ok(!canFightAso(g));
+    assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
 });

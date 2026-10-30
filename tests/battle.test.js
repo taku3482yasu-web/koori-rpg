@@ -860,3 +860,75 @@ test('11 章の バクエンリュウ: マグマの 波で 投げた 道具が �
     const lastSkill = b.events.slice(0, meltAt).filter(e => e.type === 'skill' && e.actor === boss.uid).pop();
     assert.equal(lastSkill.name, 'マグマの 波');
 });
+
+test('12 章の おにおに・鬼神: 8 章より ずっと 強い。ため の あいだに ダメージで 暴発 → チャンスタイム (2 回目から ガード)', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const o8 = BOSSES.onioni8, o12 = BOSSES.onioni12;
+    assert.ok(o12.base.atk > o8.base.atk * 1.2 && o12.base.hp > o8.base.hp && o12.lv > o8.lv + 15, '8 章とは くらべものに ならない');
+    assert.equal(o12.bigMove.trigger, 'burst');
+    assert.ok(o12.bigMove.guardCut, '2 回目から ガード');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'onioni12', lv: 55 }], rng: createRng(2), kind: 'boss' });
+    b.bossTimer = o12.bigMove.every;
+    step(b, 0.05);
+    assert.ok(b.burst && !b.burst.guard);
+    for (let i = 0; i < 400 && b.burst; i++) { b.enemies[0].hp = b.enemies[0].max; step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'burst'));
+});
+
+test('おにおにの 必殺技は 12 章で「鬼の王の金棒」に 進化する', () => {
+    const b = createBattle({ allies: [{ uid: 'a', id: 'onioni', lv: 50 }], enemies: [{ id: 'ishikoron', lv: 1 }], rng: createRng(1) });
+    assert.equal(b.wheel[0].special.name, '鬼神 金棒くだき');
+    const b2 = createBattle({ allies: [{ uid: 'a', id: 'onioni', lv: 50, upgrade: true }], enemies: [{ id: 'ishikoron', lv: 1 }], rng: createRng(1) });
+    assert.equal(b2.wheel[0].special.name, '鬼の王の金棒');
+});
+
+test('大魔王ASO: 拘束のリングで 味方 1 体が うごけず 輪も 回せない。リングを こわすと とける', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'aso15', lv: 90 }], rng: createRng(5), kind: 'boss' });
+    const boss = b.enemies[0];
+    b.wheel.forEach(u => { if (u) u.timer = -9999; });
+    for (let i = 0; i < 6000 && !b.bind; i++) { keepAliveNoAct(b); boss.hp = boss.max; step(b, 0.05); }
+    assert.ok(b.bind, '拘束のリング');
+    const bound = b.wheel.find(u => u && u.uid === b.bind.target);
+    assert.ok(bound.bound && boss.gims.ring, 'リングが 浮いている');
+    b.rotateCooldown = 0;
+    assert.equal(rotate(b, 1), false, '輪が 回せない');
+    // 拘束された なかまは うごかない
+    bound.timer = 99;
+    const from = b.events.length;
+    step(b, 0.05);
+    assert.ok(!b.events.slice(from).some(e => e.actor === bound.uid && ['attack', 'skill', 'guard', 'loaf'].includes(e.type)));
+    boss.gims.ring.hp = 1;
+    assert.ok(lockOn(b, boss.uid, 'ring'));
+    b.wheel.forEach(u => { if (u) u.timer = 0; });
+    for (let i = 0; i < 200 && b.bind; i++) { boss.hp = boss.max; step(b, 0.05); }
+    assert.ok(!b.bind && !bound.bound && !boss.gims.ring, 'リングを こわすと とける');
+    b.rotateCooldown = 0;
+    assert.ok(rotate(b, 1), 'また 輪が 回せる');
+});
+
+test('大魔王ASO: 第 1 形態の HP が なくなると 第 2 形態 (術 ぜんぶ・破壊の腕輪)。ため の あいだに ダメージで チャンスタイム', async () => {
+    const { BOSSES, JUTSU } = await import('../src/data/nakama.js');
+    const def = BOSSES.aso15;
+    assert.equal(def.lv, 90, '推奨 Lv90');
+    const names = def.phase2.moves.map(m => m.name);
+    for (const el of Object.keys(JUTSU)) assert.ok(names.includes(JUTSU[el][2]), `${JUTSU[el][2]}`);
+    assert.ok(def.phase2.moves.some(m => m.name === '破壊の腕輪' && m.effects[0].stat === 'atk' && m.effects[0].amount >= 1));
+    const b = createBattle({ allies: strongParty().map(a => ({ ...a, lv: 95 })), enemies: [{ id: 'aso15', lv: 90 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    boss.hp = 1;
+    b.lock = boss.uid;
+    b.wheel.forEach(u => { if (u) u.timer = 0; });
+    for (let i = 0; i < 200 && boss.phase === 1; i++) step(b, 0.05);
+    assert.equal(boss.phase, 2, '第 2 形態に');
+    assert.ok(!boss.ko && !b.outcome && boss.name === '大魔王ASO・真');
+    assert.ok(b.events.some(e => e.type === 'transform'));
+    b.bossTimer = boss.bigMove.every;
+    step(b, 0.05);
+    assert.ok(b.burst, '必殺技を ためる');
+    for (let i = 0; i < 400 && b.burst; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'burst'), 'チャンスタイム');
+    // 第 2 形態で たおすと 勝ち
+    for (let i = 0; i < 4000 && !b.outcome; i++) { keepAlive(b); boss.hp = Math.min(boss.hp, 50); step(b, 0.05); }
+    assert.equal(b.outcome, 'win');
+});

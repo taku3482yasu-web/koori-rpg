@@ -553,6 +553,13 @@ export const PEOPLE = [
     { id: 'soutou8', name: '双頭鬼', art: 'soutouki', x: 24, y: SHIRO_Y0 + 15, only: 'soutou8', scale: 1.4 },
     { id: 'kinme8', name: '金滅鬼', art: 'kinmetsuki', x: 24, y: SHIRO_Y0 + 11, only: 'kinme8', scale: 1.2 },
     { id: 'onioni8', name: 'おにおに', art: 'onioni', x: 24, y: SHIRO_Y0 + 7, only: 'onioni8' },
+    // 12 章: 神社に あつまった みんな (話せる) と、勝負を いどむ おにおに
+    { id: 'onioni12', name: 'おにおに', art: 'onioni2', x: 8, y: 6, only: 'onioni12', scale: 1.2 },
+    { id: 'g12zumitani', name: 'ズミタニ', art: 'zumitani', x: 3, y: 7, only: 'gather12' },
+    { id: 'g12runaya', name: 'ルナヤ', art: 'runaya', x: 3, y: 5, only: 'gather12' },
+    { id: 'g12nozoema', name: 'ノゾエマ', art: 'nozoema', x: 10, y: 4, only: 'gather12' },
+    { id: 'g12daishi', name: 'ダイシ', art: 'daishi', x: 9, y: 8, only: 'gather12' },
+    { id: 'g12rival', name: 'KING.ASAHARA', art: 'asahara', nameBy: { naitei: 'KING.ASAHARA', menkyo: 'マッスルウエノーブル' }, artBy: { naitei: 'asahara', menkyo: 'ueno' }, x: 6, y: 8, only: 'gather12' },
     // 11 章: 火山の 底の バクエンリュウ (ASO の 間への 戸口の 前) → ASO の 間の 大魔王ASO
     { id: 'bakuen11', name: 'バクエンリュウ', art: 'bakuenryu', x: 28, y: TSUBO_Y0 + 5, only: 'bakuen11', scale: 1.3 },
     { id: 'aso11', name: '大魔王ASO', art: 'maou', x: 36, y: TSUBO_Y0 + 4, only: 'aso11', scale: 1.2 },

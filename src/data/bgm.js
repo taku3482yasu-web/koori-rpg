@@ -189,6 +189,16 @@ export const SONGS = {
         melody: "1 1 1 . 5 . 4 . | 7, 7, 7, . 4 . 3 . | 1 1 1 . 5 . 6 . | 7 - 6 - 5 - . . | 1' . 7 . 6 . 5 . | 4 . 3 . 2 . 1 . | 4 4 4 . 5 5 5 . | 6 - 7 - 1' - 5 -",
         chords: '1 7 1 5 4 1 4 5', bass: 'r r o r r r o r', drums: 'x h s h x h s s'
     },
+    onioni12: {
+        name: '鬼の王 (おにおに・鬼神)', bpm: 170, root: 65, mode: 'harmonic', lead: 'sawtooth',
+        melody: "1 . 1 3 5 . 1' . | 7 . 6 . 5 4 3 . | 4 . 4 6 1' . 3' . | 2' - 1' - 7 - . . | 6 . 6 7 1' . 2' 1' | 7 . 5 . 6 . 7 . | 1' . 7 6 5 . 4 3 | 2 - 5 - 7 - 2' -",
+        chords: '1 5 4 5 6 3 4 5', bass: 'r o r o r o r o', arp: '0 1 2 3 2 1 0 1', drums: 'x h s h x h s s'
+    },
+    aso15: {
+        name: '大魔王ASO', bpm: 128, root: 62, mode: 'phrygian', lead: 'sawtooth',
+        melody: "1 - - 2 1 - 7, - | 1 - - - 5 - - . | 6 - - 5 4 - 2 - | 1 - - - . . . . | 1' - - 7 6 - 5 - | 4 - 5 - 6 - 7 - | 1' - 2' - 1' - 6 - | 5 - - - 2 - 1 -",
+        chords: '1 1 6 1 6 4 6 5', bass: 'r - r - o - r -', arp: '0 . 1 . 2 . 1 .', drums: 'k . . s k . s .'
+    },
     bakuen11: {
         name: '火山の 底の 竜 (バクエンリュウ)', bpm: 136, root: 60, mode: 'harmonic', lead: 'sawtooth',
         melody: "1 . 1 . 2 3 2 . | 1 . 7, . 6, - . . | 1 . 1 . 3 4 3 . | 2 - - - 5, - . . | 6 . 6 . 7 1' 7 . | 6 . 5 . 4 - . . | 3 . 4 . 5 6 7 . | 1' - - - 5 - - .",

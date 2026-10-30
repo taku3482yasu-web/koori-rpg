@@ -12,7 +12,7 @@ import { TILES, MAP_W, MAP_H, SPOTS, ROAMS, BUILDINGS, GATES, TOWN_H, FRIENDS, M
     SEALS, YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, BLOCK, regionOf, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, PEOPLE,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, MONS, BUILDINGS as ALL_BUILDINGS } from '../src/data/map.js';
 
-const ART = { ...LEGACY_ART, ...NEW_ART };
+import { ART } from '../src/art/index.js';
 
 const TOWN = idsInArea('ishinokawa'), SHOP = idsInArea('shoutengai');
 

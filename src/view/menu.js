@@ -15,7 +15,7 @@ import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRec
 import { sfx } from '../core/sound.js';
 import { bgmOn, setBgmOn } from '../core/bgm.js';
 import { btn, isKeyboard } from '../core/keys.js';
-import { medalByUid, friendCount, bondLevel, heroUpgraded } from '../logic/game.js';
+import { medalByUid, friendCount, bondLevel, specialUpgraded } from '../logic/game.js';
 import { statsAt, expFor } from '../logic/units.js';
 import { questList, questState, questProgress, questReady } from '../logic/quests.js';
 import { FRIENDS } from '../data/map.js';
@@ -148,7 +148,7 @@ export function createMenu(app) {
         // バトルで 使う わざ・術・必殺技 (2026-10-27)
         text(ctx, `わざ: ${n.waza.name}　術: ${n.jutsu.name} (${JUTSU_RANK_NAMES[n.jutsu.tier]})`, 170, 150, { size: 11, maxWidth: 220 });
         const bond = known && !n.hero ? bondLevel(g, id) : 0;
-        const special = n.hero && heroUpgraded(g) ? n.special2 : n.special;   // こおりくんは 9 章 クリアで 進化
+        const special = n.special2 && specialUpgraded(g, id) ? n.special2 : n.special;   // こおりくん (9 章)・おにおに (12 章) は 進化する
         text(ctx, `必殺技: ${special.name}${bond ? `　絆Lv${bond} (威力 +${bond * 10}%)` : ''}`, 170, 166, { size: 11, maxWidth: 220 });
         // 進化 (2026-10-29): 進化する Lv と 進化先
         const ev = evolveOf(id);

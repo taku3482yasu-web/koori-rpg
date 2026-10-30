@@ -13,7 +13,7 @@ import { playBgm, currentBgm } from './core/bgm.js';
 import { bgmFor } from './data/bgm.js';
 import { BOSSES } from './data/nakama.js';
 import { areaAt, TILE } from './data/map.js';
-import { newGame, migrate, VERSIONS, watchMedals, applyBattleResult, bondLevel, heroUpgraded } from './logic/game.js';
+import { newGame, migrate, VERSIONS, watchMedals, applyBattleResult, bondLevel, specialUpgraded } from './logic/game.js';
 import { createBattle } from './logic/battle.js';
 import { createTalk } from './view/talk.js';
 import { createTitle } from './view/title.js';
@@ -71,7 +71,7 @@ const app = {
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
     startBattle({ enemies, kind, place, mystery = null, team = null }) {
-        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id), upgrade: heroUpgraded(this.g) } : null));
+        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null));
         const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
         battle.mystery = mystery;
         battle.team = team;

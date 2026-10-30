@@ -77,7 +77,9 @@ const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon
     'dumbbellkong', 'magmatcho', 'kazanmatcho', 'yukiusapon', 'tsurarabo', 'kakigoora', 'penguinknight', 'shirokumatcho', 'yukionnan',
     'sakurarisu', 'harukazedori', 'fukinoton', 'harukirin', 'nozoema',
     // 11 章 ASOの壺の底 (2026-10-30。大魔王ASO は ダンジョンの maou)
-    'asohei', 'asoshougun', 'hinotorin', 'kaendaruma', 'youganworm', 'dradora', 'maou'];
+    'asohei', 'asoshougun', 'hinotorin', 'kaendaruma', 'youganworm', 'dradora', 'maou',
+    // 大魔王ASO・真 (ASO の 第 2 形態。2026-10-30)
+    'maoushin'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

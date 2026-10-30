@@ -32,7 +32,9 @@
 //   clear10  10 章 クリア。ここから 11 章「ASOの壺の底」: ともいしの 家で ルキハの 城への 道の 話
 //   tsuboe   石の川駅から 電車で ASOの壺の底へ 行ける
 //   tsubo    ASOの壺の底に 着いた。火山の 底の バクエンリュウ・闇 (flags.baku11) → ASO の 間の 大魔王ASO と 話す
-//   clear11  11 章 クリア。(12・13 章は まだ。本編の さいご = MAIN_END)
+//   clear11  11 章 クリア。ここから 12 章「集結」: ともいしの 家で 黒い 空
+//   shuuketsu 神社に みんなが あつまる。おにおに・鬼神が 勝負を いどむ (flags.oni12) → 家で ねると 出発の 前の 夜
+//   clear12  12 章 クリア。(13 章は まだ。本編の さいご = MAIN_END)
 //   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
 //   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
@@ -282,6 +284,8 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'nozoema9') { g.story = 'clear9'; g.chapter = 10; out.heroSpecial = true; }
         if (bossId === 'tashikeda10') { g.story = 'clear10'; g.chapter = 11; }
         if (bossId === 'bakuen11') g.flags.baku11 = true;
+        if (bossId === 'onioni12') { g.flags.oni12 = true; out.oniSpecial = true; }
+        if (bossId === 'aso15') g.flags.aso15 = true;
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
     }
@@ -390,6 +394,9 @@ export function objective(g) {
         case 'tsuboe': return '石の川駅から、電車で ASOの壺の底へ 行こう';
         case 'tsubo': return !g.flags.baku11 ? '火山の 底へ おりよう' : 'おくの ASOの間へ 行こう';
         case 'clear11': return '家の 前の ともいしと 話そう';
+        // 12 章「集結」
+        case 'shuuketsu': return !g.flags.oni12 ? '神社に 行こう。みんなが あつまっている' : '家に 帰って ねよう (出発の 前の 夜)';
+        case 'clear12': return '家の 前の ともいしと 話そう';
         // 14 章 (バージョンで ちがう)
         case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
         case 'park': return 'アトラクションで 遊ぼう。帰るときは 遊園地前駅へ';
@@ -460,8 +467,25 @@ export function meetAso(g) {
     g.chapter = 12;
     return true;
 }
+// ----- 12 章 (2026-10-30) -----
+export function startChapter12(g) {
+    if (g.story !== 'clear11') return false;
+    g.story = 'shuuketsu';
+    return true;
+}
+// おにおに・鬼神に 勝った あと 家で ねると 12 章 クリア (出発の 前の 夜)
+export function nightBefore(g) {
+    if (g.story !== 'shuuketsu' || !g.flags.oni12) return false;
+    g.story = 'clear12';
+    g.chapter = 13;
+    return true;
+}
+// 大魔王ASO と 勝負できるか (14 章 クリアの あと、ASO の 間で)
+export const canFightAso = g => reached(g, 'clear14') && !g.flags.aso15;
 // こおりくんの 必殺技が 進化しているか (9 章 クリアから「絶対殺すソード・レクイエム」)
 export const heroUpgraded = g => reached(g, 'clear9');
+// なかまの 必殺技が 進化しているか: こおりくん (9 章 クリア)・おにおに (12 章で 勝負に 勝つ)
+export const specialUpgraded = (g, id) => (id === HERO_ID ? heroUpgraded(g) : id === 'onioni' ? Boolean(g.flags.oni12) : false);
 
 // 金色のSE城に はじめて 着いた (8 章の はじまり)。はじめて なら true
 export function arriveShiro(g) {

@@ -7,6 +7,8 @@
 // 6 章: ともいし → 電車で 忍びの屋敷 → 庭の ズミタニ (影分身) → 奥の 間で ルキハ と おにおに → 東の 蔵の 幹部 トモオカ (右腕)
 // 7 章: 電車で 月の迷宮 (ルナヤに まねかれる) → 迷宮の 奥の 月の 鏡で 回想 → ルナヤ (満ちていく 月)
 // 8 章: 電車で 金色のSE城 (ライバル探検隊が 門を こじあける) → 幹部 大鬼・双頭鬼・金滅鬼 → 玉座の 間の おにおに → ルキハ
+// 12 章: ともいしの 家で 黒い 空 → 神社に みんなが あつまる → おにおに・鬼神と 勝負 (必殺技が 進化) → 家で ねると 出発の 前の 夜
+// 大魔王ASO: 14 章 クリアの あと ASO の 間で 話すと 勝負 (推奨 Lv90)。勝つと なかまに
 // 11 章: ともいしの 家で ルキハの 城への 道の 話 → 電車で ASOの壺の底 → 火山の 底の バクエンリュウ・闇 (ASO が 道具を 投げる) → ASO の 間
 // 10 章: 町に もどると 黒い 霧 → 石の川タウンと 商店街の キャラは ぜんぶ 紋つき「・闇」→ 5 回 助けると 家の 前に 幹部 タシケダ
 // 9 章: ともいしの 家で おにおにが なかまに → 電車で 筋肉の山 → 雪どけの 氷河の ハル麒麟 (角) → 山頂の ノゾエマ → 必殺技が 進化
@@ -31,7 +33,7 @@ import { reached } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -190,7 +192,9 @@ export function createField(app) {
                 clear10: ['こおり、ありがとね。'],
                 tsuboe: ['ASOの壺？ 大魔王が ねむっとるって 話やないね……。こおり、ほんとに 気を つけなさいよ。'],
                 tsubo: ['壺の 底は 熱いっちゃろ？ 水筒 もっていきなさい。'],
-                clear11: ['ASOさんって 人に 会えたと？ ……こおり、なんか 顔つきが かわったね。……ほら、ふるカワちゃんが また 来とるよ。'],
+                clear11: ['ASOさんって 人に 会えたと？ ……こおり、なんか 顔つきが かわったね。'],
+                shuuketsu: ['神社に みんな あつまっとるらしいよ。……こおり、あんた いつのまに こんなに ともだちが できたと？'],
+                clear12: ['……ほら、ふるカワちゃんが また 来とるよ。'],
                 invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
                 park: ['遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。'],
                 yoru: ['ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！'],
@@ -205,6 +209,16 @@ export function createField(app) {
                     nar('おにおにが なかまに なった！'),
                     furu('ルキハと 戦うには、もっと 強く ならなきゃ。……筋肉の山の ノゾエマさんに 修行を つけて もらおう！'),
                     nar('石の川駅から、電車で 筋肉の山へ 行けるように なった！')
+                ], { done: () => app.save() });
+                return;
+            }
+            if (startChapter12(g)) {
+                // 12 章の はじまり「黒い 空」(ストーリー工房 12 章 場面 1)
+                say([
+                    nar('空が 黒く そまり、世界じゅうに 紋つきの 軍勢が あらわれた。'),
+                    furu('ルキハが 本気で 世界を 喰おうと してる……！'),
+                    tomo('こおり、神社に みんなが あつまっとるらしいよ。行って きなさい。'),
+                    nar('石の川神社へ 行こう。')
                 ], { done: () => app.save() });
                 return;
             }
@@ -343,6 +357,29 @@ export function createField(app) {
                 nar('おにおにの 胸の 黒い 紋が、どくん、と 脈うった。'),
                 furu('大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('onioni8'), kind: 'boss', place: 'shiro' }) });
+        } else if (p.id === 'onioni12') {
+            // 12 章: みんなが 来た (ストーリー工房 12 章 場面 2) → おにおにの 勝負 (ユーザー指定)
+            const L = rivalLines();
+            say([
+                nar('石の川神社に、これまで 出会った みんなが あつまっていた。'),
+                by(L.meet[0], 'ライバルは ライバルでも、世界が なくなったら 勝負も できないからな。'),
+                by('onioni', '氷隊と 鬼鬼団が いっしょに 戦うとはな。……足を ひっぱるなよ、こおり。'),
+                furu('こおりくん、みんなで 行こう！'),
+                by('onioni', '……その 前に だ。こおり、おれと 勝負しろ。'),
+                by('onioni', 'ルキハに あやつられて いた おれじゃ ない、ほんとうの おれの 力を 見せてやる。……本気で 来い！'),
+                nar('おにおにの 体が 赤黒く 燃えあがった……！ 鬼神の すがただ！'),
+                furu('大技を ためてる あいだに 攻撃を あてれば、力が 暴発するはず！ 2 回目からは ガードしてくるよ！')
+            ], { done: () => app.startBattle({ enemies: bossEnemies('onioni12'), kind: 'boss', place: 'shrine' }) });
+        } else if (p.only === 'gather12') {
+            // 12 章: 神社に あつまった みんな (Claude の 仮組)
+            const lines = {
+                g12zumitani: ['zumitani', 'ルキハの 城？ 忍びこむなら まかせてよ♪ ……もちろん、ついて いくからね。'],
+                g12runaya: ['runaya', 'あの 男の 顔を ねらうのよ。顔よ、顔。……あら、これは もう 言ったかしら？'],
+                g12nozoema: ['nozoema', 'そなたの 剣、ルキハに とどかせて みせよ。筋肉も ついて いくぞ。'],
+                g12daishi: ['daishi', '拙僧も 微力ながら、念仏で 支えますぞ。……配信も しますぞ。'],
+                g12rival: [rivalLines().meet[0], 'ふん、今回だけは 手を かしてやる。……かんちがい するなよ！']
+            }[p.id];
+            say([by(lines[0], lines[1])]);
         } else if (p.id === 'bakuen11') {
             // 11 章の ボス: 火山の 底に ねむる バクエンリュウ・闇 (ASO と 出会う 前。ASO は 声だけ)
             say([
@@ -355,7 +392,23 @@ export function createField(app) {
             ], { done: () => app.startBattle({ enemies: bossEnemies('bakuen11'), kind: 'boss', place: 'tsubo' }) });
         } else if (p.id === 'aso11') {
             // 11 章: ASO の 間の 大魔王ASO (ストーリー工房 11 章 場面 2・3。ASO とは 戦わない)
-            if (!meetAso(g)) { say([{ who: '大魔王ASO', art: 'maou', text: '……きさまに たくしたぞ、こおり族の 子よ。あの 男の 顔を ねらえ。' }]); return; }
+            if (canFightAso(g)) {
+                // 14 章 クリアの あと: 大魔王ASO と 勝負 (推奨 Lv90。2026-10-30 ユーザー指定)
+                say([
+                    { who: '大魔王ASO', art: 'maou', text: '……ルキハを たおし、残党まで かたづけたか。こおり族の 子よ、きさまの 力、この 我が ためして やろう。' },
+                    { who: '大魔王ASO', art: 'maou', text: '我に 勝てたなら……きさまの なかまに なって やっても よい。' },
+                    nar('(推奨 Lv90 の 強敵)')
+                ], {
+                    choices: ['勝負する', 'やめる'],
+                    done: i => {
+                        if (i !== 0) return;
+                        say([furu('拘束のリングに つかまったら、浮いてる リングを ねらって こわして！ 輪が 回せなく なるよ！')],
+                            { done: () => app.startBattle({ enemies: bossEnemies('aso15'), kind: 'boss', place: 'tsubo' }) });
+                    }
+                });
+                return;
+            }
+            if (!meetAso(g)) { say([{ who: '大魔王ASO', art: 'maou', text: g.flags.aso15 ? '……我は きさまの なかまだ。ウォッチで 呼ぶが よい。' : '……きさまに たくしたぞ、こおり族の 子よ。あの 男の 顔を ねらえ。' }]); return; }
             say([
                 nar('ASO の 間に、大きな 影が しずかに すわっていた。'),
                 { who: '大魔王ASO', art: 'maou', text: 'この 我が……このASOが……人の すがたを した 男ごときに、力を 半分 喰われるとは……！' },
@@ -461,7 +514,17 @@ export function createField(app) {
             say([{ who: '', text: `こおりくんの 家。いまは ${g.day}日目の ${TIMES[g.time]}。` }], {
                 choices: ['ねる (時間を すすめる)', 'セーブする', 'やめる'],
                 done: i => {
-                    if (i === 0) {
+                    if (i === 0 && nightBefore(g)) {
+                        // 12 章 クリア: 出発の 前の 夜 (ストーリー工房 12 章 場面 3)
+                        g.time = 3;
+                        say([
+                            tomo('こおり、おべんとう つくっといたよ。'),
+                            tomo('……ちゃんと 帰って きなさい！ 借金も 返さんまま いなくなるのは ゆるさんけんね！'),
+                            nar('こおりくんは しずかに ねむった。'),
+                            nar('１２章 クリア！'),
+                            nar('―― １３章は つぎの アップデートで。')
+                        ], { done: () => app.save() });
+                    } else if (i === 0) {
                         advanceTime(g, app.rng);
                         sfx('heal');
                         app.save();
@@ -895,6 +958,19 @@ export function createField(app) {
                 nar('―― １５章「新たなる１日」 ――'),
                 nar('こおりくんの 旅は 終わらない。この 世界の キャラを ぜんぶ なかまに しよう！'),
                 nar('石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！')
+            ], { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'onioni12') {
+            say([
+                by('onioni', '……ぐ……。まいった。おまえ、ほんとうに 強く なったな、こおり。'),
+                by('onioni', 'だが おれも 負けっぱなしじゃ おらん。……見とけ、これが 鬼の 王の 力だ！'),
+                nar('おにおにの 必殺技が「鬼の王の金棒」に 進化した！'),
+                furu('これで ルキハの 城へ 行けるね……！ 今夜は 家に 帰って ゆっくり ねよう。')
+            ], { done: () => app.save() });
+        } else if (result.boss && result.outcome === 'win' && result.bossId === 'aso15') {
+            say([
+                { who: '大魔王ASO', art: 'maou', text: '……見事だ。この 我を 二度も 地に つけるとはな。' },
+                { who: '大魔王ASO', art: 'maou', text: 'よかろう。約束どおり、きさまの 力と なろう。' },
+                nar('大魔王ASOが なかまに なった！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'bakuen11') {
             say([
@@ -1357,6 +1433,8 @@ export function createField(app) {
         drawPeople(ctx);
         // 時間帯の 色・雨
         if (TINT[g.time]) { ctx.fillStyle = TINT[g.time]; ctx.fillRect(0, 0, 400, 240); }
+        // 12 章: 黒い 空 (町と 商店街)
+        if (g.story === 'shuuketsu' && g.pos.y < SCHOOL_Y0 * TILE) { ctx.fillStyle = 'rgba(30, 0, 10, 0.32)'; ctx.fillRect(0, 0, 400, 240); }
         // 10 章: 黒い 霧の 町
         if (darkHere()) {
             ctx.fillStyle = 'rgba(30, 6, 50, 0.5)';
@@ -1552,7 +1630,8 @@ export function createField(app) {
             : g.story === 'clear6' ? { x: 5, y: 40 } : g.story === 'meikyu' ? { x: 24, y: MOON_Y0 + 2 }
             : g.story === 'clear7' ? { x: 5, y: 40 }
             : g.story === 'oshiro' ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) }
-            : g.story === 'clear8' || g.story === 'clear10' || g.story === 'clear11' ? { x: 8, y: 24 }
+            : g.story === 'clear8' || g.story === 'clear10' || g.story === 'clear11' || g.story === 'clear12' ? { x: 8, y: 24 }
+            : g.story === 'shuuketsu' ? (!g.flags.oni12 ? { x: 8, y: 6 } : { x: 6, y: 23 })
             : g.story === 'tsuboe' ? { x: 5, y: 40 } : g.story === 'tsubo' ? (!g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 }) : g.story === 'invite' || g.story === 'onijoin' ? { x: 5, y: 40 }
             : g.story === 'shuugeki' ? ((g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null)
             : g.story === 'kinniku' ? (!g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 })

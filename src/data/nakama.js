@@ -292,6 +292,9 @@ export const WAZA = {
     dradora: W('ドラ爆', 'ほのお', 'around', 1.3),
     bakuenryu: W('マグマの 波', 'ほのお', 'around', 1.2, 'poison', 0.3),
     bakuen11: W('ほのおの いき', 'ほのお', 'line', 1.4),
+    onioni12: W('鬼神 金棒', 'ほのお', 'around', 1.4),
+    aso: W('亜祖宇激烈破', 'ふしぎ', 'around', 1.6),
+    aso15: W('魔剣 生成', 'ふしぎ', 'front', 1.8),
     tashikeda10: W('ウイルス さんぷ', 'ふしぎ', 'around', 0.6, 'poison', 0.4),
     harukirin9: W('麒麟のいかずち', 'かぜ', 'line', 1.5, 'slow', 0.3),
     nozoema9: W('刀の一振り', 'ふつう', 'around', 1.6),
@@ -1233,7 +1236,16 @@ const LIST = [
         id: 'onioni', name: 'おにおに', from: 'スロット・ダンジョン', area: 'shiro', storyOnly: true, rank: 'A', element: 'ほのお', role: 'attacker', mul: { atk: 1.2, hp: 1.1 },
         line: '金かえせ！', favorite: 'choco',
         title: 'SE城の主', desc: '鬼鬼団の団長で、金色のSE城の主。パチンコに目がなく、こおりくんに お金を 貸している。ルキハに あやつられていたが、紋が とけて こおりくんの なかまに なった。',
-        special: sp('鬼神 金棒くだき', [atk('all', 2.0, { element: 'ほのお' })])
+        special: sp('鬼神 金棒くだき', [atk('all', 2.0, { element: 'ほのお' })]),
+        // 12 章で こおりくんと 勝負して 進化する 必殺技 (2026-10-30 ユーザー指定)
+        special2: { ...sp('鬼の王の金棒', [atk('all', 2.7, { element: 'ほのお' }), { kind: 'buff', target: 'party', stat: 'atk', amount: 0.3, time: 10 }]), fx: 'onioni2' }
+    },
+    // 大魔王ASO (14 章 クリアの あと ASOの壺の底で 勝負して 勝つと なかまに なる。2026-10-30 ユーザー指定)
+    {
+        id: 'aso', name: '大魔王ASO', from: 'ダンジョン ボス', area: 'tsubo', storyOnly: true, rank: 'S', element: 'ふしぎ', role: 'jammer', mul: { mag: 1.3, hp: 1.2 }, art: 'maou',
+        line: 'よみがえったぞ……今度こそ すべてを 無に返してやる！', favorite: 'choco',
+        title: 'ASOの壺の主', desc: '数百年前に「ASOの壺」に封印されていたが、封印が解けて よみがえり、摩天楼を築いた。無から宝や武器などを生み出して使役できる。ルキハに 力を 半分 喰われたが、こおりくんの 力を みとめて なかまに なった。',
+        special: sp('亜祖宇激烈破', [atk('all', 2.6, { magic: true, element: 'ふしぎ' })])
     },
     // ----- ASOの壺の底の 6 体 (11 章「ASOの壺の底」。2026-10-30。C 5・A 1) -----
     //   ダンジョンの ASOの壺の底 (アソヘイ) と 火山の キャラ (ヒノトリン・カエンダルマ・ヨウガンワーム)・ドラドラ。
@@ -1742,6 +1754,62 @@ export const BOSSES = {
         chanceTurns: 4,
         befriends: null, lv: 35, place: 'shiro'
     },
+    // ----- 12 章「集結」の ボス (2026-10-30 ユーザー指定) -----
+    // おにおに・鬼神: ルキハとの 決戦の 前に こおりくんに 勝負を いどむ。最初から 第 2 形態 (鬼神)。8 章とは くらべものに ならない 攻撃。
+    //   チャンスタイムは 8 章の おにおにと 同じ (ため の あいだに ダメージで 紋……ではなく 力の 暴発。2 回目からは ガード)
+    onioni12: {
+        id: 'onioni12', name: 'おにおに・鬼神', element: 'ほのお', role: 'attacker', art: 'onioni2', scale: 2.2, rank: 'S',
+        base: { hp: 1300, atk: 24, def: 18, spd: 14, mag: 19 },
+        moves: [
+            { name: '鬼神 金棒', w: 3, effects: [atk('all', 1.15)] },
+            { name: '鬼神パンチ 連打', w: 2.5, effects: [atk('one', 0.9, { hits: 3 })] },
+            { name: '鬼の 大のろい', w: 2, effects: [atk('all', 0.4), { kind: 'status', target: 'all', status: 'slow', chance: 0.8 }] },
+            { name: '大火炎の術', w: 2.5, effects: [atk('all', 1.3, { magic: true, element: 'ほのお' })] },
+            { name: '地獄の 業火', w: 1.5, effects: [atk('all', 0.9, { magic: true, element: 'ほのお' }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }] }
+        ],
+        bigMove: { name: '鬼神 金棒くだき・極', trigger: 'burst', every: 11, charge: 6, need: 0.09, guardCut: 0.4, effects: [atk('all', 2.8)],
+            burst: { name: '鬼神の 力の 暴発', effects: [atk('all', 0.9, { element: 'ほのお' })] } },
+        chanceTurns: 4,
+        befriends: null, lv: 55, place: 'shrine'
+    },
+    // ----- 大魔王ASO (14 章 クリアの あと。推奨 Lv90。2026-10-30 ユーザー指定) -----
+    // 第 1 形態: 武器や アイテムを 生みだして 攻撃。「拘束のリング」: 味方 1 体を 拘束し (うごけない)、ウォッチの 輪も 回せなく なる。
+    //   リングは 拘束の あいだ ずっと 浮いていて、ねらって こわすと 拘束が とける
+    // 第 2 形態 (大魔王ASO・真。第 1 形態の HP が なくなると): 7 つの 属性の 術 ぜんぶ・「破壊の腕輪」(こうげき 超アップ) などの バフ。
+    //   必殺技の ため の あいだに 決まった ダメージを あたえると チャンスタイム
+    aso15: {
+        id: 'aso15', name: '大魔王ASO', element: 'ふしぎ', role: 'jammer', art: 'maou', scale: 1.8, rank: 'S',
+        base: { hp: 1250, atk: 22, def: 20, spd: 14, mag: 23 },
+        moves: [
+            { name: '魔剣 生成', w: 3, effects: [atk('one', 1.7)] },
+            { name: '槍の雨 生成', w: 2.5, effects: [atk('all', 0.95)] },
+            { name: '爆弾 生成', w: 2, effects: [atk('all', 1.0, { element: 'ほのお' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.3 }] },
+            { name: '毒の小瓶 生成', w: 1.5, effects: [{ kind: 'status', target: 'all', status: 'poison', chance: 0.7 }] },
+            { name: '拘束のリング', w: 2, bind: true }
+        ],
+        bigMove: { name: '亜祖宇激烈破', every: 13, warn: 2.5, effects: [atk('all', 1.6, { magic: true, element: 'ふしぎ' })] },
+        ring: { name: '拘束のリング', hp: 0.05, pos: [1.9, -0.95] },
+        phase2: {
+            name: '大魔王ASO・真', art: 'maoushin',
+            moves: [
+                { name: '氷河の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'こおり' }] },
+                { name: '大噴火の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'ほのお' }] },
+                { name: '大津波の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'みず' }] },
+                { name: '森羅の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'しぜん' }] },
+                { name: '大嵐の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'かぜ' }] },
+                { name: '異界の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'ふしぎ' }] },
+                { name: '天変の術', w: 1, effects: [{ kind: 'attack', target: 'all', power: 1.0, magic: true, element: 'ふつう' }] },
+                { name: '破壊の腕輪', w: 1.5, effects: [{ kind: 'buff', target: 'self', stat: 'atk', amount: 1.0, time: 15 }] },
+                { name: '守護の腕輪', w: 1, effects: [{ kind: 'buff', target: 'self', stat: 'def', amount: 0.6, time: 15 }] },
+                { name: '神速の腕輪', w: 1, effects: [{ kind: 'buff', target: 'self', stat: 'spd', amount: 0.5, time: 15 }] },
+                { name: '魔剣 生成', w: 2, effects: [atk('one', 1.9)] }
+            ],
+            bigMove: { name: '亜祖宇激烈破・真', trigger: 'burst', every: 12, charge: 6, need: 0.07, effects: [atk('all', 2.6, { magic: true, element: 'ふしぎ' })],
+                burst: { name: '力が みだれた', effects: [] } }
+        },
+        chanceTurns: 4,
+        befriends: 'aso', lv: 90, place: 'tsubo'
+    },
     // ----- 11 章「ASOの壺の底」の ボス (2026-10-30 ユーザー指定) -----
     // バクエンリュウ・闇 (火山の 底に ねむる 竜。紋で あやつられている): 体が マグマで ふだんは 攻撃が きかない (magma)。
     //   ASO (姿は 見えない) が 左右に 道具を 投げて くれる (throws)。道具を ねらって 攻撃すると 使える:
@@ -1853,7 +1921,7 @@ export const BOSSES = {
 // 14 章の ボスは バージョンで ちがう
 export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
 // 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
-export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'bakuen11', 'boss14'];
+export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'bakuen11', 'onioni12', 'boss14'];
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)

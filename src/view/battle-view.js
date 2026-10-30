@@ -258,6 +258,19 @@ export function createBattleView(app, battle, place) {
                 if (e.why === 'cage') banner = { text: 'おりが こわれた！ ふるカワが にげだした！ チャンス！', color: COLORS.accent, until: t + 2 };
                 if (e.why === 'signal') banner = { text: '信号機を こわした！ リハマが とまった！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
+            } else if (e.type === 'bind') {
+                // 大魔王ASO: 拘束のリング
+                banner = { text: `拘束のリング！ ${nameOf(e.target)}が うごけない！ 輪も 回せない！`, color: '#ffd040', until: t + 2 };
+                sfx('cancel');
+            } else if (e.type === 'unbind') {
+                if (e.why === 'break') { banner = { text: 'リングを こわした！ 拘束が とけた！', color: COLORS.accent, until: t + 1.8 }; sfx('big'); }
+            } else if (e.type === 'boundWheel') {
+                if (t - guardTold > 1) { guardTold = t; banner = { text: '拘束のリングで 輪が 回せない！ リングを ねらえ！', color: '#ffd040', until: t + 1.4 }; sfx('cancel'); }
+            } else if (e.type === 'transform') {
+                banner = { text: `${e.name}に すがたを かえた！`, color: '#ff6a6a', until: t + 2.2 };
+                sfx('big');
+                const p = posOf(e.actor);
+                if (p) for (let i = 0; i < 4; i++) effects.push({ kind: 'wave', x: p.x, y: p.y - 40, start: t + i * 0.15, dur: 0.7, color: '#c88aff' });
             } else if (e.type === 'throw') {
                 // 11 章: ASO が 道具を 投げた
                 banner = { text: `ASOが「${e.name}」を 投げた！ ねらって 攻撃！`, color: '#ffd080', until: t + 1.6 };
@@ -845,6 +858,11 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'shrine') {
+            // 12 章 神社 (黒い 空): 赤黒い 空と 鳥居
+            ctx.fillStyle = '#2a0a12'; ctx.fillRect(0, 0, 400, HORIZON);
+            for (let i = 0; i < 6; i++) { ctx.fillStyle = `rgba(80, 10, 30, ${0.3 + 0.1 * Math.sin(t + i)})`; ctx.beginPath(); ctx.ellipse((i * 79 + t * 8) % 480 - 40, 20 + (i % 3) * 18, 60, 12, 0, 0, Math.PI * 2); ctx.fill(); }
+            ctx.fillStyle = '#c03a2a'; ctx.fillRect(140, 30, 120, 10); ctx.fillRect(150, 46, 100, 6); ctx.fillRect(160, 40, 8, HORIZON - 40); ctx.fillRect(232, 40, 8, HORIZON - 40);
         } else if (place === 'tsubo') {
             // 11 章 ASOの壺の底: くらい どうくつと 下から 光る 溶岩
             ctx.fillStyle = '#1a0c0a'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -918,7 +936,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'tsubo' ? ['#4a1a10', '#7a3a20'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'tsubo' ? ['#4a1a10', '#7a3a20'] : place === 'shrine' ? ['#8a8070', '#b0a890'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -963,6 +981,12 @@ export function createBattleView(app, battle, place) {
             ctx.beginPath(); ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2); ctx.fill();
         }
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
+        // 拘束のリング (大魔王ASO) で うごけない なかま: 金色の 輪で しばられる
+        if (!u.ko && u.bound) {
+            const fk = scale * artFit(art);
+            ctx.strokeStyle = '#ffd040'; ctx.lineWidth = 3;
+            for (let i = 0; i < 2; i++) { ctx.beginPath(); ctx.ellipse(p.x, p.y + bobY - art.h * fk * (0.35 + i * 0.3), art.w * fk / 2 + 6, 6, 0, 0, Math.PI * 2); ctx.stroke(); }
+        }
         // とりつき中は むらさきの もや・レベルダウン中 (10 章の レベル ドレイン) は 青い もやが まとわりつく (2026-10-30 ユーザー指定)
         if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art, scale, [190, 90, 255], 0);
         if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
@@ -1083,6 +1107,14 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
                 text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+            } else if (pt.ring) {
+                // 拘束のリング (大魔王ASO): 金色の 輪が 浮いて まわる
+                const bob = Math.sin(t * 3) * 3, y0 = q.y + bob;
+                ctx.strokeStyle = '#ffd040'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.ellipse(q.x, y0, 16, 8 + 4 * Math.sin(t * 4), 0, 0, Math.PI * 2); ctx.stroke();
+                ctx.strokeStyle = '#fff0a0'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.ellipse(q.x, y0, 11, 5, t, 0, Math.PI * 2); ctx.stroke();
+                label(key, q, 18);
             } else if (pt.thrown) {
                 // ASO が 投げた 道具 (11 章): 剣・回復の 実・水爆弾
                 const bounce = Math.sin(t * 4 + q.x) * 2, y0 = q.y + bounce;

@@ -39,6 +39,8 @@
 //     双頭鬼: 右の 頭 (とりつき) と 左の 頭 (術)。頭を こわすと その 頭の わざ (move の gim) が 使えない。
 //       両方 こわす (gims の group が ぜんぶ こわれる) と チャンスタイム → おわると 頭は もとに もどる
 //     金滅鬼: めくらましの とりつき を つかう。チャンスタイムは ない
+//   大魔王ASO (14 章 クリアの あと。2026-10-30 ユーザー指定): 拘束のリング (b.bind) で 味方 1 体が うごけず、輪も 回せない。
+//     リング (gims.ring) を こわすと とける。第 1 形態の HP が なくなると 第 2 形態 (phase2) に かわる (HP は もとに もどる)
 //   11 章の バクエンリュウ (2026-10-30 ユーザー指定): 体が マグマで ふだんは 攻撃が きかない (magma。チャンスタイムの あいだだけ きく)。
 //     ASO が throws.every 秒ごとに 左右の あいた 方へ 道具を 投げる (gims の thrown。waterEvery 回に 1 回は 水爆弾)。
 //     道具を ロックオンして 攻撃すると 使える: 剣 = 前の 味方の こうげき +40% / 回復の 実 = 前の 味方を 35% 回復 /
@@ -89,8 +91,9 @@ function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
         bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
-        gims: sp.throws ? {} : sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
+        gims: sp.throws || sp.ring ? {} : sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
+        ringDef: sp.ring || null, phase2Def: sp.phase2 || null, phase: 1, bound: false,
         regenDef: sp.regen || null, magma: Boolean(sp.magma), throwDef: sp.throws || null, throwT: sp.throws ? sp.throws.every - sp.throws.first : 0, throwNo: 0, summonDef: sp.summons || null, summonNo: 0, drained: null, drainOf: null,
         cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
@@ -147,6 +150,7 @@ function hitGim(b, u, key, dmg) {
     //   14 章: サアラハの おり (ふるカワが にげる。もどらない)・リハマの 信号機 (赤信号の あいだだけ 出る。こわすと 赤信号が おわる)
     if (part.chance) { if (part.when === 'shell') u.shell = 0; startChance(b, u, part.chance); return; }
     if (part.group && Object.values(u.gims).filter(p => p.group === part.group).every(p => p.broken)) { startChance(b, u, part.group); return; }
+    if (key === 'ring') { releaseBind(b); return; }   // 拘束のリング (大魔王ASO)
     if (key === 'horn') {
         // ハル麒麟の 角 (9 章): こわすと 全回復の ため が 止まる
         if (b.regen && b.regen.uid === u.uid) { b.regen = null; emit(b, 'regenCancel', { actor: u.uid }); }
@@ -284,7 +288,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null, hack: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null, hack: null, bind: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -331,10 +335,49 @@ function afterKo(b, u) {
     if (b.regen && b.regen.uid === u.uid) b.regen = null;
     // 10 章: タシケダが 作った 敵を たおすと、吸われた レベルが もどる。タシケダが たおれたら 作った 敵も きえる
     if (u.drainOf) restoreLevel(b, u);
+    if (b.bind && b.bind.uid === u.uid) releaseBind(b, 'ko');
     if (u.summonDef) {
         for (const m of minionsOf(b, u)) { m.hp = 0; m.ko = true; emit(b, 'ko', { target: m.uid, side: 'enemy' }); restoreLevel(b, m); }
     }
     if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
+}
+
+// ----- 拘束のリング・第 2 形態 (大魔王ASO) -----
+function bindOne(b, u) {
+    const targets = b.frontAlive().filter(a => !a.bound);
+    if (b.bind || !targets.length) return false;
+    const to = b.rng.pick(targets);
+    to.bound = true;
+    const r = u.ringDef, hp = Math.max(1, Math.round(u.max * r.hp));
+    u.gims.ring = { name: r.name, hp, max: hp, when: 'always', pos: r.pos, broken: false, ring: true };
+    b.bind = { uid: u.uid, target: to.uid };
+    emit(b, 'bind', { actor: u.uid, target: to.uid });
+    return true;
+}
+function releaseBind(b, why = 'break') {
+    if (!b.bind) return;
+    const to = b.wheel.find(a => a && a.uid === b.bind.target);
+    const u = b.enemies.find(e => e.uid === b.bind.uid);
+    if (to) to.bound = false;
+    if (u && u.gims) delete u.gims.ring;
+    if (u && b.lock === u.uid && b.lockPart === 'ring') b.lockPart = null;
+    emit(b, 'unbind', { target: b.bind.target, why });
+    b.bind = null;
+}
+function transform(b, u) {
+    const p2 = u.phase2Def;
+    releaseBind(b, 'phase');
+    u.phase = 2;
+    u.hp = u.max;
+    u.name = p2.name;
+    u.art = p2.art;
+    u.bossMoves = p2.moves;
+    u.bigMove = p2.bigMove;
+    u.buffs = {};
+    u.status = {};
+    b.bossTimer = 0;
+    b.warned = false;
+    emit(b, 'transform', { actor: u.uid, name: p2.name });
 }
 
 // ----- ASO が 投げる 道具 (11 章の バクエンリュウ) -----
@@ -501,6 +544,8 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
         b.burst.dmg += dmg;
         if (b.burst.dmg >= b.burst.need) burstBreak(b, to);
     }
+    // 大魔王ASO: 第 1 形態の HP が なくなると 第 2 形態に かわる
+    if (to.hp <= 0 && to.phase2Def && to.phase === 1) { transform(b, to); return dmg; }
     if (to.hp <= 0) {
         to.ko = true;
         to.status = {};
@@ -641,7 +686,7 @@ function act(b, u) {
         if (b.chant && b.chant.uid === u.uid) { emit(b, 'chanting', { actor: u.uid }); return; }   // お経を となえている あいだは ほかの ことを しない
         if (b.burst && b.burst.uid === u.uid) { emit(b, 'charging', { actor: u.uid }); return; }   // 必殺技を ためている あいだも (8 章の おにおに)
         const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) &&
-            (!m.drain || (minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some(f => !f.drained))) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+            (!m.drain || (minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some(f => !f.drained))) && (!m.bind || !b.bind) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
         if (!list.length) { emit(b, 'stunned', { actor: u.uid, left: 0 }); return; }
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
@@ -649,6 +694,7 @@ function act(b, u) {
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
         else if (move.clones) summonClones(b, u);
         else if (move.drain) drainSummon(b, u);
+        else if (move.bind) bindOne(b, u);
         else if (move.melt) { applyEffects(b, u, move.effects); meltThrown(b, u); }
         else {
             applyEffects(b, u, move.effects || []);
@@ -694,7 +740,7 @@ function tickUnit(b, u, dt, acting) {
     if (u.status.poison > 0) {
         u.hp = Math.max(1, u.hp - u.max * 0.03 * dt);   // どくでは たおれない
     }
-    if (!acting || u.status.sleep > 0 || u.status.stun > 0) return;   // 行動不能の とりつき (10 章) は たたかれても うごけない
+    if (!acting || u.status.sleep > 0 || u.status.stun > 0 || u.bound) return;   // 拘束 (大魔王ASO の リング) も うごけない   // 行動不能の とりつき (10 章) は たたかれても うごけない
     u.timer += dt;
     if (u.timer >= interval(u)) {
         u.timer = 0;
@@ -863,7 +909,7 @@ function bossTick(b, e, dt) {
         b.bossTimer += dt;
         if (b.bossTimer < m.every) return;
         e.burstCount = (e.burstCount || 0) + 1;
-        b.burst = { uid: e.uid, left: m.charge, dmg: 0, need: Math.round(e.max * m.need), guard: e.burstCount >= 2 };
+        b.burst = { uid: e.uid, left: m.charge, dmg: 0, need: Math.round(e.max * m.need), guard: e.burstCount >= 2 && Boolean(m.guardCut) };
         emit(b, 'telegraph', { actor: e.uid, name: m.name, warn: m.charge, burst: true, guard: b.burst.guard });
         return;
     }
@@ -902,6 +948,7 @@ function bossTick(b, e, dt) {
 // dir: +1 (R) / -1 (L)
 export function rotate(b, dir) {
     if (b.outcome || b.paused || b.rotateCooldown > 0) return false;
+    if (b.bind) { emit(b, 'boundWheel'); return false; }   // 拘束のリングが ある あいだは 輪を 回せない
     b.rot = (b.rot + (dir > 0 ? 1 : 5)) % 6;
     b.rotateCooldown = ROTATE_COOLDOWN;
     emit(b, 'rotate', { dir });

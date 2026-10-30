@@ -926,6 +926,30 @@ body.nopad #pad { display: none; }
       bass: "r r o r r r o r",
       drums: "x h s h x h s s"
     },
+    onioni12: {
+      name: "鬼の王 (おにおに・鬼神)",
+      bpm: 170,
+      root: 65,
+      mode: "harmonic",
+      lead: "sawtooth",
+      melody: "1 . 1 3 5 . 1' . | 7 . 6 . 5 4 3 . | 4 . 4 6 1' . 3' . | 2' - 1' - 7 - . . | 6 . 6 7 1' . 2' 1' | 7 . 5 . 6 . 7 . | 1' . 7 6 5 . 4 3 | 2 - 5 - 7 - 2' -",
+      chords: "1 5 4 5 6 3 4 5",
+      bass: "r o r o r o r o",
+      arp: "0 1 2 3 2 1 0 1",
+      drums: "x h s h x h s s"
+    },
+    aso15: {
+      name: "大魔王ASO",
+      bpm: 128,
+      root: 62,
+      mode: "phrygian",
+      lead: "sawtooth",
+      melody: "1 - - 2 1 - 7, - | 1 - - - 5 - - . | 6 - - 5 4 - 2 - | 1 - - - . . . . | 1' - - 7 6 - 5 - | 4 - 5 - 6 - 7 - | 1' - 2' - 1' - 6 - | 5 - - - 2 - 1 -",
+      chords: "1 1 6 1 6 4 6 5",
+      bass: "r - r - o - r -",
+      arp: "0 . 1 . 2 . 1 .",
+      drums: "k . . s k . s ."
+    },
     bakuen11: {
       name: "火山の 底の 竜 (バクエンリュウ)",
       bpm: 136,
@@ -1450,6 +1474,9 @@ body.nopad #pad { display: none; }
     dradora: W$1("ドラ爆", "ほのお", "around", 1.3),
     bakuenryu: W$1("マグマの 波", "ほのお", "around", 1.2, "poison", 0.3),
     bakuen11: W$1("ほのおの いき", "ほのお", "line", 1.4),
+    onioni12: W$1("鬼神 金棒", "ほのお", "around", 1.4),
+    aso: W$1("亜祖宇激烈破", "ふしぎ", "around", 1.6),
+    aso15: W$1("魔剣 生成", "ふしぎ", "front", 1.8),
     tashikeda10: W$1("ウイルス さんぷ", "ふしぎ", "around", 0.6, "poison", 0.4),
     harukirin9: W$1("麒麟のいかずち", "かぜ", "line", 1.5, "slow", 0.3),
     nozoema9: W$1("刀の一振り", "ふつう", "around", 1.6),
@@ -3725,7 +3752,27 @@ body.nopad #pad { display: none; }
       favorite: "choco",
       title: "SE城の主",
       desc: "鬼鬼団の団長で、金色のSE城の主。パチンコに目がなく、こおりくんに お金を 貸している。ルキハに あやつられていたが、紋が とけて こおりくんの なかまに なった。",
-      special: sp("鬼神 金棒くだき", [atk("all", 2, { element: "ほのお" })])
+      special: sp("鬼神 金棒くだき", [atk("all", 2, { element: "ほのお" })]),
+      // 12 章で こおりくんと 勝負して 進化する 必殺技 (2026-10-30 ユーザー指定)
+      special2: { ...sp("鬼の王の金棒", [atk("all", 2.7, { element: "ほのお" }), { kind: "buff", target: "party", stat: "atk", amount: 0.3, time: 10 }]), fx: "onioni2" }
+    },
+    // 大魔王ASO (14 章 クリアの あと ASOの壺の底で 勝負して 勝つと なかまに なる。2026-10-30 ユーザー指定)
+    {
+      id: "aso",
+      name: "大魔王ASO",
+      from: "ダンジョン ボス",
+      area: "tsubo",
+      storyOnly: true,
+      rank: "S",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { mag: 1.3, hp: 1.2 },
+      art: "maou",
+      line: "よみがえったぞ……今度こそ すべてを 無に返してやる！",
+      favorite: "choco",
+      title: "ASOの壺の主",
+      desc: "数百年前に「ASOの壺」に封印されていたが、封印が解けて よみがえり、摩天楼を築いた。無から宝や武器などを生み出して使役できる。ルキハに 力を 半分 喰われたが、こおりくんの 力を みとめて なかまに なった。",
+      special: sp("亜祖宇激烈破", [atk("all", 2.6, { magic: true, element: "ふしぎ" })])
     },
     // ----- ASOの壺の底の 6 体 (11 章「ASOの壺の底」。2026-10-30。C 5・A 1) -----
     //   ダンジョンの ASOの壺の底 (アソヘイ) と 火山の キャラ (ヒノトリン・カエンダルマ・ヨウガンワーム)・ドラドラ。
@@ -4661,6 +4708,94 @@ body.nopad #pad { display: none; }
       lv: 35,
       place: "shiro"
     },
+    // ----- 12 章「集結」の ボス (2026-10-30 ユーザー指定) -----
+    // おにおに・鬼神: ルキハとの 決戦の 前に こおりくんに 勝負を いどむ。最初から 第 2 形態 (鬼神)。8 章とは くらべものに ならない 攻撃。
+    //   チャンスタイムは 8 章の おにおにと 同じ (ため の あいだに ダメージで 紋……ではなく 力の 暴発。2 回目からは ガード)
+    onioni12: {
+      id: "onioni12",
+      name: "おにおに・鬼神",
+      element: "ほのお",
+      role: "attacker",
+      art: "onioni2",
+      scale: 2.2,
+      rank: "S",
+      base: { hp: 1300, atk: 24, def: 18, spd: 14, mag: 19 },
+      moves: [
+        { name: "鬼神 金棒", w: 3, effects: [atk("all", 1.15)] },
+        { name: "鬼神パンチ 連打", w: 2.5, effects: [atk("one", 0.9, { hits: 3 })] },
+        { name: "鬼の 大のろい", w: 2, effects: [atk("all", 0.4), { kind: "status", target: "all", status: "slow", chance: 0.8 }] },
+        { name: "大火炎の術", w: 2.5, effects: [atk("all", 1.3, { magic: true, element: "ほのお" })] },
+        { name: "地獄の 業火", w: 1.5, effects: [atk("all", 0.9, { magic: true, element: "ほのお" }), { kind: "status", target: "all", status: "poison", chance: 0.6 }] }
+      ],
+      bigMove: {
+        name: "鬼神 金棒くだき・極",
+        trigger: "burst",
+        every: 11,
+        charge: 6,
+        need: 0.09,
+        guardCut: 0.4,
+        effects: [atk("all", 2.8)],
+        burst: { name: "鬼神の 力の 暴発", effects: [atk("all", 0.9, { element: "ほのお" })] }
+      },
+      chanceTurns: 4,
+      befriends: null,
+      lv: 55,
+      place: "shrine"
+    },
+    // ----- 大魔王ASO (14 章 クリアの あと。推奨 Lv90。2026-10-30 ユーザー指定) -----
+    // 第 1 形態: 武器や アイテムを 生みだして 攻撃。「拘束のリング」: 味方 1 体を 拘束し (うごけない)、ウォッチの 輪も 回せなく なる。
+    //   リングは 拘束の あいだ ずっと 浮いていて、ねらって こわすと 拘束が とける
+    // 第 2 形態 (大魔王ASO・真。第 1 形態の HP が なくなると): 7 つの 属性の 術 ぜんぶ・「破壊の腕輪」(こうげき 超アップ) などの バフ。
+    //   必殺技の ため の あいだに 決まった ダメージを あたえると チャンスタイム
+    aso15: {
+      id: "aso15",
+      name: "大魔王ASO",
+      element: "ふしぎ",
+      role: "jammer",
+      art: "maou",
+      scale: 1.8,
+      rank: "S",
+      base: { hp: 1250, atk: 22, def: 20, spd: 14, mag: 23 },
+      moves: [
+        { name: "魔剣 生成", w: 3, effects: [atk("one", 1.7)] },
+        { name: "槍の雨 生成", w: 2.5, effects: [atk("all", 0.95)] },
+        { name: "爆弾 生成", w: 2, effects: [atk("all", 1, { element: "ほのお" }), { kind: "status", target: "all", status: "confuse", chance: 0.3 }] },
+        { name: "毒の小瓶 生成", w: 1.5, effects: [{ kind: "status", target: "all", status: "poison", chance: 0.7 }] },
+        { name: "拘束のリング", w: 2, bind: true }
+      ],
+      bigMove: { name: "亜祖宇激烈破", every: 13, warn: 2.5, effects: [atk("all", 1.6, { magic: true, element: "ふしぎ" })] },
+      ring: { name: "拘束のリング", hp: 0.05, pos: [1.9, -0.95] },
+      phase2: {
+        name: "大魔王ASO・真",
+        art: "maoushin",
+        moves: [
+          { name: "氷河の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "こおり" }] },
+          { name: "大噴火の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "ほのお" }] },
+          { name: "大津波の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "みず" }] },
+          { name: "森羅の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "しぜん" }] },
+          { name: "大嵐の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "かぜ" }] },
+          { name: "異界の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "ふしぎ" }] },
+          { name: "天変の術", w: 1, effects: [{ kind: "attack", target: "all", power: 1, magic: true, element: "ふつう" }] },
+          { name: "破壊の腕輪", w: 1.5, effects: [{ kind: "buff", target: "self", stat: "atk", amount: 1, time: 15 }] },
+          { name: "守護の腕輪", w: 1, effects: [{ kind: "buff", target: "self", stat: "def", amount: 0.6, time: 15 }] },
+          { name: "神速の腕輪", w: 1, effects: [{ kind: "buff", target: "self", stat: "spd", amount: 0.5, time: 15 }] },
+          { name: "魔剣 生成", w: 2, effects: [atk("one", 1.9)] }
+        ],
+        bigMove: {
+          name: "亜祖宇激烈破・真",
+          trigger: "burst",
+          every: 12,
+          charge: 6,
+          need: 0.07,
+          effects: [atk("all", 2.6, { magic: true, element: "ふしぎ" })],
+          burst: { name: "力が みだれた", effects: [] }
+        }
+      },
+      chanceTurns: 4,
+      befriends: "aso",
+      lv: 90,
+      place: "tsubo"
+    },
     // ----- 11 章「ASOの壺の底」の ボス (2026-10-30 ユーザー指定) -----
     // バクエンリュウ・闇 (火山の 底に ねむる 竜。紋で あやつられている): 体が マグマで ふだんは 攻撃が きかない (magma)。
     //   ASO (姿は 見えない) が 左右に 道具を 投げて くれる (throws)。道具を ねらって 攻撃すると 使える:
@@ -4828,7 +4963,7 @@ body.nopad #pad { display: none; }
     }
   };
   const BOSS14 = { naitei: "saaraha14", menkyo: "rihama14" };
-  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "tashikeda10", "bakuen11", "boss14"];
+  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "tashikeda10", "bakuen11", "onioni12", "boss14"];
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
   const rival = (id, name, element, role, rank, mul, line2, special, extra = {}) => {
     const base = {};
@@ -5556,6 +5691,13 @@ body.nopad #pad { display: none; }
     { id: "soutou8", name: "双頭鬼", art: "soutouki", x: 24, y: SHIRO_Y0 + 15, only: "soutou8", scale: 1.4 },
     { id: "kinme8", name: "金滅鬼", art: "kinmetsuki", x: 24, y: SHIRO_Y0 + 11, only: "kinme8", scale: 1.2 },
     { id: "onioni8", name: "おにおに", art: "onioni", x: 24, y: SHIRO_Y0 + 7, only: "onioni8" },
+    // 12 章: 神社に あつまった みんな (話せる) と、勝負を いどむ おにおに
+    { id: "onioni12", name: "おにおに", art: "onioni2", x: 8, y: 6, only: "onioni12", scale: 1.2 },
+    { id: "g12zumitani", name: "ズミタニ", art: "zumitani", x: 3, y: 7, only: "gather12" },
+    { id: "g12runaya", name: "ルナヤ", art: "runaya", x: 3, y: 5, only: "gather12" },
+    { id: "g12nozoema", name: "ノゾエマ", art: "nozoema", x: 10, y: 4, only: "gather12" },
+    { id: "g12daishi", name: "ダイシ", art: "daishi", x: 9, y: 8, only: "gather12" },
+    { id: "g12rival", name: "KING.ASAHARA", art: "asahara", nameBy: { naitei: "KING.ASAHARA", menkyo: "マッスルウエノーブル" }, artBy: { naitei: "asahara", menkyo: "ueno" }, x: 6, y: 8, only: "gather12" },
     // 11 章: 火山の 底の バクエンリュウ (ASO の 間への 戸口の 前) → ASO の 間の 大魔王ASO
     { id: "bakuen11", name: "バクエンリュウ", art: "bakuenryu", x: 28, y: TSUBO_Y0 + 5, only: "bakuen11", scale: 1.3 },
     { id: "aso11", name: "大魔王ASO", art: "maou", x: 36, y: TSUBO_Y0 + 4, only: "aso11", scale: 1.2 },
@@ -5867,8 +6009,8 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "tsuboe", "tsubo", "clear11", "invite", "park", "yoru", "clear14"];
-  const MAIN_END = "clear11";
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "tsuboe", "tsubo", "clear11", "shuuketsu", "clear12", "invite", "park", "yoru", "clear14"];
+  const MAIN_END = "clear12";
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -6099,6 +6241,11 @@ body.nopad #pad { display: none; }
         g.chapter = 11;
       }
       if (bossId === "bakuen11") g.flags.baku11 = true;
+      if (bossId === "onioni12") {
+        g.flags.oni12 = true;
+        out.oniSpecial = true;
+      }
+      if (bossId === "aso15") g.flags.aso15 = true;
       if (bossId === BOSS14[g.version]) {
         g.story = "clear14";
         g.chapter = 15;
@@ -6210,6 +6357,10 @@ body.nopad #pad { display: none; }
         return !g.flags.baku11 ? "火山の 底へ おりよう" : "おくの ASOの間へ 行こう";
       case "clear11":
         return "家の 前の ともいしと 話そう";
+      case "shuuketsu":
+        return !g.flags.oni12 ? "神社に 行こう。みんなが あつまっている" : "家に 帰って ねよう (出発の 前の 夜)";
+      case "clear12":
+        return "家の 前の ともいしと 話そう";
       case "invite":
         return `石の川駅から、電車で ${g.version === "menkyo" ? "メンキョシティ" : "ナイテイパーク"}へ 行こう`;
       case "park":
@@ -6268,7 +6419,20 @@ body.nopad #pad { display: none; }
     g.chapter = 12;
     return true;
   }
+  function startChapter12(g) {
+    if (g.story !== "clear11") return false;
+    g.story = "shuuketsu";
+    return true;
+  }
+  function nightBefore(g) {
+    if (g.story !== "shuuketsu" || !g.flags.oni12) return false;
+    g.story = "clear12";
+    g.chapter = 13;
+    return true;
+  }
+  const canFightAso = (g) => reached(g, "clear14") && !g.flags.aso15;
   const heroUpgraded = (g) => reached(g, "clear9");
+  const specialUpgraded = (g, id) => id === HERO_ID ? heroUpgraded(g) : id === "onioni" ? Boolean(g.flags.oni12) : false;
   function arriveShiro(g) {
     if (g.story !== "clear7") return false;
     g.story = "oshiro";
@@ -6410,13 +6574,17 @@ body.nopad #pad { display: none; }
       bossMoves: sp2.moves || null,
       chanceTurns: sp2.chanceTurns || 3,
       // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
-      gims: sp2.throws ? {} : sp2.gims ? Object.fromEntries(Object.entries(sp2.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
+      gims: sp2.throws || sp2.ring ? {} : sp2.gims ? Object.fromEntries(Object.entries(sp2.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
       oniDef: sp2.oni || null,
       oni: false,
       rage: 0,
       shell: 0,
       baseMoves: null,
       shellCut: sp2.shellCut ?? 0.15,
+      ringDef: sp2.ring || null,
+      phase2Def: sp2.phase2 || null,
+      phase: 1,
+      bound: false,
       regenDef: sp2.regen || null,
       magma: Boolean(sp2.magma),
       throwDef: sp2.throws || null,
@@ -6494,6 +6662,10 @@ body.nopad #pad { display: none; }
     }
     if (part.group && Object.values(u.gims).filter((p) => p.group === part.group).every((p) => p.broken)) {
       startChance(b, u, part.group);
+      return;
+    }
+    if (key2 === "ring") {
+      releaseBind(b);
       return;
     }
     if (key2 === "horn") {
@@ -6666,7 +6838,8 @@ body.nopad #pad { display: none; }
       armCharge: null,
       burst: null,
       regen: null,
-      hack: null
+      hack: null,
+      bind: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -6714,6 +6887,7 @@ body.nopad #pad { display: none; }
     if (b.burst && b.burst.uid === u.uid) b.burst = null;
     if (b.regen && b.regen.uid === u.uid) b.regen = null;
     if (u.drainOf) restoreLevel(b, u);
+    if (b.bind && b.bind.uid === u.uid) releaseBind(b, "ko");
     if (u.summonDef) {
       for (const m of minionsOf(b, u)) {
         m.hp = 0;
@@ -6723,6 +6897,42 @@ body.nopad #pad { display: none; }
       }
     }
     if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
+  }
+  function bindOne(b, u) {
+    const targets = b.frontAlive().filter((a) => !a.bound);
+    if (b.bind || !targets.length) return false;
+    const to = b.rng.pick(targets);
+    to.bound = true;
+    const r2 = u.ringDef, hp = Math.max(1, Math.round(u.max * r2.hp));
+    u.gims.ring = { name: r2.name, hp, max: hp, when: "always", pos: r2.pos, broken: false, ring: true };
+    b.bind = { uid: u.uid, target: to.uid };
+    emit(b, "bind", { actor: u.uid, target: to.uid });
+    return true;
+  }
+  function releaseBind(b, why = "break") {
+    if (!b.bind) return;
+    const to = b.wheel.find((a) => a && a.uid === b.bind.target);
+    const u = b.enemies.find((e) => e.uid === b.bind.uid);
+    if (to) to.bound = false;
+    if (u && u.gims) delete u.gims.ring;
+    if (u && b.lock === u.uid && b.lockPart === "ring") b.lockPart = null;
+    emit(b, "unbind", { target: b.bind.target, why });
+    b.bind = null;
+  }
+  function transform(b, u) {
+    const p2 = u.phase2Def;
+    releaseBind(b, "phase");
+    u.phase = 2;
+    u.hp = u.max;
+    u.name = p2.name;
+    u.art = p2.art;
+    u.bossMoves = p2.moves;
+    u.bigMove = p2.bigMove;
+    u.buffs = {};
+    u.status = {};
+    b.bossTimer = 0;
+    b.warned = false;
+    emit(b, "transform", { actor: u.uid, name: p2.name });
   }
   const THROW_SLOTS = ["left", "right"];
   const THROW_POS = { left: [-2.3, -0.35], right: [2.3, -0.35] };
@@ -6887,6 +7097,10 @@ body.nopad #pad { display: none; }
       b.burst.dmg += dmg;
       if (b.burst.dmg >= b.burst.need) burstBreak(b, to);
     }
+    if (to.hp <= 0 && to.phase2Def && to.phase === 1) {
+      transform(b, to);
+      return dmg;
+    }
     if (to.hp <= 0) {
       to.ko = true;
       to.status = {};
@@ -7014,7 +7228,7 @@ body.nopad #pad { display: none; }
         emit(b, "charging", { actor: u.uid });
         return;
       }
-      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.drain || minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some((f) => !f.drained)) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.drain || minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some((f) => !f.drained)) && (!m.bind || !b.bind) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
       if (!list.length) {
         emit(b, "stunned", { actor: u.uid, left: 0 });
         return;
@@ -7027,6 +7241,7 @@ body.nopad #pad { display: none; }
         emit(b, "shell", { actor: u.uid, time: move.shell });
       } else if (move.clones) summonClones(b, u);
       else if (move.drain) drainSummon(b, u);
+      else if (move.bind) bindOne(b, u);
       else if (move.melt) {
         applyEffects(b, u, move.effects);
         meltThrown(b, u);
@@ -7072,7 +7287,7 @@ body.nopad #pad { display: none; }
     if (u.status.poison > 0) {
       u.hp = Math.max(1, u.hp - u.max * 0.03 * dt);
     }
-    if (!acting || u.status.sleep > 0 || u.status.stun > 0) return;
+    if (!acting || u.status.sleep > 0 || u.status.stun > 0 || u.bound) return;
     u.timer += dt;
     if (u.timer >= interval(u)) {
       u.timer = 0;
@@ -7261,7 +7476,7 @@ body.nopad #pad { display: none; }
       b.bossTimer += dt;
       if (b.bossTimer < m.every) return;
       e.burstCount = (e.burstCount || 0) + 1;
-      b.burst = { uid: e.uid, left: m.charge, dmg: 0, need: Math.round(e.max * m.need), guard: e.burstCount >= 2 };
+      b.burst = { uid: e.uid, left: m.charge, dmg: 0, need: Math.round(e.max * m.need), guard: e.burstCount >= 2 && Boolean(m.guardCut) };
       emit(b, "telegraph", { actor: e.uid, name: m.name, warn: m.charge, burst: true, guard: b.burst.guard });
       return;
     }
@@ -7296,6 +7511,10 @@ body.nopad #pad { display: none; }
   }
   function rotate(b, dir) {
     if (b.outcome || b.paused || b.rotateCooldown > 0) return false;
+    if (b.bind) {
+      emit(b, "boundWheel");
+      return false;
+    }
     b.rot = (b.rot + (dir > 0 ? 1 : 5)) % 6;
     b.rotateCooldown = ROTATE_COOLDOWN;
     emit(b, "rotate", { dir });
@@ -16130,6 +16349,145 @@ body.nopad #pad { display: none; }
           "..................fffffffffffff..fffffffffffff.................."
         ]
       ]
+    },
+    maoushin: {
+      w: 64,
+      h: 64,
+      palette: { "a": "#1a0a14", "b": "#092061", "c": "#05163f", "d": "#6a6a72", "e": "#7a7a82", "f": "#241818", "g": "#801aff", "h": "#e040ff", "i": "#d69ade", "j": "#2c283c", "k": "#000000", "l": "#1a0808", "m": "#ffffff", "n": "#ff00fd", "o": "#1b0585" },
+      frames: [
+        [
+          "........................dddd........dddd........................",
+          "........................dddd..eeeee.dddd........................",
+          "........................dddd..eeeee.dddd........................",
+          "..............................eeeee.............................",
+          "..........iiii..........ffggggggggggggff..........iiii..........",
+          "..........iiii.........fffgghhhhhhhhggfff.........iiii..........",
+          "..........iiiiii......fffggffffffffffggfff......iiiiii..........",
+          "..........iiiiii.....ffffggffffffffffggffff.....iiiiii..........",
+          "............iiii....fffffggffffffffffggfffff....iiii............",
+          "............iiii...ffffffggffffffffffggffffff...iiii............",
+          "............iiii..fffffffggfffffffffffffffffff..iiii............",
+          "............iiii.ffffffffffffffffffffffffffffff.iiii............",
+          "............iiii..jjjjjjjjjjjjjgjjjjjjjjjjjjjj..iiii............",
+          "............iiii..jjjjjjjjjjjjjgjjjjjjjjjjjjjj..iiii............",
+          "............iiiiiijjjjjjjjjjjjjgjjjjjjjjjjjjjjiiiiii............",
+          "............iiiiiijjjkkkkkkkkkjjjjkkkkkkkkkjjjiiiiii............",
+          "..............iiiijjjjjjjjjjjjjjjjjjjjjjjjjjjjiiii..............",
+          "..................jjjjgggggggjjjjjjgggggggjjjj..................",
+          "..................jjjjgghhhggjjjjjjgghhhggjjjj..................",
+          "..................jjjjgggggggjjjjjjgggggggjjjj..................",
+          "..................jjjjjjjjjjjjjjjjjjjjjjjjjgjj..................",
+          "..................jjgjjjjjjjjjjjjjjjjjjjjjjgjj..................",
+          "....bbbbbbbbbbbbbbjjgjjjjjjjjjjjjjjjjjjjjjjgjjbbbbbbbbbbbbbb....",
+          "....bbbbbbbbbbbbbbjjgjjjjjjjjjjjjjjjjjjjjjjgjjbbbbbbbbbbbbbb....",
+          "....aaaaaaaaaaaaaajjgjjjlmmllllllllllmmljjjgjjaaaaaaaaaaaaaa....",
+          "....aaaaaannaaaaaajjgjjjlmmllllllllllmmljjjgjjaaaaaannaaaaaa....",
+          "..cccaaaaannaaaaaajjjjjjlmmlgggggggglmmljjjjjjaaaaaannaaaaaccc..",
+          "..cccaaaaannaaaaaajjjjjjlllllllllllllllljjjjjjaaaaaannaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnffffffffffffffffffffffffffffnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnffffffffffffffffffffffffffffnnnnnnnnaaaaaccc..",
+          "..cccaaajjjjjjjjffffffffnnnnnnnnnnnnnnnnffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffnoooooooooooooonffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffnooonoonnnonnnonffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffnoonononooonononffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoonnnonnnonononffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoononooononononffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoonononnnonnnonffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoooooooooooooonffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnnnnnnnnnnnnnnnnffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffffffffffffffffffffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffffffffffffffffffffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffffffffffffffffffffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaaffffffffffffffffffffffffffffffffffffffffffffffffaaaccc..",
+          "..cccaaaffffffffffffffffffffffffffffffffffffffffffffffffaaaccc..",
+          "..cccaaaffffffffaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaffffffffaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "....aaaaaaaaaaaaaafffffffffffffaafffffffffffffaaaaaaaaaaaaaa....",
+          "....aaaaaaaaaaaaaafffffffffffffaafffffffffffffaaaaaaaaaaaaaa....",
+          "..................fffffffffffff..fffffffffffff..................",
+          "..................fffffffffffff..fffffffffffff.................."
+        ],
+        [
+          "........................dddd........dddd........................",
+          "........................dddd........dddd........................",
+          "..............................eeeee.............................",
+          "..............................eeeee.............................",
+          "..........iiii..........ffggggggggggggff..........iiii..........",
+          "..........iiii.........fffgghhhhhhhhggfff.........iiii..........",
+          "..........iiiiii......fffggffffffffffggfff......iiiiii..........",
+          "..........iiiiii.....ffffggffffffffffggffff.....iiiiii..........",
+          "............iiii....fffffggffffffffffggfffff....iiii............",
+          "............iiii...ffffffggffffffffffggffffff...iiii............",
+          "............iiii..fffffffggfffffffffffffffffff..iiii............",
+          "............iiii.ffffffffffffffffffffffffffffff.iiii............",
+          "............iiii..jjjjjjjjjjjjjgjjjjjjjjjjjjjj..iiii............",
+          "............iiii..jjjjjjjjjjjjjgjjjjjjjjjjjjjj..iiii............",
+          "............iiiiiijjjjjjjjjjjjjgjjjjjjjjjjjjjjiiiiii............",
+          "............iiiiiijjjkkkkkkkkkjjjjkkkkkkkkkjjjiiiiii............",
+          "..............iiiijjjjjjjjjjjjjjjjjjjjjjjjjjjjiiii..............",
+          "..................jjjjgggggggjjjjjjgggggggjjjj..................",
+          "..................jjjjggmmmggjjjjjjggmmmggjjjj..................",
+          "..................jjjjgggggggjjjjjjgggggggjjjj..................",
+          "..................jjjjjjjjjjjjjjjjjjjjjjjjjgjj..................",
+          "..................jjgjjjjjjjjjjjjjjjjjjjjjjgjj..................",
+          "....bbbbbbbbbbbbbbjjgjjjjjjjjjjjjjjjjjjjjjjgjjbbbbbbbbbbbbbb....",
+          "....bbbbbbbbbbbbbbjjgjjjjjjjjjjjjjjjjjjjjjjgjjbbbbbbbbbbbbbb....",
+          "....aaaaaaaaaaaaaajjgjjjlmmllllllllllmmljjjgjjaaaaaaaaaaaaaa....",
+          "....aaaaaannaaaaaajjgjjjlmmllllllllllmmljjjgjjaaaaaannaaaaaa....",
+          "..cccaaaaannaaaaaajjjjjjlmmlgggggggglmmljjjjjjaaaaaannaaaaaccc..",
+          "..cccaaaaannaaaaaajjjjjjlllllllllllllllljjjjjjaaaaaannaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnjjjjjjjjjjjjjjjjjjjjjjjjjjjjnnnnnnnnaaaaaccc..",
+          "..cccaaaaannnnnnnnffffffffffffffffffffffffffffnnnnnnnnaaaaaccc..",
+          "..cccaaajjjjjjjjnnffffffffffffffffffffffffffffnnjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffnnnnnnnnnnnnnnnnffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffnoooooooooooooonffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffnooonoonnnonnnonffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoonononooonononffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoonnnonnnonononffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoononooononononffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoonononnnonnnonffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnoooooooooooooonffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffnnnnnnnnnnnnnnnnffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffffffffffffffffffffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjgjjjjffffffffffffffffffffffffffffffffjjjjgjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaajjjjjjjjffffffffffffffffffffffffffffffffjjjjjjjjaaaccc..",
+          "..cccaaaffffffffffffffffffffffffffffffffffffffffffffffffaaaccc..",
+          "..cccaaaffffffffffffffffffffffffffffffffffffffffffffffffaaaccc..",
+          "..cccaaaffffffffffffffffffffffffffffffffffffffffffffffffaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "..cccaaaaaaaaaaaaaaajjjjjjjjjaaaaaajjjjjjjjjaaaaaaaaaaaaaaaccc..",
+          "....aaaaaaaaaaaaaafffffffffffffaafffffffffffffaaaaaaaaaaaaaa....",
+          "....aaaaaaaaaaaaaafffffffffffffaafffffffffffffaaaaaaaaaaaaaa....",
+          "..................fffffffffffff..fffffffffffff..................",
+          "..................fffffffffffff..fffffffffffff.................."
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -16584,6 +16942,7 @@ body.nopad #pad { display: none; }
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
+  ART.onioni2 = { ...ART.onioni, palette: { ...ART.onioni.palette, h: "#ffd040", k: "#1a0a0a", r: "#7a0a1a", d: "#4a0510", y: "#ff3030", t: "#3a3a3a", g: "#ffd040", s: "#fff0a0" } };
   const FONT = '"Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", "Yu Gothic", sans-serif';
   const COLORS = {
     ink: "#ffffff",
@@ -17066,7 +17425,8 @@ body.nopad #pad { display: none; }
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
     p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
     p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu" || // 8 章: 大鬼 → 双頭鬼 → 金滅鬼 → おにおに。たおした 幹部は いなくなり、次の 戸口が あく
-    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 11 章: 火山の 底の バクエンリュウ → (勝つと) ASO の 間の 大魔王ASO
+    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 12 章: 神社に あつまった みんなと おにおに・鬼神 (勝つまで)
+    p.only === "gather12" && g.story === "shuuketsu" || p.only === "onioni12" && g.story === "shuuketsu" && !g.flags.oni12 || // 11 章: 火山の 底の バクエンリュウ → (勝つと) ASO の 間の 大魔王ASO
     p.only === "bakuen11" && g.story === "tsubo" && !g.flags.baku11 || p.only === "aso11" && reached(g, "tsubo") && g.flags.baku11 || // 10 章: 紋つきを 5 回 助けると 家の 前に 幹部 タシケダ
     p.only === "tashikeda10" && g.story === "shuugeki" && (g.flags.dark10 || 0) >= 5 || // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
     p.only === "harukirin9" && g.story === "kinniku" && !g.flags.kirin9 || p.only === "nozoema9" && g.story === "kinniku" && g.flags.kirin9 || // 14 章: おにおには 遊園地に いっしょに 来ている。夜に 手がかりが そろうと 広場に 残党の ボス
@@ -18490,7 +18850,9 @@ body.nopad #pad { display: none; }
           clear10: ["こおり、ありがとね。"],
           tsuboe: ["ASOの壺？ 大魔王が ねむっとるって 話やないね……。こおり、ほんとに 気を つけなさいよ。"],
           tsubo: ["壺の 底は 熱いっちゃろ？ 水筒 もっていきなさい。"],
-          clear11: ["ASOさんって 人に 会えたと？ ……こおり、なんか 顔つきが かわったね。……ほら、ふるカワちゃんが また 来とるよ。"],
+          clear11: ["ASOさんって 人に 会えたと？ ……こおり、なんか 顔つきが かわったね。"],
+          shuuketsu: ["神社に みんな あつまっとるらしいよ。……こおり、あんた いつのまに こんなに ともだちが できたと？"],
+          clear12: ["……ほら、ふるカワちゃんが また 来とるよ。"],
           invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
           park: ["遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。"],
           yoru: ["ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！"],
@@ -18504,6 +18866,15 @@ body.nopad #pad { display: none; }
             nar("おにおにが なかまに なった！"),
             furu("ルキハと 戦うには、もっと 強く ならなきゃ。……筋肉の山の ノゾエマさんに 修行を つけて もらおう！"),
             nar("石の川駅から、電車で 筋肉の山へ 行けるように なった！")
+          ], { done: () => app2.save() });
+          return;
+        }
+        if (startChapter12(g)) {
+          say([
+            nar("空が 黒く そまり、世界じゅうに 紋つきの 軍勢が あらわれた。"),
+            furu("ルキハが 本気で 世界を 喰おうと してる……！"),
+            tomo("こおり、神社に みんなが あつまっとるらしいよ。行って きなさい。"),
+            nar("石の川神社へ 行こう。")
           ], { done: () => app2.save() });
           return;
         }
@@ -18632,6 +19003,27 @@ body.nopad #pad { display: none; }
           nar("おにおにの 胸の 黒い 紋が、どくん、と 脈うった。"),
           furu("大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni8"), kind: "boss", place: "shiro" }) });
+      } else if (p.id === "onioni12") {
+        const L = rivalLines();
+        say([
+          nar("石の川神社に、これまで 出会った みんなが あつまっていた。"),
+          by(L.meet[0], "ライバルは ライバルでも、世界が なくなったら 勝負も できないからな。"),
+          by("onioni", "氷隊と 鬼鬼団が いっしょに 戦うとはな。……足を ひっぱるなよ、こおり。"),
+          furu("こおりくん、みんなで 行こう！"),
+          by("onioni", "……その 前に だ。こおり、おれと 勝負しろ。"),
+          by("onioni", "ルキハに あやつられて いた おれじゃ ない、ほんとうの おれの 力を 見せてやる。……本気で 来い！"),
+          nar("おにおにの 体が 赤黒く 燃えあがった……！ 鬼神の すがただ！"),
+          furu("大技を ためてる あいだに 攻撃を あてれば、力が 暴発するはず！ 2 回目からは ガードしてくるよ！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni12"), kind: "boss", place: "shrine" }) });
+      } else if (p.only === "gather12") {
+        const lines = {
+          g12zumitani: ["zumitani", "ルキハの 城？ 忍びこむなら まかせてよ♪ ……もちろん、ついて いくからね。"],
+          g12runaya: ["runaya", "あの 男の 顔を ねらうのよ。顔よ、顔。……あら、これは もう 言ったかしら？"],
+          g12nozoema: ["nozoema", "そなたの 剣、ルキハに とどかせて みせよ。筋肉も ついて いくぞ。"],
+          g12daishi: ["daishi", "拙僧も 微力ながら、念仏で 支えますぞ。……配信も しますぞ。"],
+          g12rival: [rivalLines().meet[0], "ふん、今回だけは 手を かしてやる。……かんちがい するなよ！"]
+        }[p.id];
+        say([by(lines[0], lines[1])]);
       } else if (p.id === "bakuen11") {
         say([
           nar("火山の 底で、マグマの 竜が ねむっていた。胸には 黒い 紋が どくどくと 脈うっている。"),
@@ -18642,8 +19034,25 @@ body.nopad #pad { display: none; }
           furu("マグマの 波で 道具が とけちゃうから、いそいで！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("bakuen11"), kind: "boss", place: "tsubo" }) });
       } else if (p.id === "aso11") {
+        if (canFightAso(g)) {
+          say([
+            { who: "大魔王ASO", art: "maou", text: "……ルキハを たおし、残党まで かたづけたか。こおり族の 子よ、きさまの 力、この 我が ためして やろう。" },
+            { who: "大魔王ASO", art: "maou", text: "我に 勝てたなら……きさまの なかまに なって やっても よい。" },
+            nar("(推奨 Lv90 の 強敵)")
+          ], {
+            choices: ["勝負する", "やめる"],
+            done: (i) => {
+              if (i !== 0) return;
+              say(
+                [furu("拘束のリングに つかまったら、浮いてる リングを ねらって こわして！ 輪が 回せなく なるよ！")],
+                { done: () => app2.startBattle({ enemies: bossEnemies("aso15"), kind: "boss", place: "tsubo" }) }
+              );
+            }
+          });
+          return;
+        }
         if (!meetAso(g)) {
-          say([{ who: "大魔王ASO", art: "maou", text: "……きさまに たくしたぞ、こおり族の 子よ。あの 男の 顔を ねらえ。" }]);
+          say([{ who: "大魔王ASO", art: "maou", text: g.flags.aso15 ? "……我は きさまの なかまだ。ウォッチで 呼ぶが よい。" : "……きさまに たくしたぞ、こおり族の 子よ。あの 男の 顔を ねらえ。" }]);
           return;
         }
         say([
@@ -18744,7 +19153,16 @@ body.nopad #pad { display: none; }
         say([{ who: "", text: `こおりくんの 家。いまは ${g.day}日目の ${TIMES[g.time]}。` }], {
           choices: ["ねる (時間を すすめる)", "セーブする", "やめる"],
           done: (i) => {
-            if (i === 0) {
+            if (i === 0 && nightBefore(g)) {
+              g.time = 3;
+              say([
+                tomo("こおり、おべんとう つくっといたよ。"),
+                tomo("……ちゃんと 帰って きなさい！ 借金も 返さんまま いなくなるのは ゆるさんけんね！"),
+                nar("こおりくんは しずかに ねむった。"),
+                nar("１２章 クリア！"),
+                nar("―― １３章は つぎの アップデートで。")
+              ], { done: () => app2.save() });
+            } else if (i === 0) {
               advanceTime(g, app2.rng);
               sfx("heal");
               app2.save();
@@ -19227,6 +19645,19 @@ body.nopad #pad { display: none; }
           nar("―― １５章「新たなる１日」 ――"),
           nar("こおりくんの 旅は 終わらない。この 世界の キャラを ぜんぶ なかまに しよう！"),
           nar("石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "onioni12") {
+        say([
+          by("onioni", "……ぐ……。まいった。おまえ、ほんとうに 強く なったな、こおり。"),
+          by("onioni", "だが おれも 負けっぱなしじゃ おらん。……見とけ、これが 鬼の 王の 力だ！"),
+          nar("おにおにの 必殺技が「鬼の王の金棒」に 進化した！"),
+          furu("これで ルキハの 城へ 行けるね……！ 今夜は 家に 帰って ゆっくり ねよう。")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "aso15") {
+        say([
+          { who: "大魔王ASO", art: "maou", text: "……見事だ。この 我を 二度も 地に つけるとはな。" },
+          { who: "大魔王ASO", art: "maou", text: "よかろう。約束どおり、きさまの 力と なろう。" },
+          nar("大魔王ASOが なかまに なった！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "bakuen11") {
         say([
@@ -19734,6 +20165,10 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = TINT[g.time];
         ctx.fillRect(0, 0, 400, 240);
       }
+      if (g.story === "shuuketsu" && g.pos.y < SCHOOL_Y0 * TILE) {
+        ctx.fillStyle = "rgba(30, 0, 10, 0.32)";
+        ctx.fillRect(0, 0, 400, 240);
+      }
       if (darkHere()) {
         ctx.fillStyle = "rgba(30, 6, 50, 0.5)";
         ctx.fillRect(0, 0, 400, 240);
@@ -19892,7 +20327,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" || g.story === "clear10" || g.story === "clear11" ? { x: 8, y: 24 } : g.story === "tsuboe" ? { x: 5, y: 40 } : g.story === "tsubo" ? !g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 } : g.story === "invite" || g.story === "onijoin" ? { x: 5, y: 40 } : g.story === "shuugeki" ? (g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null : g.story === "kinniku" ? !g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" || g.story === "clear10" || g.story === "clear11" || g.story === "clear12" ? { x: 8, y: 24 } : g.story === "shuuketsu" ? !g.flags.oni12 ? { x: 8, y: 6 } : { x: 6, y: 23 } : g.story === "tsuboe" ? { x: 5, y: 40 } : g.story === "tsubo" ? !g.flags.baku11 ? { x: 28, y: TSUBO_Y0 + 5 } : { x: 36, y: TSUBO_Y0 + 4 } : g.story === "invite" || g.story === "onijoin" ? { x: 5, y: 40 } : g.story === "shuugeki" ? (g.flags.dark10 || 0) >= DARK10_GOAL ? { x: 10, y: 24 } : null : g.story === "kinniku" ? !g.flags.kirin9 ? { x: 13, y: KINNIKU_Y0 + 10 } : { x: 34, y: KINNIKU_Y0 + 2 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -20365,7 +20800,7 @@ body.nopad #pad { display: none; }
     ...Object.fromEntries(["harryknight", "harrymage", "gargoharry", "iwaharry", "haridaijin", "haridora", "goldharry", "harrymimic", "metalharry", "metalkingharry"].map((k) => [k, auto(k)])),
     // 15 章で なかまに なる ライバル探検隊 (なかまの id は r_ + 絵の 名前。うしろ姿は 絵の 名前で)
     // 11 章 ASOの壺の底
-    ...Object.fromEntries(["asohei", "asoshougun", "hinotorin", "kaendaruma", "youganworm", "dradora", "bakuenryu"].map((k) => [k, auto(k)])),
+    ...Object.fromEntries(["asohei", "asoshougun", "hinotorin", "kaendaruma", "youganworm", "dradora", "bakuenryu", "maou"].map((k) => [k, auto(k)])),
     // 9 章 筋肉の山と 雪どけの 氷河
     ...Object.fromEntries([
       "dumbbellkong",
@@ -20526,6 +20961,9 @@ body.nopad #pad { display: none; }
     setsubunmame: { motion: "rain", color: "#e0e0e0" },
     goukioni: { motion: "dash", color: "#ff8a4a" },
     kinmetsuki: { motion: "beam", color: "#ffd040" },
+    // おにおにの 進化した 必殺技「鬼の王の金棒」(12 章)・大魔王ASO
+    onioni2: { motion: "multi", color: "#ffd040" },
+    aso: { motion: "beam", color: "#d8a8ff" },
     // 11 章 ASOの壺の底
     asohei: { motion: "dash", color: "#e0e0e0" },
     asoshougun: { motion: "multi", color: "#e0e0e0" },
@@ -21580,6 +22018,25 @@ body.nopad #pad { display: none; }
           if (e.why === "cage") banner = { text: "おりが こわれた！ ふるカワが にげだした！ チャンス！", color: COLORS.accent, until: t + 2 };
           if (e.why === "signal") banner = { text: "信号機を こわした！ リハマが とまった！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           sfx("special");
+        } else if (e.type === "bind") {
+          banner = { text: `拘束のリング！ ${nameOf(e.target)}が うごけない！ 輪も 回せない！`, color: "#ffd040", until: t + 2 };
+          sfx("cancel");
+        } else if (e.type === "unbind") {
+          if (e.why === "break") {
+            banner = { text: "リングを こわした！ 拘束が とけた！", color: COLORS.accent, until: t + 1.8 };
+            sfx("big");
+          }
+        } else if (e.type === "boundWheel") {
+          if (t - guardTold > 1) {
+            guardTold = t;
+            banner = { text: "拘束のリングで 輪が 回せない！ リングを ねらえ！", color: "#ffd040", until: t + 1.4 };
+            sfx("cancel");
+          }
+        } else if (e.type === "transform") {
+          banner = { text: `${e.name}に すがたを かえた！`, color: "#ff6a6a", until: t + 2.2 };
+          sfx("big");
+          const p = posOf(e.actor);
+          if (p) for (let i = 0; i < 4; i++) effects.push({ kind: "wave", x: p.x, y: p.y - 40, start: t + i * 0.15, dur: 0.7, color: "#c88aff" });
         } else if (e.type === "throw") {
           banner = { text: `ASOが「${e.name}」を 投げた！ ねらって 攻撃！`, color: "#ffd080", until: t + 1.6 };
           sfx("lens");
@@ -22273,6 +22730,20 @@ body.nopad #pad { display: none; }
           ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
           ctx.fill();
         }
+      } else if (place === "shrine") {
+        ctx.fillStyle = "#2a0a12";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        for (let i = 0; i < 6; i++) {
+          ctx.fillStyle = `rgba(80, 10, 30, ${0.3 + 0.1 * Math.sin(t + i)})`;
+          ctx.beginPath();
+          ctx.ellipse((i * 79 + t * 8) % 480 - 40, 20 + i % 3 * 18, 60, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#c03a2a";
+        ctx.fillRect(140, 30, 120, 10);
+        ctx.fillRect(150, 46, 100, 6);
+        ctx.fillRect(160, 40, 8, HORIZON - 40);
+        ctx.fillRect(232, 40, 8, HORIZON - 40);
       } else if (place === "tsubo") {
         ctx.fillStyle = "#1a0c0a";
         ctx.fillRect(0, 0, 400, HORIZON);
@@ -22397,7 +22868,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "tsubo" ? ["#4a1a10", "#7a3a20"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "tsubo" ? ["#4a1a10", "#7a3a20"] : place === "shrine" ? ["#8a8070", "#b0a890"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -22445,6 +22916,16 @@ body.nopad #pad { display: none; }
         ctx.fill();
       }
       drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? "#ffffff" : null, sx, sy });
+      if (!u.ko && u.bound) {
+        const fk = scale * artFit(art);
+        ctx.strokeStyle = "#ffd040";
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 2; i++) {
+          ctx.beginPath();
+          ctx.ellipse(p.x, p.y + bobY - art.h * fk * (0.35 + i * 0.3), art.w * fk / 2 + 6, 6, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
       if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art, scale, [190, 90, 255], 0);
       if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
       if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
@@ -22575,6 +23056,19 @@ body.nopad #pad { display: none; }
           ctx.restore();
           bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? "#ffe85a" : "#9a9ad8");
           text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
+        } else if (pt.ring) {
+          const bob2 = Math.sin(t * 3) * 3, y0 = q.y + bob2;
+          ctx.strokeStyle = "#ffd040";
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.ellipse(q.x, y0, 16, 8 + 4 * Math.sin(t * 4), 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = "#fff0a0";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.ellipse(q.x, y0, 11, 5, t, 0, Math.PI * 2);
+          ctx.stroke();
+          label(key2, q, 18);
         } else if (pt.thrown) {
           const bounce = Math.sin(t * 4 + q.x) * 2, y0 = q.y + bounce;
           ctx.fillStyle = "rgba(255, 232, 140, 0.25)";
@@ -23399,7 +23893,7 @@ body.nopad #pad { display: none; }
       wrap(ctx, n.desc, 215, ds).slice(0, 4).forEach((r2, i) => text(ctx, r2, 170, 90 + i * (ds + 3.5), { size: ds }));
       text(ctx, `わざ: ${n.waza.name}　術: ${n.jutsu.name} (${JUTSU_RANK_NAMES[n.jutsu.tier]})`, 170, 150, { size: 11, maxWidth: 220 });
       const bond = known && !n.hero ? bondLevel(g, id) : 0;
-      const special = n.hero && heroUpgraded(g) ? n.special2 : n.special;
+      const special = n.special2 && specialUpgraded(g, id) ? n.special2 : n.special;
       text(ctx, `必殺技: ${special.name}${bond ? `　絆Lv${bond} (威力 +${bond * 10}%)` : ""}`, 170, 166, { size: 11, maxWidth: 220 });
       const ev = evolveOf(id);
       if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}${ev ? `　Lv${ev.lv}で ${NAKAMA[ev.to].name}に 進化` : n.evo ? `　${NAKAMA[n.evo].name}が 進化した すがた` : ""}`, 170, 182, { size: 11, maxWidth: 220 });
@@ -23861,7 +24355,7 @@ body.nopad #pad { display: none; }
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
     startBattle({ enemies, kind, place, mystery = null, team = null }) {
-      const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id), upgrade: heroUpgraded(this.g) } : null);
+      const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null);
       const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
       battle.mystery = mystery;
       battle.team = team;
