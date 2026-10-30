@@ -379,14 +379,14 @@ test('地図: 14 章の 遊園地。駅から アトラクション 3 つの 入
 });
 
 test('地図: 筋肉の山 (9 章)。駅から 氷河の ハル麒麟の 前まで 行けて、ハル麒麟を たおすと 山頂の ノゾエマの 前まで 行ける', async () => {
-    const { KINNIKU_Y0, KINNIKU_IN } = await import('../src/data/map.js');
-    assert.deepEqual(regionOf(KINNIKU_IN.y), [KINNIKU_Y0, MAP_H]);
+    const { KINNIKU_Y0, KINNIKU_IN, TSUBO_Y0 } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(KINNIKU_IN.y), [KINNIKU_Y0, TSUBO_Y0]);
     const kirin = PEOPLE.find(p => p.id === 'harukirin9'), noz = PEOPLE.find(p => p.id === 'nozoema9');
     const reach = blockKirin => {
         const seen = new Set([`${KINNIKU_IN.x},${KINNIKU_IN.y}`]);
         const q = [[KINNIKU_IN.x, KINNIKU_IN.y]];
         const inB = (x, y) => BUILDINGS.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
-        const open = (x, y) => y >= KINNIKU_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !inB(x, y) && !(blockKirin && x === kirin.x && y === kirin.y);
+        const open = (x, y) => y >= KINNIKU_Y0 && y < TSUBO_Y0 && !BLOCK.has(TILES[y][x]) && !inB(x, y) && !(blockKirin && x === kirin.x && y === kirin.y);
         while (q.length) {
             const [x, y] = q.shift();
             for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -404,4 +404,31 @@ test('地図: 筋肉の山 (9 章)。駅から 氷河の ハル麒麟の 前ま�
     assert.equal(k.length, 13);
     const count = rk => k.filter(id => NAKAMA[id].rank === rk).length;
     assert.deepEqual([count('D'), count('C'), count('B')], [6, 5, 2]);
+});
+
+test('地図: ASOの壺の底 (11 章)。駅から 火山の 底の バクエンリュウの 前まで 行けて、たおすと ASO の 間に 入れる', async () => {
+    const { TSUBO_Y0, TSUBO_IN } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(TSUBO_IN.y), [TSUBO_Y0, MAP_H]);
+    assert.ok(BLOCK.has('m'), '溶岩は 通れない');
+    const baku = PEOPLE.find(p => p.id === 'bakuen11'), aso = PEOPLE.find(p => p.id === 'aso11');
+    const reach = blockBaku => {
+        const seen = new Set([`${TSUBO_IN.x},${TSUBO_IN.y}`]);
+        const q = [[TSUBO_IN.x, TSUBO_IN.y]];
+        const inB = (x, y) => BUILDINGS.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+        const open = (x, y) => y >= TSUBO_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !inB(x, y) && !(blockBaku && x === baku.x && y === baku.y) && !(x === aso.x && y === aso.y);
+        while (q.length) {
+            const [x, y] = q.shift();
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const k = `${x + dx},${y + dy}`;
+                if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); }
+            }
+        }
+        return seen;
+    };
+    const before = reach(true);
+    assert.ok(before.has(`${baku.x - 1},${baku.y}`), 'バクエンリュウの 前まで');
+    assert.ok(!before.has(`${aso.x},${aso.y + 1}`), 'バクエンリュウが いる あいだは ASO の 間に 入れない');
+    assert.ok(reach(false).has(`${aso.x},${aso.y + 1}`), 'たおすと ASO の 前まで');
+    const t = idsInArea('tsubo');
+    assert.equal(t.length, 6);
 });

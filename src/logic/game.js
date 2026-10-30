@@ -29,7 +29,10 @@
 //   clear9   9 章 クリア。こおりくんの 必殺技が「絶対殺すソード・レクイエム」に 進化
 //   shuugeki 10 章「石の川タウン しゅうげき」: 町に もどると 黒い 霧。石の川タウンと 商店街の キャラは ぜんぶ 紋つき (「・闇」)。
 //            紋つきに 5 回 勝つ (flags.dark10) と 家の 前に 幹部 タシケダ
-//   clear10  10 章 クリア。(11〜13 章は まだ。本編の さいご = MAIN_END)
+//   clear10  10 章 クリア。ここから 11 章「ASOの壺の底」: ともいしの 家で ルキハの 城への 道の 話
+//   tsuboe   石の川駅から 電車で ASOの壺の底へ 行ける
+//   tsubo    ASOの壺の底に 着いた。火山の 底の バクエンリュウ・闇 (flags.baku11) → ASO の 間の 大魔王ASO と 話す
+//   clear11  11 章 クリア。(12・13 章は まだ。本編の さいご = MAIN_END)
 //   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
 //   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
@@ -278,6 +281,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'harukirin9') g.flags.kirin9 = true;
         if (bossId === 'nozoema9') { g.story = 'clear9'; g.chapter = 10; out.heroSpecial = true; }
         if (bossId === 'tashikeda10') { g.story = 'clear10'; g.chapter = 11; }
+        if (bossId === 'bakuen11') g.flags.baku11 = true;
         if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
     }
@@ -382,6 +386,10 @@ export function objective(g) {
         case 'shuugeki': return (g.flags.dark10 || 0) < DARK10_GOAL
             ? `紋つきの なかまを 助けよう (${g.flags.dark10 || 0}/${DARK10_GOAL})` : '家の 前の 幹部から ともいしを まもろう';
         case 'clear10': return '家の 前の ともいしと 話そう';
+        // 11 章「ASOの壺の底」
+        case 'tsuboe': return '石の川駅から、電車で ASOの壺の底へ 行こう';
+        case 'tsubo': return !g.flags.baku11 ? '火山の 底へ おりよう' : 'おくの ASOの間へ 行こう';
+        case 'clear11': return '家の 前の ともいしと 話そう';
         // 14 章 (バージョンで ちがう)
         case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
         case 'park': return 'アトラクションで 遊ぼう。帰るときは 遊園地前駅へ';
@@ -412,7 +420,7 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'onijoin') ? ['kinniku'] : []), ...(reached(g, 'tsuboe') ? ['tsubo'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
 
 // ----- 9 章 (2026-10-30) -----
 // 8 章 クリアの あと ともいしの 家で: おにおにが なかまに なる。はじめて なら おにおにの メダル
@@ -431,6 +439,25 @@ export function startChapter10(g) {
     if (g.story !== 'clear9') return false;
     g.story = 'shuugeki';
     g.flags.dark10 = 0;
+    return true;
+}
+// ----- 11 章 (2026-10-30) -----
+// 10 章 クリアの あと ともいしの 家で: ルキハの 城への 道は ASOの壺の底に ある
+export function startChapter11(g) {
+    if (g.story !== 'clear10') return false;
+    g.story = 'tsuboe';
+    return true;
+}
+export function arriveTsubo(g) {
+    if (g.story !== 'tsuboe') return false;
+    g.story = 'tsubo';
+    return true;
+}
+// ASO の 間で ASO と 話すと 11 章 クリア
+export function meetAso(g) {
+    if (g.story !== 'tsubo' || !g.flags.baku11) return false;
+    g.story = 'clear11';
+    g.chapter = 12;
     return true;
 }
 // こおりくんの 必殺技が 進化しているか (9 章 クリアから「絶対殺すソード・レクイエム」)

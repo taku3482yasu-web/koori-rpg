@@ -156,6 +156,14 @@ export const SPECIALS = {
     setsubunmame: { motion: 'rain', color: '#e0e0e0' },
     goukioni: { motion: 'dash', color: '#ff8a4a' },
     kinmetsuki: { motion: 'beam', color: '#ffd040' },
+    // 11 章 ASOの壺の底
+    asohei: { motion: 'dash', color: '#e0e0e0' },
+    asoshougun: { motion: 'multi', color: '#e0e0e0' },
+    hinotorin: { motion: 'beam', color: '#ff8a4a' },
+    kaendaruma: { motion: 'rain', color: '#ff8a4a' },
+    youganworm: { motion: 'dash', color: '#ff8a4a' },
+    dradora: { motion: 'cloud', color: '#ff8a4a' },
+    bakuenryu: { motion: 'rain', color: '#ff5020' },
     // 9 章 筋肉の山と 雪どけの 氷河・おにおに
     dumbbellkong: { motion: 'dash', color: '#e0e0e0' },
     magmatcho: { motion: 'dash', color: '#ff8a4a' },

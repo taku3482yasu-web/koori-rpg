@@ -793,3 +793,70 @@ test('タシケダが たおれると 作った 紋つきも きえて、レベ�
     assert.equal(b.outcome, 'win');
     assert.ok(b.wheel.every(u => !u || (!u.drained && u.lv === 45)), 'レベルが ぜんぶ もどる');
 });
+
+test('11 章の バクエンリュウ: マグマの 体で ふだんは 攻撃が きかない。ASO が 左右に 道具を 投げる (3 回に 1 回は 水爆弾)', async () => {
+    const { THROW_SLOTS } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'bakuen11', lv: 46 }], rng: createRng(4), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.equal(boss.name, 'バクエンリュウ・闇');
+    const kinds = [];
+    for (let i = 0; i < 1200; i++) {
+        boss.timer = -999;   // ボスは うごかない (マグマの 波で とけないように)
+        for (const s of THROW_SLOTS) if (boss.gims[s]) { kinds.push(boss.gims[s].kind); delete boss.gims[s]; }
+        keepAlive(b);
+        step(b, 0.05);
+    }
+    assert.equal(boss.hp, boss.max, '体には きかない');
+    assert.ok(b.events.some(e => e.type === 'immune'));
+    assert.ok(kinds.length >= 6, `投げた 数 ${kinds.length}`);
+    assert.ok(kinds.filter(k => k === 'water').length >= Math.floor(kinds.length / 3), '水爆弾も 投げる');
+    assert.ok(kinds.some(k => k === 'weapon' || k === 'heal'));
+});
+
+test('11 章の バクエンリュウ: 剣で こうげき アップ・実で 回復・水爆弾で チャンスタイム (攻撃が きく) → マグマに もどる', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const mk = () => {
+        const b = createBattle({ allies: strongParty(), enemies: [{ id: 'bakuen11', lv: 46 }], rng: createRng(4), kind: 'boss' });
+        b.enemies[0].timer = -999;
+        return b;
+    };
+    const put = (b, kind) => { const e = b.enemies[0]; e.gims.left = { name: kind, kind, thrown: true, when: 'always', pos: [-2.3, -0.35], hp: 5, max: 5, broken: false }; assert.ok(lockOn(b, e.uid, 'left')); };
+    const hitUntil = (b, cond) => { for (let i = 0; i < 400 && !cond(); i++) { b.enemies[0].timer = -999; step(b, 0.05); } };
+    // 剣
+    let b = mk();
+    put(b, 'weapon');
+    hitUntil(b, () => !b.enemies[0].gims.left);
+    assert.ok(b.frontAlive().every(u => u.buffs.atk && u.buffs.atk.amount > 0), '剣で こうげき アップ');
+    // 回復の 実
+    b = mk();
+    b.wheel.forEach(u => { if (u) u.hp = Math.round(u.max / 3); });
+    put(b, 'heal');
+    hitUntil(b, () => !b.enemies[0].gims.left);
+    assert.ok(b.frontAlive().every(u => u.hp > u.max / 3 + 1), '実で 回復');
+    // 水爆弾
+    b = mk();
+    const boss = b.enemies[0];
+    put(b, 'water');
+    hitUntil(b, () => Boolean(b.chance));
+    assert.ok(b.chance && b.events.some(e => e.type === 'chance' && e.why === 'water'), '水爆弾で チャンスタイム');
+    const hp = boss.hp;
+    b.lock = boss.uid; b.lockPart = null;
+    for (let i = 0; i < 100 && boss.hp === hp; i++) step(b, 0.05);
+    assert.ok(boss.hp < hp, 'かたまって いる あいだは 攻撃が きく');
+    for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(!b.chance);
+    const hp2 = boss.hp;
+    for (let i = 0; i < 60; i++) { boss.timer = -999; for (const s of ['left', 'right']) delete boss.gims[s]; step(b, 0.05); }
+    assert.equal(boss.hp, hp2, 'マグマに もどると また きかない');
+});
+
+test('11 章の バクエンリュウ: マグマの 波で 投げた 道具が とける', async () => {
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'bakuen11', lv: 46 }], rng: createRng(9), kind: 'boss' });
+    const boss = b.enemies[0];
+    b.wheel.forEach(u => { if (u) u.timer = -9999; });
+    for (let i = 0; i < 4000 && !b.events.some(e => e.type === 'melt'); i++) { keepAliveNoAct(b); step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'melt'), 'とける');
+    const meltAt = b.events.findIndex(e => e.type === 'melt');
+    const lastSkill = b.events.slice(0, meltAt).filter(e => e.type === 'skill' && e.actor === boss.uid).pop();
+    assert.equal(lastSkill.name, 'マグマの 波');
+});

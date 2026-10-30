@@ -39,6 +39,10 @@
 //     双頭鬼: 右の 頭 (とりつき) と 左の 頭 (術)。頭を こわすと その 頭の わざ (move の gim) が 使えない。
 //       両方 こわす (gims の group が ぜんぶ こわれる) と チャンスタイム → おわると 頭は もとに もどる
 //     金滅鬼: めくらましの とりつき を つかう。チャンスタイムは ない
+//   11 章の バクエンリュウ (2026-10-30 ユーザー指定): 体が マグマで ふだんは 攻撃が きかない (magma。チャンスタイムの あいだだけ きく)。
+//     ASO が throws.every 秒ごとに 左右の あいた 方へ 道具を 投げる (gims の thrown。waterEvery 回に 1 回は 水爆弾)。
+//     道具を ロックオンして 攻撃すると 使える: 剣 = 前の 味方の こうげき +40% / 回復の 実 = 前の 味方を 35% 回復 /
+//     水爆弾 = 体が かたまって チャンスタイム。わざの melt (マグマの 波) で 道具は とける
 //   紋つき (dark。2026-10-30 ユーザー指定): 名前は「○○・闇」。少し 強い (HP・こうげき・ぼうぎょ 1.15 倍)
 //   10 章の タシケダ (2026-10-30 ユーザー指定): 行動不能の とりつき (stun)・レベル ドレイン (なかまを Lv10 / Lv1 に して
 //     左右に 紋つきの 味方を 作る。たおすと レベルが もどる)・左右に 2 体 そろうと「私はハッキングが好きだ！」(b.hack)
@@ -85,9 +89,9 @@ function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
         bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
-        gims: sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
+        gims: sp.throws ? {} : sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
-        regenDef: sp.regen || null, summonDef: sp.summons || null, summonNo: 0, drained: null, drainOf: null,
+        regenDef: sp.regen || null, magma: Boolean(sp.magma), throwDef: sp.throws || null, throwT: sp.throws ? sp.throws.every - sp.throws.first : 0, throwNo: 0, summonDef: sp.summons || null, summonNo: 0, drained: null, drainOf: null,
         cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
     };
@@ -333,6 +337,41 @@ function afterKo(b, u) {
     if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
 }
 
+// ----- ASO が 投げる 道具 (11 章の バクエンリュウ) -----
+export const THROW_SLOTS = ['left', 'right'];
+const THROW_POS = { left: [-2.3, -0.35], right: [2.3, -0.35] };
+function throwItem(b, u) {
+    const d = u.throwDef;
+    const slot = THROW_SLOTS.find(s => !u.gims[s]);
+    if (!slot) return;
+    u.throwNo++;
+    const kind = u.throwNo % d.waterEvery === 0 ? 'water' : b.rng.pick(['weapon', 'heal']);
+    const it = d.items[kind];
+    const hp = Math.max(1, Math.round(u.max * it.hp));
+    u.gims[slot] = { name: it.name, kind, thrown: true, when: 'always', pos: THROW_POS[slot], hp, max: hp, broken: false };
+    emit(b, 'throw', { actor: u.uid, slot, kind, name: it.name });
+}
+function useThrown(b, u, slot) {
+    const it = u.gims[slot];
+    delete u.gims[slot];
+    if (b.lock === u.uid && b.lockPart === slot) b.lockPart = null;
+    emit(b, 'useItem', { actor: u.uid, slot, kind: it.kind, name: it.name });
+    if (it.kind === 'weapon') {
+        for (const a of b.frontAlive()) { a.buffs.atk = { amount: 0.4, t: 15 }; emit(b, 'buff', { target: a.uid, stat: 'atk' }); }
+    } else if (it.kind === 'heal') {
+        for (const a of b.frontAlive()) heal(b, a, a, a.max * 0.35);
+    } else if (it.kind === 'water') {
+        startChance(b, u, 'water');
+    }
+}
+// マグマの 波で 投げた 道具が とける
+function meltThrown(b, u) {
+    const n = THROW_SLOTS.filter(s => u.gims[s]).length;
+    for (const s of THROW_SLOTS) delete u.gims[s];
+    if (b.lock === u.uid && THROW_SLOTS.includes(b.lockPart)) b.lockPart = null;
+    if (n) emit(b, 'melt', { actor: u.uid, n });
+}
+
 // ----- レベル ドレイン (10 章の タシケダ) -----
 export const minionsOf = (b, boss) => b.enemies.filter(e => e.owner === boss.uid && e.drainOf !== null && !e.ko);
 const MINION_SLOTS = ['left', 'right'];
@@ -410,6 +449,11 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     }
     // しかけの 部位を ねらっている
     const gim = from.side === 'ally' && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
+    // 11 章の バクエンリュウ: 投げられた 道具を ねらうと 使う。体は マグマで チャンスタイム いがいは きかない
+    if (to.magma && from.side === 'ally') {
+        if (gim && to.gims[gim].thrown) { useThrown(b, to, gim); return 0; }
+        if (!(b.chance && b.chance.uid === to.uid)) { emit(b, 'immune', { target: to.uid, actor: from.uid }); return 0; }
+    }
     if (gim && to.gims[gim].noBody) {
         // 鐘: ボスには ダメージなし。当たれば 鳴る
         hitGim(b, to, gim, to.gims[gim].hp);
@@ -605,6 +649,7 @@ function act(b, u) {
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
         else if (move.clones) summonClones(b, u);
         else if (move.drain) drainSummon(b, u);
+        else if (move.melt) { applyEffects(b, u, move.effects); meltThrown(b, u); }
         else {
             applyEffects(b, u, move.effects || []);
             // もの忘れ (7 章の ルナヤ): ときどき 同じ わざを もう いちど
@@ -730,6 +775,12 @@ export function step(b, dt) {
                 emit(b, 'armShrink', { target: u.uid, lv: u.armLv });
             }
         }
+    }
+    // 11 章: ASO が 道具を 投げる (チャンスタイムの あいだは 投げない)
+    for (const e of b.enemies) {
+        if (e.ko || !e.throwDef || (b.chance && b.chance.uid === e.uid)) continue;
+        e.throwT += dt;
+        if (e.throwT >= e.throwDef.every) { e.throwT = 0; throwItem(b, e); }
     }
     // 9 章の ハル麒麟: ためおわった とき 角が のこっていたら 全回復
     if (b.regen) {

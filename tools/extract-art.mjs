@@ -75,7 +75,9 @@ const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon
     'ishii', 'mazuda', 'naitoon', 'yahami', 'maechokkin', 'norahan', 'okagappa', 'hibikimakuri', 'yamamou',
     // 9 章 筋肉の山と 雪どけの 氷河 (2026-10-30)
     'dumbbellkong', 'magmatcho', 'kazanmatcho', 'yukiusapon', 'tsurarabo', 'kakigoora', 'penguinknight', 'shirokumatcho', 'yukionnan',
-    'sakurarisu', 'harukazedori', 'fukinoton', 'harukirin', 'nozoema'];
+    'sakurarisu', 'harukazedori', 'fukinoton', 'harukirin', 'nozoema',
+    // 11 章 ASOの壺の底 (2026-10-30。大魔王ASO は ダンジョンの maou)
+    'asohei', 'asoshougun', 'hinotorin', 'kaendaruma', 'youganworm', 'dradora', 'maou'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

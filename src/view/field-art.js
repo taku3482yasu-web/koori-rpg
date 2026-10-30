@@ -15,7 +15,7 @@ const hash = (x, y, k = 0) => {
 export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72',
     L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a',
     U: '#8a6a4a', H: '#7a5a3a', N: '#f0f6fa', Q: '#9aa0a8', D: '#a89a80', E: '#b8a888', I: '#9ad8f0',
-    J: '#4a4e58', C: '#7a7468', Z: '#4a3624', O: '#c8c070', V: '#2a2050', v: '#5a5088', k: '#c8a030', r: '#b02030' };
+    J: '#4a4e58', C: '#7a7468', Z: '#4a3624', O: '#c8c070', V: '#2a2050', v: '#5a5088', k: '#c8a030', r: '#b02030', m: '#e04a10' };
 
 function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -169,6 +169,12 @@ function drawTile(c, ch, x, y, wet = false) {
             r(0, 0, 16, 16, '#5a5088');
             r(0, 7, 16, 1, '#4a4078'); r((y % 2) * 8, 0, 1, 7, '#4a4078'); r(((y + 1) % 2) * 8, 8, 1, 8, '#4a4078');
             if (hash(x, y, 98) < 0.15) r(Math.floor(hash(x, y, 99) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, '#d8d8ff');
+            break;
+        // ----- ASOの壺の底 (11 章) -----
+        case 'm':   // 溶岩 (赤と だいだいの まだら・黄色い 光)
+            r(0, 0, 16, 16, '#c02808');
+            r((x * 5 + y * 3) % 10, (x + y * 7) % 10, 6, 4, '#ff6a18');
+            if (hash(x, y, 71) < 0.5) r(Math.floor(hash(x, y, 72) * 13), Math.floor(hash(x, y, 73) * 13), 3, 2, '#ffd040');
             break;
         // ----- 金色のSE城 (8 章) -----
         case 'k': { // 金の かべ (金の 板と 赤い 柱)

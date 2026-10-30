@@ -839,6 +839,44 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear10"'), 'タシケダに 勝つと 10 章 クリア');
 
+    // ----- 11 章: ASOの壺の底 → バクエンリュウ・闇 (ASO の 道具) → ASO (2026-10-30) -----
+    const A11 = 372;
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "tsuboe"'), '10 章の あと ともいしの 家で ルキハの 城への 道の 話 (11 章)');
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    for (let i = 0; i < 6; i++) await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('tsubo-arrive');
+    check(await evaluate(`window.__app.g.story === "tsubo" && window.__app.g.pos.y > ${A11} * 16 && window.__bgm() === "tsubo"`), '電車で ASOの壺の底へ (壺の BGM)');
+    await at(27, A11 + 5, 'right');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "bakuen11" && window.__bgm() === "bakuen11"'), '火山の 底の バクエンリュウ・闇と バトル');
+    await key('KeyJ');
+    await sleep(500);
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.timer = -999; e.throwT = 99; const u = b.front()[0], v = b.front()[1]; u.status.possess = 20; v.drained = { lv: v.lv, s: v.s, max: v.max }; return true; })()');
+    check(await waitFor('Object.keys(window.__app.scene.battle.enemies[0].gims).length > 0', 3000), 'バクエンリュウ: ASO が 道具を 投げる');
+    await sleep(600);
+    await shot('tsubo-throw-mist');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.front()[1].drained = null; e.gims.left = { name: "水爆弾", kind: "water", thrown: true, when: "always", pos: [-2.3, -0.35], hp: 1, max: 1, broken: false }; b.lock = e.uid; b.lockPart = "left"; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.chance)'), 'バクエンリュウ: 水爆弾を 攻撃すると 体が かたまって チャンスタイム');
+    await sleep(300);
+    await shot('tsubo-water');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.flags.baku11 && window.__app.g.medals.some(m => m.id === "bakuenryu")'), 'バクエンリュウに 勝つと 紋が とけて なかまに');
+    await at(36, A11 + 5, 'up');
+    await key('KeyJ');
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "clear11"'), 'ASO の 間で ASO と 話すと 11 章 クリア');
+
     // ----- 14 章 (内定版): 招待券 → ナイテイパーク → ふるカワが いない → 夜の 手がかり → サアラハ (おり) (2026-10-30) -----
     const P14 = 300;
     await at(8, 25, 'up');
@@ -848,7 +886,7 @@ try {
     await at(5, 41, 'up');
     await key('KeyJ');
     await sleep(1500);
-    for (let i = 0; i < 6; i++) await key('ArrowDown');
+    for (let i = 0; i < 7; i++) await key('ArrowDown');
     await key('Enter');
     await skipTalk();
     await sleep(200);

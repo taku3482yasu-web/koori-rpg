@@ -371,5 +371,31 @@ export const NEW_ART = {
             '...bbbbb..bbbbb...',
             '..................'
         ], 'G', 's')
+    },
+    // バクエンリュウ (11 章の ボス。火山の 底に ねむる 竜。新キャラ・2026-10-30): マグマの 体に 黄色く 光る ひび。むねに 黒い 紋 (むらさき)
+    bakuenryu: {
+        w: 26, h: 19,
+        palette: { o: '#1a0804', r: '#a82010', R: '#ff5020', y: '#ffd040', k: '#140404', e: '#ffff80', p: '#a040e0' },
+        frames: bob([
+            '.oo....................oo.',
+            '.oRo..................oRo.',
+            '..oRo....oooooooo....oRo..',
+            '...oRoorrrrrrrrrrrrooRo...',
+            '....orrrrrrrrrrrrrrrro....',
+            '...orreerrrrrrrrrreerro...',
+            '...orrekrrrrrrrrrrkerro...',
+            '...orrrrrrryRRyrrrrrrro...',
+            '...orrkkkkkkkkkkkkkkrro...',
+            '...orrkRkRkRkRkRkRkRrro...',
+            '....orrrrrrrrrrrrrrrro....',
+            '.oo..orrRRyyRRyyRRrro..oo.',
+            '.oRo.orRRyRRRRRRyRRro.oRo.',
+            '.oRRoorRyRRRppRRRyRrooRRo.',
+            '.oRRRorRRyRRRRRRyRRroRRRo.',
+            '..ooo.rRRRRyyyyRRRRr.ooo..',
+            '......orRRRRRRRRRRro......',
+            '.......orro....orro.......',
+            '.......oyyo....oyyo.......'
+        ])
     }
 };

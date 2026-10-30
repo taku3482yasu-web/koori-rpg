@@ -283,6 +283,15 @@ export const WAZA = {
     fukinoton: W('ふきのとうボム', 'しぜん', 'front', 1.1, 'poison', 0.4),
     harukirin: W('春をよぶ角', 'しぜん', 'around', 1.3, 'slow', 0.4),
     nozoema: W('兜割り', 'ふつう', 'front', 2.2),
+    // ASOの壺の底 (11 章)。やけど は どく
+    asohei: W('アソやり', 'ふつう', 'line', 1.1),
+    asoshougun: W('将軍のやり', 'ふつう', 'line', 1.4),
+    hinotorin: W('ひのはね', 'ほのお', 'line', 1.3, 'poison', 0.3),
+    kaendaruma: W('だるまタックル', 'ほのお', 'front', 1.6),
+    youganworm: W('ようがん かみつき', 'ほのお', 'front', 1.5, 'poison', 0.3),
+    dradora: W('ドラ爆', 'ほのお', 'around', 1.3),
+    bakuenryu: W('マグマの 波', 'ほのお', 'around', 1.2, 'poison', 0.3),
+    bakuen11: W('ほのおの いき', 'ほのお', 'line', 1.4),
     tashikeda10: W('ウイルス さんぷ', 'ふしぎ', 'around', 0.6, 'poison', 0.4),
     harukirin9: W('麒麟のいかずち', 'かぜ', 'line', 1.5, 'slow', 0.3),
     nozoema9: W('刀の一振り', 'ふつう', 'around', 1.6),
@@ -1226,6 +1235,52 @@ const LIST = [
         title: 'SE城の主', desc: '鬼鬼団の団長で、金色のSE城の主。パチンコに目がなく、こおりくんに お金を 貸している。ルキハに あやつられていたが、紋が とけて こおりくんの なかまに なった。',
         special: sp('鬼神 金棒くだき', [atk('all', 2.0, { element: 'ほのお' })])
     },
+    // ----- ASOの壺の底の 6 体 (11 章「ASOの壺の底」。2026-10-30。C 5・A 1) -----
+    //   ダンジョンの ASOの壺の底 (アソヘイ) と 火山の キャラ (ヒノトリン・カエンダルマ・ヨウガンワーム)・ドラドラ。
+    //   バクエンリュウは 火山の 底の ボス (紋つき)。たおすと 紋が とけて なかまに なる。新キャラ。ほかは ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'asohei', name: 'アソヘイ', from: 'ダンジョン 044', area: 'tsubo', rank: 'C', element: 'ふつう', role: 'attacker', mul: {},
+        line: 'アソ！アソ！', favorite: 'onigiri',
+        title: 'ＡＳＯの従者', desc: 'ＡＳＯに付き従うもの。ＡＳＯのためならば、手段をえらばない。',
+        special: sp('アソ 突撃', [atk('all', 1.6)])
+    },
+    {
+        id: 'hinotorin', name: 'ヒノトリン', from: 'ダンジョン 083', area: 'tsubo', rank: 'C', element: 'ほのお', role: 'attacker', mul: { mag: 1.1 },
+        line: 'ピヨッ（ぼうぼう）', favorite: 'niboshi',
+        title: '炎の風見鶏', desc: '火山で生まれた鳥。火山灰を主食としている。',
+        special: sp('火山灰 フェニックス', [atk('all', 1.6, { magic: true, element: 'ほのお' })])
+    },
+    {
+        id: 'kaendaruma', name: 'カエンダルマ', from: 'ダンジョン 084', area: 'tsubo', rank: 'C', element: 'ほのお', role: 'defender', mul: { hp: 1.1 },
+        line: '七転び 八起き 大爆発！', favorite: 'cider',
+        title: '火火だるま', desc: '火炎に包まれただるま。軽度の熱中症に悩まされている。',
+        special: sp('七転び 大爆発', [atk('all', 1.8, { element: 'ほのお' })])
+    },
+    {
+        id: 'youganworm', name: 'ヨウガンワーム', from: 'ダンジョン 085', area: 'tsubo', rank: 'C', element: 'ほのお', role: 'attacker', mul: { atk: 1.1 },
+        line: 'ズズズ…', favorite: 'kyuuri',
+        title: '溶岩に巣食う蛇', desc: '溶岩に適応した蛇。体温は２０００度に及ぶらしい。',
+        special: sp('二千度の まきつき', [atk('one', 2.4), { kind: 'status', target: 'one', status: 'poison', chance: 0.8 }])
+    },
+    {
+        id: 'dradora', name: 'ドラドラ', from: 'ダンジョン 128', area: 'tsubo', rank: 'C', element: 'ほのお', role: 'jammer', mul: { mag: 1.1 },
+        line: 'ドラ ドラ ドラ！', favorite: 'choco',
+        title: 'ドラを呼ぶ竜', desc: '麻雀のドラの化身。この竜が来た卓では、点数がどんどん跳ね上がる。',
+        special: sp('ドラ 乗り', [atk('all', 1.2, { magic: true }), { kind: 'buff', target: 'party', stat: 'atk', amount: 0.3, time: 10 }])
+    },
+    {
+        id: 'bakuenryu', name: 'バクエンリュウ', from: '新キャラ (11 章)', area: 'tsubo', rank: 'A', element: 'ほのお', role: 'attacker', mul: { atk: 1.15, hp: 1.1 },
+        line: 'グオオオ……あつい……', favorite: 'cider',
+        title: '火山の底の竜', desc: 'ASOの壺の 底の 火山に ねむる 竜。体は マグマで できていて、ふつうの 攻撃は とどかない。ルキハの 紋に あやつられていたが、こおりくんたちに 紋を とかれて なかまに なった。',
+        special: sp('大噴火', [atk('all', 2.0, { element: 'ほのお' })])
+    },
+    // 進化で なる キャラ: アソヘイ → アソショウグン (ダンジョンの 進化表の のこり。11 章)
+    {
+        id: 'asoshougun', name: 'アソショウグン', from: 'ダンジョン 075', area: 'tsubo', evo: 'asohei', rank: 'B', element: 'ふつう', role: 'attacker', mul: { atk: 1.1 },
+        line: 'アソ！ アソ！ 全軍 かかれ！', favorite: 'onigiri',
+        title: 'ＡＳＯの将軍', desc: 'アソヘイが手がらを立てて将軍になった姿。今度は従者たちを率いて、ＡＳＯのためなら手段をえらばない。',
+        special: sp('全軍 突撃', [atk('all', 1.9)])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
         id: 'kaguyausagi', name: 'カグヤウサギ', from: 'ダンジョン 069', area: 'moon', evo: 'tsukiusagi', rank: 'C', element: 'ふしぎ', role: 'healer', mul: {},
@@ -1381,7 +1436,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地', kinniku: '筋肉の山' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地', kinniku: '筋肉の山', tsubo: 'ASOの壺の底' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -1434,6 +1489,7 @@ export const EVOLVE = {
     koorimodoki: { to: 'koorimodokishin', lv: 50 },
     daichouenkin: { to: 'daichouenou', lv: 30 },
     magmatcho: { to: 'kazanmatcho', lv: 44 },   // 9 章 (2026-10-30)
+    asohei: { to: 'asoshougun', lv: 50 },       // 11 章 (2026-10-30)
     // 追加 (2026-10-30)。ハリジェネラルは もう 1 回 進化する (ハリーベビー → ハリジェネラル → キングハリー)
     enjoubouzu: { to: 'daienjou', lv: 30 },
     harigeneral: { to: 'kingharry', lv: 55 },
@@ -1686,6 +1742,30 @@ export const BOSSES = {
         chanceTurns: 4,
         befriends: null, lv: 35, place: 'shiro'
     },
+    // ----- 11 章「ASOの壺の底」の ボス (2026-10-30 ユーザー指定) -----
+    // バクエンリュウ・闇 (火山の 底に ねむる 竜。紋で あやつられている): 体が マグマで ふだんは 攻撃が きかない (magma)。
+    //   ASO (姿は 見えない) が 左右に 道具を 投げて くれる (throws)。道具を ねらって 攻撃すると 使える:
+    //   剣 = 味方の こうげき アップ / 回復の 実 = 味方 全員 回復 / 水爆弾 = 体が かたまって チャンスタイム (おわると マグマに もどる)。
+    //   「マグマの 波」で 投げた 道具が とけて しまう
+    bakuen11: {
+        id: 'bakuen11', name: 'バクエンリュウ・闇', dark: true, element: 'ほのお', role: 'attacker', art: 'bakuenryu', scale: 1.8, rank: 'A',
+        base: { hp: 960, atk: 18, def: 16, spd: 11, mag: 16 },
+        moves: [
+            { name: 'ほのおの いき', w: 3, effects: [atk('one', 1.4, { magic: true, element: 'ほのお' })] },
+            { name: 'しっぽ たたき', w: 3, effects: [atk('one', 1.3)] },
+            { name: 'マグマの 波', w: 2.5, melt: true, effects: [atk('all', 0.75, { element: 'ほのお' }), { kind: 'status', target: 'all', status: 'poison', chance: 0.25 }] }
+        ],
+        bigMove: { name: '大噴火', every: 14, warn: 2.5, effects: [atk('all', 1.4, { element: 'ほのお' })] },
+        magma: true,
+        throws: { every: 4.5, first: 2, waterEvery: 3,
+            items: {
+                weapon: { name: 'ASOの 剣', hp: 0.05 },
+                heal: { name: '回復の 実', hp: 0.05 },
+                water: { name: '水爆弾', hp: 0.05 }
+            } },
+        chanceTurns: 4,
+        befriends: 'bakuenryu', lv: 46, place: 'tsubo'
+    },
     // ----- 10 章「石の川タウン しゅうげき」の ボス (2026-10-30 ユーザー指定) -----
     // タシケダ (ルキハの 軍勢の 幹部): 戦う 力は ひくい。行動不能の とりつき (stun)。
     //   レベル ドレイン: なかま 1 体の レベルを 吸って Lv10 に する (Lv10 いかなら Lv1)。吸った レベルで 紋つきの 味方を 作る
@@ -1773,7 +1853,7 @@ export const BOSSES = {
 // 14 章の ボスは バージョンで ちがう
 export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
 // 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
-export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'boss14'];
+export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'bakuen11', 'boss14'];
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)

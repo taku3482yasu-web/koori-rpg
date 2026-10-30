@@ -35,6 +35,9 @@ export function peopleHere(g) {
         (p.only === 'soutou8' && g.story === 'oshiro' && !g.flags.soutou8) ||
         (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
         (p.only === 'onioni8' && g.story === 'oshiro') ||
+        // 11 章: 火山の 底の バクエンリュウ → (勝つと) ASO の 間の 大魔王ASO
+        (p.only === 'bakuen11' && g.story === 'tsubo' && !g.flags.baku11) ||
+        (p.only === 'aso11' && reached(g, 'tsubo') && g.flags.baku11) ||
         // 10 章: 紋つきを 5 回 助けると 家の 前に 幹部 タシケダ
         (p.only === 'tashikeda10' && g.story === 'shuugeki' && (g.flags.dark10 || 0) >= 5) ||
         // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ

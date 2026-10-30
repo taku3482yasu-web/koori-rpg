@@ -253,10 +253,29 @@ export function createBattleView(app, battle, place) {
             } else if (e.type === 'chance') {
                 if (e.why === 'flip') banner = { text: 'ひっくり返った！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 if (e.why === 'fall') banner = { text: `${nameOf(e.target)}が 転んだ！ チャンス！`, color: COLORS.accent, until: t + 1.8 };
+                if (e.why === 'water') banner = { text: '水爆弾で 体が かたまった！ チャンス！', color: COLORS.accent, until: t + 2 };
                 if (e.why === 'heads') banner = { text: '頭を ふたつとも こわした！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 if (e.why === 'cage') banner = { text: 'おりが こわれた！ ふるカワが にげだした！ チャンス！', color: COLORS.accent, until: t + 2 };
                 if (e.why === 'signal') banner = { text: '信号機を こわした！ リハマが とまった！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
+            } else if (e.type === 'throw') {
+                // 11 章: ASO が 道具を 投げた
+                banner = { text: `ASOが「${e.name}」を 投げた！ ねらって 攻撃！`, color: '#ffd080', until: t + 1.6 };
+                sfx('lens');
+                const k = battle.enemies.findIndex(x => x.uid === e.actor), pp = k >= 0 ? partPos(k, e.slot) : null;
+                if (pp) effects.push({ kind: 'wave', x: pp.x, y: pp.y, start: t, dur: 0.4, color: '#ffd080' });
+            } else if (e.type === 'useItem') {
+                banner = { text: e.kind === 'weapon' ? `「${e.name}」で こうげき アップ！` : e.kind === 'heal' ? `「${e.name}」で 回復！` : `「${e.name}」が はじけた！`, color: COLORS.accent, until: t + 1.6 };
+                sfx(e.kind === 'heal' ? 'heal' : 'big');
+            } else if (e.type === 'melt') {
+                banner = { text: 'マグマの 波で 道具が とけて しまった……！', color: '#ff8a4a', until: t + 1.8 };
+                sfx('cancel');
+            } else if (e.type === 'immune') {
+                if (t - guardTold > 1.2) {
+                    guardTold = t;
+                    const p = posOf(e.target);
+                    if (p) pops.push({ x: p.x, y: p.y - 120, text: 'マグマの 体で きかない！', color: '#ffb080', small: true, until: t + 1.1 });
+                }
             } else if (e.type === 'drain') {
                 // 10 章の タシケダ: レベル ドレイン → 紋つきの 味方
                 banner = { text: `${nameOf(e.target)}の レベルが 吸われた！ Lv${e.from} → Lv${e.to}`, color: '#ff6a9a', until: t + 2 };
@@ -334,7 +353,8 @@ export function createBattleView(app, battle, place) {
                 const p = posOf(e.actor);
                 if (p) pops.push({ x: p.x, y: p.y - 112, text: 'うごけない！', color: '#ffe85a', until: t + 1 });
             } else if (e.type === 'chanceEnd') {
-                banner = { text: 'こわした ところが もとに もどった！', color: '#ff6a6a', until: t + 1.8 };
+                const magma = battle.enemies.find(x => x.uid === e.target)?.magma;
+                banner = { text: magma ? 'マグマの 体に もどった！' : 'こわした ところが もとに もどった！', color: '#ff6a6a', until: t + 1.8 };
                 sfx('cancel');
             } else if (e.type === 'partGuard') {
                 // 両手を こわすまで 頭は こわせない (知らせるのは ときどき)
@@ -814,6 +834,14 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'tsubo') {
+            // 11 章 ASOの壺の底: くらい どうくつと 下から 光る 溶岩
+            ctx.fillStyle = '#1a0c0a'; ctx.fillRect(0, 0, 400, HORIZON);
+            ctx.fillStyle = '#2a1410';
+            [[0, 50], [70, 30], [150, 56], [250, 26], [330, 44]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 40, y); ctx.lineTo(x + 80, 0); ctx.fill(); });
+            const lg = ctx.createLinearGradient(0, HORIZON - 30, 0, HORIZON);
+            lg.addColorStop(0, 'rgba(255, 90, 20, 0)'); lg.addColorStop(1, `rgba(255, 90, 20, ${0.45 + 0.1 * Math.sin(t * 2)})`);
+            ctx.fillStyle = lg; ctx.fillRect(0, HORIZON - 30, 400, 30);
         } else if (place === 'town') {
             // 10 章 黒い 霧の 石の川タウン: むらさきの 空と 家の かげ
             ctx.fillStyle = '#2a1a3a'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -879,7 +907,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'tsubo' ? ['#4a1a10', '#7a3a20'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -917,13 +945,16 @@ export function createBattleView(app, battle, place) {
         ctx.fill();
         // うしろ姿: 描いた 絵 (back-art.js) が なければ 顔を 消して 作る (back.js)
         const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
-        // 紋つき (「・闇」): むらさきの もや
+        // 紋つき (「・闇」): 黒い もや (とりつきの むらさきと 見分けられるように 黒っぽく)
         if (u.dark && !u.ko) {
             const fk = scale * artFit(art);
-            ctx.fillStyle = `rgba(110, 30, 150, ${0.3 + 0.12 * Math.sin(t * 4 + p.x)})`;
+            ctx.fillStyle = `rgba(30, 6, 40, ${0.4 + 0.12 * Math.sin(t * 4 + p.x)})`;
             ctx.beginPath(); ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2); ctx.fill();
         }
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
+        // とりつき中は むらさきの もや・レベルダウン中 (10 章の レベル ドレイン) は 青い もやが まとわりつく (2026-10-30 ユーザー指定)
+        if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art, scale, [190, 90, 255], 0);
+        if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
         // 氷の 偶像: 水色の 氷を 重ねる
         if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: '#cdf2ff', sx, sy });
         const w = u.parts ? 150 : 44, head = p.y - art.h * scale * artFit(art);
@@ -1008,6 +1039,13 @@ export function createBattleView(app, battle, place) {
             if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, '#ffb84a');
             text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
         };
+        // マグマの 体 (11 章の バクエンリュウ): ふだんは だいだいに ゆらめき、水爆弾で かたまると 灰色の 岩
+        if (e.magma) {
+            const hard = battle.chance && battle.chance.uid === e.uid;
+            ctx.fillStyle = hard ? 'rgba(110, 110, 120, 0.55)' : `rgba(255, 110, 30, ${0.14 + 0.08 * Math.sin(t * 5)})`;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y - h / 2, w * 0.55, h * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+            text(ctx, hard ? 'かたまった！ 攻撃が きく！' : 'マグマの 体', p.x, p.y - h - 22, { size: 10, align: 'center', bold: true, color: hard ? '#e0e0e0' : '#ffb080' });
+        }
         // 赤信号 (14 章の リハマ): 体が 赤く 光る
         if (e.shell > 0 && e.gims.signal) {
             ctx.strokeStyle = `rgba(255, 40, 40, ${0.5 + 0.3 * Math.sin(t * 10)})`;
@@ -1075,6 +1113,24 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
                 text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+            } else if (pt.thrown) {
+                // ASO が 投げた 道具 (11 章): 剣・回復の 実・水爆弾
+                const bounce = Math.sin(t * 4 + q.x) * 2, y0 = q.y + bounce;
+                ctx.fillStyle = 'rgba(255, 232, 140, 0.25)'; ctx.beginPath(); ctx.arc(q.x, y0, 18, 0, Math.PI * 2); ctx.fill();
+                if (pt.kind === 'weapon') {
+                    ctx.fillStyle = '#d8e0f0'; ctx.fillRect(q.x - 2, y0 - 16, 4, 22);
+                    ctx.fillStyle = '#ffd040'; ctx.fillRect(q.x - 7, y0 + 4, 14, 3);
+                    ctx.fillStyle = '#7a4a2a'; ctx.fillRect(q.x - 2, y0 + 7, 4, 7);
+                } else if (pt.kind === 'heal') {
+                    ctx.fillStyle = '#ff5a6a'; ctx.beginPath(); ctx.arc(q.x, y0 + 2, 9, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#5ad06a'; ctx.fillRect(q.x - 1, y0 - 12, 3, 6); ctx.fillRect(q.x + 1, y0 - 11, 6, 3);
+                } else {
+                    ctx.fillStyle = '#3a8ae0'; ctx.beginPath(); ctx.arc(q.x, y0 + 2, 10, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#bff0ff'; ctx.fillRect(q.x - 4, y0 - 3, 3, 3);
+                    ctx.strokeStyle = '#5a5a5a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q.x, y0 - 8); ctx.lineTo(q.x + 5, y0 - 14); ctx.stroke();
+                    ctx.fillStyle = '#ffd040'; ctx.fillRect(q.x + 4, y0 - 16, 3, 3);
+                }
+                text(ctx, pt.name, q.x, y0 + 28, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
             } else if (key === 'horn' && !pt.broken) {
                 // ハル麒麟の 角 (9 章): 金色の 角。ためている あいだは ピンクに 光る
                 const glow = battle.regen && battle.regen.uid === e.uid;
@@ -1123,6 +1179,19 @@ export function createBattleView(app, battle, place) {
                 if (open) { ctx.strokeStyle = `rgba(255, 232, 90, ${0.5 + 0.3 * Math.sin(t * 8)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y - 12, 24, 0, Math.PI * 2); ctx.stroke(); }
                 label(key, q, 10);
             }
+        }
+    }
+
+    // まとわりつく もや: 体の まわりを ゆらゆら 回る 小さな もやの つぶ と うすい 光。rgb: 色・phase: 2 つ 重なっても ずれるように
+    function drawMist(ctx, x, y, art, scale, [r, g2, b2], phase) {
+        const fk = scale * artFit(art), w = art.w * fk / 2, h = art.h * fk, cy = y - h / 2;
+        ctx.fillStyle = `rgba(${r}, ${g2}, ${b2}, ${0.14 + 0.06 * Math.sin(t * 3 + phase)})`;
+        ctx.beginPath(); ctx.ellipse(x, cy, w + 6, h / 2 + 6, 0, 0, Math.PI * 2); ctx.fill();
+        for (let i = 0; i < 7; i++) {
+            const a = t * 1.6 + i * Math.PI * 2 / 7 + phase;
+            const px = x + Math.cos(a) * (w + 4), py = cy + Math.sin(a * 1.3) * (h / 2) - ((t * 18 + i * 9) % 14);
+            ctx.fillStyle = `rgba(${r}, ${g2}, ${b2}, ${0.45 + 0.2 * Math.sin(t * 5 + i)})`;
+            ctx.beginPath(); ctx.ellipse(px, py, 5 + (i % 3), 3.5, a, 0, Math.PI * 2); ctx.fill();
         }
     }
 
@@ -1318,6 +1387,15 @@ export function createBattleView(app, battle, place) {
                 ctx.arc(x, y, 24 + Math.sin(t * 6) * 1.5, 0, Math.PI * 2);
                 ctx.stroke();
                 text(ctx, 'とりつき', x, y - 24, { size: 8.5, align: 'center', bold: true, color: '#e0b0ff' });
+            }
+            // レベルダウン中 (10 章) の なかまには 青い 印
+            if (!u.ko && u.drained) {
+                ctx.strokeStyle = '#5aaaff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(x, y, 27 + Math.sin(t * 6) * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+                text(ctx, `Lv${u.lv}`, x, y + 32, { size: 8.5, align: 'center', bold: true, color: '#9ad0ff' });
             }
         });
         text(ctx, `${btn('l')} ◀ なぞって回す ▶ ${btn('r')}`, WHEEL.x, 232, { size: 10.5, align: 'center', color: COLORS.sub });
