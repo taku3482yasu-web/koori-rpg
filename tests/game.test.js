@@ -446,3 +446,33 @@ test('7 章: 電車で 月の迷宮 → 鏡の 間の ルナヤに 勝つと 7 �
     assert.equal(g.story, 'clear7');
     assert.ok(!peopleHere(g).some(p => p.id === 'runaya7'));
 });
+
+test('8 章: 電車で SE城 → 大鬼 → 双頭鬼 → 金滅鬼 (なかまに なる) → おにおにに 勝つと 8 章 クリア (2026-10-30)', async () => {
+    const { arriveShiro, trainLines } = await import('../src/logic/game.js');
+    const g = newGame('naitei');
+    receiveWatch(g);
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const here = id => peopleHere(g).some(p => p.id === id);
+    g.story = 'meikyu';
+    assert.ok(!trainLines(g).includes('shiro'));
+    g.story = 'clear7';
+    assert.ok(trainLines(g).includes('shiro'));
+    assert.match(objective(g), /SE城/);
+    assert.ok(arriveShiro(g));
+    assert.ok(!arriveShiro(g), '2 回目は なにも おきない');
+    assert.ok(here('ooni8') && here('soutou8') && here('kinme8') && here('onioni8'));
+    let out = applyBattleResult(g, winBattle(g, bossEnemies('ooni8'), 'boss'), rng);
+    assert.equal(out.befriend, null);
+    assert.ok(!here('ooni8') && here('soutou8'));
+    assert.match(objective(g), /双頭鬼/);
+    applyBattleResult(g, winBattle(g, bossEnemies('soutou8'), 'boss'), rng);
+    assert.ok(!here('soutou8'));
+    out = applyBattleResult(g, winBattle(g, bossEnemies('kinme8'), 'boss'), rng);
+    assert.equal(out.befriend.id, 'kinmetsuki', '金滅鬼は 紋が とけて なかまに なる');
+    assert.match(objective(g), /おにおに/);
+    out = applyBattleResult(g, winBattle(g, bossEnemies('onioni8'), 'boss'), rng);
+    assert.equal(out.befriend, null);
+    assert.equal(g.story, 'clear8');
+    assert.equal(g.chapter, 9);
+    assert.ok(!here('onioni8'));
+});

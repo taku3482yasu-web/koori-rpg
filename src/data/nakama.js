@@ -230,7 +230,18 @@ export const WAZA = {
     zumitani6: W('クナイ乱れうち', 'かぜ', 'line', 1.3),
     onioni6: W('金棒 たたき', 'ほのお', 'front', 1.4),
     tomooka6: W('右ストレート', 'ふつう', 'front', 1.3),
-    runaya7: W('ムーンビーム', 'ふしぎ', 'line', 1.3)
+    runaya7: W('ムーンビーム', 'ふしぎ', 'line', 1.3),
+    // 金色のSE城 (8 章)。ひるみ は こんらん・やけど は どく・よわき は のろい
+    tsunodaruma: W('だるまころがし', 'ふつう', 'line', 1.2, 'confuse', 0.3),
+    onibin: W('おにび', 'ほのお', 'line', 1.2, 'poison', 0.4),
+    onigirin: { name: 'おにぎりパワー', heal: 1.0 },
+    setsubunmame: W('まめまき', 'ふつう', 'around', 0.9, 'slow', 0.4),
+    goukioni: W('剛鬼のこぶし', 'ほのお', 'front', 1.8),
+    kinmetsuki: W('金滅の一閃', 'ほのお', 'line', 1.8, 'poison', 0.3),
+    ooni8: W('ふみつけ', 'ふつう', 'around', 1),
+    soutou8: W('かみつき', 'ふつう', 'front', 1.2),
+    kinme8: W('金色の鬼気', 'ふしぎ', 'around', 1.1, 'blind', 0.4),
+    onioni8: W('金棒 大ぶり', 'ほのお', 'around', 1.1)
 };
 // わざの 効果 (battle.js の applyEffects の 形)。わざは 前作の 威力 × 1.4
 export function wazaEffects(w) {
@@ -877,6 +888,45 @@ const LIST = [
         title: '月の迷宮の大魔法使い', desc: 'ASO四天王の1人。前は摩天楼を作り、今は 月の迷宮を作った大魔法使い。迷宮の形を自由自在に変えられる。月の魔術を使い、月の力をこめたビームを放つ。心配性なのか、同じことを何度も話そうとする癖がある。',
         special: sp('満月の ムーンビーム', [atk('all', 1.6, { magic: true, element: 'ふしぎ' })])
     },
+    // ----- 金色のSE城の 6 体 (8 章「金色のSE城の 決戦」。2026-10-30。ダンジョンの 金色の鬼ヶ城の 鬼鬼団。D 3・C 1・B 1・A 1) -----
+    //   金滅鬼は 城の 3 人目の 幹部 (ボス)。たおすと 紋が とけて なかまに なる。ゴウキオニは 8 章 クリアの あと 玉座の 間に 出る
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+        id: 'tsunodaruma', name: 'ツノダルマ', from: 'ダンジョン V14', area: 'shiro', rank: 'D', element: 'ふつう', role: 'defender', mul: { def: 1.1 },
+        line: 'ころんでも おきあがる', favorite: 'onigiri',
+        title: '角の生えただるま', desc: '角の生えただるま。何度転んでも起き上がるが、角が床に刺さって起きられない時もある。',
+        special: sp('七転び八起き', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'onibin', name: 'オニビン', from: 'ダンジョン V15', area: 'shiro', rank: 'D', element: 'ほのお', role: 'jammer', mul: { mag: 1.1 },
+        line: 'ゆら……ゆら……', favorite: 'cider',
+        title: '鬼の火', desc: '城の中をゆらゆらただよう鬼火。消えそうで消えない。',
+        special: sp('鬼火の 舞', [atk('all', 0.8, { magic: true }), { kind: 'status', target: 'all', status: 'poison', chance: 0.6 }])
+    },
+    {
+        id: 'onigirin', name: 'オニギリン', from: 'ダンジョン V18', area: 'shiro', rank: 'C', element: 'しぜん', role: 'healer', mul: { hp: 1.1 },
+        line: 'のりは パリパリ派', favorite: 'onigiri',
+        title: 'おにぎりの鬼', desc: '鬼鬼団のまかない係。のりはパリパリ派で、しっとり派とは口をきかない。',
+        special: sp('まかない 大盛り', [{ kind: 'heal', target: 'party', power: 0.5 }])
+    },
+    {
+        id: 'setsubunmame', name: 'セツブンマメ', from: 'ダンジョン V19', area: 'shiro', rank: 'D', element: 'ふつう', role: 'jammer', mul: {},
+        line: 'おには そと！ ……あれ？', favorite: 'niboshi',
+        title: '鬼を追う豆', desc: '節分の豆の妖怪。鬼を追い払うために城へ乗りこんだが、どの鬼にも効かなくて困っている。',
+        special: sp('福は うち', [atk('all', 0.8), { kind: 'status', target: 'all', status: 'slow', chance: 0.6 }])
+    },
+    {
+        id: 'goukioni', name: 'ゴウキオニ', from: 'ダンジョン V20', area: 'shiro', rank: 'B', element: 'ほのお', role: 'attacker', mul: { atk: 1.15 },
+        line: '鬼鬼団の 一番槍は おれだ！', favorite: 'cider',
+        title: '鬼鬼団1番槍', desc: '鬼鬼団の特攻隊長。こいつが通った後はすべてが更地に様変わり。',
+        special: sp('一番槍 突撃', [atk('all', 1.8)])
+    },
+    {
+        id: 'kinmetsuki', name: '金滅鬼', from: 'ダンジョン 限定ボス', area: 'shiro', rank: 'A', element: 'ほのお', role: 'attacker', mul: { atk: 1.15, def: 1.1 },
+        line: '金色の 鬼に ひれ伏せ！', favorite: 'choco',
+        title: 'いぶし金', desc: '金でできた鬼。自身の身体に自信を持っており、黄金の身体を見せつけては、周りを嘲笑している。',
+        special: sp('金滅 大一閃', [atk('all', 1.9, { element: 'ほのお' })])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
         id: 'kaguyausagi', name: 'カグヤウサギ', from: 'ダンジョン 069', area: 'moon', evo: 'tsukiusagi', rank: 'C', element: 'ふしぎ', role: 'healer', mul: {},
@@ -1032,7 +1082,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -1254,6 +1304,72 @@ export const BOSSES = {
             move: { name: '満月の ムーンビーム', effects: [atk('all', 2.6, { magic: true, element: 'ふしぎ' })] } },
         gims: { moon: { name: '月', hp: 99, when: 'always', pos: [2.8, -0.7], arm: true } },
         befriends: 'runaya', lv: 30, place: 'moon'
+    },
+    // ----- 8 章 金色のSE城の ボス 4 体 (2026-10-30 ユーザー指定)。幹部 3 体 (大鬼 → 双頭鬼 → 金滅鬼) → 玉座の 間の おにおに -----
+    // 大鬼: 体が でかく、わざは ぜんぶ 全体攻撃。足を ねらえて、当てつづけて こわすと 転んで チャンスタイム (おわると 足は もとに もどる)
+    ooni8: {
+        id: 'ooni8', name: '大鬼', element: 'ふつう', role: 'attacker', art: 'ooni', scale: 2, rank: 'B',
+        base: { hp: 900, atk: 15, def: 14, spd: 8, mag: 10 },
+        moves: [
+            { name: 'ふみつけ', w: 3, effects: [atk('all', 0.7)] },
+            { name: '大金棒 ぶんまわし', w: 3, effects: [atk('all', 0.85)] },
+            { name: '鬼の おたけび', w: 1.5, effects: [atk('all', 0.4), { kind: 'status', target: 'all', status: 'confuse', chance: 0.35 }] }
+        ],
+        bigMove: { name: '大地 ゆらし', every: 13, warn: 2.5, effects: [atk('all', 1.4)] },
+        gims: { legs: { name: '足', hp: 0.12, when: 'always', pos: [0, -0.13], chance: 'fall', reset: true } },
+        chanceTurns: 3,
+        befriends: null, lv: 31, place: 'shiro'
+    },
+    // 双頭鬼: 右の 頭 (見ている 人の 左) は とりつき、左の 頭 は 術を 使う。頭を こわすと その 頭の わざが 使えない。
+    //   両方 こわすと チャンスタイム → おわると 頭は もとに もどる
+    soutou8: {
+        id: 'soutou8', name: '双頭鬼', element: 'ふしぎ', role: 'jammer', art: 'soutouki', scale: 2, rank: 'B',
+        base: { hp: 860, atk: 14, def: 13, spd: 11, mag: 16 },
+        moves: [
+            { name: 'かみつき', w: 2, effects: [atk('one', 1.2)] },
+            { name: '右の頭: のろいの 息', w: 2, gim: 'rhead', effects: [{ kind: 'status', target: 'all', status: 'slow', chance: 0.6 }] },
+            { name: '右の頭: いたずらの 声', w: 2, gim: 'rhead', effects: [{ kind: 'status', target: 'one', status: 'possess', chance: 0.8 }] },
+            { name: '右の頭: ねむりの 歌', w: 1.5, gim: 'rhead', effects: [{ kind: 'status', target: 'all', status: 'sleep', chance: 0.4 }] },
+            { name: '左の頭: 業火の術', w: 2, gim: 'lhead', effects: [atk('one', 1.5, { magic: true, element: 'ほのお' })] },
+            { name: '左の頭: 吹雪の術', w: 2, gim: 'lhead', effects: [atk('all', 0.8, { magic: true, element: 'こおり' })] }
+        ],
+        bigMove: { name: '双頭の 大咆哮', every: 14, warn: 2.5, effects: [atk('all', 1.2, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.3 }] },
+        gims: {
+            rhead: { name: '右の頭', hp: 0.07, when: 'always', pos: [-0.46, -0.8], group: 'heads', move: 'とりつき', reset: true },
+            lhead: { name: '左の頭', hp: 0.07, when: 'always', pos: [0.46, -0.8], group: 'heads', move: '術', reset: true }
+        },
+        chanceTurns: 3,
+        befriends: null, lv: 32, place: 'shiro'
+    },
+    // 金滅鬼: 金の 体で、めくらましの とりつき (攻撃が 当たりにくい) を かける。チャンスタイムは なく、ただの なぐりあい。幹部で いちばん 強い
+    kinme8: {
+        id: 'kinme8', name: '金滅鬼', element: 'ほのお', role: 'attacker', art: 'kinmetsuki', scale: 1.6, rank: 'A',
+        base: { hp: 1000, atk: 18, def: 17, spd: 12, mag: 13 },
+        moves: [
+            { name: '金滅の一閃', w: 3, effects: [atk('one', 1.7, { element: 'ほのお' })] },
+            { name: '黄金の こぶし', w: 3, effects: [atk('one', 1.3)] },
+            { name: '金色の鬼気', w: 2, effects: [atk('all', 0.7, { magic: true, element: 'ふしぎ' })] },
+            { name: '金の かがやき', w: 2, effects: [{ kind: 'status', target: 'all', status: 'blind', chance: 0.7 }] }
+        ],
+        bigMove: { name: '金滅 大一閃', every: 12, warn: 2.5, effects: [atk('all', 1.5, { element: 'ほのお' })] },
+        befriends: 'kinmetsuki', lv: 33, place: 'shiro'
+    },
+    // 玉座の 間: ルキハに あやつられた おにおに (8 章の 山場)。金滅鬼より はげしい 攻撃: 全体攻撃・全体の のろいの とりつき・大火炎の術
+    //   必殺技「鬼神 金棒くだき」は 6 秒 ためてから 打つ。ためている あいだに 最大HP の 9% ぶん ダメージを あたえると 紋が 暴発して 自爆
+    //   (味方に ダメージ・おにおには チャンスタイム)。2 回目からの ため では ガードして、うける ダメージが 40% に へる
+    onioni8: {
+        id: 'onioni8', name: 'おにおに (黒い紋)', element: 'ほのお', role: 'attacker', art: 'onioni', scale: 2, rank: 'A',
+        base: { hp: 1050, atk: 19, def: 15, spd: 12, mag: 15 },
+        moves: [
+            { name: '金棒 大ぶり', w: 3, effects: [atk('all', 0.9)] },
+            { name: '鬼パンチ 連打', w: 2, effects: [atk('one', 0.8, { hits: 2 })] },
+            { name: '鬼の のろい', w: 2, effects: [{ kind: 'status', target: 'all', status: 'slow', chance: 0.7 }] },
+            { name: '大火炎の術', w: 2, effects: [atk('all', 1.0, { magic: true, element: 'ほのお' })] }
+        ],
+        bigMove: { name: '鬼神 金棒くだき', trigger: 'burst', every: 12, charge: 6, need: 0.09, guardCut: 0.4, effects: [atk('all', 2.2)],
+            burst: { name: '紋の 暴発', effects: [atk('all', 0.7, { element: 'ほのお' })] } },
+        chanceTurns: 4,
+        befriends: null, lv: 35, place: 'shiro'
     }
 };
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));

@@ -149,6 +149,13 @@ export const SPECIALS = {
     daichouenou: { motion: 'cloud', color: '#d8a8ff' },
     daienjou: { motion: 'rain', color: '#ff8a4a' },
     kingharry: { motion: 'multi', color: '#e0e0e0' },
+    // 8 章 金色のSE城
+    tsunodaruma: { motion: 'dash', color: '#e0e0e0' },
+    onibin: { motion: 'cloud', color: '#ff8a4a' },
+    onigirin: { motion: 'aura', color: '#5ad06a' },
+    setsubunmame: { motion: 'rain', color: '#e0e0e0' },
+    goukioni: { motion: 'dash', color: '#ff8a4a' },
+    kinmetsuki: { motion: 'beam', color: '#ffd040' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };

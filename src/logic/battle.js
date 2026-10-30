@@ -34,6 +34,13 @@
 //     右腕を ねらって 当てると、決まった ダメージごとに 1 段ずつ しぼむ (体への ダメージは へる)
 //   満ちていく 月 (7 章の ルナヤ): 右腕と 同じ しくみで、growEvery 秒ごとに 1 段 満ちる (体を たたいても 満ちない)
 //   もの忘れ (7 章の ルナヤ): repeat の 確率で 同じ わざを もう いちど 使う
+//   8 章 金色のSE城 (2026-10-30 ユーザー指定):
+//     大鬼: わざは ぜんぶ 全体攻撃。足 (gims の chance) に 当てつづけて こわすと 転んで チャンスタイム → 足は もとに もどる
+//     双頭鬼: 右の 頭 (とりつき) と 左の 頭 (術)。頭を こわすと その 頭の わざ (move の gim) が 使えない。
+//       両方 こわす (gims の group が ぜんぶ こわれる) と チャンスタイム → おわると 頭は もとに もどる
+//     金滅鬼: めくらましの とりつき を つかう。チャンスタイムは ない
+//     おにおに: 必殺技を ためる あいだ (b.burst) に 決まった ダメージを あたえると 紋が 暴発 (自爆): 味方に ダメージ + チャンスタイム。
+//       2 回目からの ためでは ガードして、うける ダメージが へる (guardCut)
 // =====================================================================
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
@@ -120,6 +127,9 @@ function hitGim(b, u, key, dmg) {
     part.broken = true;
     if (!part.noBody) emit(b, 'partBreak', { target: u.uid, part: key, name: part.name, move: part.move || null, gim: true });
     if (b.lock === u.uid && b.lockPart === key) b.lockPart = null;
+    // 8 章: こわすと チャンスタイム (大鬼の 足) / 組の 部位が ぜんぶ こわれると チャンスタイム (双頭鬼の 頭)
+    if (part.chance) { startChance(b, u, part.chance); return; }
+    if (part.group && Object.values(u.gims).filter(p => p.group === part.group).every(p => p.broken)) { startChance(b, u, part.group); return; }
     if (key === 'box') {
         // 玉手箱が こわれた: 玉手箱の わざと 必殺技が 使えない。けむりが 出て 味方の 攻撃が 当たりにくい
         u.bossMoves = u.bossMoves.filter(m => !m.box);
@@ -227,6 +237,16 @@ function enterOni(b, u) {
     emit(b, 'phase', { actor: u.uid, name: o.name });
     emit(b, 'skill', { actor: u.uid, name: o.name, cmd: 'boss' });
 }
+// 紋の 暴発 (8 章の おにおに): ため が 止まり、味方に ダメージ。おにおには 目を まわして チャンスタイム
+function burstBreak(b, u) {
+    const m = u.bigMove;
+    b.burst = null;
+    b.bossTimer = 0;
+    emit(b, 'burstBreak', { actor: u.uid, name: m.burst.name });
+    emit(b, 'special', { actor: u.uid, name: m.burst.name, side: 'enemy', big: true });
+    applyEffects(b, u, m.burst.effects);
+    startChance(b, u, 'burst');
+}
 function leaveOni(b, u) {
     u.oni = false;
     u.rage = 0;
@@ -242,7 +262,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -285,6 +305,7 @@ function afterKo(b, u) {
         if (b.charge && b.charge.uid === u.uid) b.charge = null;
     }
     if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
+    if (b.burst && b.burst.uid === u.uid) b.burst = null;
 }
 
 const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
@@ -333,12 +354,15 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     const headGuard = from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart === 'head' && !handsBroken(to) && !b.chance;
     // こうらに こもっている あいだは 体への ダメージが ぐっと へる (頭を ねらえば ふつう)
     const shell = (to.shell > 0 && !gim ? (to.shellCut ?? 0.15) : 1) * (gim && to.gims[gim].arm ? to.armDef.bodyCut : 1) * cloneHit;
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell;
+    // 8 章の おにおに: 2 回目からの ため では ガード
+    const burstOn = from.side === 'ally' && b.burst && b.burst.uid === to.uid;
+    const burstGuard = burstOn && b.burst.guard ? to.bigMove.guardCut : 1;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell * burstGuard;
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
     if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1, weak: weak && !headGuard, headGuard, part: gim });
+    emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1 || burstGuard < 1, weak: weak && !headGuard, headGuard, part: gim });
     if (gim && to.hp > 0 && !to.gims[gim].arm) hitGim(b, to, gim, dmg);
     // 右腕 (6 章): 右腕に 当てると しぼみ、体に 当てると ふくらむ
     if (from.side === 'ally' && to.armDef && to.hp > 0) {
@@ -351,6 +375,11 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
         if (to.rage >= to.max * to.oniDef.at) enterOni(b, to);
     }
     if (from.side === 'ally' && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
+    // 8 章の おにおに: ためている あいだに 決まった ダメージを あたえると 紋が 暴発
+    if (burstOn && to.hp > 0) {
+        b.burst.dmg += dmg;
+        if (b.burst.dmg >= b.burst.need) burstBreak(b, to);
+    }
     if (to.hp <= 0) {
         to.ko = true;
         to.status = {};
@@ -487,7 +516,9 @@ function act(b, u) {
     // 偶像を 作る わざは 偶像が 2 体 そろって いない あいだだけ
     if (u.bossMoves) {
         if (b.chant && b.chant.uid === u.uid) { emit(b, 'chanting', { actor: u.uid }); return; }   // お経を となえている あいだは ほかの ことを しない
-        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+        if (b.burst && b.burst.uid === u.uid) { emit(b, 'charging', { actor: u.uid }); return; }   // 必殺技を ためている あいだも (8 章の おにおに)
+        const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+        if (!list.length) { emit(b, 'stunned', { actor: u.uid, left: 0 }); return; }
         const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss' });
         if (move.summon) summonIdol(b, u);
@@ -648,6 +679,24 @@ function bossTick(b, e, dt) {
         emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
         applyEffects(b, e, m.effects);
         for (const idol of idolsOf(b, e)) { idol.hp = 0; idol.ko = true; emit(b, 'ko', { target: idol.uid, side: 'enemy' }); }
+        return;
+    }
+    // 必殺技を ためる あいだに 攻撃を うけきると 紋が 暴発する (8 章の おにおに)
+    if (m.trigger === 'burst') {
+        if (b.burst && b.burst.uid === e.uid) {
+            b.burst.left -= dt;
+            if (b.burst.left > 0) return;
+            b.burst = null;
+            b.bossTimer = 0;
+            emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
+            applyEffects(b, e, m.effects);
+            return;
+        }
+        b.bossTimer += dt;
+        if (b.bossTimer < m.every) return;
+        e.burstCount = (e.burstCount || 0) + 1;
+        b.burst = { uid: e.uid, left: m.charge, dmg: 0, need: Math.round(e.max * m.need), guard: e.burstCount >= 2 };
+        emit(b, 'telegraph', { actor: e.uid, name: m.name, warn: m.charge, burst: true, guard: b.burst.guard });
         return;
     }
     // お経を となえきると 必殺技 (5 章の ダイシ)。となえている あいだ だけ 鐘を ねらえる

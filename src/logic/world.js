@@ -29,7 +29,12 @@ export function peopleHere(g) {
         (p.only === 'zumitani6' && g.story === 'yashiki' && !g.flags.zumi6) ||
         (p.only === 'onioni6' && g.story === 'yashiki' && g.flags.zumi6 && !g.flags.oni6) ||
         (p.only === 'tomooka6' && g.story === 'yashiki' && g.flags.oni6) ||
-        (p.only === 'runaya7' && g.story === 'meikyu'));
+        (p.only === 'runaya7' && g.story === 'meikyu') ||
+        // 8 章: 大鬼 → 双頭鬼 → 金滅鬼 → おにおに。たおした 幹部は いなくなり、次の 戸口が あく
+        (p.only === 'ooni8' && g.story === 'oshiro' && !g.flags.ooni8) ||
+        (p.only === 'soutou8' && g.story === 'oshiro' && !g.flags.soutou8) ||
+        (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
+        (p.only === 'onioni8' && g.story === 'oshiro'));
 }
 // 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)
 export const personName = (g, p) => (p.nameBy ? p.nameBy[g.version] || p.name : p.name);

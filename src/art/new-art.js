@@ -233,5 +233,63 @@ export const NEW_ART = {
                 '......bbbb....bbbb......'
             ]
         ]
+    },
+    // 大鬼 (8 章の 鬼鬼団 幹部。新キャラ・2026-10-30 ユーザー指定): 体が でかい 赤茶の 鬼。2 本角・きばの ある 口・とらがらの パンツ。
+    //   バトルでは 足を ねらえる (足に 当てつづけると 転んで チャンスタイム)
+    ooni: {
+        w: 24, h: 24,
+        palette: { o: '#2a1010', s: '#9a3a2a', S: '#702818', y: '#f0e0a0', k: '#111111', e: '#ffe040', w: '#ffffff', t: '#ffd040', b: '#2a2a2a' },
+        frames: bob([
+            '........................',
+            '..yy................yy..',
+            '..yyy..............yyy..',
+            '...yyy..oooooooo..yyy...',
+            '....yyooSssssssSooyy....',
+            '.....osssssssssssso.....',
+            '....osskksssssskksso....',
+            '....osseeksssskeesso....',
+            '....ossssssSSsssssso....',
+            '....osskkkkkkkkkksso....',
+            '....osskwkkkkkkwksso....',
+            '.....osssssssssssso.....',
+            'oooossssssssssssssssoooo',
+            'osssssssssssssssssssssso',
+            'osSssssssssssssssssssSso',
+            'osS.ssssssssssssssss.Sso',
+            'osS.sssssSSSSSSsssss.Sso',
+            'oss.tbttbttbbttbttbt.sso',
+            '.oo.tttttttttttttttt.oo.',
+            '....tttttttttttttttt....',
+            '....ssssss....ssssss....',
+            '....ssssss....ssssss....',
+            '...osssssso..osssssso...',
+            '..ooooooooo..ooooooooo..'
+        ])
+    },
+    // 双頭鬼 (8 章の 鬼鬼団 幹部。新キャラ・2026-10-30 ユーザー指定): 頭が 2 つの 鬼。右の 頭 (見ている 人の 左・むらさき) は とりつき、
+    //   左の 頭 (見ている 人の 右・青) は 術を 使う。頭は ねらって こわせる
+    soutouki: {
+        w: 26, h: 18,
+        palette: { o: '#1a1a24', p: '#8a4ac0', u: '#3a7ad0', s: '#5a6a5a', S: '#3a4a3a', y: '#f0e0a0', k: '#111111', w: '#ffffff', t: '#ffd040', b: '#2a2a2a' },
+        frames: bob([
+            '....y....y......y....y....',
+            '....yy..yy......yy..yy....',
+            '....oooooo......oooooo....',
+            '...oppppppo....ouuuuuuo...',
+            '...opkppkpo....oukuukuo...',
+            '...oppppppo....ouuuuuuo...',
+            '...opwkkwpo....ouwkkwuo...',
+            '....oppppo......ouuuuo....',
+            '.....oppo........ouuo.....',
+            '.....oooooooooooooooo.....',
+            '....osssssssssssssssso....',
+            '...osssssssssssssssssso...',
+            '..osSssssssssssssssssSso..',
+            '..osS.ttbttbttbttbtt.Sso..',
+            '..oo..tttttttttttttt..oo..',
+            '......ssss......ssss......',
+            '......ssss......ssss......',
+            '.....oooooo....oooooo.....'
+        ])
     }
 };

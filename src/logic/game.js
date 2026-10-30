@@ -20,7 +20,10 @@
 //   yashiki  屋敷に 着いた。ボス 3 回: 庭の ズミタニ (flags.zumi6) → 奥の 間の おにおに (flags.oni6) → 東の 蔵の トモオカ
 //   clear6   6 章 クリア。ここから 7 章「月の迷宮と 喰らう 者の 伝説」: 石の川駅から 電車で 月の迷宮へ
 //   meikyu   月の迷宮に 着いた (ルナヤに まねかれる)。迷宮の いちばん 奥で 月の 鏡 (flags.mirror7) → ルナヤ (ボス)
-//   clear7   7 章 クリア。なかまを あつめる (順番は story.js)
+//   clear7   7 章 クリア。ここから 8 章「金色のSE城の 決戦」: 石の川駅から 電車で 金色のSE城へ
+//   oshiro   SE城に 着いた (ライバル探検隊が 門を こじあける)。幹部 3 人: 大広間の 大鬼 (flags.ooni8) → 双頭の間の 双頭鬼
+//            (flags.soutou8) → 金の間の 金滅鬼 (flags.kinme8) → 玉座の 間の おにおに (ボス)
+//   clear8   8 章 クリア。なかまを あつめる (順番は story.js)
 // =====================================================================
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
@@ -232,6 +235,10 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'onioni6') g.flags.oni6 = true;
         if (bossId === 'tomooka6') { g.story = 'clear6'; g.chapter = 7; }
         if (bossId === 'runaya7') { g.story = 'clear7'; g.chapter = 8; }
+        if (bossId === 'ooni8') g.flags.ooni8 = true;
+        if (bossId === 'soutou8') g.flags.soutou8 = true;
+        if (bossId === 'kinme8') g.flags.kinme8 = true;
+        if (bossId === 'onioni8') { g.story = 'clear8'; g.chapter = 9; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -316,11 +323,16 @@ export function objective(g) {
         // 7 章「月の迷宮と 喰らう 者の 伝説」
         case 'clear6': return '石の川駅から、電車で 月の迷宮へ 行こう';
         case 'meikyu': return '月の迷宮の いちばん 奥の「月の 鏡」を めざそう';
+        // 8 章「金色のSE城の 決戦」
+        case 'clear7': return '石の川駅から、電車で 金色のSE城へ 行こう';
+        case 'oshiro': return !g.flags.ooni8 ? 'SE城の 大広間で 幹部の 大鬼を たおそう'
+            : !g.flags.soutou8 ? '双頭の間で 幹部の 双頭鬼を たおそう'
+            : !g.flags.kinme8 ? '金の間で 幹部の 金滅鬼を たおそう' : '玉座の 間で おにおにを とりもどそう';
         default: {
-            // 7 章 クリアの あと: なかま あつめ
+            // 8 章 クリアの あと: なかま あつめ
             const got = area => idsInArea(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}・${part('yashiki', '屋敷')}・${part('moon', '月')}`;
+            return `なかまを あつめよう　${part('ishinokawa', '石の川')}・${part('shoutengai', '商店街')}・${part('school', '学校')}・${part('yama', '山')}・${part('umi', '海')}・${part('tera', '寺')}・${part('yashiki', '屋敷')}・${part('moon', '月')}・${part('shiro', '城')}`;
         }
     }
 }
@@ -340,7 +352,14 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : [])];
+
+// 金色のSE城に はじめて 着いた (8 章の はじまり)。はじめて なら true
+export function arriveShiro(g) {
+    if (g.story !== 'clear7') return false;
+    g.story = 'oshiro';
+    return true;
+}
 
 // 月の迷宮に はじめて 着いた (7 章の はじまり)。はじめて なら true
 export function arriveMoon(g) {

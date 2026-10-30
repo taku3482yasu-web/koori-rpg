@@ -66,7 +66,9 @@ const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon
     // 7 章 月の迷宮の 8 体・ルナヤ・進化先 3 体 (2026-10-29)
     'tsukiusagi', 'nandomoslime', 'mangetsuwolf', 'watageboushi', 'tatsumakitsune', 'shakkinbourei', 'tsubomajin', 'kaminarigumo', 'kaguyausagi', 'shingetsuwolf', 'rishitoribourei', 'runaya',
     // 追加の 進化先 2 体 (2026-10-30)
-    'daienjou', 'kingharry'];
+    'daienjou', 'kingharry',
+    // 8 章 金色のSE城の 6 体 (2026-10-30。金滅鬼は 幹部の ボスにも 使う)
+    'tsunodaruma', 'onibin', 'onigirin', 'setsubunmame', 'goukioni', 'kinmetsuki'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

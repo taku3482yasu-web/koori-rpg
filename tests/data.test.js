@@ -294,14 +294,14 @@ test('地図の マスの 文字は ぜんぶ 地図の 色と 絵が ある (�
 });
 
 test('地図: 月の迷宮 (7 章)。入り口から 月の 鏡の 間の ルナヤまで 歩いて 行ける (行き止まりも ある)', async () => {
-    const { MOON_Y0, MOON_IN, MOON_MIRROR } = await import('../src/data/map.js');
+    const { MOON_Y0, MOON_IN, MOON_MIRROR, SHIRO_Y0 } = await import('../src/data/map.js');
     assert.ok([...TILES[MOON_Y0]].every(c => c === 'T'));
-    assert.deepEqual(regionOf(MOON_IN.y), [MOON_Y0, MAP_H]);
+    assert.deepEqual(regionOf(MOON_IN.y), [MOON_Y0, SHIRO_Y0]);
     assert.ok(BLOCK.has('V'));
     // 駅の 前から 歩ける マスを たどる
     const seen = new Set([`${MOON_IN.x},${MOON_IN.y}`]);
     const q = [[MOON_IN.x, MOON_IN.y]];
-    const open = (x, y) => y >= MOON_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !(x === MOON_MIRROR.x && y === MOON_MIRROR.y);
+    const open = (x, y) => y >= MOON_Y0 && y < SHIRO_Y0 && !BLOCK.has(TILES[y][x]) && !(x === MOON_MIRROR.x && y === MOON_MIRROR.y);
     while (q.length) {
         const [x, y] = q.shift();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -315,4 +315,36 @@ test('地図: 月の迷宮 (7 章)。入り口から 月の 鏡の 間の ルナ
     assert.equal(moon.length, 9);
     const count = rk => moon.filter(id => NAKAMA[id].rank === rk).length;
     assert.deepEqual([count('D'), count('C')], [5, 4]);
+});
+
+test('地図: 金色のSE城 (8 章)。駅から 大鬼 → 双頭鬼 → 金滅鬼 → おにおにの 前まで、幹部を たおすたびに 進める', async () => {
+    const { SHIRO_Y0, SHIRO_IN, PROPS } = await import('../src/data/map.js');
+    assert.ok([...TILES[SHIRO_Y0]].every(c => c === 'T'));
+    assert.deepEqual(regionOf(SHIRO_IN.y), [SHIRO_Y0, MAP_H]);
+    assert.ok(BLOCK.has('k'));
+    const order = ['ooni8', 'soutou8', 'kinme8', 'onioni8'].map(id => PEOPLE.find(p => p.id === id));
+    // まだ たおして いない 幹部は 通れない。たおした 幹部の 先へ 進める
+    const reach = beaten => {
+        const stand = order.slice(beaten.length).map(p => `${p.x},${p.y}`);
+        const seen = new Set([`${SHIRO_IN.x},${SHIRO_IN.y}`]);
+        const q = [[SHIRO_IN.x, SHIRO_IN.y]];
+        const open = (x, y) => y >= SHIRO_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !stand.includes(`${x},${y}`) && !PROPS.some(p => p.x === x && p.y === y);
+        while (q.length) {
+            const [x, y] = q.shift();
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const k = `${x + dx},${y + dy}`;
+                if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); }
+            }
+        }
+        return seen;
+    };
+    for (let i = 0; i < order.length; i++) {
+        const seen = reach(order.slice(0, i));
+        assert.ok(seen.has(`${order[i].x},${order[i].y + 1}`), `${order[i].id} の 前まで 行ける`);
+        if (i + 1 < order.length) assert.ok(!seen.has(`${order[i + 1].x},${order[i + 1].y + 1}`), `${order[i].id} を たおすまで ${order[i + 1].id} には 行けない`);
+    }
+    const shiro = idsInArea('shiro');
+    assert.equal(shiro.length, 6);
+    const count = rk => shiro.filter(id => NAKAMA[id].rank === rk).length;
+    assert.deepEqual([count('D'), count('C'), count('B'), count('A')], [3, 1, 1, 1]);
 });

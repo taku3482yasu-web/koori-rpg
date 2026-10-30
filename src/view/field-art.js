@@ -15,7 +15,7 @@ const hash = (x, y, k = 0) => {
 export const MINI_COLORS = { G: '#6cc04a', F: '#8ad070', T: '#2e6e2e', R: '#b8b0a0', W: '#3a8ad0', B: '#b07a48', P: '#c8c0b0', S: '#e8d8a0', K: '#c8c8c0', A: '#6a6a72',
     L: '#c89a62', X: '#3a3040', Y: '#d8eef0', M: '#c03a3a',
     U: '#8a6a4a', H: '#7a5a3a', N: '#f0f6fa', Q: '#9aa0a8', D: '#a89a80', E: '#b8a888', I: '#9ad8f0',
-    J: '#4a4e58', C: '#7a7468', Z: '#4a3624', O: '#c8c070', V: '#2a2050', v: '#5a5088' };
+    J: '#4a4e58', C: '#7a7468', Z: '#4a3624', O: '#c8c070', V: '#2a2050', v: '#5a5088', k: '#c8a030', r: '#b02030' };
 
 function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -170,6 +170,21 @@ function drawTile(c, ch, x, y, wet = false) {
             r(0, 7, 16, 1, '#4a4078'); r((y % 2) * 8, 0, 1, 7, '#4a4078'); r(((y + 1) % 2) * 8, 8, 1, 8, '#4a4078');
             if (hash(x, y, 98) < 0.15) r(Math.floor(hash(x, y, 99) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, '#d8d8ff');
             break;
+        // ----- 金色のSE城 (8 章) -----
+        case 'k': { // 金の かべ (金の 板と 赤い 柱)
+            r(0, 0, 16, 16, '#a07818');
+            if (tileAt(x, y + 1) === 'r' || tileAt(x, y + 1) === 'K') {
+                r(0, 4, 16, 12, '#e0b840'); r(0, 4, 16, 1, '#fff0a0'); r(0, 15, 16, 1, '#8a6010');
+                if (x % 4 === 0) r(6, 4, 4, 12, '#a02020');
+            } else if ((x + y) % 2 === 0) r(4, 4, 8, 8, '#b88a20');
+            break;
+        }
+        case 'r':   // 赤い じゅうたん (金の ふち)
+            r(0, 0, 16, 16, '#b02030');
+            if (tileAt(x - 1, y) !== 'r') r(0, 0, 2, 16, '#e0b840');
+            if (tileAt(x + 1, y) !== 'r') r(14, 0, 2, 16, '#e0b840');
+            if (hash(x, y, 41) < 0.12) r(Math.floor(hash(x, y, 42) * 12) + 2, Math.floor(hash(x, y, 43) * 14), 2, 1, '#d04050');
+            break;
         default:
             r(0, 0, 16, 16, '#ff00ff');
     }
@@ -215,6 +230,15 @@ function drawProp(c, p) {
         c.fillStyle = '#9ad8ff'; c.fillRect(px + 1, py - 3, 14, 16);
         c.fillStyle = '#e8f8ff'; c.fillRect(px + 3, py - 1, 3, 6);
         c.fillStyle = '#ffe85a'; c.fillRect(px + 6, py - 9, 4, 3);
+        return;
+    }
+    if (p.kind === 'throne') {
+        // SE城の 玉座 (8 章): 金の いすに 赤い ざぶとん
+        const px = p.x * TILE, py = p.y * TILE;
+        c.fillStyle = '#e0b840'; c.fillRect(px - 2, py - 10, 20, 26);
+        c.fillStyle = '#fff0a0'; c.fillRect(px - 2, py - 10, 20, 2);
+        c.fillStyle = '#b02030'; c.fillRect(px + 2, py - 6, 12, 10); c.fillRect(px + 1, py + 6, 14, 5);
+        c.fillStyle = '#a07818'; c.fillRect(px - 2, py + 12, 4, 4); c.fillRect(px + 14, py + 12, 4, 4);
         return;
     }
     if (p.kind !== 'torii') return;

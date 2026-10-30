@@ -660,6 +660,61 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear7" && window.__app.g.medals.some(m => m.id === "runaya")'), 'ルナヤに 勝つと 7 章 クリア (なかまに なる)');
 
+    // ----- 8 章: 電車で 金色のSE城 → 大鬼 (足) → 双頭鬼 (頭 2 つ) → 金滅鬼 → おにおに (紋の 暴発) (2026-10-30) -----
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    for (let i = 0; i < 4; i++) await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('shiro-arrive');
+    check(await evaluate('window.__app.g.story === "oshiro" && window.__app.g.pos.y > 264 * 16 && window.__bgm() === "shiro"'), '7 章 クリアの あと 電車で 金色のSE城へ (8 章・城の BGM)');
+    const boss8 = async (id, y, label) => {
+        await at(24, y + 1, 'up');
+        await key('KeyJ');
+        await skipTalk();
+        await sleep(300);
+        check(await evaluate(`window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "${id}" && window.__bgm() === "${id}"`), `${label}と バトル (ボスの BGM)`);
+        await key('KeyJ');
+        await sleep(600);
+    };
+    await boss8('ooni8', 283, '大鬼');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.max = e.hp = 99999; e.gims.legs.hp = 1; b.lock = e.uid; b.lockPart = "legs"; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.chance)'), '大鬼: 足を こわすと 転んで チャンスタイム');
+    await sleep(300);
+    await shot('shiro-ooni-fall');
+    await winNow();
+    await skipTalk(30);
+    await boss8('soutou8', 279, '双頭鬼');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.max = e.hp = 99999; e.gims.rhead.hp = 1; e.gims.lhead.hp = 1; b.lock = e.uid; b.lockPart = "rhead"; return true; })()');
+    check(await waitFor('window.__app.scene.battle.enemies[0].gims.rhead.broken'), '双頭鬼: 右の 頭を こわせる');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; b.lock = e.uid; b.lockPart = "lhead"; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.chance)'), '双頭鬼: 両方の 頭を こわすと チャンスタイム');
+    await sleep(300);
+    await shot('shiro-soutou-heads');
+    await winNow();
+    await skipTalk(30);
+    await boss8('kinme8', 275, '金滅鬼');
+    await sleep(300);
+    await shot('shiro-kinme');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.medals.some(m => m.id === "kinmetsuki")'), '金滅鬼に 勝つと なかまに なる');
+    await boss8('onioni8', 271, 'おにおに');
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.max = e.hp = 99999; b.bossTimer = 99; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.burst)'), 'おにおに: 必殺技を ためる');
+    await sleep(300);
+    await shot('shiro-oni-burst');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.burst.dmg = b.burst.need; return true; })()');
+    await evaluate('(() => { const b = window.__app.scene.battle; b.burst.need = 1; return true; })()');
+    check(await waitFor('window.__app.scene.battle.events.some(e => e.type === "burstBreak") || Boolean(window.__app.scene.battle.chance)'), 'おにおに: ためている あいだに 攻撃を 当てると 紋が 暴発');
+    await sleep(300);
+    await shot('shiro-oni-break');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "clear8"'), 'おにおにに 勝つと 8 章 クリア');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

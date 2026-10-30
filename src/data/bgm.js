@@ -74,6 +74,12 @@ export const SONGS = {
         chords: '1 2 1 2 3 2 7 1', bass: 'r - - - - - - -', arp: '0 1 2 3 0 1 2 3', drums: '. . . . . . . .'
     },
 
+    shiro: {
+        name: '金色のSE城', bpm: 118, root: 69, mode: 'minor', lead: 'square',
+        melody: "1 . 1 2 3 . 5 . | 6 - 5 - 3 - . . | 1' . 7 6 5 . 3 . | 5 - - - . . . . | 3 . 3 5 6 . 1' . | 7 - 6 - 5 - 3 - | 4 . 3 2 1 . 2 . | 1 - - - 5, - - .",
+        chords: '1 4 6 5 3 7 4 1', bass: 'r . o . r . o .', drums: 'k . k s . k s .'
+    },
+
     // ----- ふつうの 戦闘・ライバル探検隊 -----
     battle: {
         name: 'なかまと バトル', bpm: 152, root: 69, mode: 'minor', lead: 'square',
@@ -132,7 +138,27 @@ export const SONGS = {
         melody: "5 - - 1' - 7 | 6 - 5 4 - - | 3 - - 6 - 5 | 5 - - - - . | 1' - 7 6 - 5 | 4 - 3 4 - 6 | 5 - 4 3 - 2 | 7, - - 2 - -",
         chords: '1 6 4 5 1 6 2 5', bass: 'r - - f - -', arp: '0 1 2 3 2 1', drums: 'k . h s . h'
     },
-    // 曲が まだ ない ボス (8 章 から 先) は これ
+    ooni8: {
+        name: '大地 ゆらし (大鬼)', bpm: 120, root: 57, mode: 'phrygian', lead: 'sawtooth',
+        melody: "1 - . 1 - . 2 - | 1 - - - . . . . | 1 - . 1 - . 4 - | 3 - 2 - 1 - . . | 5 - . 5 - . 6 - | 5 - 4 - 2 - . . | 4 - 5 - 6 - 7 - | 1' - - - 5 - - .",
+        chords: '1 1 1 2 6 6 4 1', bass: 'r - . r - . r .', drums: 'k . . k . . s .'
+    },
+    soutou8: {
+        name: 'ふたつの 頭 (双頭鬼)', bpm: 146, root: 64, mode: 'harmonic', lead: 'square',
+        melody: "5 4 3 . 1, 2, 3, . | 6 5 4 . 2, 3, 4, . | 1' 7 6 . 3, 4, 5, . | 7 - - . 7, - - . | 5 4 3 . 1, 2, 3, . | 6 5 4 . 4, 5, 6, . | 7 6 5 . 5, 6, 7, . | 1' - - . 1 - - .",
+        chords: '1 4 6 5 1 4 5 1', bass: 'r o r o r o r o', drums: 'k h s h k k s h'
+    },
+    kinme8: {
+        name: '黄金の なぐりあい (金滅鬼)', bpm: 164, root: 66, mode: 'minor', lead: 'square',
+        melody: "1 . 1 3 5 . 4 3 | 4 . 4 5 6 . 5 4 | 5 . 5 6 7 . 6 5 | 1' - 7 - 5 - . . | 3' . 2' 1' 7 . 1' 2' | 3' - 2' - 1' - 5 - | 6 . 5 4 3 . 2 3 | 5 - - 7, 5 - - .",
+        chords: '1 4 5 1 3 7 4 5', bass: 'r o r o r o r o', drums: 'x h s h x h s s'
+    },
+    onioni8: {
+        name: '紋に のまれた ともだち (おにおに)', bpm: 158, root: 65, mode: 'harmonic', lead: 'square',
+        melody: "1 . 3 . 5 . 1' 7 | 6 - 5 - 4 - 3 - | 4 . 6 . 1' . 3' 2' | 1' - 7 - 5 - . . | 6 . 6 7 1' . 7 6 | 5 . 5 6 7 . 6 5 | 4 . 3 4 6 . 1' 2' | 7 - - - 5 - 7 -",
+        chords: '1 6 4 5 6 1 4 5', bass: 'r o r o r o r o', arp: '0 1 2 1 0 1 2 1', drums: 'k h s h k k s h'
+    },
+    // 曲が まだ ない ボス (9 章 から 先) は これ
     boss: {
         name: 'ボス バトル', bpm: 150, root: 69, mode: 'harmonic', lead: 'square',
         melody: "1 . 3 . 5 . 1' . | 7 - 6 - 5 - . . | 4 . 6 . 1' . 3' . | 2' - 1' - 7 - . . | 1' . 7 6 5 . 6 7 | 1' - 5 - 3 - . . | 4 . 4 5 6 . 7 1' | 7 - - - 5 - 7 -",

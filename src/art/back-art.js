@@ -372,5 +372,12 @@ export const BACK_ART = {
     runaya: auto('runaya'),
     // 追加の 進化先 (2026-10-30)
     daienjou: auto('daienjou'),
-    kingharry: auto('kingharry')
+    kingharry: auto('kingharry'),
+    // 8 章 金色のSE城 (2026-10-30)
+    tsunodaruma: auto('tsunodaruma'),
+    onibin: auto('onibin'),
+    onigirin: auto('onigirin'),
+    setsubunmame: auto('setsubunmame'),
+    goukioni: auto('goukioni'),
+    kinmetsuki: auto('kinmetsuki')
 };

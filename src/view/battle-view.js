@@ -252,7 +252,16 @@ export function createBattleView(app, battle, place) {
                 if (pp) effects.push({ kind: 'wave', x: pp.x, y: pp.y + 10, start: t, dur: 0.5, color: '#ffe85a' });
             } else if (e.type === 'chance') {
                 if (e.why === 'flip') banner = { text: 'ひっくり返った！ チャンス！', color: COLORS.accent, until: t + 1.8 };
+                if (e.why === 'fall') banner = { text: `${nameOf(e.target)}が 転んだ！ チャンス！`, color: COLORS.accent, until: t + 1.8 };
+                if (e.why === 'heads') banner = { text: '頭を ふたつとも こわした！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
+            } else if (e.type === 'burstBreak') {
+                // 8 章の おにおに: ためている あいだに 攻撃を うけきって 紋が 暴発
+                banner = { text: `紋が 暴発した！「${e.name}」！ ${nameOf(e.actor)}が 目を まわした！`, color: '#ffb84a', until: t + 2 };
+                warn = null;
+                sfx('big');
+                const p = posOf(e.actor);
+                if (p) for (let i = 0; i < 3; i++) effects.push({ kind: 'wave', x: p.x, y: p.y - 40, start: t + i * 0.12, dur: 0.6, color: '#ff6a3a' });
             } else if (e.type === 'clones') {
                 // 6 章: ズミタニの 影分身
                 banner = { text: 'かげぶんしん！ 本物を ロックオンして こうげき！', color: '#c8f08a', until: t + 1.8 };
@@ -322,7 +331,7 @@ export function createBattleView(app, battle, place) {
                 banner = { text: e.ok ? `おはらい せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おはらい しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
-                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm) };
+                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst) };
                 sfx('cancel');
             } else if (e.type === 'summon') {
                 // 氷の 偶像が できた (3 章の ダムの主)
@@ -784,6 +793,15 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'shiro') {
+            // 金色のSE城 (8 章): 金の かべと 赤い 柱、ちょうちん
+            ctx.fillStyle = '#a07818'; ctx.fillRect(0, 0, 400, HORIZON);
+            ctx.fillStyle = '#e0b840'; ctx.fillRect(0, HORIZON - 40, 400, 40);
+            ctx.fillStyle = '#fff0a0'; ctx.fillRect(0, HORIZON - 40, 400, 2);
+            ctx.fillStyle = '#a02020';
+            for (let i = 0; i < 6; i++) ctx.fillRect(20 + i * 72, 0, 12, HORIZON);
+            ctx.fillStyle = '#ff6a3a';
+            for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(62 + i * 72, 26, 9, 12, 0, 0, Math.PI * 2); ctx.fill(); }
         } else if (place === 'moon') {
             // 月の迷宮 (7 章): 夜空と 星、むらさきの 石の かべ
             ctx.fillStyle = '#0c0a24'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -819,7 +837,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -1002,6 +1020,20 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
                 text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+            } else if (key === 'legs' && open) {
+                // 大鬼の 足 (8 章): 足もとに 黄色い わく
+                ctx.strokeStyle = `rgba(255, 232, 90, ${0.45 + 0.25 * Math.sin(t * 6)})`; ctx.lineWidth = 2;
+                ctx.strokeRect(q.x - w * 0.36, q.y - 12, w * 0.72, 22);
+                label(key, q, 14);
+            } else if ((key === 'rhead' || key === 'lhead') && !pt.broken) {
+                // 双頭鬼の 頭 (8 章): ねらえる 頭に わく (右の 頭 = とりつき・左の 頭 = 術)
+                ctx.strokeStyle = key === 'rhead' ? 'rgba(200, 138, 255, 0.8)' : 'rgba(120, 180, 255, 0.8)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.arc(q.x, q.y, 20, 0, Math.PI * 2); ctx.stroke();
+                label(key, q, 20);
+            } else if (key === 'rhead' || key === 'lhead') {
+                // こわれた 頭: 黒い けむりで おおう
+                ctx.fillStyle = 'rgba(20, 20, 30, 0.8)'; ctx.beginPath(); ctx.arc(q.x, q.y, 18, 0, Math.PI * 2); ctx.fill();
+                text(ctx, '×', q.x, q.y + 7, { size: 20, align: 'center', bold: true, color: '#ff6a6a' });
             } else if (key === 'bell') {
                 // 鐘 (いつも うしろに ある。お経の あいだ だけ 光って ねらえる)
                 const swing = open ? Math.sin(t * 5) * 0.08 : 0;
@@ -1080,6 +1112,14 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(90, 20, 90, 0.9)', edge: '#ffe85a' });
             text(ctx, `お経を となえている……「${warn ? warn.name : ''}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffe0a0' });
+        } else if (battle.burst && !battle.outcome) {
+            // 8 章の おにおに: ためている あいだに 決まった ダメージを あたえると 紋が 暴発する。2 回目からは ガード
+            const bu = battle.burst;
+            panel(ctx, 30, 8, 340, 44, { fill: 'rgba(120, 30, 10, 0.92)', edge: bu.guard ? '#8ad0ff' : '#ffb84a' });
+            text(ctx, `!! 「${warn ? warn.name : ''}」を ためている！${bu.guard ? ' (ガード中)' : ''}`, 200, 23, { size: 13, align: 'center', bold: true });
+            bar(ctx, 60, 30, 200, 6, Math.min(1, bu.dmg / bu.need), '#ffb84a');
+            text(ctx, `${bu.guard ? 'ガードで ダメージが へる！' : ''}攻撃を 当てて 止めろ！ (${Math.max(0, bu.left).toFixed(1)})`, 200, 47, { size: 10, align: 'center', color: '#ffd0d0' });
+            text(ctx, `${Math.floor(bu.dmg)}/${bu.need}`, 300, 37, { size: 10, align: 'center', bold: true, color: '#ffe0b0' });
         } else if (battle.smoke && !battle.outcome && !(warn && warn.until > t)) {
             panel(ctx, 90, 8, 220, 24, { fill: 'rgba(60, 60, 70, 0.85)', edge: '#d0d0d8' });
             text(ctx, `けむりで 攻撃が 当たりにくい (${Math.ceil(battle.smoke.left)})`, 200, 25, { size: 11, align: 'center', bold: true });
@@ -1088,7 +1128,7 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
-        } else if (warn && !warn.idols && !warn.chant && !warn.arm && warn.until > t) {
+        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });

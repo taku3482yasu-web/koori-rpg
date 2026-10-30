@@ -527,3 +527,94 @@ test('7 章の ルナヤ: 月が 時間で 満ち、満月で ムーンビーム
     for (let i = 0; i < 600 && !b2.events.some(e => e.type === 'repeat'); i++) { b2.enemies[0].hp = b2.enemies[0].max; b2.wheel[0].hp = b2.wheel[0].max; step(b2, 0.05); }
     assert.ok(b2.events.some(e => e.type === 'repeat'), 'あら、これ もう 言ったかしら？');
 });
+
+// 8 章の ボス (2026-10-30 ユーザー指定)
+const strongParty = () => ['koori', 'kogame', 'haribaby', 'kozarappa', 'ishikoron', 'mizukirin'].map((id, i) => ({ uid: `a${i}`, id, lv: 70 }));
+const keepAlive = b => b.wheel.forEach(u => { if (u) { u.hp = u.max; u.ko = false; } });
+
+test('8 章の 大鬼: わざは ぜんぶ 全体攻撃。足に 当てつづけて こわすと 転んで チャンスタイム → 足は もとに もどる', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const def = BOSSES.ooni8;
+    for (const m of [...def.moves, def.bigMove]) for (const fx of m.effects) if (fx.kind === 'attack' || fx.kind === 'status') assert.equal(fx.target, 'all', m.name);
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'ooni8', lv: 31 }], rng: createRng(3), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.ok(lockOn(b, boss.uid, 'legs'));
+    for (let i = 0; i < 2000 && !b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(b.chance && b.events.some(e => e.type === 'chance' && e.why === 'fall'), '転んで チャンスタイム');
+    assert.ok(boss.gims.legs.broken);
+    for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(!boss.gims.legs.broken, 'チャンスタイムが おわると 足は もとに もどる');
+});
+
+test('8 章の 双頭鬼: 頭を こわすと その 頭の わざが 使えない。両方 こわすと チャンスタイム → 頭は もとに もどる', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'soutou8', lv: 32 }], rng: createRng(5), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.ok(lockOn(b, boss.uid, 'rhead'));
+    for (let i = 0; i < 2000 && !boss.gims.rhead.broken; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(boss.gims.rhead.broken && !b.chance, '右の 頭 だけでは チャンスに ならない');
+    const from = b.events.length;
+    for (let i = 0; i < 600; i++) { boss.hp = boss.max; keepAlive(b); b.wheel.forEach(u => { if (u) u.timer = 0; }); step(b, 0.05); }
+    const used = b.events.slice(from).filter(e => e.type === 'skill' && e.actor === boss.uid).map(e => e.name);
+    assert.ok(used.length > 3, `わざを 使う ${used.length}`);
+    assert.ok(!used.some(n => n.startsWith('右の頭')), '右の 頭の わざ (とりつき) は 使わない');
+    assert.ok(lockOn(b, boss.uid, 'lhead'));
+    for (let i = 0; i < 2000 && !b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'heads'), '両方 こわすと チャンスタイム');
+    for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(!boss.gims.rhead.broken && !boss.gims.lhead.broken, '頭は もとに もどる');
+});
+
+test('8 章の 金滅鬼: めくらましの とりつきを かける。チャンスタイムは ない (なぐりあい)', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const def = BOSSES.kinme8;
+    assert.ok(def.moves.some(m => m.effects.some(fx => fx.status === 'blind')));
+    assert.ok(!def.gims && !def.parts, 'ねらえる 部位は ない');
+    const others = ['ooni8', 'soutou8'].map(id => BOSSES[id]);
+    for (const o of others) assert.ok(def.base.hp > o.base.hp && def.base.atk > o.base.atk && def.lv > o.lv, `${o.name}より 強い`);
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'kinme8', lv: 33 }], rng: createRng(8), kind: 'boss' });
+    for (let i = 0; i < 1200; i++) { b.enemies[0].hp = b.enemies[0].max; keepAlive(b); step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'status' && e.status === 'blind'), 'めくらましの とりつき');
+    assert.ok(!b.events.some(e => e.type === 'chance'), 'チャンスタイムは ない');
+});
+
+test('8 章の おにおに: ためている あいだに ダメージを あたえると 紋が 暴発 (味方に ダメージ・チャンスタイム)。2 回目からは ガード', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const kin = BOSSES.kinme8, oni = BOSSES.onioni8;
+    assert.ok(oni.base.atk > kin.base.atk && oni.lv > kin.lv, '金滅鬼より はげしい');
+    assert.ok(oni.moves.some(m => m.name === '大火炎の術' && m.effects[0].target === 'all' && m.effects[0].magic));
+    assert.ok(oni.moves.some(m => m.effects.some(fx => fx.status === 'slow' && fx.target === 'all')), '全体の のろいの とりつき');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'onioni8', lv: 35 }], rng: createRng(2), kind: 'boss' });
+    const boss = b.enemies[0];
+    b.bossTimer = oni.bigMove.every;
+    step(b, 0.05);
+    assert.ok(b.burst && !b.burst.guard, '1 回目の ため (ガードなし)');
+    const hp0 = b.wheel.map(u => u && u.hp);
+    for (let i = 0; i < 400 && b.burst; i++) { boss.hp = boss.max; step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'burstBreak'), '紋が 暴発');
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'burst'), 'チャンスタイム');
+    assert.ok(!b.events.some(e => e.type === 'special' && e.name === oni.bigMove.name), '必殺技は 打たない');
+    assert.ok(b.events.some(e => e.type === 'special' && e.name === oni.bigMove.burst.name), '暴発で 味方に ダメージ');
+    for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    // 2 回目: ガードで ダメージが へる
+    b.bossTimer = oni.bigMove.every;
+    step(b, 0.05);
+    assert.ok(b.burst && b.burst.guard, '2 回目の ため は ガード');
+    const from = b.events.length;
+    for (let i = 0; i < 20 && b.burst; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    const hits = b.events.slice(from).filter(e => e.type === 'damage' && e.target === boss.uid);
+    assert.ok(hits.length && hits.every(e => e.guard), 'ガード中の ダメージ');
+    assert.ok(hp0.length);
+});
+
+test('8 章の おにおに: ため の あいだに ダメージが たりないと 必殺技を 打つ', async () => {
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const oni = BOSSES.onioni8;
+    const b = createBattle({ allies: [{ uid: 'a', id: 'kogame', lv: 5 }], enemies: [{ id: 'onioni8', lv: 35 }], rng: createRng(1), kind: 'boss' });
+    b.bossTimer = oni.bigMove.every;
+    step(b, 0.05);
+    for (let i = 0; i < 400 && b.burst; i++) { b.wheel[0].hp = b.wheel[0].max; b.wheel[0].timer = 0; step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'special' && e.name === oni.bigMove.name));
+    assert.ok(!b.events.some(e => e.type === 'burstBreak'));
+});

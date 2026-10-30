@@ -673,6 +673,17 @@ body.nopad #pad { display: none; }
       arp: "0 1 2 3 0 1 2 3",
       drums: ". . . . . . . ."
     },
+    shiro: {
+      name: "金色のSE城",
+      bpm: 118,
+      root: 69,
+      mode: "minor",
+      lead: "square",
+      melody: "1 . 1 2 3 . 5 . | 6 - 5 - 3 - . . | 1' . 7 6 5 . 3 . | 5 - - - . . . . | 3 . 3 5 6 . 1' . | 7 - 6 - 5 - 3 - | 4 . 3 2 1 . 2 . | 1 - - - 5, - - .",
+      chords: "1 4 6 5 3 7 4 1",
+      bass: "r . o . r . o .",
+      drums: "k . k s . k s ."
+    },
     // ----- ふつうの 戦闘・ライバル探検隊 -----
     battle: {
       name: "なかまと バトル",
@@ -801,7 +812,52 @@ body.nopad #pad { display: none; }
       arp: "0 1 2 3 2 1",
       drums: "k . h s . h"
     },
-    // 曲が まだ ない ボス (8 章 から 先) は これ
+    ooni8: {
+      name: "大地 ゆらし (大鬼)",
+      bpm: 120,
+      root: 57,
+      mode: "phrygian",
+      lead: "sawtooth",
+      melody: "1 - . 1 - . 2 - | 1 - - - . . . . | 1 - . 1 - . 4 - | 3 - 2 - 1 - . . | 5 - . 5 - . 6 - | 5 - 4 - 2 - . . | 4 - 5 - 6 - 7 - | 1' - - - 5 - - .",
+      chords: "1 1 1 2 6 6 4 1",
+      bass: "r - . r - . r .",
+      drums: "k . . k . . s ."
+    },
+    soutou8: {
+      name: "ふたつの 頭 (双頭鬼)",
+      bpm: 146,
+      root: 64,
+      mode: "harmonic",
+      lead: "square",
+      melody: "5 4 3 . 1, 2, 3, . | 6 5 4 . 2, 3, 4, . | 1' 7 6 . 3, 4, 5, . | 7 - - . 7, - - . | 5 4 3 . 1, 2, 3, . | 6 5 4 . 4, 5, 6, . | 7 6 5 . 5, 6, 7, . | 1' - - . 1 - - .",
+      chords: "1 4 6 5 1 4 5 1",
+      bass: "r o r o r o r o",
+      drums: "k h s h k k s h"
+    },
+    kinme8: {
+      name: "黄金の なぐりあい (金滅鬼)",
+      bpm: 164,
+      root: 66,
+      mode: "minor",
+      lead: "square",
+      melody: "1 . 1 3 5 . 4 3 | 4 . 4 5 6 . 5 4 | 5 . 5 6 7 . 6 5 | 1' - 7 - 5 - . . | 3' . 2' 1' 7 . 1' 2' | 3' - 2' - 1' - 5 - | 6 . 5 4 3 . 2 3 | 5 - - 7, 5 - - .",
+      chords: "1 4 5 1 3 7 4 5",
+      bass: "r o r o r o r o",
+      drums: "x h s h x h s s"
+    },
+    onioni8: {
+      name: "紋に のまれた ともだち (おにおに)",
+      bpm: 158,
+      root: 65,
+      mode: "harmonic",
+      lead: "square",
+      melody: "1 . 3 . 5 . 1' 7 | 6 - 5 - 4 - 3 - | 4 . 6 . 1' . 3' 2' | 1' - 7 - 5 - . . | 6 . 6 7 1' . 7 6 | 5 . 5 6 7 . 6 5 | 4 . 3 4 6 . 1' 2' | 7 - - - 5 - 7 -",
+      chords: "1 6 4 5 6 1 4 5",
+      bass: "r o r o r o r o",
+      arp: "0 1 2 1 0 1 2 1",
+      drums: "k h s h k k s h"
+    },
+    // 曲が まだ ない ボス (9 章 から 先) は これ
     boss: {
       name: "ボス バトル",
       bpm: 150,
@@ -1199,7 +1255,18 @@ body.nopad #pad { display: none; }
     zumitani6: W$1("クナイ乱れうち", "かぜ", "line", 1.3),
     onioni6: W$1("金棒 たたき", "ほのお", "front", 1.4),
     tomooka6: W$1("右ストレート", "ふつう", "front", 1.3),
-    runaya7: W$1("ムーンビーム", "ふしぎ", "line", 1.3)
+    runaya7: W$1("ムーンビーム", "ふしぎ", "line", 1.3),
+    // 金色のSE城 (8 章)。ひるみ は こんらん・やけど は どく・よわき は のろい
+    tsunodaruma: W$1("だるまころがし", "ふつう", "line", 1.2, "confuse", 0.3),
+    onibin: W$1("おにび", "ほのお", "line", 1.2, "poison", 0.4),
+    onigirin: { name: "おにぎりパワー", heal: 1 },
+    setsubunmame: W$1("まめまき", "ふつう", "around", 0.9, "slow", 0.4),
+    goukioni: W$1("剛鬼のこぶし", "ほのお", "front", 1.8),
+    kinmetsuki: W$1("金滅の一閃", "ほのお", "line", 1.8, "poison", 0.3),
+    ooni8: W$1("ふみつけ", "ふつう", "around", 1),
+    soutou8: W$1("かみつき", "ふつう", "front", 1.2),
+    kinme8: W$1("金色の鬼気", "ふしぎ", "around", 1.1, "blind", 0.4),
+    onioni8: W$1("金棒 大ぶり", "ほのお", "around", 1.1)
   };
   function wazaEffects(w) {
     if (w.heal) return [{ kind: "heal", target: "lowest", power: w.heal }];
@@ -2700,6 +2767,99 @@ body.nopad #pad { display: none; }
       desc: "ASO四天王の1人。前は摩天楼を作り、今は 月の迷宮を作った大魔法使い。迷宮の形を自由自在に変えられる。月の魔術を使い、月の力をこめたビームを放つ。心配性なのか、同じことを何度も話そうとする癖がある。",
       special: sp("満月の ムーンビーム", [atk("all", 1.6, { magic: true, element: "ふしぎ" })])
     },
+    // ----- 金色のSE城の 6 体 (8 章「金色のSE城の 決戦」。2026-10-30。ダンジョンの 金色の鬼ヶ城の 鬼鬼団。D 3・C 1・B 1・A 1) -----
+    //   金滅鬼は 城の 3 人目の 幹部 (ボス)。たおすと 紋が とけて なかまに なる。ゴウキオニは 8 章 クリアの あと 玉座の 間に 出る
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 仮
+    {
+      id: "tsunodaruma",
+      name: "ツノダルマ",
+      from: "ダンジョン V14",
+      area: "shiro",
+      rank: "D",
+      element: "ふつう",
+      role: "defender",
+      mul: { def: 1.1 },
+      line: "ころんでも おきあがる",
+      favorite: "onigiri",
+      title: "角の生えただるま",
+      desc: "角の生えただるま。何度転んでも起き上がるが、角が床に刺さって起きられない時もある。",
+      special: sp("七転び八起き", [atk("one", 2), { kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }])
+    },
+    {
+      id: "onibin",
+      name: "オニビン",
+      from: "ダンジョン V15",
+      area: "shiro",
+      rank: "D",
+      element: "ほのお",
+      role: "jammer",
+      mul: { mag: 1.1 },
+      line: "ゆら……ゆら……",
+      favorite: "cider",
+      title: "鬼の火",
+      desc: "城の中をゆらゆらただよう鬼火。消えそうで消えない。",
+      special: sp("鬼火の 舞", [atk("all", 0.8, { magic: true }), { kind: "status", target: "all", status: "poison", chance: 0.6 }])
+    },
+    {
+      id: "onigirin",
+      name: "オニギリン",
+      from: "ダンジョン V18",
+      area: "shiro",
+      rank: "C",
+      element: "しぜん",
+      role: "healer",
+      mul: { hp: 1.1 },
+      line: "のりは パリパリ派",
+      favorite: "onigiri",
+      title: "おにぎりの鬼",
+      desc: "鬼鬼団のまかない係。のりはパリパリ派で、しっとり派とは口をきかない。",
+      special: sp("まかない 大盛り", [{ kind: "heal", target: "party", power: 0.5 }])
+    },
+    {
+      id: "setsubunmame",
+      name: "セツブンマメ",
+      from: "ダンジョン V19",
+      area: "shiro",
+      rank: "D",
+      element: "ふつう",
+      role: "jammer",
+      mul: {},
+      line: "おには そと！ ……あれ？",
+      favorite: "niboshi",
+      title: "鬼を追う豆",
+      desc: "節分の豆の妖怪。鬼を追い払うために城へ乗りこんだが、どの鬼にも効かなくて困っている。",
+      special: sp("福は うち", [atk("all", 0.8), { kind: "status", target: "all", status: "slow", chance: 0.6 }])
+    },
+    {
+      id: "goukioni",
+      name: "ゴウキオニ",
+      from: "ダンジョン V20",
+      area: "shiro",
+      rank: "B",
+      element: "ほのお",
+      role: "attacker",
+      mul: { atk: 1.15 },
+      line: "鬼鬼団の 一番槍は おれだ！",
+      favorite: "cider",
+      title: "鬼鬼団1番槍",
+      desc: "鬼鬼団の特攻隊長。こいつが通った後はすべてが更地に様変わり。",
+      special: sp("一番槍 突撃", [atk("all", 1.8)])
+    },
+    {
+      id: "kinmetsuki",
+      name: "金滅鬼",
+      from: "ダンジョン 限定ボス",
+      area: "shiro",
+      rank: "A",
+      element: "ほのお",
+      role: "attacker",
+      mul: { atk: 1.15, def: 1.1 },
+      line: "金色の 鬼に ひれ伏せ！",
+      favorite: "choco",
+      title: "いぶし金",
+      desc: "金でできた鬼。自身の身体に自信を持っており、黄金の身体を見せつけては、周りを嘲笑している。",
+      special: sp("金滅 大一閃", [atk("all", 1.9, { element: "ほのお" })])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
       id: "kaguyausagi",
@@ -3080,7 +3240,7 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
-  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮" };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮", shiro: "金色のSE城" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
@@ -3397,6 +3557,112 @@ body.nopad #pad { display: none; }
       befriends: "runaya",
       lv: 30,
       place: "moon"
+    },
+    // ----- 8 章 金色のSE城の ボス 4 体 (2026-10-30 ユーザー指定)。幹部 3 体 (大鬼 → 双頭鬼 → 金滅鬼) → 玉座の 間の おにおに -----
+    // 大鬼: 体が でかく、わざは ぜんぶ 全体攻撃。足を ねらえて、当てつづけて こわすと 転んで チャンスタイム (おわると 足は もとに もどる)
+    ooni8: {
+      id: "ooni8",
+      name: "大鬼",
+      element: "ふつう",
+      role: "attacker",
+      art: "ooni",
+      scale: 2,
+      rank: "B",
+      base: { hp: 900, atk: 15, def: 14, spd: 8, mag: 10 },
+      moves: [
+        { name: "ふみつけ", w: 3, effects: [atk("all", 0.7)] },
+        { name: "大金棒 ぶんまわし", w: 3, effects: [atk("all", 0.85)] },
+        { name: "鬼の おたけび", w: 1.5, effects: [atk("all", 0.4), { kind: "status", target: "all", status: "confuse", chance: 0.35 }] }
+      ],
+      bigMove: { name: "大地 ゆらし", every: 13, warn: 2.5, effects: [atk("all", 1.4)] },
+      gims: { legs: { name: "足", hp: 0.12, when: "always", pos: [0, -0.13], chance: "fall", reset: true } },
+      chanceTurns: 3,
+      befriends: null,
+      lv: 31,
+      place: "shiro"
+    },
+    // 双頭鬼: 右の 頭 (見ている 人の 左) は とりつき、左の 頭 は 術を 使う。頭を こわすと その 頭の わざが 使えない。
+    //   両方 こわすと チャンスタイム → おわると 頭は もとに もどる
+    soutou8: {
+      id: "soutou8",
+      name: "双頭鬼",
+      element: "ふしぎ",
+      role: "jammer",
+      art: "soutouki",
+      scale: 2,
+      rank: "B",
+      base: { hp: 860, atk: 14, def: 13, spd: 11, mag: 16 },
+      moves: [
+        { name: "かみつき", w: 2, effects: [atk("one", 1.2)] },
+        { name: "右の頭: のろいの 息", w: 2, gim: "rhead", effects: [{ kind: "status", target: "all", status: "slow", chance: 0.6 }] },
+        { name: "右の頭: いたずらの 声", w: 2, gim: "rhead", effects: [{ kind: "status", target: "one", status: "possess", chance: 0.8 }] },
+        { name: "右の頭: ねむりの 歌", w: 1.5, gim: "rhead", effects: [{ kind: "status", target: "all", status: "sleep", chance: 0.4 }] },
+        { name: "左の頭: 業火の術", w: 2, gim: "lhead", effects: [atk("one", 1.5, { magic: true, element: "ほのお" })] },
+        { name: "左の頭: 吹雪の術", w: 2, gim: "lhead", effects: [atk("all", 0.8, { magic: true, element: "こおり" })] }
+      ],
+      bigMove: { name: "双頭の 大咆哮", every: 14, warn: 2.5, effects: [atk("all", 1.2, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "confuse", chance: 0.3 }] },
+      gims: {
+        rhead: { name: "右の頭", hp: 0.07, when: "always", pos: [-0.46, -0.8], group: "heads", move: "とりつき", reset: true },
+        lhead: { name: "左の頭", hp: 0.07, when: "always", pos: [0.46, -0.8], group: "heads", move: "術", reset: true }
+      },
+      chanceTurns: 3,
+      befriends: null,
+      lv: 32,
+      place: "shiro"
+    },
+    // 金滅鬼: 金の 体で、めくらましの とりつき (攻撃が 当たりにくい) を かける。チャンスタイムは なく、ただの なぐりあい。幹部で いちばん 強い
+    kinme8: {
+      id: "kinme8",
+      name: "金滅鬼",
+      element: "ほのお",
+      role: "attacker",
+      art: "kinmetsuki",
+      scale: 1.6,
+      rank: "A",
+      base: { hp: 1e3, atk: 18, def: 17, spd: 12, mag: 13 },
+      moves: [
+        { name: "金滅の一閃", w: 3, effects: [atk("one", 1.7, { element: "ほのお" })] },
+        { name: "黄金の こぶし", w: 3, effects: [atk("one", 1.3)] },
+        { name: "金色の鬼気", w: 2, effects: [atk("all", 0.7, { magic: true, element: "ふしぎ" })] },
+        { name: "金の かがやき", w: 2, effects: [{ kind: "status", target: "all", status: "blind", chance: 0.7 }] }
+      ],
+      bigMove: { name: "金滅 大一閃", every: 12, warn: 2.5, effects: [atk("all", 1.5, { element: "ほのお" })] },
+      befriends: "kinmetsuki",
+      lv: 33,
+      place: "shiro"
+    },
+    // 玉座の 間: ルキハに あやつられた おにおに (8 章の 山場)。金滅鬼より はげしい 攻撃: 全体攻撃・全体の のろいの とりつき・大火炎の術
+    //   必殺技「鬼神 金棒くだき」は 6 秒 ためてから 打つ。ためている あいだに 最大HP の 9% ぶん ダメージを あたえると 紋が 暴発して 自爆
+    //   (味方に ダメージ・おにおには チャンスタイム)。2 回目からの ため では ガードして、うける ダメージが 40% に へる
+    onioni8: {
+      id: "onioni8",
+      name: "おにおに (黒い紋)",
+      element: "ほのお",
+      role: "attacker",
+      art: "onioni",
+      scale: 2,
+      rank: "A",
+      base: { hp: 1050, atk: 19, def: 15, spd: 12, mag: 15 },
+      moves: [
+        { name: "金棒 大ぶり", w: 3, effects: [atk("all", 0.9)] },
+        { name: "鬼パンチ 連打", w: 2, effects: [atk("one", 0.8, { hits: 2 })] },
+        { name: "鬼の のろい", w: 2, effects: [{ kind: "status", target: "all", status: "slow", chance: 0.7 }] },
+        { name: "大火炎の術", w: 2, effects: [atk("all", 1, { magic: true, element: "ほのお" })] }
+      ],
+      bigMove: {
+        name: "鬼神 金棒くだき",
+        trigger: "burst",
+        every: 12,
+        charge: 6,
+        need: 0.09,
+        guardCut: 0.4,
+        effects: [atk("all", 2.2)],
+        burst: { name: "紋の 暴発", effects: [atk("all", 0.7, { element: "ほのお" })] }
+      },
+      chanceTurns: 4,
+      befriends: null,
+      lv: 35,
+      place: "shiro"
     }
   };
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
@@ -3457,7 +3723,7 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 264;
+  const MAP_W = 48, MAP_H = 300;
   const TOWN_H = 36;
   const SCHOOL_Y0 = 60;
   const YAMA_Y0 = 84;
@@ -3465,7 +3731,8 @@ body.nopad #pad { display: none; }
   const TERA_Y0 = 156;
   const YASHIKI_Y0 = 192;
   const MOON_Y0 = 228;
-  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z", "V"]);
+  const SHIRO_Y0 = 264;
+  const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z", "V", "k"]);
   const WET = /* @__PURE__ */ new Set(["D", "E", "I"]);
   function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill("G"));
@@ -3642,6 +3909,26 @@ body.nopad #pad { display: none; }
     [[3, M + 28], [12, M + 29], [30, M + 29], [40, M + 30], [44, M + 28], [17, M + 33]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
+    const S = SHIRO_Y0;
+    fill(0, S, MAP_W - 1, MAP_H - 1, "T");
+    fill(1, S + 1, MAP_W - 2, S + 34, "G");
+    fill(6, S + 1, 41, S + 25, "k");
+    fill(18, S + 2, 31, S + 4, "r");
+    fill(31, S + 5, 31, S + 5, "r");
+    fill(12, S + 6, 35, S + 9, "r");
+    fill(24, S + 10, 24, S + 10, "r");
+    fill(12, S + 11, 35, S + 13, "r");
+    fill(24, S + 14, 24, S + 14, "r");
+    fill(12, S + 15, 35, S + 17, "r");
+    fill(24, S + 18, 24, S + 18, "r");
+    fill(9, S + 19, 38, S + 23, "r");
+    fill(23, S + 24, 24, S + 25, "K");
+    fill(23, S + 26, 24, S + 31, "K");
+    fill(4, S + 31, 6, S + 31, "K");
+    fill(4, S + 32, 24, S + 33, "K");
+    [[3, S + 28], [12, S + 29], [30, S + 29], [40, S + 30], [44, S + 28], [17, S + 33], [36, S + 27]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -3680,7 +3967,9 @@ body.nopad #pad { display: none; }
     // 忍びの屋敷 (6 章)
     { id: "yashikiStation", label: "忍びの屋敷前駅", x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#3a3a3a", door: { x: 5, y: YASHIKI_Y0 + 30 } },
     // 月の迷宮 (7 章)
-    { id: "moonStation", label: "月の迷宮前駅", x: 2, y: MOON_Y0 + 27, w: 6, h: 4, wall: "#e0e0f0", roof: "#3a3a6a", door: { x: 5, y: MOON_Y0 + 30 } }
+    { id: "moonStation", label: "月の迷宮前駅", x: 2, y: MOON_Y0 + 27, w: 6, h: 4, wall: "#e0e0f0", roof: "#3a3a6a", door: { x: 5, y: MOON_Y0 + 30 } },
+    // 金色のSE城 (8 章)
+    { id: "shiroStation", label: "SE城前駅", x: 2, y: SHIRO_Y0 + 27, w: 6, h: 4, wall: "#f0e0b0", roof: "#a02020", door: { x: 5, y: SHIRO_Y0 + 30 } }
   ];
   const GATES = [
     { id: "gateW", x: 12, y: TOWN_H - 1, w: 2, only: "beforeClear" },
@@ -3692,7 +3981,9 @@ body.nopad #pad { display: none; }
     { id: "torii-l", kind: "torii", x: 5, y: 9 },
     { id: "torii-r", kind: "torii", x: 8, y: 9 },
     // 7 章: 月の迷宮の 月の 鏡
-    { id: "moonMirror", kind: "mirror", x: 24, y: MOON_Y0 + 1 }
+    { id: "moonMirror", kind: "mirror", x: 24, y: MOON_Y0 + 1 },
+    // 8 章: SE城の 玉座 (玉座の 間の 北の かべ ぎわ)
+    { id: "throne", kind: "throne", x: 24, y: SHIRO_Y0 + 6 }
   ];
   const SHOUTENGAI_LV = [6, 10];
   const SCHOOL_LV = [9, 13];
@@ -3702,6 +3993,7 @@ body.nopad #pad { display: none; }
   const TERA_LV = [19, 22];
   const YASHIKI_LV = [22, 25];
   const MOON_LV = [25, 28];
+  const SHIRO_LV = [28, 31];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -3730,7 +4022,10 @@ body.nopad #pad { display: none; }
     { id: "kuraTsubo", label: "蔵の すみ", x: 38, y: YASHIKI_Y0 + 8, cue: "glitch", lv: YASHIKI_LV, kinds: [{ id: "makibikonmk3", w: 1 }] },
     // 月の迷宮 (7 章)
     { id: "moonTsubo", label: "西の 小部屋の ツボ", x: 13, y: MOON_Y0 + 15, cue: "glitch", lv: MOON_LV, kinds: [{ id: "tsubomajin", w: 1 }] },
-    { id: "moonKado", label: "行き止まりの かげ", x: 34, y: MOON_Y0 + 17, cue: "nightEyes", lv: MOON_LV, kinds: [{ id: "shakkinbourei", w: 1 }] }
+    { id: "moonKado", label: "行き止まりの かげ", x: 34, y: MOON_Y0 + 17, cue: "nightEyes", lv: MOON_LV, kinds: [{ id: "shakkinbourei", w: 1 }] },
+    // 金色のSE城 (8 章)
+    { id: "shiroMasu", label: "城門の 豆の ます", x: 21, y: SHIRO_Y0 + 26, cue: "glitch", lv: SHIRO_LV, kinds: [{ id: "setsubunmame", w: 1 }] },
+    { id: "shiroKama", label: "大広間の すみの かまど", x: 10, y: SHIRO_Y0 + 19, cue: "nightEyes", lv: SHIRO_LV, kinds: [{ id: "onigirin", w: 1 }] }
   ];
   const ROAMS = [
     { id: "kawakami", label: "夏の川上", x0: 25, y0: 1, x1: 29, y1: 5, max: 1, kinds: [{ id: "soumennagare", w: 1 }] },
@@ -3782,6 +4077,10 @@ body.nopad #pad { display: none; }
     { id: "moonWest", label: "迷宮の 西の たて道", x0: 8, y0: MOON_Y0 + 8, x1: 20, y1: MOON_Y0 + 19, max: 1, lv: MOON_LV, kinds: [{ id: "mangetsuwolf", w: 2, time: ["evening", "night"] }, { id: "tatsumakitsune", w: 1 }, { id: "nandomoslime", w: 1 }] },
     { id: "moonEast", label: "迷宮の 東の 行き止まり", x0: 26, y0: MOON_Y0 + 12, x1: 40, y1: MOON_Y0 + 19, max: 1, lv: MOON_LV, kinds: [{ id: "kaminarigumo", w: 1 }, { id: "watageboushi", w: 1 }, { id: "tatsumakitsune", w: 1 }] },
     { id: "moonOku", label: "月の 鏡の 間", x0: 17, y0: MOON_Y0 + 1, x1: 31, y1: MOON_Y0 + 5, max: 1, lv: MOON_LV, kinds: [{ id: "runaya", w: 1, after: "clear7" }, { id: "tsukiusagi", w: 1, after: "clear7" }] },
+    // 金色のSE城 (8 章)。ゴウキオニは 8 章 クリアの あと (clear8) 玉座の 間に いる
+    { id: "shiroSoto", label: "城の まわり", x0: 1, y0: SHIRO_Y0 + 26, x1: 46, y1: SHIRO_Y0 + 33, max: 2, lv: SHIRO_LV, kinds: [{ id: "setsubunmame", w: 2 }, { id: "onibin", w: 1, time: ["evening", "night"] }, { id: "tsunodaruma", w: 1 }] },
+    { id: "hiroma", label: "大広間", x0: 9, y0: SHIRO_Y0 + 20, x1: 38, y1: SHIRO_Y0 + 23, max: 2, lv: SHIRO_LV, kinds: [{ id: "tsunodaruma", w: 2 }, { id: "onibin", w: 2 }, { id: "onigirin", w: 1 }] },
+    { id: "gyokuza", label: "玉座の 間", x0: 12, y0: SHIRO_Y0 + 7, x1: 35, y1: SHIRO_Y0 + 9, max: 1, lv: SHIRO_LV, kinds: [{ id: "goukioni", w: 1, after: "clear8" }, { id: "kinmetsuki", w: 1, after: "clear8" }] },
     { id: "yashikiSoto", label: "屋敷の まわり", x0: 1, y0: YASHIKI_Y0 + 24, x1: 46, y1: YASHIKI_Y0 + 33, max: 2, lv: YASHIKI_LV, kinds: [{ id: "shurikenbo", w: 1 }, { id: "konin", w: 1 }, { id: "bakudanjirou", w: 1 }] }
   ];
   const FRIENDS = [
@@ -3915,7 +4214,12 @@ body.nopad #pad { display: none; }
     { id: "rukiha6", name: "ルキハ", art: "rukiha", x: 21, y: YASHIKI_Y0 + 4, only: "onioni6" },
     { id: "tomooka6", name: "トモオカ", art: "tomooka", x: 35, y: YASHIKI_Y0 + 5, only: "tomooka6", scale: 1.3 },
     // 7 章: 月の 鏡の 間で 待つ ルナヤ (話すと 鏡の 回想 → 力を ためす バトル)
-    { id: "runaya7", name: "ルナヤ", art: "runaya", x: 27, y: MOON_Y0 + 2, only: "runaya7", scale: 1.2 }
+    { id: "runaya7", name: "ルナヤ", art: "runaya", x: 27, y: MOON_Y0 + 2, only: "runaya7", scale: 1.2 },
+    // 8 章: SE城の 幹部 3 人と おにおに。それぞれ 次の 部屋への 戸口の 前に 立って ふさぐ
+    { id: "ooni8", name: "大鬼", art: "ooni", x: 24, y: SHIRO_Y0 + 19, only: "ooni8", scale: 1.5 },
+    { id: "soutou8", name: "双頭鬼", art: "soutouki", x: 24, y: SHIRO_Y0 + 15, only: "soutou8", scale: 1.4 },
+    { id: "kinme8", name: "金滅鬼", art: "kinmetsuki", x: 24, y: SHIRO_Y0 + 11, only: "kinme8", scale: 1.2 },
+    { id: "onioni8", name: "おにおに", art: "onioni", x: 24, y: SHIRO_Y0 + 7, only: "onioni8" }
   ];
   const START = { x: 6, y: 24 };
   const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
@@ -4064,6 +4368,16 @@ body.nopad #pad { display: none; }
     { id: "iriguchi", label: "入り口", x: 23.5, y: MOON_Y0 + 25 },
     { id: "moonStation", label: "駅", x: 5, y: MOON_Y0 + 28 }
   ];
+  const SHIRO_IN = { x: 5, y: SHIRO_Y0 + 31, dir: "down" };
+  const SHIRO_PLACES = [
+    { id: "houmotsuko", label: "宝物庫", x: 24, y: SHIRO_Y0 + 3 },
+    { id: "gyokuza", label: "玉座の間", x: 24, y: SHIRO_Y0 + 7.5 },
+    { id: "kinnoma", label: "金の間", x: 18, y: SHIRO_Y0 + 12 },
+    { id: "soutou", label: "双頭の間", x: 18, y: SHIRO_Y0 + 16 },
+    { id: "hiroma", label: "大広間", x: 16, y: SHIRO_Y0 + 21 },
+    { id: "jomon", label: "城門", x: 23.5, y: SHIRO_Y0 + 25 },
+    { id: "shiroStation", label: "駅", x: 5, y: SHIRO_Y0 + 28 }
+  ];
   const YASHIKI_IN = { x: 5, y: YASHIKI_Y0 + 31, dir: "down" };
   const YASHIKI_PLACES = [
     { id: "okunoma", label: "奥の間", x: 24, y: YASHIKI_Y0 + 4 },
@@ -4124,8 +4438,8 @@ body.nopad #pad { display: none; }
     { id: "cave", label: "海岸どうくつ", x: 37, y: UMI_Y0 + 13 }
   ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
-  const regionOf = (ty) => ty >= MOON_Y0 ? [MOON_Y0, MAP_H] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
+  const areaAt = (x, y) => y >= SHIRO_Y0 ? "shiro" : y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const regionOf = (ty) => ty >= SHIRO_Y0 ? [SHIRO_Y0, MAP_H] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
   const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
@@ -4159,7 +4473,7 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7"];
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8"];
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -4349,6 +4663,13 @@ body.nopad #pad { display: none; }
         g.story = "clear7";
         g.chapter = 8;
       }
+      if (bossId === "ooni8") g.flags.ooni8 = true;
+      if (bossId === "soutou8") g.flags.soutou8 = true;
+      if (bossId === "kinme8") g.flags.kinme8 = true;
+      if (bossId === "onioni8") {
+        g.story = "clear8";
+        g.chapter = 9;
+      }
       return out;
     }
     const ids = [...new Set(battle.enemies.map((e) => e.id))];
@@ -4430,10 +4751,14 @@ body.nopad #pad { display: none; }
         return "石の川駅から、電車で 月の迷宮へ 行こう";
       case "meikyu":
         return "月の迷宮の いちばん 奥の「月の 鏡」を めざそう";
+      case "clear7":
+        return "石の川駅から、電車で 金色のSE城へ 行こう";
+      case "oshiro":
+        return !g.flags.ooni8 ? "SE城の 大広間で 幹部の 大鬼を たおそう" : !g.flags.soutou8 ? "双頭の間で 幹部の 双頭鬼を たおそう" : !g.flags.kinme8 ? "金の間で 幹部の 金滅鬼を たおそう" : "玉座の 間で おにおにを とりもどそう";
       default: {
         const got = (area) => idsInArea(area).filter((id) => g.zukan.friends[id]).length;
         const part = (area, name) => `${name} ${got(area)}/${idsInArea(area).length}`;
-        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}・${part("yashiki", "屋敷")}・${part("moon", "月")}`;
+        return `なかまを あつめよう　${part("ishinokawa", "石の川")}・${part("shoutengai", "商店街")}・${part("school", "学校")}・${part("yama", "山")}・${part("umi", "海")}・${part("tera", "寺")}・${part("yashiki", "屋敷")}・${part("moon", "月")}・${part("shiro", "城")}`;
       }
     }
   }
@@ -4448,7 +4773,12 @@ body.nopad #pad { display: none; }
     return true;
   }
   const canRideTrain = (g) => reached(g, "umi");
-  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : []];
+  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : [], ...reached(g, "clear7") ? ["shiro"] : []];
+  function arriveShiro(g) {
+    if (g.story !== "clear7") return false;
+    g.story = "oshiro";
+    return true;
+  }
   function arriveMoon(g) {
     if (g.story !== "clear6") return false;
     g.story = "meikyu";
@@ -4611,6 +4941,14 @@ body.nopad #pad { display: none; }
     part.broken = true;
     if (!part.noBody) emit(b, "partBreak", { target: u.uid, part: key2, name: part.name, move: part.move || null, gim: true });
     if (b.lock === u.uid && b.lockPart === key2) b.lockPart = null;
+    if (part.chance) {
+      startChance(b, u, part.chance);
+      return;
+    }
+    if (part.group && Object.values(u.gims).filter((p) => p.group === part.group).every((p) => p.broken)) {
+      startChance(b, u, part.group);
+      return;
+    }
     if (key2 === "box") {
       u.bossMoves = u.bossMoves.filter((m) => !m.box);
       if (u.bigMove && u.bigMove.box) u.bigMove = null;
@@ -4728,6 +5066,15 @@ body.nopad #pad { display: none; }
     emit(b, "phase", { actor: u.uid, name: o.name });
     emit(b, "skill", { actor: u.uid, name: o.name, cmd: "boss" });
   }
+  function burstBreak(b, u) {
+    const m = u.bigMove;
+    b.burst = null;
+    b.bossTimer = 0;
+    emit(b, "burstBreak", { actor: u.uid, name: m.burst.name });
+    emit(b, "special", { actor: u.uid, name: m.burst.name, side: "enemy", big: true });
+    applyEffects(b, u, m.burst.effects);
+    startChance(b, u, "burst");
+  }
   function leaveOni(b, u) {
     u.oni = false;
     u.rage = 0;
@@ -4762,7 +5109,8 @@ body.nopad #pad { display: none; }
       smoke: null,
       chant: null,
       clones: null,
-      armCharge: null
+      armCharge: null,
+      burst: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -4807,6 +5155,7 @@ body.nopad #pad { display: none; }
       if (b.charge && b.charge.uid === u.uid) b.charge = null;
     }
     if (b.clones && b.clones.uid === u.uid) clearClones(b, null);
+    if (b.burst && b.burst.uid === u.uid) b.burst = null;
   }
   const emit = (b, type, data = {}) => b.events.push({ type, t: b.t, ...data });
   const buffOf = (u, stat) => u.buffs[stat] && u.buffs[stat].t > 0 ? u.buffs[stat].amount : 0;
@@ -4851,12 +5200,14 @@ body.nopad #pad { display: none; }
     const weak = from.side === "ally" && to.uid === b.lock && weakActive(b);
     const headGuard = from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart === "head" && !handsBroken(to) && !b.chance;
     const shell = (to.shell > 0 && !gim ? to.shellCut ?? 0.15 : 1) * (gim && to.gims[gim].arm ? to.armDef.bodyCut : 1) * cloneHit;
-    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell;
+    const burstOn = from.side === "ally" && b.burst && b.burst.uid === to.uid;
+    const burstGuard = burstOn && b.burst.guard ? to.bigMove.guardCut : 1;
+    let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell * burstGuard;
     dmg = Math.max(1, Math.round(dmg));
     to.hp = Math.max(0, to.hp - dmg);
     if (to.status.sleep > 0) to.status.sleep = 0;
     if (to.side === "ally") to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
-    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1, weak: weak && !headGuard, headGuard, part: gim });
+    emit(b, "damage", { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1 || burstGuard < 1, weak: weak && !headGuard, headGuard, part: gim });
     if (gim && to.hp > 0 && !to.gims[gim].arm) hitGim(b, to, gim, dmg);
     if (from.side === "ally" && to.armDef && to.hp > 0) {
       if (gim && to.gims[gim].arm) armShrink(b, to, dmg / to.armDef.bodyCut);
@@ -4867,6 +5218,10 @@ body.nopad #pad { display: none; }
       if (to.rage >= to.max * to.oniDef.at) enterOni(b, to);
     }
     if (from.side === "ally" && to.parts && to.uid === b.lock && b.lockPart && to.hp > 0) hitPart(b, to, b.lockPart, dmg);
+    if (burstOn && to.hp > 0) {
+      b.burst.dmg += dmg;
+      if (b.burst.dmg >= b.burst.need) burstBreak(b, to);
+    }
     if (to.hp <= 0) {
       to.ko = true;
       to.status = {};
@@ -4989,7 +5344,15 @@ body.nopad #pad { display: none; }
         emit(b, "chanting", { actor: u.uid });
         return;
       }
-      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+      if (b.burst && b.burst.uid === u.uid) {
+        emit(b, "charging", { actor: u.uid });
+        return;
+      }
+      const list = u.bossMoves.filter((m) => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) && (!m.summon || !b.charge && idolsOf(b, u).length < IDOL_SLOTS.length) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
+      if (!list.length) {
+        emit(b, "stunned", { actor: u.uid, left: 0 });
+        return;
+      }
       const move = b.rng.weighted(list.map((m) => ({ m, w: m.w }))).m;
       emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss" });
       if (move.summon) summonIdol(b, u);
@@ -5168,6 +5531,23 @@ body.nopad #pad { display: none; }
         idol.ko = true;
         emit(b, "ko", { target: idol.uid, side: "enemy" });
       }
+      return;
+    }
+    if (m.trigger === "burst") {
+      if (b.burst && b.burst.uid === e.uid) {
+        b.burst.left -= dt;
+        if (b.burst.left > 0) return;
+        b.burst = null;
+        b.bossTimer = 0;
+        emit(b, "special", { actor: e.uid, name: m.name, side: "enemy", big: true });
+        applyEffects(b, e, m.effects);
+        return;
+      }
+      b.bossTimer += dt;
+      if (b.bossTimer < m.every) return;
+      e.burstCount = (e.burstCount || 0) + 1;
+      b.burst = { uid: e.uid, left: m.charge, dmg: 0, need: Math.round(e.max * m.need), guard: e.burstCount >= 2 };
+      emit(b, "telegraph", { actor: e.uid, name: m.name, warn: m.charge, burst: true, guard: b.burst.guard });
       return;
     }
     if (m.trigger === "chant") {
@@ -11353,6 +11733,312 @@ body.nopad #pad { display: none; }
           "................"
         ]
       ]
+    },
+    tsunodaruma: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#d82a2a", "b": "#f8e8d0", "c": "#111111", "d": "#3a1010", "e": "#ffd840", "f": "#2a1a10" },
+      frames: [
+        [
+          "................",
+          "....ee....ee....",
+          "....ee....ee....",
+          "...aeeaaaaeea...",
+          "...aaaaaaaaaa...",
+          "...aabbbbbbaa...",
+          "..aaabbbbbbaaa..",
+          "..aaabcbbcbaaa..",
+          "..aaabbbbbbaaa..",
+          "..aaabbddbbaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaeeeeeeeeaa..",
+          "..aaeeffffeeaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "................"
+        ],
+        [
+          "................",
+          "....ee....ee....",
+          "....ee....ee....",
+          "...aeeaaaaeea...",
+          "...aaaaaaaaaa...",
+          "...aabbbbbbaa...",
+          "..aaabbbbbbaaa..",
+          "..aaabcbbbcaaa..",
+          "..aaabbbbbbaaa..",
+          "..aaabbddbbaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaeeeeeeeeaa..",
+          "..aaeeffffeeaa..",
+          "..aaaaaaaaaaaa..",
+          "...aaaaaaaaaa...",
+          "................"
+        ]
+      ]
+    },
+    onibin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ffb040", "b": "#ff7a2a", "c": "#e84a1a", "d": "#ffd840", "e": "#ffffff", "f": "#111111", "g": "#f4e8c8", "h": "#c83a1a" },
+      frames: [
+        [
+          ".......dd.......",
+          ".......dd.......",
+          ".....aaaaaa.....",
+          "....ggaaaagg....",
+          "....ggbbbbgg....",
+          "....bbbbbbbb....",
+          "....beebbeeb....",
+          "....befbbefb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bccccccb....",
+          ".....cccccc.....",
+          ".....cccccc.....",
+          "......hhhh......",
+          "......hhhh......",
+          "................"
+        ],
+        [
+          ".......dd.......",
+          ".....aaaaaa.....",
+          "....ggaaaagg....",
+          "....ggbbbbgg....",
+          "....bbbbbbbb....",
+          "....beebbeeb....",
+          "....befbbefb....",
+          "....bbbbbbbb....",
+          "....bbbbbbbb....",
+          "....bccccccb....",
+          ".....cccccc.....",
+          ".....cccccc.....",
+          "......hhhh......",
+          "......hhhh......",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    onigirin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ffffff", "b": "#f4e8c8", "c": "#1a2a1a", "d": "#111111", "e": "#e04a6a", "f": "#ff5a3a" },
+      frames: [
+        [
+          "................",
+          ".....baaaab.....",
+          ".....baaaab.....",
+          "....aaaaaaaa....",
+          "....aaafaaaa....",
+          "....aaaaaaaa....",
+          "...aaadaadaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaeeaaaa...",
+          "...acccccccca...",
+          "...acccccccca...",
+          "....cccccccc....",
+          "....cccccccc....",
+          "....aa....aa....",
+          "....aa....aa....",
+          "................"
+        ],
+        [
+          ".....baaaab.....",
+          ".....baaaab.....",
+          "....aaaaaaaa....",
+          "....aaafaaaa....",
+          "....aaaaaaaa....",
+          "...aaadaadaaa...",
+          "...aaaaaaaaaa...",
+          "...aaaaeeaaaa...",
+          "...acccccccca...",
+          "...acccccccca...",
+          "....cccccccc....",
+          "....cccccccc....",
+          "................",
+          "....aa....aa....",
+          "....aa....aa....",
+          "................"
+        ]
+      ]
+    },
+    setsubunmame: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#d8b070", "b": "#f0d090", "c": "#111111", "d": "#6a4a2a", "e": "#a8804a" },
+      frames: [
+        [
+          "................",
+          "............aaa.",
+          "............aaa.",
+          "............aaa.",
+          "....aaaaaaaa....",
+          "....abbaaaaa....",
+          "...aabbaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaacaacaaa...",
+          "...aaaaaaaaaa...",
+          "....aaaddaaa....",
+          "....aaaaaaaa....",
+          ".aaa..ee.ee.....",
+          ".aaa..ee.ee.....",
+          ".aaa..ee.ee.....",
+          "................"
+        ],
+        [
+          "................",
+          "............aaa.",
+          "............aaa.",
+          "....aaaaaaaaaaa.",
+          "....abbaaaaa....",
+          "...aabbaaaaaa...",
+          "...aaaaaaaaaa...",
+          "...aaacaacaaa...",
+          "...aaaaaaaaaa...",
+          "....aaaddaaa....",
+          "....aaaaaaaa....",
+          "................",
+          ".aaa..ee.ee.....",
+          ".aaa..ee.ee..aa.",
+          ".aaa..ee.ee..aa.",
+          "................"
+        ]
+      ]
+    },
+    goukioni: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#3a1a10", "b": "#a82a2a", "c": "#ffd840", "d": "#2a1a10", "e": "#ffffff", "f": "#111111", "g": "#3a1010", "h": "#3a3a4a", "i": "#ff8a3a" },
+      frames: [
+        [
+          "...cc......cc...",
+          "..accccaaaccca..",
+          "..accddddddcca..",
+          "..adddddddddda..",
+          "....bbbbbbbb....",
+          "....bbeebbee....",
+          "....bbefbbef....",
+          "....bbbbbbbb....",
+          "....bbgggggb....",
+          "bb..bbbebbeb..bb",
+          "bbbbbhhhhhhbbbbb",
+          "bbbbbhhhhhhbbbbb",
+          "bbbbcdccdccdbbbb",
+          "....cdccdccd....",
+          "....cdccdccd....",
+          "................"
+        ],
+        [
+          "..accccaaaccca..",
+          "..accddddddcca..",
+          "..adddddddddda..",
+          "....bbbbbbbb....",
+          "....bbeebbee....",
+          "....bbefbbef....",
+          "....bbbbbbbb....",
+          "i...bbgggggb...i",
+          "....bbbebbeb....",
+          "bb............bb",
+          "bbbbbhhhhhhbbbbb",
+          "bbbbbhhhhhhbbbbb",
+          "bbbbcdccdccdbbbb",
+          "....cdccdccd....",
+          "....cdccdccd....",
+          "................"
+        ]
+      ]
+    },
+    kinmetsuki: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#fff2a0", "b": "#ffffff", "c": "#2a1a10", "d": "#ffd840", "e": "#c89a20", "f": "#c01a1a", "g": "#3a1010", "h": "#1a1a2a", "i": "#e8e8f0", "j": "#3a1a10", "k": "#ff6a1a" },
+      frames: [
+        [
+          ".........aba........aba.........",
+          ".........aba........aba.........",
+          ".........aaa........aaa.........",
+          ".........aaa........aaa.........",
+          ".......cccccccccccccccccc.......",
+          ".......cccccccccccccccccc.......",
+          ".......cddddddddddddddddc....ib.",
+          ".......cddddddddddddddddc....ib.",
+          "........dcccccddddcccccd.....ib.",
+          "........ddbbbbddddbbbbdd.....ib.",
+          "........ddbbffddddffbbdd.....ib.",
+          "........ddbbffddddffbbdd.....ib.",
+          "........dddddddddddddddd.....ib.",
+          "........dddddddddddddddd.....ib.",
+          "........dddgbggggggbgddd.....ib.",
+          "........dddgbggggggbgddd.....ib.",
+          "........eeeeeeeeeeeeeeee.....ib.",
+          "........eeeeeeeeeeeeeeee.....ib.",
+          ".....ddddhhhhhddddhhhhhdddd..ib.",
+          ".....ddddhhhhhddddhhhhhdddd..ib.",
+          "..dddddddhhhhhddddhhhhhddddddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhddffff",
+          "..ddddhhhhhhhhddddhhhhhhhhddffff",
+          "..dddd.ddccddccddccddccdd.dddjj.",
+          ".......ddccddccddccddccdd....jj.",
+          ".......ddccddccddccddccdd....jj.",
+          ".......ddccddccddccddccdd....jj.",
+          ".......ddccddccddccddccdd.......",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........eeeeee....eeeeee........",
+          "........eeeeee....eeeeee........"
+        ],
+        [
+          ".........aba........aba.........",
+          ".........aaa........aaa.........",
+          ".........aaa........aaa.........",
+          ".......cccccccccccccccccc.......",
+          ".......cccccccccccccccccc.......",
+          ".......cddddddddddddddddc.......",
+          "...d...cddddddddddddddddc.......",
+          "........dcccccddddcccccd.....ib.",
+          "........ddbbbbddddbbbbdd.....ib.",
+          "........ddbbffddddffbbdd.....ib.",
+          "........ddbbffddddffbbdd.....ib.",
+          "........dddddddddddddddd.....ib.",
+          "........dddddddddddddddd.....ib.",
+          "........dddgbggggggbgddd.....ib.",
+          "kk......dddgbggggggbgddd.....ib.",
+          "kk......eeeeeeeeeeeeeeee.....ib.",
+          "........eeeeeeeeeeeeeeee.....ib.",
+          ".............................ib.",
+          ".....ddddhhhhhddddhhhhhdddd..ib.",
+          ".....ddddhhhhhddddhhhhhdddd..ib.",
+          "..dddddddhhhhhddddhhhhhddddddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhdddib.",
+          "..ddddhhhhhhhhddddhhhhhhhhddffff",
+          "..ddddhhhhhhhhddddhhhhhhhhddffff",
+          "..dddd.ddccddccddccddccdd.dddjj.",
+          ".......ddccddccddccddccdd....jj.",
+          ".......ddccddccddccddccdd....jj.",
+          ".......ddccddccddccddccdd....jj.",
+          ".......ddccddccddccddccdd.......",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........dddddd....dddddd........",
+          "........eeeeee....eeeeee........",
+          "........eeeeee....eeeeee........"
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -11604,6 +12290,66 @@ body.nopad #pad { display: none; }
           "......bbbb....bbbb......"
         ]
       ]
+    },
+    // 大鬼 (8 章の 鬼鬼団 幹部。新キャラ・2026-10-30 ユーザー指定): 体が でかい 赤茶の 鬼。2 本角・きばの ある 口・とらがらの パンツ。
+    //   バトルでは 足を ねらえる (足に 当てつづけると 転んで チャンスタイム)
+    ooni: {
+      w: 24,
+      h: 24,
+      palette: { o: "#2a1010", s: "#9a3a2a", S: "#702818", y: "#f0e0a0", k: "#111111", e: "#ffe040", w: "#ffffff", t: "#ffd040", b: "#2a2a2a" },
+      frames: bob$1([
+        "........................",
+        "..yy................yy..",
+        "..yyy..............yyy..",
+        "...yyy..oooooooo..yyy...",
+        "....yyooSssssssSooyy....",
+        ".....osssssssssssso.....",
+        "....osskksssssskksso....",
+        "....osseeksssskeesso....",
+        "....ossssssSSsssssso....",
+        "....osskkkkkkkkkksso....",
+        "....osskwkkkkkkwksso....",
+        ".....osssssssssssso.....",
+        "oooossssssssssssssssoooo",
+        "osssssssssssssssssssssso",
+        "osSssssssssssssssssssSso",
+        "osS.ssssssssssssssss.Sso",
+        "osS.sssssSSSSSSsssss.Sso",
+        "oss.tbttbttbbttbttbt.sso",
+        ".oo.tttttttttttttttt.oo.",
+        "....tttttttttttttttt....",
+        "....ssssss....ssssss....",
+        "....ssssss....ssssss....",
+        "...osssssso..osssssso...",
+        "..ooooooooo..ooooooooo.."
+      ])
+    },
+    // 双頭鬼 (8 章の 鬼鬼団 幹部。新キャラ・2026-10-30 ユーザー指定): 頭が 2 つの 鬼。右の 頭 (見ている 人の 左・むらさき) は とりつき、
+    //   左の 頭 (見ている 人の 右・青) は 術を 使う。頭は ねらって こわせる
+    soutouki: {
+      w: 26,
+      h: 18,
+      palette: { o: "#1a1a24", p: "#8a4ac0", u: "#3a7ad0", s: "#5a6a5a", S: "#3a4a3a", y: "#f0e0a0", k: "#111111", w: "#ffffff", t: "#ffd040", b: "#2a2a2a" },
+      frames: bob$1([
+        "....y....y......y....y....",
+        "....yy..yy......yy..yy....",
+        "....oooooo......oooooo....",
+        "...oppppppo....ouuuuuuo...",
+        "...opkppkpo....oukuukuo...",
+        "...oppppppo....ouuuuuuo...",
+        "...opwkkwpo....ouwkkwuo...",
+        "....oppppo......ouuuuo....",
+        ".....oppo........ouuo.....",
+        ".....oooooooooooooooo.....",
+        "....osssssssssssssssso....",
+        "...osssssssssssssssssso...",
+        "..osSssssssssssssssssSso..",
+        "..osS.ttbttbttbttbtt.Sso..",
+        "..oo..tttttttttttttt..oo..",
+        "......ssss......ssss......",
+        "......ssss......ssss......",
+        ".....oooooo....oooooo....."
+      ])
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -12046,7 +12792,8 @@ body.nopad #pad { display: none; }
     return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "damNushi" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]) || // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
     p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
-    p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu");
+    p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu" || // 8 章: 大鬼 → 双頭鬼 → 金滅鬼 → おにおに。たおした 幹部は いなくなり、次の 戸口が あく
+    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro");
   }
   const personArt = (g, p) => p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art;
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
@@ -12521,7 +13268,9 @@ body.nopad #pad { display: none; }
     Z: "#4a3624",
     O: "#c8c070",
     V: "#2a2050",
-    v: "#5a5088"
+    v: "#5a5088",
+    k: "#c8a030",
+    r: "#b02030"
   };
   function drawTile(c, ch, x, y, wet = false) {
     const px = x * TILE, py = y * TILE;
@@ -12727,6 +13476,22 @@ body.nopad #pad { display: none; }
         r2((y + 1) % 2 * 8, 8, 1, 8, "#4a4078");
         if (hash(x, y, 98) < 0.15) r2(Math.floor(hash(x, y, 99) * 14), Math.floor(hash(x, y, 97) * 14), 1, 1, "#d8d8ff");
         break;
+      case "k": {
+        r2(0, 0, 16, 16, "#a07818");
+        if (tileAt(x, y + 1) === "r" || tileAt(x, y + 1) === "K") {
+          r2(0, 4, 16, 12, "#e0b840");
+          r2(0, 4, 16, 1, "#fff0a0");
+          r2(0, 15, 16, 1, "#8a6010");
+          if (x % 4 === 0) r2(6, 4, 4, 12, "#a02020");
+        } else if ((x + y) % 2 === 0) r2(4, 4, 8, 8, "#b88a20");
+        break;
+      }
+      case "r":
+        r2(0, 0, 16, 16, "#b02030");
+        if (tileAt(x - 1, y) !== "r") r2(0, 0, 2, 16, "#e0b840");
+        if (tileAt(x + 1, y) !== "r") r2(14, 0, 2, 16, "#e0b840");
+        if (hash(x, y, 41) < 0.12) r2(Math.floor(hash(x, y, 42) * 12) + 2, Math.floor(hash(x, y, 43) * 14), 2, 1, "#d04050");
+        break;
       default:
         r2(0, 0, 16, 16, "#ff00ff");
     }
@@ -12769,6 +13534,20 @@ body.nopad #pad { display: none; }
       c.fillRect(px2 + 3, py2 - 1, 3, 6);
       c.fillStyle = "#ffe85a";
       c.fillRect(px2 + 6, py2 - 9, 4, 3);
+      return;
+    }
+    if (p.kind === "throne") {
+      const px2 = p.x * TILE, py2 = p.y * TILE;
+      c.fillStyle = "#e0b840";
+      c.fillRect(px2 - 2, py2 - 10, 20, 26);
+      c.fillStyle = "#fff0a0";
+      c.fillRect(px2 - 2, py2 - 10, 20, 2);
+      c.fillStyle = "#b02030";
+      c.fillRect(px2 + 2, py2 - 6, 12, 10);
+      c.fillRect(px2 + 1, py2 + 6, 14, 5);
+      c.fillStyle = "#a07818";
+      c.fillRect(px2 - 2, py2 + 12, 4, 4);
+      c.fillRect(px2 + 14, py2 + 12, 4, 4);
       return;
     }
     if (p.kind !== "torii") return;
@@ -12985,10 +13764,12 @@ body.nopad #pad { display: none; }
     const wild = createWild(g, app2.rng);
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
-    const inMoon = () => g.pos.y >= MOON_Y0 * TILE;
-    const inYashiki = () => g.pos.y >= YASHIKI_Y0 * TILE && !inMoon();
-    const inTera = () => g.pos.y >= TERA_Y0 * TILE && !inYashiki();
-    const inUmi = () => g.pos.y >= UMI_Y0 * TILE && !inTera();
+    const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
+    const inShiro = () => g.pos.y >= SHIRO_Y0 * TILE;
+    const inMoon = () => between(MOON_Y0, SHIRO_Y0);
+    const inYashiki = () => between(YASHIKI_Y0, MOON_Y0);
+    const inTera = () => between(TERA_Y0, YASHIKI_Y0);
+    const inUmi = () => between(UMI_Y0, TERA_Y0);
     const inYama = () => g.pos.y >= YAMA_Y0 * TILE && g.pos.y < UMI_Y0 * TILE;
     const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && g.pos.y < YAMA_Y0 * TILE;
     const inCave = () => {
@@ -13068,7 +13849,9 @@ body.nopad #pad { display: none; }
           yashiki: ["忍びの屋敷は どうやった？ 忍者さんって ほんとに いるとね？"],
           clear6: ["町の 子たちの メダル、とりもどしてくれたって？ こおり、えらいやん！", "おにおにくん……どうしたっちゃろうね。こおり、なんか しっとうと？"],
           meikyu: ["月の迷宮？ まよったら いかんよ。こおり、あんた 方向おんちやけん。"],
-          clear7: ["おにおにくんを とりもどしに 行くと？ ……こおり、ちゃんと 連れて 帰ってきなさいよ。"]
+          clear7: ["おにおにくんを とりもどしに 行くと？ ……こおり、ちゃんと 連れて 帰ってきなさいよ。"],
+          oshiro: ["SE城？ 金ピカの お城なんて、おにおにくんも 出世したもんやね。……え、ちがうと？"],
+          clear8: ["おにおにくん、もどってきたっちゃろ？ よかったやん！ ……ルキハって 人は、まだ どこかに おるとね？"]
         }[g.story];
         if (startChapter6(g)) {
           say([
@@ -13147,6 +13930,32 @@ body.nopad #pad { display: none; }
           g.flags.mirror7 = true;
           app2.startBattle({ enemies: bossEnemies("runaya7"), kind: "boss", place: "moon" });
         } });
+      } else if (p.id === "ooni8") {
+        say([
+          nar("大広間の 奥に、天井に 頭が とどきそうな 大きな 鬼が 立ちふさがった。胸には 黒い 紋。"),
+          { who: "大鬼", art: "ooni", text: "ここから 先は 通さん！ ルキハさまの ため……つぶれろ……！" },
+          furu("大きすぎて、どの わざも みんなに とどくよ！ 足を ねらって 当てつづけて！ 転ばせれば チャンス！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("ooni8"), kind: "boss", place: "shiro" }) });
+      } else if (p.id === "soutou8") {
+        say([
+          { who: "双頭鬼 (右の頭)", art: "soutouki", text: "ケケケ……とりついて やろうか？" },
+          { who: "双頭鬼 (左の頭)", art: "soutouki", text: "いや、術で 焼いて やろう。" },
+          furu("右の 頭は とりつき、左の 頭は 術を 使うみたい！ 頭を こわせば その わざは 止まるよ。両方 こわせば チャンス！"),
+          furu("とりつかれたら 後ろに 回して「おはらい」だよ！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("soutou8"), kind: "boss", place: "shiro" }) });
+      } else if (p.id === "kinme8") {
+        say([
+          by("kinmetsuki", "金色の 鬼に ひれ伏せ！ ルキハさまの ために……！ この 黄金の 体、きずひとつ つけられまい！"),
+          furu("金ピカで 目が くらんじゃう……！ めくらましの とりつきに 気を つけて！ この 鬼に すきは ない、まっこう 勝負だよ！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("kinme8"), kind: "boss", place: "shiro" }) });
+      } else if (p.id === "onioni8") {
+        say([
+          by("onioni", "……来たか、こおり。"),
+          by("onioni", "ルキハさまの じゃまは させん。……借金ごと ここで 消えて もらうぞ！"),
+          furu("おにおに、目を さまして！"),
+          nar("おにおにの 胸の 黒い 紋が、どくん、と 脈うった。"),
+          furu("大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！")
+        ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni8"), kind: "boss", place: "shiro" }) });
       } else if (p.id === "daishi5") {
         say([
           nar("ダイシの 体に、黒い 紋が どくどくと 脈うっている……。"),
@@ -13208,6 +14017,16 @@ body.nopad #pad { display: none; }
         readOkunoin();
       } else if (b.id === "station") {
         rideTrain();
+      } else if (b.id === "shiroStation") {
+        say([nar("SE城前駅。石の川 行きの 電車が とまっている。")], {
+          choices: ["石の川へ もどる", "やめる"],
+          done: (i) => {
+            if (i === 0) {
+              sfx("watch");
+              warp(STATION_OUT);
+            }
+          }
+        });
       } else if (b.id === "moonStation") {
         say([nar("月の迷宮前駅。石の川 行きの 電車が とまっている。")], {
           choices: ["石の川へ もどる", "やめる"],
@@ -13361,7 +14180,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const lines = trainLines(g);
-      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く" };
+      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く", shiro: "金色のSE城へ 行く" };
       say([nar(`石の川駅。${lines.length > 1 ? "どこへ 行こうか？" : lines[0] === "tera" ? "ネット寺 行きの 電車が とまっている。" : "海辺の 町 行きの 電車が とまっている。"}`)], {
         choices: [...lines.map((l) => names[l]), "やめる"],
         done: (i) => {
@@ -13378,6 +14197,10 @@ body.nopad #pad { display: none; }
           }
           if (dest === "moon") {
             goMoon();
+            return;
+          }
+          if (dest === "shiro") {
+            goShiro();
             return;
           }
           warp(UMI_IN);
@@ -13400,6 +14223,18 @@ body.nopad #pad { display: none; }
         by("daishi", "よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。"),
         by("daishi", "寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。"),
         nar("境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。")
+      ], { done: () => app2.save() });
+    }
+    function goShiro() {
+      warp(SHIRO_IN);
+      if (!arriveShiro(g)) return;
+      const L = rivalLines(), team = rivalTeam(g.version);
+      say([
+        nar("電車に ゆられて、金色のSE城に 着いた。城門の 前には、鬼鬼団の 鬼たちが ずらりと ならんでいる……！"),
+        nar(`そこへ、チーム「${team.name}」が かけつけた！`),
+        by(L.meet[0], "ここは おれたちが ひきうける！ 行け、こおりくん！"),
+        furu("ありがとう！ こおりくん、行こう！"),
+        nar("ライバル探検隊が 城門を こじあけた！ 城の 中では 鬼鬼団の 幹部が 待ちかまえている。")
       ], { done: () => app2.save() });
     }
     function goMoon() {
@@ -13505,7 +14340,40 @@ body.nopad #pad { display: none; }
           by("runaya", "鬼鬼団の 金色のSE城に、ぬすんだ 力が あつめられて いるはず。おにおにも そこに いるわ。……SE城よ、SE城。わすれないでね？ SE城よ？"),
           { who: "こおりくん", art: "koori", text: "（おにおにを とりもどそう！）" },
           nar("７章 クリア！ ルナヤが なかまに なった。"),
-          nar("―― ８章は つぎの アップデートで。")
+          nar("石の川駅から、電車で 金色のSE城へ 行けるように なった！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "ooni8") {
+        say([
+          { who: "大鬼", art: "ooni", text: "ぐ……おお……。" },
+          nar("大鬼の 紋が、ぱきんと くだけた。大鬼は その場に すわりこんで、ねむって しまった。"),
+          furu("紋が とけた！ 次の 部屋へ 行こう！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "soutou8") {
+        say([
+          { who: "双頭鬼 (右の頭)", art: "soutouki", text: "……あれ？ おれたち、なんで けんか してたんだっけ？" },
+          { who: "双頭鬼 (左の頭)", art: "soutouki", text: "さあ……。頭が 2 つ あっても、思い出せん……。" },
+          nar("双頭鬼の 紋が くだけた！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "kinme8") {
+        say([
+          by("kinmetsuki", "……ぐぬぬ、金ピカが……はがれる……。"),
+          nar("金滅鬼の 紋が、ぱきんと くだけた。"),
+          by("kinmetsuki", "……その 心、本物か。この 金滅鬼、きさまらに ついて いこう。"),
+          nar("金滅鬼が なかまに なった！"),
+          furu("この 先が 玉座の 間……おにおにが いるはずだよ！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === "onioni8") {
+        say([
+          nar("おにおにの 紋が くだけ、目に 光が もどった。"),
+          by("onioni", "……う、ここは……おれの SE城か？ なんで こおりが ここに……。"),
+          by("onioni", "そうだ……ルキハって 男に 会って、目を 見た とたん……そこから なにも おぼえとらん……。"),
+          by("onioni", "くそっ……おれは みんなに なんて ことを……。すまん、こおり……！"),
+          { who: "ルキハ", art: "rukiha", text: "人形が こわれたか。まあ いい、城の 力は ぜんぶ いただいた。" },
+          nar("宝物庫に あつめられた 光が、ルキハの 口に すいこまれていく。"),
+          { who: "ルキハ", art: "rukiha", text: "つぎは この 世界 ぜんぶを いただく。……せいぜい 楽しみに しておけ、こおり族の 子。" },
+          nar("ルキハは 黒い 霧に なって 消えた。"),
+          nar("８章 クリア！ 玉座の 間に ゴウキオニと 金滅鬼が あらわれるように なった。"),
+          nar("―― ９章は つぎの アップデートで。")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "zumitani6") {
         say([
@@ -13820,7 +14688,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
         }
       });
     }
@@ -13878,7 +14746,7 @@ body.nopad #pad { display: none; }
       ensureCanvas(reached(g, "clear3"));
       ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && !inMoon() && i < 6; i++) {
+      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && !inMoon() && !inShiro() && i < 6; i++) {
         const wy = (i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE);
         ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
       }
@@ -14045,7 +14913,7 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -14060,7 +14928,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -14521,7 +15389,14 @@ body.nopad #pad { display: none; }
     runaya: auto("runaya"),
     // 追加の 進化先 (2026-10-30)
     daienjou: auto("daienjou"),
-    kingharry: auto("kingharry")
+    kingharry: auto("kingharry"),
+    // 8 章 金色のSE城 (2026-10-30)
+    tsunodaruma: auto("tsunodaruma"),
+    onibin: auto("onibin"),
+    onigirin: auto("onigirin"),
+    setsubunmame: auto("setsubunmame"),
+    goukioni: auto("goukioni"),
+    kinmetsuki: auto("kinmetsuki")
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -14656,6 +15531,13 @@ body.nopad #pad { display: none; }
     daichouenou: { motion: "cloud", color: "#d8a8ff" },
     daienjou: { motion: "rain", color: "#ff8a4a" },
     kingharry: { motion: "multi", color: "#e0e0e0" },
+    // 8 章 金色のSE城
+    tsunodaruma: { motion: "dash", color: "#e0e0e0" },
+    onibin: { motion: "cloud", color: "#ff8a4a" },
+    onigirin: { motion: "aura", color: "#5ad06a" },
+    setsubunmame: { motion: "rain", color: "#e0e0e0" },
+    goukioni: { motion: "dash", color: "#ff8a4a" },
+    kinmetsuki: { motion: "beam", color: "#ffd040" },
     // こおりくん: 大腸炎アタック
     koori: { motion: "cloud", color: "#c8a060", glyph: "@" }
   };
@@ -15651,7 +16533,15 @@ body.nopad #pad { display: none; }
           if (pp) effects.push({ kind: "wave", x: pp.x, y: pp.y + 10, start: t, dur: 0.5, color: "#ffe85a" });
         } else if (e.type === "chance") {
           if (e.why === "flip") banner = { text: "ひっくり返った！ チャンス！", color: COLORS.accent, until: t + 1.8 };
+          if (e.why === "fall") banner = { text: `${nameOf(e.target)}が 転んだ！ チャンス！`, color: COLORS.accent, until: t + 1.8 };
+          if (e.why === "heads") banner = { text: "頭を ふたつとも こわした！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           sfx("special");
+        } else if (e.type === "burstBreak") {
+          banner = { text: `紋が 暴発した！「${e.name}」！ ${nameOf(e.actor)}が 目を まわした！`, color: "#ffb84a", until: t + 2 };
+          warn = null;
+          sfx("big");
+          const p = posOf(e.actor);
+          if (p) for (let i = 0; i < 3; i++) effects.push({ kind: "wave", x: p.x, y: p.y - 40, start: t + i * 0.12, dur: 0.6, color: "#ff6a3a" });
         } else if (e.type === "clones") {
           banner = { text: "かげぶんしん！ 本物を ロックオンして こうげき！", color: "#c8f08a", until: t + 1.8 };
           sfx("lens");
@@ -15721,7 +16611,7 @@ body.nopad #pad { display: none; }
           banner = { text: e.ok ? `おはらい せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : "おはらい しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
-          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm) };
+          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst) };
           sfx("cancel");
         } else if (e.type === "summon") {
           banner = { text: `${nameOf(e.target)}が あらわれた！`, color: "#bfeaff", until: t + 1.4 };
@@ -16292,6 +17182,21 @@ body.nopad #pad { display: none; }
           ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
           ctx.fill();
         }
+      } else if (place === "shiro") {
+        ctx.fillStyle = "#a07818";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        ctx.fillStyle = "#e0b840";
+        ctx.fillRect(0, HORIZON - 40, 400, 40);
+        ctx.fillStyle = "#fff0a0";
+        ctx.fillRect(0, HORIZON - 40, 400, 2);
+        ctx.fillStyle = "#a02020";
+        for (let i = 0; i < 6; i++) ctx.fillRect(20 + i * 72, 0, 12, HORIZON);
+        ctx.fillStyle = "#ff6a3a";
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.ellipse(62 + i * 72, 26, 9, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
       } else if (place === "moon") {
         ctx.fillStyle = "#0c0a24";
         ctx.fillRect(0, 0, 400, HORIZON);
@@ -16324,7 +17229,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -16545,6 +17450,24 @@ body.nopad #pad { display: none; }
           ctx.restore();
           bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? "#ffe85a" : "#9a9ad8");
           text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
+        } else if (key2 === "legs" && open) {
+          ctx.strokeStyle = `rgba(255, 232, 90, ${0.45 + 0.25 * Math.sin(t * 6)})`;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(q.x - w * 0.36, q.y - 12, w * 0.72, 22);
+          label(key2, q, 14);
+        } else if ((key2 === "rhead" || key2 === "lhead") && !pt.broken) {
+          ctx.strokeStyle = key2 === "rhead" ? "rgba(200, 138, 255, 0.8)" : "rgba(120, 180, 255, 0.8)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, 20, 0, Math.PI * 2);
+          ctx.stroke();
+          label(key2, q, 20);
+        } else if (key2 === "rhead" || key2 === "lhead") {
+          ctx.fillStyle = "rgba(20, 20, 30, 0.8)";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y, 18, 0, Math.PI * 2);
+          ctx.fill();
+          text(ctx, "×", q.x, q.y + 7, { size: 20, align: "center", bold: true, color: "#ff6a6a" });
         } else if (key2 === "bell") {
           const swing = open ? Math.sin(t * 5) * 0.08 : 0;
           ctx.save();
@@ -16637,6 +17560,13 @@ body.nopad #pad { display: none; }
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(90, 20, 90, 0.9)", edge: "#ffe85a" });
         text(ctx, `お経を となえている……「${warn ? warn.name : ""}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `うしろの 鐘を ねらって 鳴らせ！ (${Math.max(0, battle.chant.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffe0a0" });
+      } else if (battle.burst && !battle.outcome) {
+        const bu = battle.burst;
+        panel(ctx, 30, 8, 340, 44, { fill: "rgba(120, 30, 10, 0.92)", edge: bu.guard ? "#8ad0ff" : "#ffb84a" });
+        text(ctx, `!! 「${warn ? warn.name : ""}」を ためている！${bu.guard ? " (ガード中)" : ""}`, 200, 23, { size: 13, align: "center", bold: true });
+        bar(ctx, 60, 30, 200, 6, Math.min(1, bu.dmg / bu.need), "#ffb84a");
+        text(ctx, `${bu.guard ? "ガードで ダメージが へる！" : ""}攻撃を 当てて 止めろ！ (${Math.max(0, bu.left).toFixed(1)})`, 200, 47, { size: 10, align: "center", color: "#ffd0d0" });
+        text(ctx, `${Math.floor(bu.dmg)}/${bu.need}`, 300, 37, { size: 10, align: "center", bold: true, color: "#ffe0b0" });
       } else if (battle.smoke && !battle.outcome && !(warn && warn.until > t)) {
         panel(ctx, 90, 8, 220, 24, { fill: "rgba(60, 60, 70, 0.85)", edge: "#d0d0d8" });
         text(ctx, `けむりで 攻撃が 当たりにくい (${Math.ceil(battle.smoke.left)})`, 200, 25, { size: 11, align: "center", bold: true });
@@ -16644,7 +17574,7 @@ body.nopad #pad { display: none; }
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
-      } else if (warn && !warn.idols && !warn.chant && !warn.arm && warn.until > t) {
+      } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && warn.until > t) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
