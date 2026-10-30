@@ -397,5 +397,34 @@ export const NEW_ART = {
             '.......orro....orro.......',
             '.......oyyo....oyyo.......'
         ])
+    },
+    // ろうかの カゲ (2 章の ボスの すがた。2026-10-30): ルナシャドウが 大きく なった 影。左右に 大きな 手 (右手 = 見ている 人の 左)、
+    //   頭に 黄色い 目と 赤い 口。部位 (右手・左手・頭) は この 絵の 上で ねらう (nakama.js の parts の rect)
+    kageboss: {
+        w: 30, h: 21,
+        palette: { o: '#0a0818', a: '#1a1430', y: '#ffe080', b: '#c03040' },
+        frames: bob([
+            '.............oooo.............',
+            '...........oaaaaaao...........',
+            '..........oaaaaaaaao..........',
+            '..........oayyaayyao..........',
+            'y.y.y.....oayyaayyao.....y.y.y',
+            'a.a.a.....oaaaaaaaao.....a.a.a',
+            'a.a.a.....oaabbbbaao.....a.a.a',
+            'aaaaa......oaaaaaao......aaaaa',
+            'aaaaaa.....oaaaaaao.....aaaaaa',
+            '.aaaaa....oaaaaaaaao....aaaaa.',
+            '..aaaa...oaaaaaaaaaao...aaaa..',
+            '...aaaa.oaaaaaaaaaaaao.aaaa...',
+            '....aaaaoaaaaaaaaaaaaoaaaa....',
+            '........oaaaaaaaaaaaao........',
+            '........oaaaaaaaaaaaao........',
+            '.......oaaaaaaaaaaaaaao.......',
+            '.......oaaaaaaaaaaaaaao.......',
+            '......oaaaaaaaaaaaaaaaao......',
+            '......oaaaaaaaaaaaaaaaao......',
+            '.....oaaa.aaa.aaa.aaa.aao.....',
+            '.....aa...aa...aa...aa..a.....'
+        ])
     }
 };

@@ -4296,14 +4296,14 @@ body.nopad #pad { display: none; }
       name: "ろうかの カゲ・ルナシャドウ",
       element: "ふしぎ",
       role: "attacker",
-      art: "lunashadow",
+      art: "kageboss",
       scale: 2,
       rank: "C",
       base: { hp: 700, atk: 14, def: 13, spd: 11, mag: 14 },
       parts: {
-        rhand: { name: "右手", hp: 0.1, move: "不明の右手" },
-        lhand: { name: "左手", hp: 0.1, move: "未詳の左腕" },
-        head: { name: "頭", hp: 0.12 }
+        rhand: { name: "右手", hp: 0.1, move: "不明の右手", rect: [0, 4, 6, 11] },
+        lhand: { name: "左手", hp: 0.1, move: "未詳の左腕", rect: [23, 4, 29, 11] },
+        head: { name: "頭", hp: 0.12, rect: [10, 0, 19, 7] }
       },
       chanceTurns: 3,
       moves: [
@@ -4378,8 +4378,8 @@ body.nopad #pad { display: none; }
       ],
       bigMove: { name: "黒い紋の 玉手箱", box: true, every: 13, warn: 2.5, effects: [atk("all", 1.4, { magic: true, element: "みず" }), { kind: "status", target: "all", status: "possess", chance: 0.25 }] },
       gims: {
-        box: { name: "玉手箱", hp: 0.08, when: "always", pos: [-0.55, -0.25], move: "玉手箱", smoke: 10, miss: 0.45 },
-        head: { name: "頭", hp: 0.05, when: "shell", pos: [0, -0.82], reset: true }
+        box: { name: "玉手箱", hp: 0.08, when: "always", rect: [2, 27, 9, 32], move: "玉手箱", smoke: 10, miss: 0.45 },
+        head: { name: "頭", hp: 0.05, when: "shell", rect: [10, 3, 21, 11], reset: true }
       },
       shellCut: 0.3,
       // こもっている あいだの 体への ダメージ (30%)
@@ -4430,7 +4430,7 @@ body.nopad #pad { display: none; }
         ]
       },
       gims: {
-        mask: { name: "鬼の面", hp: 0.08, when: "oni", pos: [0, -0.8] },
+        mask: { name: "鬼の面", hp: 0.08, when: "oni", rect: [11, 2, 24, 14] },
         bell: { name: "鐘", hp: 0.01, when: "chant", pos: [-1.9, -0.55], noBody: true, reset: true }
       },
       chanceTurns: 3,
@@ -4509,7 +4509,7 @@ body.nopad #pad { display: none; }
         after: 0,
         move: { name: "丘砕きの一撃", effects: [atk("all", 2.6, { unguardable: true })] }
       },
-      gims: { arm: { name: "右腕", hp: 99, when: "always", pos: [-1.15, -0.68], arm: true } },
+      gims: { arm: { name: "右腕", hp: 99, when: "always", rect: [0, 9, 4, 14], anchor: [4, 10], arm: true } },
       befriends: null,
       lv: 28,
       place: "yashiki"
@@ -4569,7 +4569,7 @@ body.nopad #pad { display: none; }
         { name: "鬼の おたけび", w: 1.5, effects: [atk("all", 0.4), { kind: "status", target: "all", status: "confuse", chance: 0.35 }] }
       ],
       bigMove: { name: "大地 ゆらし", every: 13, warn: 2.5, effects: [atk("all", 1.4)] },
-      gims: { legs: { name: "足", hp: 0.12, when: "always", pos: [0, -0.13], chance: "fall", reset: true } },
+      gims: { legs: { name: "足", hp: 0.12, when: "always", rect: [4, 20, 19, 23], chance: "fall", reset: true } },
       chanceTurns: 3,
       befriends: null,
       lv: 31,
@@ -4597,8 +4597,8 @@ body.nopad #pad { display: none; }
       ],
       bigMove: { name: "双頭の 大咆哮", every: 14, warn: 2.5, effects: [atk("all", 1.2, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "confuse", chance: 0.3 }] },
       gims: {
-        rhead: { name: "右の頭", hp: 0.07, when: "always", pos: [-0.46, -0.8], group: "heads", move: "とりつき", reset: true },
-        lhead: { name: "左の頭", hp: 0.07, when: "always", pos: [0.46, -0.8], group: "heads", move: "術", reset: true }
+        rhead: { name: "右の頭", hp: 0.07, when: "always", rect: [3, 0, 10, 8], group: "heads", move: "とりつき", reset: true },
+        lhead: { name: "左の頭", hp: 0.07, when: "always", rect: [15, 0, 22, 8], group: "heads", move: "術", reset: true }
       },
       chanceTurns: 3,
       befriends: null,
@@ -4749,7 +4749,7 @@ body.nopad #pad { display: none; }
       ],
       bigMove: { name: "春麗", every: 14, warn: 2.5, effects: [atk("all", 1.3, { magic: true, element: "しぜん" }), { kind: "status", target: "all", status: "sleep", chance: 0.4 }] },
       regen: { name: "春の 目ざめ", at: 0.5, charge: 7 },
-      gims: { horn: { name: "角", hp: 0.08, when: "always", pos: [0.15, -0.95] } },
+      gims: { horn: { name: "角", hp: 0.08, when: "always", rect: [22, 0, 27, 4] } },
       befriends: "harukirin",
       lv: 37,
       place: "hyouga"
@@ -16551,6 +16551,36 @@ body.nopad #pad { display: none; }
         ".......orro....orro.......",
         ".......oyyo....oyyo......."
       ])
+    },
+    // ろうかの カゲ (2 章の ボスの すがた。2026-10-30): ルナシャドウが 大きく なった 影。左右に 大きな 手 (右手 = 見ている 人の 左)、
+    //   頭に 黄色い 目と 赤い 口。部位 (右手・左手・頭) は この 絵の 上で ねらう (nakama.js の parts の rect)
+    kageboss: {
+      w: 30,
+      h: 21,
+      palette: { o: "#0a0818", a: "#1a1430", y: "#ffe080", b: "#c03040" },
+      frames: bob$1([
+        ".............oooo.............",
+        "...........oaaaaaao...........",
+        "..........oaaaaaaaao..........",
+        "..........oayyaayyao..........",
+        "y.y.y.....oayyaayyao.....y.y.y",
+        "a.a.a.....oaaaaaaaao.....a.a.a",
+        "a.a.a.....oaabbbbaao.....a.a.a",
+        "aaaaa......oaaaaaao......aaaaa",
+        "aaaaaa.....oaaaaaao.....aaaaaa",
+        ".aaaaa....oaaaaaaaao....aaaaa.",
+        "..aaaa...oaaaaaaaaaao...aaaa..",
+        "...aaaa.oaaaaaaaaaaaao.aaaa...",
+        "....aaaaoaaaaaaaaaaaaoaaaa....",
+        "........oaaaaaaaaaaaao........",
+        "........oaaaaaaaaaaaao........",
+        ".......oaaaaaaaaaaaaaao.......",
+        ".......oaaaaaaaaaaaaaao.......",
+        "......oaaaaaaaaaaaaaaaao......",
+        "......oaaaaaaaaaaaaaaaao......",
+        ".....oaaa.aaa.aaa.aaa.aao.....",
+        ".....aa...aa...aa...aa..a....."
+      ])
     }
   };
   const ART = { ...LEGACY_ART, ...NEW_ART };
@@ -21731,6 +21761,17 @@ body.nopad #pad { display: none; }
     function partPos(k, key2) {
       const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
       const fk = p.scale * artFit(art), h = art.h * fk, side = art.w * fk / 2 + 26;
+      const pt = e.gims && e.gims[key2] || e.parts && e.parts[key2];
+      if (pt && pt.rect) {
+        const [x0, y0, x1, y1] = pt.rect, left = p.x - art.w * fk / 2, top = p.y - h;
+        let cx = left + (x0 + x1 + 1) / 2 * fk, cy = top + (y0 + y1 + 1) / 2 * fk;
+        if (pt.arm && pt.anchor) {
+          const ax = left + pt.anchor[0] * fk, ay = top + pt.anchor[1] * fk, g2 = armScale(e);
+          cx = ax + (cx - ax) * g2;
+          cy = ay + (cy - ay) * g2;
+        }
+        return { x: cx, y: cy };
+      }
       if (e.gims && e.gims[key2]) {
         const [fx, fy] = e.gims[key2].pos;
         return { x: p.x + fx * art.w * fk / 2, y: p.y + fy * h };
@@ -22407,7 +22448,7 @@ body.nopad #pad { display: none; }
       if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art, scale, [190, 90, 255], 0);
       if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
       if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
-      const w = u.parts ? 150 : 44, head = p.y - art.h * scale * artFit(art);
+      const w = u.parts || u.boss && u.side === "enemy" ? battle.enemies.filter((x) => !x.idol && !x.ko).length > 1 ? 100 : 150 : 44, head = p.y - art.h * scale * artFit(art);
       const barY = head - 10, nameY = head - 14;
       bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
       text(ctx, u.idol ? u.name : `${u.name} Lv${u.lv}`, p.x, nameY, { size: 9.5, align: "center" });
@@ -22433,27 +22474,15 @@ body.nopad #pad { display: none; }
       if (guards.length) text(ctx, guards.join(" "), p.x, head - (marks.length ? 38 : 26), { size: 9.5, align: "center", color: "#8ad0ff", bold: true });
     }
     function drawParts(ctx, e, k) {
-      const lit = (flash[e.uid] || 0) > t;
       for (const key2 of ["rhand", "lhand"]) {
         const pt = e.parts[key2], q2 = partPos(k, key2);
-        ctx.save();
-        ctx.translate(q2.x, q2.y);
-        ctx.scale(key2 === "lhand" ? -1 : 1, 1);
-        ctx.globalAlpha = pt.broken ? 0.25 : 1;
-        ctx.fillStyle = lit && !pt.broken ? "#ffffff" : "#1a1430";
-        ctx.beginPath();
-        ctx.ellipse(0, 4, 15, 12, 0, 0, Math.PI * 2);
-        ctx.fill();
-        for (let i = 0; i < 3; i++) ctx.fillRect(-13 + i * 9, -16, 6, 16);
-        ctx.fillRect(10, -2, 11, 6);
-        ctx.fillStyle = "#ffe080";
-        for (let i = 0; i < 3; i++) ctx.fillRect(-13 + i * 9, -19, 6, 3);
-        ctx.restore();
+        drawRegion(ctx, e, k, pt.rect, pt.broken ? { tint: "#000000", alpha: 0.6 } : { tint: "#ffe85a", alpha: 0.18 + 0.12 * Math.sin(t * 5) });
         if (pt.broken) text(ctx, "×", q2.x, q2.y + 10, { size: 22, align: "center", bold: true, color: "#ff6a6a" });
         else bar(ctx, q2.x - 16, q2.y + 20, 32, 4, pt.hp / pt.max, "#ffb84a");
         text(ctx, pt.name, q2.x, q2.y + 34, { size: 9, align: "center", bold: true, color: pt.broken ? COLORS.dim : "#ffe0b0" });
       }
       const head = e.parts.head, q = partPos(k, "head");
+      drawRegion(ctx, e, k, head.rect, head.broken ? { tint: "#000000", alpha: 0.5 } : handsBrokenView(e) ? { tint: "#ffe85a", alpha: 0.18 + 0.12 * Math.sin(t * 5) } : { tint: "#9a9ab0", alpha: 0.12 });
       if (head.broken) {
         ctx.strokeStyle = "#ffe85a";
         ctx.lineWidth = 2;
@@ -22522,67 +22551,12 @@ body.nopad #pad { display: none; }
       }
       for (const key2 of Object.keys(e.gims)) {
         const pt = e.gims[key2], q = partPos(k, key2), open = gimOpen(battle, e, key2);
-        if (key2 === "box" && !pt.broken) {
-          ctx.fillStyle = "#c02030";
-          ctx.fillRect(q.x - 11, q.y - 9, 22, 16);
-          ctx.fillStyle = "#ffd700";
-          ctx.fillRect(q.x - 11, q.y - 9, 22, 3);
-          ctx.fillRect(q.x - 2, q.y - 9, 4, 16);
-          label(key2, q, 12);
-        } else if (key2 === "head" && open) {
-          ctx.fillStyle = "#f0c8a0";
-          ctx.beginPath();
-          ctx.arc(q.x, q.y, 9, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#111";
-          ctx.fillRect(q.x - 4, q.y - 2, 2, 2);
-          ctx.fillRect(q.x + 2, q.y - 2, 2, 2);
-          label(key2, q, 12);
-        } else if (key2 === "mask" && open) {
-          ctx.fillStyle = "rgba(200, 30, 40, 0.9)";
-          ctx.beginPath();
-          ctx.ellipse(q.x, q.y, 14, 15, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#ffe080";
-          ctx.beginPath();
-          ctx.moveTo(q.x - 11, q.y - 9);
-          ctx.lineTo(q.x - 7, q.y - 22);
-          ctx.lineTo(q.x - 4, q.y - 11);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.moveTo(q.x + 11, q.y - 9);
-          ctx.lineTo(q.x + 7, q.y - 22);
-          ctx.lineTo(q.x + 4, q.y - 11);
-          ctx.fill();
-          ctx.fillStyle = "#ffe85a";
-          ctx.fillRect(q.x - 7, q.y - 3, 4, 3);
-          ctx.fillRect(q.x + 3, q.y - 3, 4, 3);
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(q.x - 6, q.y + 6, 12, 2);
-          label(key2, q, 16);
-        } else if (key2 === "arm") {
-          const lv = e.armLv, mx = e.armDef.max, k2 = 0.7 + lv * 0.14, hot = lv >= mx - 2;
-          ctx.save();
-          ctx.translate(q.x, q.y);
-          ctx.scale(k2, k2);
-          ctx.fillStyle = hot ? `rgba(255, 80, 60, ${0.35 + 0.25 * Math.sin(t * 10)})` : "rgba(0,0,0,0)";
-          ctx.beginPath();
-          ctx.arc(0, 0, 22, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#c84a3a";
-          ctx.fillRect(4, -7, 22, 14);
-          ctx.fillStyle = "#a03228";
-          ctx.fillRect(4, 3, 22, 4);
-          ctx.fillStyle = "#c84a3a";
-          ctx.beginPath();
-          ctx.arc(-4, 0, 13, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#a03228";
-          for (let i = 0; i < 3; i++) ctx.fillRect(-14, -8 + i * 6, 6, 2);
-          ctx.restore();
-          bar(ctx, q.x - 22, q.y + 18 * k2, 44, 4, lv / mx, hot ? "#ff4a3a" : "#ffb84a");
-          text(ctx, `右腕 ${lv}/${mx}`, q.x, q.y + 18 * k2 + 13, { size: 9.5, align: "center", bold: true, color: hot ? "#ff9a8a" : "#ffe0b0" });
-        } else if (key2 === "moon") {
+        if (pt.rect) {
+          drawBodyPart(ctx, e, k, key2, pt, q, open, label);
+          continue;
+        }
+        if (key2 === "moon") ;
+        else if (key2 === "moon") {
           const lv = e.armLv, mx = e.armDef.max, hot = lv >= mx - 1;
           ctx.fillStyle = hot ? `rgba(255, 240, 140, ${0.3 + 0.2 * Math.sin(t * 8)})` : "rgba(255,255,255,0.08)";
           ctx.beginPath();
@@ -22639,19 +22613,6 @@ body.nopad #pad { display: none; }
             ctx.fillRect(q.x + 4, y0 - 16, 3, 3);
           }
           text(ctx, pt.name, q.x, y0 + 28, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
-        } else if (key2 === "horn" && !pt.broken) {
-          const glow = battle.regen && battle.regen.uid === e.uid;
-          ctx.fillStyle = glow ? `rgba(255, 176, 200, ${0.4 + 0.3 * Math.sin(t * 10)})` : "rgba(255, 232, 140, 0.25)";
-          ctx.beginPath();
-          ctx.arc(q.x, q.y, 16, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = "#ffd860";
-          ctx.beginPath();
-          ctx.moveTo(q.x - 6, q.y + 8);
-          ctx.lineTo(q.x + 2, q.y - 16);
-          ctx.lineTo(q.x + 6, q.y + 8);
-          ctx.fill();
-          label(key2, q, 14);
         } else if (key2 === "cage" && !pt.broken) {
           drawArt(ctx, ART.furukawa, Math.floor(t * 2), q.x, q.y + 14, { scale: 1.6 });
           ctx.strokeStyle = "#3a2a4a";
@@ -22681,24 +22642,6 @@ body.nopad #pad { display: none; }
           ctx.arc(q.x, q.y + 10, 5, 0, Math.PI * 2);
           ctx.fill();
           if (open) label(key2, q, 24);
-        } else if (key2 === "legs" && open) {
-          ctx.strokeStyle = `rgba(255, 232, 90, ${0.45 + 0.25 * Math.sin(t * 6)})`;
-          ctx.lineWidth = 2;
-          ctx.strokeRect(q.x - w * 0.36, q.y - 12, w * 0.72, 22);
-          label(key2, q, 14);
-        } else if ((key2 === "rhead" || key2 === "lhead") && !pt.broken) {
-          ctx.strokeStyle = key2 === "rhead" ? "rgba(200, 138, 255, 0.8)" : "rgba(120, 180, 255, 0.8)";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(q.x, q.y, 20, 0, Math.PI * 2);
-          ctx.stroke();
-          label(key2, q, 20);
-        } else if (key2 === "rhead" || key2 === "lhead") {
-          ctx.fillStyle = "rgba(20, 20, 30, 0.8)";
-          ctx.beginPath();
-          ctx.arc(q.x, q.y, 18, 0, Math.PI * 2);
-          ctx.fill();
-          text(ctx, "×", q.x, q.y + 7, { size: 20, align: "center", bold: true, color: "#ff6a6a" });
         } else if (key2 === "bell") {
           const swing = open ? Math.sin(t * 5) * 0.08 : 0;
           ctx.save();
@@ -22741,6 +22684,54 @@ body.nopad #pad { display: none; }
         ctx.ellipse(px, py, 5 + i % 3, 3.5, a, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+    function drawRegion(ctx, e, k, [x0, y0, x1, y1], { tint = null, alpha = 1, gscale = 1, anchor = null } = {}) {
+      const p = enemyPos(k), art = ART[e.art], fk = p.scale * artFit(art);
+      const { ox, oy } = offsetOf(e);
+      const x = p.x + ox, y = p.y + oy + (e.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5);
+      const rows = art.frames[(e.status.sleep > 0 || e.ko ? 0 : Math.floor(t * 2)) % art.frames.length];
+      const left = Math.round(x - art.w * fk / 2), top = Math.round(y - art.h * fk);
+      ctx.save();
+      if (anchor && gscale !== 1) {
+        const ax = left + anchor[0] * fk, ay = top + anchor[1] * fk;
+        ctx.translate(ax, ay);
+        ctx.scale(gscale, gscale);
+        ctx.translate(-ax, -ay);
+      }
+      ctx.globalAlpha *= alpha;
+      for (let ry = y0; ry <= y1; ry++) {
+        const row2 = rows[ry] || "";
+        for (let rx = x0; rx <= x1; rx++) {
+          const ch = row2[rx];
+          if (!ch || ch === ".") continue;
+          ctx.fillStyle = tint || art.palette[ch];
+          ctx.fillRect(left + rx * fk, top + ry * fk, fk + 0.05, fk + 0.05);
+        }
+      }
+      ctx.restore();
+    }
+    const handsBrokenView = (e) => e.parts.rhand.broken && e.parts.lhand.broken;
+    const armScale = (e) => 1 + (e.armLv || 0) * 0.12;
+    function drawBodyPart(ctx, e, k, key2, pt, q, open, label) {
+      if (pt.arm) {
+        const lv = e.armLv, mx = e.armDef.max, hot = lv >= mx - 2;
+        drawRegion(ctx, e, k, pt.rect, { gscale: armScale(e), anchor: pt.anchor });
+        if (hot) drawRegion(ctx, e, k, pt.rect, { gscale: armScale(e), anchor: pt.anchor, tint: "#ff3a2a", alpha: 0.3 + 0.25 * Math.sin(t * 10) });
+        bar(ctx, q.x - 22, q.y + 20, 44, 4, lv / mx, hot ? "#ff4a3a" : "#ffb84a");
+        text(ctx, `${pt.name} ${lv}/${mx}`, q.x, q.y + 33, { size: 9.5, align: "center", bold: true, color: hot ? "#ff9a8a" : "#ffe0b0" });
+        return;
+      }
+      if (pt.broken) {
+        drawRegion(ctx, e, k, pt.rect, { tint: "#000000", alpha: 0.6 });
+        text(ctx, "×", q.x, q.y + 8, { size: 20, align: "center", bold: true, color: "#ff6a6a" });
+        return;
+      }
+      if (!open) return;
+      if (key2 === "head" && e.shell > 0) drawRegion(ctx, e, k, pt.rect);
+      const regen = key2 === "horn" && battle.regen && battle.regen.uid === e.uid;
+      const color = key2 === "mask" ? "#ff2a3a" : key2 === "rhead" ? "#c88aff" : key2 === "lhead" ? "#78b4ff" : regen ? "#ff8ab8" : "#ffe85a";
+      drawRegion(ctx, e, k, pt.rect, { tint: color, alpha: (key2 === "mask" || regen ? 0.45 : 0.22) + 0.12 * Math.sin(t * (regen ? 10 : 5)) });
+      label(key2, q, 14);
     }
     function drawShield(ctx, x, y, s = 1) {
       ctx.fillStyle = "rgba(138, 208, 255, 0.55)";

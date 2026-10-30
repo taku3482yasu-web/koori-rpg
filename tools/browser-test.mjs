@@ -941,6 +941,18 @@ try {
     await skipTalk(30);
     check(await evaluate('["r_okagappa", "r_hibikimakuri", "r_yamamou"].every(id => window.__app.g.zukan.friends[id])'), 'チーム5DX に 勝つと 3 人 なかまに なる');
 
+    // ----- ボスの 部位は ドット絵の 上 (2 章の 影: 右手・左手・頭。2026-10-30) -----
+    await evaluate('window.__app.startBattle({ enemies: [{ id: "kage", lv: 13 }], kind: "boss", place: "school" }); true');
+    await sleep(300);
+    await key('KeyJ');
+    await sleep(500);
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.parts.rhand.broken = true; b.lock = e.uid; b.lockPart = "lhand"; return true; })()');
+    await sleep(400);
+    await shot('kage-parts');
+    check(await evaluate('window.__app.scene.battle.enemies[0].art === "kageboss"'), '2 章の 影は 手の ある 大きな 影の 絵 (部位は 絵の 上)');
+    await winNow();
+    await skipTalk(30);
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

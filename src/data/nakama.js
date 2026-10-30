@@ -1516,12 +1516,12 @@ export const BOSSES = {
     //   頭を こわすと チャンスタイム (chanceTurns 回 うごけない)。おわると こわした ところが もとに もどる
     //   moves: ふだんの わざ (part: その 部位が こわれていると 使えない)。bigMove: 必殺技 アンノウン (予告つき)
     kage: {
-        id: 'kage', name: 'ろうかの カゲ・ルナシャドウ', element: 'ふしぎ', role: 'attacker', art: 'lunashadow', scale: 2, rank: 'C',
+        id: 'kage', name: 'ろうかの カゲ・ルナシャドウ', element: 'ふしぎ', role: 'attacker', art: 'kageboss', scale: 2, rank: 'C',
         base: { hp: 700, atk: 14, def: 13, spd: 11, mag: 14 },
         parts: {
-            rhand: { name: '右手', hp: 0.1, move: '不明の右手' },
-            lhand: { name: '左手', hp: 0.1, move: '未詳の左腕' },
-            head: { name: '頭', hp: 0.12 }
+            rhand: { name: '右手', hp: 0.1, move: '不明の右手', rect: [0, 4, 6, 11] },
+            lhand: { name: '左手', hp: 0.1, move: '未詳の左腕', rect: [23, 4, 29, 11] },
+            head: { name: '頭', hp: 0.12, rect: [10, 0, 19, 7] }
         },
         chanceTurns: 3,
         moves: [
@@ -1573,8 +1573,8 @@ export const BOSSES = {
         ],
         bigMove: { name: '黒い紋の 玉手箱', box: true, every: 13, warn: 2.5, effects: [atk('all', 1.4, { magic: true, element: 'みず' }), { kind: 'status', target: 'all', status: 'possess', chance: 0.25 }] },
         gims: {
-            box: { name: '玉手箱', hp: 0.08, when: 'always', pos: [-0.55, -0.25], move: '玉手箱', smoke: 10, miss: 0.45 },
-            head: { name: '頭', hp: 0.05, when: 'shell', pos: [0, -0.82], reset: true }
+            box: { name: '玉手箱', hp: 0.08, when: 'always', rect: [2, 27, 9, 32], move: '玉手箱', smoke: 10, miss: 0.45 },
+            head: { name: '頭', hp: 0.05, when: 'shell', rect: [10, 3, 21, 11], reset: true }
         },
         shellCut: 0.3,   // こもっている あいだの 体への ダメージ (30%)
         chanceTurns: 3,
@@ -1607,7 +1607,7 @@ export const BOSSES = {
             ]
         },
         gims: {
-            mask: { name: '鬼の面', hp: 0.08, when: 'oni', pos: [0, -0.8] },
+            mask: { name: '鬼の面', hp: 0.08, when: 'oni', rect: [11, 2, 24, 14] },
             bell: { name: '鐘', hp: 0.01, when: 'chant', pos: [-1.9, -0.55], noBody: true, reset: true }
         },
         chanceTurns: 3,
@@ -1654,7 +1654,7 @@ export const BOSSES = {
         ],
         arm: { max: 10, start: 2, perHit: 1, step: 0.035, bodyCut: 0.4, charge: 4, after: 0,
             move: { name: '丘砕きの一撃', effects: [atk('all', 2.6, { unguardable: true })] } },
-        gims: { arm: { name: '右腕', hp: 99, when: 'always', pos: [-1.15, -0.68], arm: true } },
+        gims: { arm: { name: '右腕', hp: 99, when: 'always', rect: [0, 9, 4, 14], anchor: [4, 10], arm: true } },
         befriends: null, lv: 28, place: 'yashiki'
     },
     // 7 章の ボス: 月の迷宮の 大魔法使い ルナヤ (「力を ためさせて もらうわ」)。しかけは Claude の 案 (2026-10-29)
@@ -1687,7 +1687,7 @@ export const BOSSES = {
             { name: '鬼の おたけび', w: 1.5, effects: [atk('all', 0.4), { kind: 'status', target: 'all', status: 'confuse', chance: 0.35 }] }
         ],
         bigMove: { name: '大地 ゆらし', every: 13, warn: 2.5, effects: [atk('all', 1.4)] },
-        gims: { legs: { name: '足', hp: 0.12, when: 'always', pos: [0, -0.13], chance: 'fall', reset: true } },
+        gims: { legs: { name: '足', hp: 0.12, when: 'always', rect: [4, 20, 19, 23], chance: 'fall', reset: true } },
         chanceTurns: 3,
         befriends: null, lv: 31, place: 'shiro'
     },
@@ -1706,8 +1706,8 @@ export const BOSSES = {
         ],
         bigMove: { name: '双頭の 大咆哮', every: 14, warn: 2.5, effects: [atk('all', 1.2, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.3 }] },
         gims: {
-            rhead: { name: '右の頭', hp: 0.07, when: 'always', pos: [-0.46, -0.8], group: 'heads', move: 'とりつき', reset: true },
-            lhead: { name: '左の頭', hp: 0.07, when: 'always', pos: [0.46, -0.8], group: 'heads', move: '術', reset: true }
+            rhead: { name: '右の頭', hp: 0.07, when: 'always', rect: [3, 0, 10, 8], group: 'heads', move: 'とりつき', reset: true },
+            lhead: { name: '左の頭', hp: 0.07, when: 'always', rect: [15, 0, 22, 8], group: 'heads', move: '術', reset: true }
         },
         chanceTurns: 3,
         befriends: null, lv: 32, place: 'shiro'
@@ -1798,7 +1798,7 @@ export const BOSSES = {
         ],
         bigMove: { name: '春麗', every: 14, warn: 2.5, effects: [atk('all', 1.3, { magic: true, element: 'しぜん' }), { kind: 'status', target: 'all', status: 'sleep', chance: 0.4 }] },
         regen: { name: '春の 目ざめ', at: 0.5, charge: 7 },
-        gims: { horn: { name: '角', hp: 0.08, when: 'always', pos: [0.15, -0.95] } },
+        gims: { horn: { name: '角', hp: 0.08, when: 'always', rect: [22, 0, 27, 4] } },
         befriends: 'harukirin', lv: 37, place: 'hyouga'
     },
     // ノゾエマ (筋肉の山の 山頂): 1 体への 斬撃・全体の 斬撃。「筋肉の おたすけ」で 自分の こうげきを どんどん 上げる (重なる)。

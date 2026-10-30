@@ -440,9 +440,20 @@ export function createBattleView(app, battle, place) {
         sfx('cursor');
     }
     // 部位の 場所 (上画面)。右手は 見ている 人の 左
+    //   rect の ある 部位 (2026-10-30 ユーザー指定): ボスの ドット絵の その 部分 (ピクセルの 範囲) の まんなか
     function partPos(k, key) {
         const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
         const fk = p.scale * artFit(art), h = art.h * fk, side = art.w * fk / 2 + 26;
+        const pt = (e.gims && e.gims[key]) || (e.parts && e.parts[key]);
+        if (pt && pt.rect) {
+            const [x0, y0, x1, y1] = pt.rect, left = p.x - art.w * fk / 2, top = p.y - h;
+            let cx = left + (x0 + x1 + 1) / 2 * fk, cy = top + (y0 + y1 + 1) / 2 * fk;
+            if (pt.arm && pt.anchor) {
+                const ax = left + pt.anchor[0] * fk, ay = top + pt.anchor[1] * fk, g2 = armScale(e);
+                cx = ax + (cx - ax) * g2; cy = ay + (cy - ay) * g2;
+            }
+            return { x: cx, y: cy };
+        }
         // しかけの 部位 (4 章・5 章): pos = [横 (絵の 半分の はばで), たて (絵の 高さで)]
         if (e.gims && e.gims[key]) {
             const [fx, fy] = e.gims[key].pos;
@@ -957,7 +968,8 @@ export function createBattleView(app, battle, place) {
         if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
         // 氷の 偶像: 水色の 氷を 重ねる
         if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: '#cdf2ff', sx, sy });
-        const w = u.parts ? 150 : 44, head = p.y - art.h * scale * artFit(art);
+        // HP ゲージ: ボスは 長く (2026-10-30 ユーザー指定。ほかの 敵と ならぶ ときは 少し みじかく)
+        const w = u.parts || (u.boss && u.side === 'enemy') ? (battle.enemies.filter(x => !x.idol && !x.ko).length > 1 ? 100 : 150) : 44, head = p.y - art.h * scale * artFit(art);
         // 名前と HP は 頭の 上 (手前の 味方と 奥の 敵の 名前が 重ならないように)
         const barY = head - 10, nameY = head - 14;
         bar(ctx, p.x - w / 2, barY, w, 4, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
@@ -989,27 +1001,16 @@ export function createBattleView(app, battle, place) {
 
     // 部位の ある ボスの 両手と 部位の HP (こわれた 手は うすく、頭は ひびが 入る)
     function drawParts(ctx, e, k) {
-        const lit = (flash[e.uid] || 0) > t;
         for (const key of ['rhand', 'lhand']) {
             const pt = e.parts[key], q = partPos(k, key);
-            ctx.save();
-            ctx.translate(q.x, q.y);
-            ctx.scale(key === 'lhand' ? -1 : 1, 1);
-            ctx.globalAlpha = pt.broken ? 0.25 : 1;
-            ctx.fillStyle = lit && !pt.broken ? '#ffffff' : '#1a1430';
-            ctx.beginPath();
-            ctx.ellipse(0, 4, 15, 12, 0, 0, Math.PI * 2);
-            ctx.fill();
-            for (let i = 0; i < 3; i++) ctx.fillRect(-13 + i * 9, -16, 6, 16);
-            ctx.fillRect(10, -2, 11, 6);
-            ctx.fillStyle = '#ffe080';
-            for (let i = 0; i < 3; i++) ctx.fillRect(-13 + i * 9, -19, 6, 3);
-            ctx.restore();
+            // 絵の 手の ところを 光らせる (こわれたら かげる)
+            drawRegion(ctx, e, k, pt.rect, pt.broken ? { tint: '#000000', alpha: 0.6 } : { tint: '#ffe85a', alpha: 0.18 + 0.12 * Math.sin(t * 5) });
             if (pt.broken) text(ctx, '×', q.x, q.y + 10, { size: 22, align: 'center', bold: true, color: '#ff6a6a' });
             else bar(ctx, q.x - 16, q.y + 20, 32, 4, pt.hp / pt.max, '#ffb84a');
             text(ctx, pt.name, q.x, q.y + 34, { size: 9, align: 'center', bold: true, color: pt.broken ? COLORS.dim : '#ffe0b0' });
         }
         const head = e.parts.head, q = partPos(k, 'head');
+        drawRegion(ctx, e, k, head.rect, head.broken ? { tint: '#000000', alpha: 0.5 } : handsBrokenView(e) ? { tint: '#ffe85a', alpha: 0.18 + 0.12 * Math.sin(t * 5) } : { tint: '#9a9ab0', alpha: 0.12 });
         if (head.broken) {
             ctx.strokeStyle = '#ffe85a';
             ctx.lineWidth = 2;
@@ -1070,39 +1071,8 @@ export function createBattleView(app, battle, place) {
         }
         for (const key of Object.keys(e.gims)) {
             const pt = e.gims[key], q = partPos(k, key), open = gimOpen(battle, e, key);
-            if (key === 'box' && !pt.broken) {
-                // 玉手箱 (赤い 箱に 金の ふち)
-                ctx.fillStyle = '#c02030'; ctx.fillRect(q.x - 11, q.y - 9, 22, 16);
-                ctx.fillStyle = '#ffd700'; ctx.fillRect(q.x - 11, q.y - 9, 22, 3); ctx.fillRect(q.x - 2, q.y - 9, 4, 16);
-                label(key, q, 12);
-            } else if (key === 'head' && open) {
-                // こうらの すきまから 出ている 頭
-                ctx.fillStyle = '#f0c8a0'; ctx.beginPath(); ctx.arc(q.x, q.y, 9, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#111'; ctx.fillRect(q.x - 4, q.y - 2, 2, 2); ctx.fillRect(q.x + 2, q.y - 2, 2, 2);
-                label(key, q, 12);
-            } else if (key === 'mask' && open) {
-                // 鬼の面 (赤い 顔に 角)
-                ctx.fillStyle = 'rgba(200, 30, 40, 0.9)'; ctx.beginPath(); ctx.ellipse(q.x, q.y, 14, 15, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#ffe080';
-                ctx.beginPath(); ctx.moveTo(q.x - 11, q.y - 9); ctx.lineTo(q.x - 7, q.y - 22); ctx.lineTo(q.x - 4, q.y - 11); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(q.x + 11, q.y - 9); ctx.lineTo(q.x + 7, q.y - 22); ctx.lineTo(q.x + 4, q.y - 11); ctx.fill();
-                ctx.fillStyle = '#ffe85a'; ctx.fillRect(q.x - 7, q.y - 3, 4, 3); ctx.fillRect(q.x + 3, q.y - 3, 4, 3);
-                ctx.fillStyle = '#fff'; ctx.fillRect(q.x - 6, q.y + 6, 12, 2);
-                label(key, q, 16);
-            } else if (key === 'arm') {
-                // 右腕 (6 章): 段が 上がるほど 太く 大きく。限界が 近いと 赤く 光る
-                const lv = e.armLv, mx = e.armDef.max, k2 = 0.7 + lv * 0.14, hot = lv >= mx - 2;
-                ctx.save(); ctx.translate(q.x, q.y); ctx.scale(k2, k2);
-                ctx.fillStyle = hot ? `rgba(255, 80, 60, ${0.35 + 0.25 * Math.sin(t * 10)})` : 'rgba(0,0,0,0)';
-                ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#c84a3a'; ctx.fillRect(4, -7, 22, 14);            // うで
-                ctx.fillStyle = '#a03228'; ctx.fillRect(4, 3, 22, 4);
-                ctx.fillStyle = '#c84a3a'; ctx.beginPath(); ctx.arc(-4, 0, 13, 0, Math.PI * 2); ctx.fill();   // こぶし
-                ctx.fillStyle = '#a03228'; for (let i = 0; i < 3; i++) ctx.fillRect(-14, -8 + i * 6, 6, 2);
-                ctx.restore();
-                bar(ctx, q.x - 22, q.y + 18 * k2, 44, 4, lv / mx, hot ? '#ff4a3a' : '#ffb84a');
-                text(ctx, `右腕 ${lv}/${mx}`, q.x, q.y + 18 * k2 + 13, { size: 9.5, align: 'center', bold: true, color: hot ? '#ff9a8a' : '#ffe0b0' });
-            } else if (key === 'moon') {
+            if (pt.rect) { drawBodyPart(ctx, e, k, key, pt, q, open, label); continue; }
+            if (key === 'moon') {            } else if (key === 'moon') {
                 // 空の 月 (7 章): 段が 上がるほど 満ちる。満月が 近いと 光る
                 const lv = e.armLv, mx = e.armDef.max, hot = lv >= mx - 1;
                 ctx.fillStyle = hot ? `rgba(255, 240, 140, ${0.3 + 0.2 * Math.sin(t * 8)})` : 'rgba(255,255,255,0.08)';
@@ -1131,14 +1101,6 @@ export function createBattleView(app, battle, place) {
                     ctx.fillStyle = '#ffd040'; ctx.fillRect(q.x + 4, y0 - 16, 3, 3);
                 }
                 text(ctx, pt.name, q.x, y0 + 28, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
-            } else if (key === 'horn' && !pt.broken) {
-                // ハル麒麟の 角 (9 章): 金色の 角。ためている あいだは ピンクに 光る
-                const glow = battle.regen && battle.regen.uid === e.uid;
-                ctx.fillStyle = glow ? `rgba(255, 176, 200, ${0.4 + 0.3 * Math.sin(t * 10)})` : 'rgba(255, 232, 140, 0.25)';
-                ctx.beginPath(); ctx.arc(q.x, q.y, 16, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#ffd860';
-                ctx.beginPath(); ctx.moveTo(q.x - 6, q.y + 8); ctx.lineTo(q.x + 2, q.y - 16); ctx.lineTo(q.x + 6, q.y + 8); ctx.fill();
-                label(key, q, 14);
             } else if (key === 'cage' && !pt.broken) {
                 // ふるカワの おり (14 章の サアラハ): 黒い おりの 中に ふるカワ
                 drawArt(ctx, ART.furukawa, Math.floor(t * 2), q.x, q.y + 14, { scale: 1.6 });
@@ -1153,20 +1115,6 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = '#4a4a1a'; ctx.beginPath(); ctx.arc(q.x, q.y - 2, 5, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = open ? '#1a3a1a' : '#4aff6a'; ctx.beginPath(); ctx.arc(q.x, q.y + 10, 5, 0, Math.PI * 2); ctx.fill();
                 if (open) label(key, q, 24);
-            } else if (key === 'legs' && open) {
-                // 大鬼の 足 (8 章): 足もとに 黄色い わく
-                ctx.strokeStyle = `rgba(255, 232, 90, ${0.45 + 0.25 * Math.sin(t * 6)})`; ctx.lineWidth = 2;
-                ctx.strokeRect(q.x - w * 0.36, q.y - 12, w * 0.72, 22);
-                label(key, q, 14);
-            } else if ((key === 'rhead' || key === 'lhead') && !pt.broken) {
-                // 双頭鬼の 頭 (8 章): ねらえる 頭に わく (右の 頭 = とりつき・左の 頭 = 術)
-                ctx.strokeStyle = key === 'rhead' ? 'rgba(200, 138, 255, 0.8)' : 'rgba(120, 180, 255, 0.8)'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.arc(q.x, q.y, 20, 0, Math.PI * 2); ctx.stroke();
-                label(key, q, 20);
-            } else if (key === 'rhead' || key === 'lhead') {
-                // こわれた 頭: 黒い けむりで おおう
-                ctx.fillStyle = 'rgba(20, 20, 30, 0.8)'; ctx.beginPath(); ctx.arc(q.x, q.y, 18, 0, Math.PI * 2); ctx.fill();
-                text(ctx, '×', q.x, q.y + 7, { size: 20, align: 'center', bold: true, color: '#ff6a6a' });
             } else if (key === 'bell') {
                 // 鐘 (いつも うしろに ある。お経の あいだ だけ 光って ねらえる)
                 const swing = open ? Math.sin(t * 5) * 0.08 : 0;
@@ -1193,6 +1141,59 @@ export function createBattleView(app, battle, place) {
             ctx.fillStyle = `rgba(${r}, ${g2}, ${b2}, ${0.45 + 0.2 * Math.sin(t * 5 + i)})`;
             ctx.beginPath(); ctx.ellipse(px, py, 5 + (i % 3), 3.5, a, 0, Math.PI * 2); ctx.fill();
         }
+    }
+
+    // ----- ボスの 体の 部位 (2026-10-30 ユーザー指定: 別の 絵を 足さず、ドット絵の その 部分を ねらう) -----
+    // ボスの ドット絵の うち rect (ピクセルの 範囲) だけを 描く。tint: その 色で ぬる / なし: もとの 色。gscale・anchor: 肩を 中心に 大きく 描く
+    function drawRegion(ctx, e, k, [x0, y0, x1, y1], { tint = null, alpha = 1, gscale = 1, anchor = null } = {}) {
+        const p = enemyPos(k), art = ART[e.art], fk = p.scale * artFit(art);
+        const { ox, oy } = offsetOf(e);
+        const x = p.x + ox, y = p.y + oy + (e.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5);
+        const rows = art.frames[(e.status.sleep > 0 || e.ko ? 0 : Math.floor(t * 2)) % art.frames.length];
+        const left = Math.round(x - art.w * fk / 2), top = Math.round(y - art.h * fk);
+        ctx.save();
+        if (anchor && gscale !== 1) {
+            const ax = left + anchor[0] * fk, ay = top + anchor[1] * fk;
+            ctx.translate(ax, ay); ctx.scale(gscale, gscale); ctx.translate(-ax, -ay);
+        }
+        ctx.globalAlpha *= alpha;
+        for (let ry = y0; ry <= y1; ry++) {
+            const row = rows[ry] || '';
+            for (let rx = x0; rx <= x1; rx++) {
+                const ch = row[rx];
+                if (!ch || ch === '.') continue;
+                ctx.fillStyle = tint || art.palette[ch];
+                ctx.fillRect(left + rx * fk, top + ry * fk, fk + 0.05, fk + 0.05);
+            }
+        }
+        ctx.restore();
+    }
+    const handsBrokenView = e => e.parts.rhand.broken && e.parts.lhand.broken;
+    // 右腕 (6 章の トモオカ) の 大きさ: 段が 上がるほど ドット絵の 腕が 大きく なる
+    const armScale = e => 1 + (e.armLv || 0) * 0.12;
+    // 体の 部位 1 つ: ねらえる ときは その 部分が 光る・こわれたら かげる。右腕は ドット絵の 腕 そのものが 大きく なる
+    function drawBodyPart(ctx, e, k, key, pt, q, open, label) {
+        if (pt.arm) {
+            const lv = e.armLv, mx = e.armDef.max, hot = lv >= mx - 2;
+            drawRegion(ctx, e, k, pt.rect, { gscale: armScale(e), anchor: pt.anchor });
+            if (hot) drawRegion(ctx, e, k, pt.rect, { gscale: armScale(e), anchor: pt.anchor, tint: '#ff3a2a', alpha: 0.3 + 0.25 * Math.sin(t * 10) });
+            bar(ctx, q.x - 22, q.y + 20, 44, 4, lv / mx, hot ? '#ff4a3a' : '#ffb84a');
+            text(ctx, `${pt.name} ${lv}/${mx}`, q.x, q.y + 33, { size: 9.5, align: 'center', bold: true, color: hot ? '#ff9a8a' : '#ffe0b0' });
+            return;
+        }
+        if (pt.broken) {
+            drawRegion(ctx, e, k, pt.rect, { tint: '#000000', alpha: 0.6 });
+            text(ctx, '×', q.x, q.y + 8, { size: 20, align: 'center', bold: true, color: '#ff6a6a' });
+            return;
+        }
+        if (!open) return;
+        // こうらに こもった 浦の島重蔵: こうらの 上に 頭を 出す
+        if (key === 'head' && e.shell > 0) drawRegion(ctx, e, k, pt.rect);
+        // 鬼の面は 赤・双頭鬼の 頭は むらさき / 青・ハル麒麟の 角は ためている あいだ ピンク・ほかは 黄色
+        const regen = key === 'horn' && battle.regen && battle.regen.uid === e.uid;
+        const color = key === 'mask' ? '#ff2a3a' : key === 'rhead' ? '#c88aff' : key === 'lhead' ? '#78b4ff' : regen ? '#ff8ab8' : '#ffe85a';
+        drawRegion(ctx, e, k, pt.rect, { tint: color, alpha: (key === 'mask' || regen ? 0.45 : 0.22) + 0.12 * Math.sin(t * (regen ? 10 : 5)) });
+        label(key, q, 14);
     }
 
     // 盾 (まもり)。(x, y) は まんなか
