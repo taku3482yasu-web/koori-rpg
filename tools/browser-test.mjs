@@ -748,6 +748,70 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear8"'), 'おにおにに 勝つと 8 章 クリア');
 
+    // ----- 14 章 (内定版): 招待券 → ナイテイパーク → ふるカワが いない → 夜の 手がかり → サアラハ (おり) (2026-10-30) -----
+    const P14 = 300;
+    await at(8, 25, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('window.__app.g.story === "invite"'), '本編の あと ともいしの 家で 遊園地の 招待券 (14 章)');
+    await at(5, 41, 'up');
+    await key('KeyJ');
+    await sleep(1500);
+    for (let i = 0; i < 5; i++) await key('ArrowDown');
+    await key('Enter');
+    await skipTalk();
+    await sleep(200);
+    await shot('park-arrive');
+    check(await evaluate(`window.__app.g.story === "park" && window.__app.g.pos.y > ${P14} * 16 && window.__bgm() === "park"`), '電車で ナイテイパークへ (遊園地の BGM)');
+    await at(24, P14 + 7, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    check(await evaluate('Boolean(window.__app.g.flags.ride14 && window.__app.g.flags.ride14.attrB)'), 'かんらん車に 乗る');
+    await at(5, P14 + 31, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(200);
+    await shot('park-night');
+    check(await evaluate('window.__app.g.story === "yoru" && window.__app.g.time === 3'), '駅で 帰ろうとすると ふるカワが いない → 夜');
+    for (const [x, y] of [[11, P14 + 15], [24, P14 + 7], [37, P14 + 15]]) {
+        await at(x, y, 'up');
+        await key('KeyJ');
+        await skipTalk();
+    }
+    check(await evaluate('Object.keys(window.__app.g.flags.clue14).length === 3'), 'アトラクションの 入り口で 手がかりを 3 つ');
+    await at(24, P14 + 13, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.enemies[0].id === "saaraha14" && window.__bgm() === "saaraha14"'), '広場の サアラハと バトル');
+    await key('KeyJ');
+    await sleep(600);
+    await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; e.max = e.hp = 99999; e.gims.cage.hp = 1; b.lock = e.uid; b.lockPart = "cage"; return true; })()');
+    check(await waitFor('Boolean(window.__app.scene.battle.chance)'), 'サアラハ: おりを こわすと ふるカワが にげて チャンスタイム');
+    await sleep(300);
+    await shot('park-cage');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.story === "clear14"'), 'サアラハに 勝つと 14 章 クリア → 15 章');
+
+    // ----- 15 章: 無限回廊・ライバル探検隊の 仲間クエスト -----
+    await at(10, 41, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.kind === "kairou"'), '無限回廊の 番人に 話すと 1 階の 強化ボスと バトル');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('window.__app.g.kairou.floor === 2'), '無限回廊: 勝つと 次の 階へ');
+    await at(20, 30, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.kind === "team" && window.__app.scene.battle.team === "5dx"'), 'チーム5DX が 勝負を いどんでくる');
+    await winNow();
+    await skipTalk(30);
+    check(await evaluate('["r_okagappa", "r_hibikimakuri", "r_yamamou"].every(id => window.__app.g.zukan.friends[id])'), 'チーム5DX に 勝つと 3 人 なかまに なる');
+
     // ----- スマホ (縦持ち) -----
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

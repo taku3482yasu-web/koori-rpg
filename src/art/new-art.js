@@ -291,5 +291,58 @@ export const NEW_ART = {
             '......ssss......ssss......',
             '.....oooooo....oooooo.....'
         ])
+    },
+    // サアラハ (14 章 内定版の ボス。ルキハの 軍勢の 残党。新キャラ・2026-10-30 Claude の 案): 黒い スーツに むらさきの 仮面、
+    //   手には「内定通知」の 紙。胸に 黒い 紋
+    saaraha: {
+        w: 18, h: 19,
+        palette: { o: '#0a0a14', h: '#2a1a3a', m: '#6a2a9a', R: '#ff3040', s: '#e8d0c0', w: '#f0f0f0', k: '#1a1a24', p: '#a040e0', y: '#fff0b0', b: '#000000' },
+        frames: bob([
+            '.......oooo.......',
+            '.....oohhhhoo.....',
+            '....ohhhhhhhho....',
+            '....ohmmmmmmho....',
+            '....ohmRmmRmho....',
+            '....ohmmmmmmho....',
+            '.....osssssso.....',
+            '......oswwso......',
+            '....ookkwwkkoo....',
+            '...okkkkwwkkkko...',
+            '..okkkkpwwpkkkko..',
+            '..okkkkkppkkkkko..',
+            '..okk.kkkkkk.kko..',
+            '..oss.kkkkkk.yyo..',
+            '......kkkkkk.yy...',
+            '......kkk.kkk.....',
+            '......kkk.kkk.....',
+            '......kkk.kkk.....',
+            '.....bbbb.bbbb....'
+        ])
+    },
+    // リハマ (14 章 免許版の ボス。ルキハの 軍勢の 残党。新キャラ・2026-10-30 Claude の 案): 赤い ヘルメットに 黒い ライダースーツ、黄色い ライン
+    rihama: {
+        w: 18, h: 19,
+        palette: { o: '#0a0a10', h: '#8a1020', v: '#102030', R: '#ff3040', k: '#1a1a1a', y: '#ffd040', p: '#a040e0', g: '#808890', b: '#000000' },
+        frames: bob([
+            '.....oooooooo.....',
+            '....ohhhhhhhho....',
+            '...ohhhhhhhhhho...',
+            '...ohvvvvvvvvho...',
+            '...ohvvRvvRvvho...',
+            '...ohhhhhhhhhho...',
+            '....ohhhhhhhho....',
+            '......okkkko......',
+            '....ookkkkkkoo....',
+            '...okkkyykkkkko...',
+            '..okkkyykkpkkkko..',
+            '..okkyykkpppkkko..',
+            '..okk.kkkkkk.kko..',
+            '..ogg.kkkkkk.ggo..',
+            '......kkkkkk......',
+            '......kkk.kkk.....',
+            '......kkk.kkk.....',
+            '......kkk.kkk.....',
+            '.....bbbb.bbbb....'
+        ])
     }
 };

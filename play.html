@@ -684,6 +684,18 @@ body.nopad #pad { display: none; }
       bass: "r . o . r . o .",
       drums: "k . k s . k s ."
     },
+    park: {
+      name: "ようこそ 遊園地へ",
+      bpm: 132,
+      root: 72,
+      mode: "major",
+      lead: "square",
+      melody: "5 . 5 6 5 . 3 . | 1' . 7 6 5 - . . | 4 . 4 5 6 . 1' . | 7 - 6 - 5 - . . | 3 . 5 1' 7 . 6 5 | 6 . 4 6 5 . 3 1 | 2 . 3 4 5 . 7, 2 | 1 - - - . . 5, .",
+      chords: "1 4 4 5 1 4 2 5",
+      bass: "r . f . r . f .",
+      arp: ". 2 . 1 . 2 . 1",
+      drums: "k h s h k k s h"
+    },
     // ----- ふつうの 戦闘・ライバル探検隊 -----
     battle: {
       name: "なかまと バトル",
@@ -857,6 +869,29 @@ body.nopad #pad { display: none; }
       arp: "0 1 2 1 0 1 2 1",
       drums: "k h s h k k s h"
     },
+    saaraha14: {
+      name: "内定とりけし (サアラハ)",
+      bpm: 148,
+      root: 63,
+      mode: "harmonic",
+      lead: "sawtooth",
+      melody: "1 . 2 3 . 2 1 . | 7, - 1 - 5, - . . | 1 . 2 3 . 5 4 . | 3 - 2 - 7, - . . | 6 . 5 6 . 5 3 . | 4 - 3 - 2 - 1 - | 6, . 7, 1 . 2 3 . | 7, - - - 5, - 7, -",
+      chords: "1 5 1 5 6 4 6 5",
+      bass: "r o r o r o r o",
+      arp: "0 1 2 1 0 1 2 1",
+      drums: "k h s h k h s s"
+    },
+    rihama14: {
+      name: "暴走 信号無視 (リハマ)",
+      bpm: 172,
+      root: 64,
+      mode: "mixolydian",
+      lead: "square",
+      melody: "1 1 1 . 5 . 4 . | 7, 7, 7, . 4 . 3 . | 1 1 1 . 5 . 6 . | 7 - 6 - 5 - . . | 1' . 7 . 6 . 5 . | 4 . 3 . 2 . 1 . | 4 4 4 . 5 5 5 . | 6 - 7 - 1' - 5 -",
+      chords: "1 7 1 5 4 1 4 5",
+      bass: "r r o r r r o r",
+      drums: "x h s h x h s s"
+    },
     // 曲が まだ ない ボス (9 章 から 先) は これ
     boss: {
       name: "ボス バトル",
@@ -928,8 +963,8 @@ body.nopad #pad { display: none; }
     if (scene === "field" || scene === "menu" || scene === "fusion") return SONGS[area] ? area : "ishinokawa";
     if (scene === "battle" && battle) {
       if (battle.outcome) return null;
-      if (battle.kind === "boss") return SONGS[battle.bossId] ? battle.bossId : "boss";
-      if (battle.kind === "rival") return "rival";
+      if (battle.kind === "boss" || battle.kind === "kairou") return SONGS[battle.bossId] ? battle.bossId : "boss";
+      if (battle.kind === "rival" || battle.kind === "team") return "rival";
       return "battle";
     }
     return null;
@@ -1291,6 +1326,24 @@ body.nopad #pad { display: none; }
     harrymimic: W$1("たからばこハリ", "ふつう", "front", 1.8),
     metalharry: W$1("メタルたいあたり", "ふつう", "front", 1),
     metalkingharry: W$1("メタルキングの威光", "ふしぎ", "around", 1.2),
+    // 15 章: なかまに なる ライバル探検隊 (前作の 必殺わざ。ひるみ は こんらん・まひ・しばり・よわき は のろい・めくらまし は めくらまし)
+    r_asahara: W$1("DOPAPANCHI", "ほのお", "front", 2.2),
+    r_sasaki: W$1("ASAスラッシュ", "ふつう", "front", 1.8),
+    r_kotani: W$1("NABIテンポ", "ふしぎ", "around", 0, "slow", 0.8),
+    r_ishii: W$1("うさぎ跳びキック", "しぜん", "front", 2, "confuse", 0.3),
+    r_mazuda: W$1("ツキノワベアハッグ", "ふつう", "front", 1.6, "slow", 0.5),
+    r_naitoon: W$1("ナイトハウル", "かぜ", "around", 0.9, "slow", 0.6),
+    r_ueno: W$1("マッスルウエノクラッシュ", "ふつう", "around", 1.6),
+    r_shibata: W$1("シバタードライバー", "ふつう", "front", 2, "confuse", 0.5),
+    r_ikekimu: W$1("イケキムドライブ", "かぜ", "line", 1.7, "blind", 0.4),
+    r_yahami: W$1("みりょうの手鏡", "ふしぎ", "around", 1.2, "confuse", 0.4),
+    r_maechokkin: W$1("チョッキンカット", "かぜ", "front", 1.8, "slow", 0.5),
+    r_norahan: W$1("ねこだまし", "みず", "front", 1.2, "confuse", 0.9),
+    r_okagappa: W$1("おかピポっと光線", "みず", "line", 1.6, "confuse", 0.3),
+    r_hibikimakuri: W$1("大音響4DX", "かぜ", "around", 1.2, "confuse", 0.4),
+    r_yamamou: W$1("おちょくりボーンフィーバー", "ふつう", "front", 1.6, "confuse", 0.4),
+    saaraha14: W$1("内定とりけし", "ふしぎ", "around", 0.8, "possess", 0.3),
+    rihama14: W$1("ノーブレーキ", "かぜ", "line", 1.5),
     ooni8: W$1("ふみつけ", "ふつう", "around", 1),
     soutou8: W$1("かみつき", "ふつう", "front", 1.2),
     kinme8: W$1("金色の鬼気", "ふしぎ", "around", 1.1, "blind", 0.4),
@@ -3062,6 +3115,277 @@ body.nopad #pad { display: none; }
       desc: "ハリー王国の先代の王。どんな攻撃も弾く鋼の肉体を持つ。",
       special: sp("メタルキングの 威光", [atk("all", 1.4, { magic: true }), { kind: "buff", target: "party", stat: "def", amount: 0.5, time: 10 }])
     },
+    // ----- ライバル探検隊 15 人 (15 章「新たなる１日」の 仲間クエスト。2026-10-30) -----
+    //   team: どの チームか (TEAMS)。チームに 勝つと 3 人 ぜんいん なかまに なる。リーダー S・メンバー A (設計書)。
+    //   内定版 ASK-3・ケモノミチ / 免許版 お願いマッスル・バータス / 5DX は 両方。4 章の ライバル戦の キャラ (RIVALS) とは べつ (id に r_)
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 前作の 必殺技
+    {
+      id: "r_asahara",
+      name: "KING.ASAHARA",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "naitei",
+      team: "ask3",
+      rank: "S",
+      element: "ほのお",
+      role: "attacker",
+      mul: { atk: 1.2 },
+      art: "asahara",
+      line: "CS城の主の力、見せてやろう！ ひれ伏せ！",
+      favorite: "choco",
+      title: "CS城の主",
+      desc: "チームASK-3 のリーダーで、CS城の主。SE城の主おにおにとはライバル。プライドが高く、思い通りに事が進まないとかんしゃくを起こす。優秀な策略家でもある。",
+      special: sp("DOPAPANCHI", [atk("one", 3)])
+    },
+    {
+      id: "r_sasaki",
+      name: "Mr.SASAKI",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "naitei",
+      team: "ask3",
+      rank: "A",
+      element: "ふつう",
+      role: "supporter",
+      mul: { atk: 1.1 },
+      art: "sasaki",
+      line: "どうも、しご出来です。",
+      favorite: "onigiri",
+      title: "イケてる社員",
+      desc: "チームASK-3 のメンバー。シゴできお兄さん。仕事を一人でこなしすぎて疲れているのか、語彙が死ぬ時がある。口ぐせは「締め切り厳守です。」",
+      special: sp("締め切り厳守", [{ kind: "buff", target: "party", stat: "spd", amount: 0.4, time: 10 }, atk("one", 2)])
+    },
+    {
+      id: "r_kotani",
+      name: "Mr.KOTANI",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "naitei",
+      team: "ask3",
+      rank: "A",
+      element: "かぜ",
+      role: "jammer",
+      mul: { mag: 1.1 },
+      art: "kotani",
+      line: "勝率は計算済みです。",
+      favorite: "cider",
+      title: "KING.ASAHARA の腹心",
+      desc: "チームASK-3 の頭脳。クリップボードをいつも持っている。この20年間、遅刻・欠席を一度もしたことがない。数字だけを信じるタイプで、何でも確率で言う。",
+      special: sp("計算どおり", [{ kind: "status", target: "all", status: "slow", chance: 0.9 }])
+    },
+    {
+      id: "r_ishii",
+      name: "イシイー",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "naitei",
+      team: "kemono",
+      rank: "S",
+      element: "しぜん",
+      role: "attacker",
+      mul: { atk: 1.2 },
+      art: "ishii",
+      line: "ピョンッ！ 迷宮は おれたちの 家だ！",
+      favorite: "kyuuri",
+      title: "ど根性ウサギ",
+      desc: "根性の塊。どんな困難も根性で解決できると思っている。しかし、冷静な部分もあり、リーダーとしての資質もある。チーム・ケモノミチ のリーダー。",
+      special: sp("ど根性 キック", [atk("all", 1.9)])
+    },
+    {
+      id: "r_mazuda",
+      name: "マズダ",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "naitei",
+      team: "kemono",
+      rank: "A",
+      element: "ふつう",
+      role: "defender",
+      mul: { hp: 1.15 },
+      art: "mazuda",
+      line: "ダンジョン育ちを なめるなよ",
+      favorite: "niboshi",
+      title: "大柄な隣人",
+      desc: "無口な大熊。基本的には温厚だが、キレると何をしでかすかわからない。",
+      special: sp("ベアハッグ", [atk("one", 2.2), { kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }])
+    },
+    {
+      id: "r_naitoon",
+      name: "NAITOON",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "naitei",
+      team: "kemono",
+      rank: "A",
+      element: "かぜ",
+      role: "jammer",
+      mul: { spd: 1.15 },
+      art: "naitoon",
+      line: "ワォーン……夜の迷宮で おれに 勝てると 思うなよ",
+      favorite: "niboshi",
+      title: "夜に潜む者",
+      desc: "夜を好む狼。満月の晩にのみ、凄まじき力を発揮するが、光に非常に弱い。",
+      special: sp("満月の 遠吠え", [atk("all", 1, { magic: true }), { kind: "status", target: "all", status: "slow", chance: 0.7 }])
+    },
+    {
+      id: "r_ueno",
+      name: "マッスルウエノーブル",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "menkyo",
+      team: "muscle",
+      rank: "S",
+      element: "ふつう",
+      role: "defender",
+      mul: { hp: 1.2, atk: 1.1 },
+      art: "ueno",
+      line: "我が筋肉の前にひれ伏すがよい！",
+      favorite: "onigiri",
+      title: "筋肉の貴族",
+      desc: "オープンキャンパスクラブ会長のナカツォー家の主。チームお願いマッスル のリーダー。筋肉をこよなく愛し、1日26時間を筋肉を磨くトレーニングにあてている。愛妻家。",
+      special: sp("マッスルウエノクラッシュ", [atk("all", 1.9)])
+    },
+    {
+      id: "r_shibata",
+      name: "シバター",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "menkyo",
+      team: "muscle",
+      rank: "A",
+      element: "ふつう",
+      role: "attacker",
+      mul: { atk: 1.15 },
+      art: "shibata",
+      line: "ぶんぶん！ 撮れ高いただき！ んなああ～",
+      favorite: "cider",
+      title: "おはしばた",
+      desc: "現代に名をはせるユーチューバー兼プロレスラー。ダンジョンでも撮れ高を探している。たまに「んな～」と鳴く。",
+      special: sp("撮れ高 ばっちり", [atk("one", 2.6)])
+    },
+    {
+      id: "r_ikekimu",
+      name: "イケキム",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "menkyo",
+      team: "muscle",
+      rank: "A",
+      element: "かぜ",
+      role: "jammer",
+      mul: { spd: 1.1 },
+      art: "ikekimu",
+      line: "チッ…邪魔だ。",
+      favorite: "choco",
+      title: "アイドル兼盗賊",
+      desc: "表の顔はアイドルユニットのメンバー。裏の顔は、裏の世界で有名な盗賊一家の長男。暗殺術にたけている。",
+      special: sp("暗殺術", [atk("one", 2.4), { kind: "status", target: "one", status: "blind", chance: 0.6 }])
+    },
+    {
+      id: "r_yahami",
+      name: "ヤーハミー",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "menkyo",
+      team: "bartas",
+      rank: "S",
+      element: "ふしぎ",
+      role: "healer",
+      mul: { mag: 1.2 },
+      art: "yahami",
+      line: "お宝も 視線も、ぜんぶ いただくわ",
+      favorite: "choco",
+      title: "美しき大怪盗",
+      desc: "美しさを追い求める怪盗。究極の美を求めるために今日もダンジョンに潜り込む。チームバータス のリーダー。",
+      special: sp("究極の 美", [{ kind: "heal", target: "party", power: 0.6 }, { kind: "status", target: "all", status: "confuse", chance: 0.5 }])
+    },
+    {
+      id: "r_maechokkin",
+      name: "マエチョッキン",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "menkyo",
+      team: "bartas",
+      rank: "A",
+      element: "かぜ",
+      role: "attacker",
+      mul: { atk: 1.15 },
+      art: "maechokkin",
+      line: "チョッキン♪ 前髪も お宝も 切りそろえて あげる",
+      favorite: "melonpan",
+      title: "鋏の達人",
+      desc: "鋏を扱うことにたけており、肌身離さない。彼女の鋏で切られたものは、切られたことすら気づかない。",
+      special: sp("ぜんぶ 切りそろえ", [atk("all", 1.7)])
+    },
+    {
+      id: "r_norahan",
+      name: "ノラハン",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      version: "menkyo",
+      team: "bartas",
+      rank: "A",
+      element: "みず",
+      role: "supporter",
+      mul: { spd: 1.1 },
+      art: "norahan",
+      line: "ニャハッ。盗むのは お宝だけじゃないかもね♪",
+      favorite: "niboshi",
+      title: "猫の怪盗",
+      desc: "１００年生きた猫が人に化け、怪盗になった。長寿ゆえの知恵や経験を用いて、チームのバックアップを行う。",
+      special: sp("百年の 知恵", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, { kind: "buff", target: "party", stat: "spd", amount: 0.3, time: 10 }])
+    },
+    {
+      id: "r_okagappa",
+      name: "おかがっぱ",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      team: "5dx",
+      rank: "S",
+      element: "みず",
+      role: "attacker",
+      mul: { mag: 1.15 },
+      art: "okagappa",
+      line: "ま～だまだ戦わねバ！ イェア！",
+      favorite: "kyuuri",
+      title: "丘に上がったカッパ",
+      desc: "丘に進出したカッパ。チーム5DX のリーダー。ＤＪをしており、山グッチのおかピポとして名も知られている。ノリと勢いで生きている。",
+      special: sp("おかピポっと光線", [atk("all", 1.6, { magic: true, element: "みず" }), { kind: "status", target: "all", status: "confuse", chance: 0.4 }])
+    },
+    {
+      id: "r_hibikimakuri",
+      name: "ひびきまくり",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      team: "5dx",
+      rank: "A",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { mag: 1.1 },
+      art: "hibikimakuri",
+      line: "響きです。",
+      favorite: "melonpan",
+      title: "響きを伝える妖怪",
+      desc: "はるか昔から伝わる古典妖怪。広い部屋などで声や物音が響いたりするのはこいつのせい。最近は４ＤＸにはまっている。",
+      special: sp("大音響4DX", [atk("all", 1.2, { magic: true }), { kind: "status", target: "all", status: "confuse", chance: 0.6 }])
+    },
+    {
+      id: "r_yamamou",
+      name: "やまもぅ",
+      from: "ダンジョン ライバル",
+      area: "tanken",
+      team: "5dx",
+      rank: "A",
+      element: "ふつう",
+      role: "defender",
+      mul: { hp: 1.15 },
+      art: "yamamou",
+      line: "牛の力を見せてやる！ モォー！",
+      favorite: "onigiri",
+      title: "牛にあこがれる青年",
+      desc: "チーム5DX のメンバー。牛にあこがれていて、どんなときも牛へのリスペクトを欠かさない。おちょくられるのが大嫌い。",
+      special: sp("おちょくりボーンフィーバー", [atk("one", 2.4), { kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
       id: "kaguyausagi",
@@ -3442,17 +3766,25 @@ body.nopad #pad { display: none; }
     return { waza: { name: w.name, effects: wazaEffects(w) }, jutsu: jutsuOf(element, jutsuTier(rank, upper), JUTSU_TYPE[id]) };
   }
   const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
-  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮", shiro: "金色のSE城" };
+  const AREAS = { ishinokawa: "石の川タウン", shoutengai: "商店街", school: "石の川小学校", yama: "山と ダム", umi: "海辺の 町", tera: "ネット寺", yashiki: "忍びの屋敷", moon: "月の迷宮", shiro: "金色のSE城", park: "遊園地" };
   const NAKAMA = {};
   LIST.forEach((n, i) => {
     const rank = n.rank || "E";
     const base = {};
     for (const [k, v] of Object.entries(ROLE_BASE[n.role])) base[k] = Math.round(v * (n.mul[k] || 1) * RANK_K[rank]);
-    NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || "ishinokawa", base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
+    NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || "ishinokawa", base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.art || n.id };
   });
   const NAKAMA_IDS = LIST.map((n) => n.id);
   const VERSION_ONLY = { naitei: "内定版", menkyo: "免許版" };
   const inVersion = (id, version) => !NAKAMA[id] || !NAKAMA[id].version || NAKAMA[id].version === version;
+  const TEAMS = {
+    ask3: { name: "ASK-3", leader: "r_asahara", members: ["r_sasaki", "r_asahara", "r_kotani"], version: "naitei" },
+    kemono: { name: "チーム・ケモノミチ", leader: "r_ishii", members: ["r_mazuda", "r_ishii", "r_naitoon"], version: "naitei" },
+    muscle: { name: "お願いマッスル", leader: "r_ueno", members: ["r_shibata", "r_ueno", "r_ikekimu"], version: "menkyo" },
+    bartas: { name: "チームバータス", leader: "r_yahami", members: ["r_maechokkin", "r_yahami", "r_norahan"], version: "menkyo" },
+    "5dx": { name: "チーム5DX", leader: "r_okagappa", members: ["r_hibikimakuri", "r_okagappa", "r_yamamou"], version: null }
+  };
+  const TEAM_LV = 50;
   const idsInArea = (area) => NAKAMA_IDS.filter((id) => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
   const EVOLVE = {
     haribaby: { to: "harigeneral", lv: 22 },
@@ -3867,8 +4199,60 @@ body.nopad #pad { display: none; }
       befriends: null,
       lv: 35,
       place: "shiro"
+    },
+    // ----- 14 章の ボス (バージョンで ちがう。ルキハの 軍勢の 残党。しかけは Claude の 案・2026-10-30) -----
+    // サアラハ (内定版。ナイテイパーク): ふるカワを おりに とじこめている。おりを ねらって こわすと ふるカワが にげて チャンスタイム
+    //   (おりは もどらない)。おりが ある あいだは「ふるカワを 盾に」(まもりが 上がる) を 使う。とりつきが 多い
+    saaraha14: {
+      id: "saaraha14",
+      name: "サアラハ",
+      element: "ふしぎ",
+      role: "jammer",
+      art: "saaraha",
+      scale: 1.8,
+      rank: "A",
+      base: { hp: 1e3, atk: 17, def: 15, spd: 13, mag: 18 },
+      moves: [
+        { name: "内定とりけし", w: 3, effects: [atk("all", 0.8, { magic: true, element: "ふしぎ" }), { kind: "status", target: "all", status: "possess", chance: 0.3 }] },
+        { name: "お祈りの 手紙", w: 2, effects: [atk("one", 1.5, { magic: true })] },
+        { name: "圧迫 面接", w: 2, effects: [{ kind: "status", target: "all", status: "confuse", chance: 0.5 }] },
+        { name: "ふるカワを 盾に", w: 2, gim: "cage", effects: [{ kind: "buff", target: "self", stat: "def", amount: 0.8, time: 8 }] }
+      ],
+      bigMove: { name: "残党の 闇", every: 13, warn: 2.5, effects: [atk("all", 1.6, { magic: true, element: "ふしぎ" })] },
+      gims: { cage: { name: "ふるカワの おり", hp: 0.1, when: "always", pos: [2.4, -0.5], chance: "cage", move: "ふるカワを 盾に" } },
+      chanceTurns: 4,
+      befriends: null,
+      lv: 42,
+      place: "yuen"
+    },
+    // リハマ (免許版。メンキョシティ): ときどき「赤信号」で 体を かためる (体への ダメージ 20%)。赤信号の あいだだけ 出る 信号機を
+    //   ねらって こわすと 止まって チャンスタイム (信号は もどる)。速い
+    rihama14: {
+      id: "rihama14",
+      name: "リハマ",
+      element: "かぜ",
+      role: "attacker",
+      art: "rihama",
+      scale: 1.8,
+      rank: "A",
+      base: { hp: 1e3, atk: 19, def: 15, spd: 16, mag: 12 },
+      moves: [
+        { name: "ノーブレーキ", w: 3, effects: [atk("one", 1.6)] },
+        { name: "ドリフト", w: 2, effects: [atk("all", 0.8, { element: "かぜ" })] },
+        { name: "クラクション", w: 2, effects: [{ kind: "status", target: "all", status: "confuse", chance: 0.4 }] },
+        { name: "赤信号", w: 1.5, shell: 6 }
+      ],
+      bigMove: { name: "暴走 信号無視", every: 13, warn: 2.5, effects: [atk("all", 1.7, { element: "かぜ" })] },
+      gims: { signal: { name: "信号機", hp: 0.06, when: "shell", pos: [2.2, -0.9], chance: "signal", reset: true } },
+      shellCut: 0.2,
+      chanceTurns: 3,
+      befriends: null,
+      lv: 42,
+      place: "yuen"
     }
   };
+  const BOSS14 = { naitei: "saaraha14", menkyo: "rihama14" };
+  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "boss14"];
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
   const rival = (id, name, element, role, rank, mul, line2, special, extra = {}) => {
     const base = {};
@@ -3927,7 +4311,7 @@ body.nopad #pad { display: none; }
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
   const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
   const TILE = 16;
-  const MAP_W = 48, MAP_H = 300;
+  const MAP_W = 48, MAP_H = 336;
   const TOWN_H = 36;
   const SCHOOL_Y0 = 60;
   const YAMA_Y0 = 84;
@@ -3936,6 +4320,7 @@ body.nopad #pad { display: none; }
   const YASHIKI_Y0 = 192;
   const MOON_Y0 = 228;
   const SHIRO_Y0 = 264;
+  const PARK_Y0 = 300;
   const BLOCK = /* @__PURE__ */ new Set(["T", "W", "X", "Q", "I", "J", "Z", "V", "k"]);
   const WET = /* @__PURE__ */ new Set(["D", "E", "I"]);
   function build() {
@@ -4133,6 +4518,29 @@ body.nopad #pad { display: none; }
     [[3, S + 28], [12, S + 29], [30, S + 29], [40, S + 30], [44, S + 28], [17, S + 33], [36, S + 27]].forEach(([x, y]) => {
       t[y][x] = "T";
     });
+    const P = PARK_Y0;
+    fill(0, P, MAP_W - 1, MAP_H - 1, "T");
+    fill(1, P + 1, MAP_W - 2, P + 34, "G");
+    fill(5, P + 2, 42, P + 23, "K");
+    fill(6, P + 18, 11, P + 21, "F");
+    fill(36, P + 18, 41, P + 21, "F");
+    fill(16, P + 9, 19, P + 10, "F");
+    fill(29, P + 9, 32, P + 10, "F");
+    for (let x = 4; x <= 43; x++) {
+      t[P + 1][x] = "T";
+      t[P + 24][x] = "T";
+    }
+    for (let y = P + 1; y <= P + 24; y++) {
+      t[y][4] = "T";
+      t[y][43] = "T";
+    }
+    fill(23, P + 24, 24, P + 24, "K");
+    fill(23, P + 25, 24, P + 31, "K");
+    fill(4, P + 31, 6, P + 31, "K");
+    fill(4, P + 32, 24, P + 33, "K");
+    [[3, P + 28], [12, P + 29], [30, P + 29], [40, P + 30], [44, P + 28], [17, P + 33]].forEach(([x, y]) => {
+      t[y][x] = "T";
+    });
     return t.map((row2) => row2.join(""));
   }
   const TILES = build();
@@ -4175,7 +4583,12 @@ body.nopad #pad { display: none; }
     // 商店街の 合体の館 (2026-10-30 ユーザー指定。パチンコ店あとの 北)
     { id: "gattai", label: "合体の館", x: 15, y: 37, w: 6, h: 4, wall: "#d8c8f0", roof: "#6a3a9a", door: { x: 18, y: 40 } },
     // 金色のSE城 (8 章)
-    { id: "shiroStation", label: "SE城前駅", x: 2, y: SHIRO_Y0 + 27, w: 6, h: 4, wall: "#f0e0b0", roof: "#a02020", door: { x: 5, y: SHIRO_Y0 + 30 } }
+    { id: "shiroStation", label: "SE城前駅", x: 2, y: SHIRO_Y0 + 27, w: 6, h: 4, wall: "#f0e0b0", roof: "#a02020", door: { x: 5, y: SHIRO_Y0 + 30 } },
+    // 14 章の 遊園地 (アトラクションの 名前は どちらの バージョンも 同じ)
+    { id: "attrA", label: "コースター", x: 8, y: PARK_Y0 + 11, w: 6, h: 4, wall: "#ffd0e0", roof: "#e04a8a", door: { x: 11, y: PARK_Y0 + 14 } },
+    { id: "attrB", label: "かんらん車", x: 20, y: PARK_Y0 + 3, w: 8, h: 4, wall: "#d0f0ff", roof: "#3a8ae0", door: { x: 24, y: PARK_Y0 + 6 } },
+    { id: "attrC", label: "おばけ屋敷", x: 34, y: PARK_Y0 + 11, w: 6, h: 4, wall: "#d8d0e8", roof: "#4a3a6a", door: { x: 37, y: PARK_Y0 + 14 } },
+    { id: "parkStation", label: "遊園地前駅", x: 2, y: PARK_Y0 + 27, w: 6, h: 4, wall: "#fff0d0", roof: "#e08a2a", door: { x: 5, y: PARK_Y0 + 30 } }
   ];
   const GATES = [
     { id: "gateW", x: 12, y: TOWN_H - 1, w: 2, only: "beforeClear" },
@@ -4200,6 +4613,7 @@ body.nopad #pad { display: none; }
   const YASHIKI_LV = [22, 25];
   const MOON_LV = [25, 28];
   const SHIRO_LV = [28, 31];
+  const PARK_LV = [36, 40];
   const SPOTS = [
     { id: "kawara", label: "川原の石ころ", x: 28, y: 11, cue: "eyeStone", kinds: [{ id: "ishikoron", w: 1 }] },
     { id: "uraYama", label: "小学校の裏山のお地蔵さん", x: 25, y: 3, cue: "jizoTail", kinds: [{ id: "kawarimidanuki", w: 1 }] },
@@ -4287,6 +4701,8 @@ body.nopad #pad { display: none; }
     { id: "shiroSoto", label: "城の まわり", x0: 1, y0: SHIRO_Y0 + 26, x1: 46, y1: SHIRO_Y0 + 33, max: 2, lv: SHIRO_LV, kinds: [{ id: "setsubunmame", w: 2 }, { id: "onibin", w: 1, time: ["evening", "night"] }, { id: "tsunodaruma", w: 1 }] },
     { id: "hiroma", label: "大広間", x0: 9, y0: SHIRO_Y0 + 20, x1: 38, y1: SHIRO_Y0 + 23, max: 2, lv: SHIRO_LV, kinds: [{ id: "tsunodaruma", w: 2 }, { id: "onibin", w: 2 }, { id: "onigirin", w: 1 }] },
     { id: "gyokuza", label: "玉座の 間", x0: 12, y0: SHIRO_Y0 + 7, x1: 35, y1: SHIRO_Y0 + 9, max: 1, lv: SHIRO_LV, kinds: [{ id: "goukioni", w: 1, after: "clear8" }, { id: "kinmetsuki", w: 1, after: "clear8" }] },
+    // 14 章の 遊園地 (前の 地区の にぎやかな キャラが あそびに 来ている)
+    { id: "parkHiroba", label: "遊園地の 広場", x0: 5, y0: PARK_Y0 + 16, x1: 42, y1: PARK_Y0 + 23, max: 3, lv: PARK_LV, kinds: [{ id: "gachapon", w: 2 }, { id: "chouchinbura", w: 2 }, { id: "neonkurage", w: 1, time: ["evening", "night"] }, { id: "pachinkodaman", w: 1 }, { id: "kinmenkoinu", w: 1 }] },
     { id: "yashikiSoto", label: "屋敷の まわり", x0: 1, y0: YASHIKI_Y0 + 24, x1: 46, y1: YASHIKI_Y0 + 33, max: 2, lv: YASHIKI_LV, kinds: [{ id: "shurikenbo", w: 1 }, { id: "konin", w: 1 }, { id: "bakudanjirou", w: 1 }] }
   ];
   const FRIENDS = [
@@ -4507,7 +4923,17 @@ body.nopad #pad { display: none; }
     { id: "ooni8", name: "大鬼", art: "ooni", x: 24, y: SHIRO_Y0 + 19, only: "ooni8", scale: 1.5 },
     { id: "soutou8", name: "双頭鬼", art: "soutouki", x: 24, y: SHIRO_Y0 + 15, only: "soutou8", scale: 1.4 },
     { id: "kinme8", name: "金滅鬼", art: "kinmetsuki", x: 24, y: SHIRO_Y0 + 11, only: "kinme8", scale: 1.2 },
-    { id: "onioni8", name: "おにおに", art: "onioni", x: 24, y: SHIRO_Y0 + 7, only: "onioni8" }
+    { id: "onioni8", name: "おにおに", art: "onioni", x: 24, y: SHIRO_Y0 + 7, only: "onioni8" },
+    // 14 章: 遊園地の 広場の おにおに (いっしょに 来た)。夜は 広場の まんなかに 残党の ボス (バージョンで ちがう)
+    { id: "oni14", name: "おにおに", art: "onioni", x: 20, y: PARK_Y0 + 20, only: "park14" },
+    { id: "boss14", name: "サアラハ", art: "saaraha", nameBy: { naitei: "サアラハ", menkyo: "リハマ" }, artBy: { naitei: "saaraha", menkyo: "rihama" }, x: 24, y: PARK_Y0 + 12, only: "boss14", scale: 1.3 },
+    // 15 章: 無限回廊の 番人 (石の川駅の 前) と ライバル探検隊 (勝つと なかまに なる。version の チームは その バージョンだけ)
+    { id: "kairou", name: "回廊の 番人", art: "haridaijin", x: 10, y: 40, only: "clear14" },
+    { id: "team_5dx", name: "おかがっぱ", art: "okagappa", x: 20, y: 29, only: "team", team: "5dx" },
+    { id: "team_ask3", name: "KING.ASAHARA", art: "asahara", x: 24, y: 48, only: "team", team: "ask3", version: "naitei" },
+    { id: "team_kemono", name: "イシイー", art: "ishii", x: 36, y: MOON_Y0 + 21, only: "team", team: "kemono", version: "naitei" },
+    { id: "team_muscle", name: "マッスルウエノーブル", art: "ueno", x: 20, y: UMI_Y0 + 9, only: "team", team: "muscle", version: "menkyo" },
+    { id: "team_bartas", name: "ヤーハミー", art: "yahami", x: 36, y: MOON_Y0 + 21, only: "team", team: "bartas", version: "menkyo" }
   ];
   const START = { x: 6, y: 24 };
   const SCHOOL_IN = { x: 23.5, y: 70, dir: "up" };
@@ -4656,6 +5082,21 @@ body.nopad #pad { display: none; }
     { id: "iriguchi", label: "入り口", x: 23.5, y: MOON_Y0 + 25 },
     { id: "moonStation", label: "駅", x: 5, y: MOON_Y0 + 28 }
   ];
+  const PARK_IN = { x: 5, y: PARK_Y0 + 31, dir: "down" };
+  const PARK_NAME = { naitei: "ナイテイパーク", menkyo: "メンキョシティ" };
+  const PARK_PLACES = [
+    { id: "attrB", label: "かんらん車", x: 24, y: PARK_Y0 + 4 },
+    { id: "attrA", label: "コースター", x: 11, y: PARK_Y0 + 12 },
+    { id: "attrC", label: "おばけ屋敷", x: 37, y: PARK_Y0 + 12 },
+    { id: "hiroba", label: "広場", x: 24, y: PARK_Y0 + 17 },
+    { id: "gate", label: "ゲート", x: 23.5, y: PARK_Y0 + 24 },
+    { id: "parkStation", label: "駅", x: 5, y: PARK_Y0 + 28 }
+  ];
+  const PARK_CLUES = [
+    { id: "attrA", item: "ふるカワの リボン" },
+    { id: "attrB", item: "ふるカワの 招待券" },
+    { id: "attrC", item: "ふるカワの スマホ" }
+  ];
   const SHIRO_IN = { x: 5, y: SHIRO_Y0 + 31, dir: "down" };
   const SHIRO_PLACES = [
     { id: "houmotsuko", label: "宝物庫", x: 24, y: SHIRO_Y0 + 3 },
@@ -4726,8 +5167,8 @@ body.nopad #pad { display: none; }
     { id: "cave", label: "海岸どうくつ", x: 37, y: UMI_Y0 + 13 }
   ];
   const tileAt = (x, y) => x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? "T" : TILES[y][x];
-  const areaAt = (x, y) => y >= SHIRO_Y0 ? "shiro" : y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
-  const regionOf = (ty) => ty >= SHIRO_Y0 ? [SHIRO_Y0, MAP_H] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
+  const areaAt = (x, y) => y >= PARK_Y0 ? "park" : y >= SHIRO_Y0 ? "shiro" : y >= MOON_Y0 ? "moon" : y >= YASHIKI_Y0 ? "yashiki" : y >= TERA_Y0 ? "tera" : y >= UMI_Y0 ? "umi" : y >= YAMA_Y0 ? "yama" : y >= SCHOOL_Y0 ? "school" : y >= TOWN_H ? "shoutengai" : "ishinokawa";
+  const regionOf = (ty) => ty >= PARK_Y0 ? [PARK_Y0, MAP_H] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0];
   const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
@@ -4770,7 +5211,8 @@ body.nopad #pad { display: none; }
   };
   const expReward = (id, lv) => Math.round((10 + lv * 6) * bossK(id, 4));
   const moneyReward = (id, lv) => Math.round((8 + lv * 4) * bossK(id, 5));
-  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8"];
+  const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "invite", "park", "yoru", "clear14"];
+  const MAIN_END = "clear8";
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
@@ -4920,6 +5362,24 @@ body.nopad #pad { display: none; }
       out.mon = mon.id;
       return out;
     }
+    if (battle.kind === "team") {
+      const team = battle.team;
+      g.flags[`team_${team}`] = true;
+      out.team = team;
+      out.joined = TEAMS[team].members.map((id) => addMedal(g, id, TEAM_LV - 5));
+      return out;
+    }
+    if (battle.kind === "kairou") {
+      const k = kairouOf(g);
+      k.floor++;
+      k.best = Math.max(k.best, k.floor - 1);
+      out.kairou = k.floor - 1;
+      if (out.kairou % 5 === 0) {
+        out.prize = KAIROU_PRIZES[(out.kairou / 5 - 1) % KAIROU_PRIZES.length];
+        g.items[out.prize] = (g.items[out.prize] || 0) + 1;
+      }
+      return out;
+    }
     if (battle.kind === "rival") {
       g.flags.rival4 = true;
       out.rival = true;
@@ -4966,6 +5426,10 @@ body.nopad #pad { display: none; }
       if (bossId === "onioni8") {
         g.story = "clear8";
         g.chapter = 9;
+      }
+      if (bossId === BOSS14[g.version]) {
+        g.story = "clear14";
+        g.chapter = 15;
       }
       return out;
     }
@@ -5052,6 +5516,12 @@ body.nopad #pad { display: none; }
         return "石の川駅から、電車で 金色のSE城へ 行こう";
       case "oshiro":
         return !g.flags.ooni8 ? "SE城の 大広間で 幹部の 大鬼を たおそう" : !g.flags.soutou8 ? "双頭の間で 幹部の 双頭鬼を たおそう" : !g.flags.kinme8 ? "金の間で 幹部の 金滅鬼を たおそう" : "玉座の 間で おにおにを とりもどそう";
+      case "invite":
+        return `石の川駅から、電車で ${g.version === "menkyo" ? "メンキョシティ" : "ナイテイパーク"}へ 行こう`;
+      case "park":
+        return "アトラクションで 遊ぼう。帰るときは 遊園地前駅へ";
+      case "yoru":
+        return cluesFound(g) < PARK_CLUES.length ? `夜の 遊園地で ふるカワの 手がかりを さがそう (${cluesFound(g)}/${PARK_CLUES.length})` : "広場の まんなかへ 行こう";
       default: {
         const here = (area) => idsInArea(area).filter((id) => inVersion(id, g.version));
         const got = (area) => here(area).filter((id) => g.zukan.friends[id]).length;
@@ -5071,12 +5541,50 @@ body.nopad #pad { display: none; }
     return true;
   }
   const canRideTrain = (g) => reached(g, "umi");
-  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : [], ...reached(g, "clear7") ? ["shiro"] : []];
+  const trainLines = (g) => [...reached(g, "umi") ? ["umi"] : [], ...reached(g, "tera") ? ["tera"] : [], ...reached(g, "shinobi") ? ["yashiki"] : [], ...reached(g, "clear6") ? ["moon"] : [], ...reached(g, "clear7") ? ["shiro"] : [], ...reached(g, "invite") ? ["park"] : []];
   function arriveShiro(g) {
     if (g.story !== "clear7") return false;
     g.story = "oshiro";
     return true;
   }
+  function startChapter14(g) {
+    if (g.story !== MAIN_END) return false;
+    g.story = "invite";
+    return true;
+  }
+  function arrivePark(g) {
+    if (g.story !== "invite") return false;
+    g.story = "park";
+    g.time = 1;
+    return true;
+  }
+  function parkNight(g) {
+    if (g.story !== "park") return false;
+    g.story = "yoru";
+    g.time = 3;
+    if (!g.flags.clue14) g.flags.clue14 = {};
+    return true;
+  }
+  const cluesFound = (g) => PARK_CLUES.filter((c) => g.flags.clue14 && g.flags.clue14[c.id]).length;
+  function findClue(g, attrId) {
+    const c = PARK_CLUES.find((x) => x.id === attrId);
+    if (g.story !== "yoru" || !c || g.flags.clue14[c.id]) return null;
+    g.flags.clue14[c.id] = true;
+    return c;
+  }
+  const boss14Enemies = (g) => bossEnemies(BOSS14[g.version] || BOSS14.naitei);
+  const KAIROU_PRIZES = ["gattaidango", "luckycoin", "tsukishizuku", "makimono"];
+  function kairouOf(g) {
+    if (!g.kairou) g.kairou = { floor: 1, best: 0 };
+    return g.kairou;
+  }
+  function kairouEnemies(g) {
+    const floor = kairouOf(g).floor;
+    const key2 = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
+    const id = key2 === "boss14" ? BOSS14[g.version] || BOSS14.naitei : key2;
+    return [{ id, lv: Math.min(99, BOSSES[id].lv + 12 + floor * 2) }];
+  }
+  const teamEnemies = (team) => TEAMS[team].members.map((id) => ({ id, lv: TEAM_LV + (id === TEAMS[team].leader ? 2 : 0) }));
   function arriveMoon(g) {
     if (g.story !== "clear6") return false;
     g.story = "meikyu";
@@ -5240,6 +5748,7 @@ body.nopad #pad { display: none; }
     if (!part.noBody) emit(b, "partBreak", { target: u.uid, part: key2, name: part.name, move: part.move || null, gim: true });
     if (b.lock === u.uid && b.lockPart === key2) b.lockPart = null;
     if (part.chance) {
+      if (part.when === "shell") u.shell = 0;
       startChance(b, u, part.chance);
       return;
     }
@@ -12767,6 +13276,837 @@ body.nopad #pad { display: none; }
           "................"
         ]
       ]
+    },
+    ishii: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#d8ccb8", "b": "#f0a0b0", "c": "#d02a2a", "d": "#c02a3a", "e": "#5a4a3a", "f": "#f8f0e8", "g": "#d06070", "h": "#ffffff", "i": "#a8987e" },
+      frames: [
+        [
+          "..........aaaa..................",
+          "..........abba....aaaa..........",
+          "..........abba....abba..........",
+          "..........abba....abba..........",
+          "..........abba....abba..........",
+          "..........abba....abba..........",
+          "..........abba....abbaaaa.......",
+          "..........abba.......aaaa.......",
+          "..........abba.......aaaa.......",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........cccccccccccccc.........",
+          ".........ccccccccccccccccc......",
+          ".........aeeeaaaaaaeeea.cc......",
+          ".........aaddaaaaaaddaa.........",
+          ".........aaddaaaaaaddaa.........",
+          ".........aaaaafggfaaaaa.........",
+          ".........aaaaaffffaaaaa.........",
+          ".........aaaaaahhaaaaaa.........",
+          ".........aaaaaahhaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".....aaaaaaaaaaaaaaaaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          "....iiiiiaaaffffffffaaaiiiii....",
+          "....iiiiiaaaffffffffaaahhhhi....",
+          "....iiiiiaaaffffffffaaahhhhi....",
+          ".........aaaaaaaaaaaaaahhhh.....",
+          "........aaaaaa....aaaaahhhh.....",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "......iiiiiiiii..iiiiiiiii......",
+          "......iiiiiiiii..iiiiiiiii......",
+          "......iiiiiiiii..iiiiiiiii......",
+          "................................"
+        ],
+        [
+          "..........abba..................",
+          "..........abba....aaaa..........",
+          "..........abba....abba..........",
+          "..........abba....abba..........",
+          "..........abba....abba..........",
+          "..........abba....abba..........",
+          "..........abba....abbaaaa.......",
+          "..........abba.......aaaa.......",
+          "..........aaaa.......aaaa.......",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........ccccccccccccccccc......",
+          ".........cccccccccccccc.cc......",
+          ".........aeeeaaaaaaeeea.........",
+          ".........aaddaaaaaaddaa.........",
+          ".........aaddaaaaaaddaa.........",
+          ".........aaaaafggfaaaaa.........",
+          ".........aaaaaffffaaaaa.........",
+          ".........aaaaaahhaaaaaa.........",
+          ".........aaaaaahhaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".....aaaaaaaaaaaaaaaaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          ".....aaaaaaaffffffffaaaaaaa.....",
+          "....iiiiiaaaffffffffaaaiiiii....",
+          "....iiiiiaaaffffffffaaaiiiii....",
+          "....iiiiiaaaffffffffaaahhhhi....",
+          ".........aaaffffffffaaahhhh.....",
+          ".........aaaaaaaaaaaaaahhhh.....",
+          "........aaaaaa....aaaaahhhh.....",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "......iiiiiiiii..iiiiiiiii......",
+          "......iiiiiiiii..iiiiiiiii......",
+          "......iiiiiiiii..iiiiiiiii......",
+          "................................"
+        ]
+      ]
+    },
+    mazuda: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#3a2a20", "b": "#7a5a4a", "c": "#5a7a3a", "d": "#3a5a2a", "e": "#111111", "f": "#c05050", "g": "#a08060", "h": "#5a1a1a", "i": "#f0f0f0", "j": "#e8e0d0", "k": "#2a1a10" },
+      frames: [
+        [
+          "................................",
+          "................................",
+          ".......aaaa..........aaaa.......",
+          ".......abba..........abba.......",
+          ".......aaaaaaaaaaaaaaaaaa.......",
+          ".......aaaaaaaaaaaaaaaaaa.......",
+          "........cccddccccccccccc........",
+          "........ccccccccccdddccc........",
+          "........aaaaaaaaaaaafaaa........",
+          "........aaaeeaaaaaaefaaa........",
+          "........aaaeeaaaaaaefaaa........",
+          "........aaaagggeegggfaaa........",
+          "........aaaagggeegggaaaa........",
+          "........aaaaggggggggaaaa........",
+          "........aaaaggghhgggaaaa........",
+          "........aaaaggggggggaaaa........",
+          "........aaaaaaaaaaaaaaaa........",
+          "......aaaaaaaaaaaaaaaaaaaa......",
+          "..aaaaaaiiaaaaaaaaaaaaiiaaaaaa..",
+          "..aaaaaaiiiiiiiiiiiiiiiiaaaaaa..",
+          "..aaaaaaaaiiiiiiiiiiiiaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..jjjjaaaaaaaaaaaaaaaaaaaajjjj..",
+          "..jjjjaaaaaaaaaaaaaaaaaaaajjjj..",
+          "......aaaaaaaaaaaaaaaaaaaa......",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          ".......kkkkkkk....kkkkkkk.......",
+          ".......kkkkkkk....kkkkkkk.......",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          ".......aaaa..........aaaa.......",
+          ".......abba..........abba.......",
+          ".......aaaaaaaaaaaaaaaaaa.......",
+          ".......aaaaaaaaaaaaaaaaaa.......",
+          "........cccddccccccccccc........",
+          "........ccccccccccdddccc........",
+          "........aaaaaaaaaaaafaaa........",
+          "........aaaeeaaaaaaefaaa........",
+          "........aaaeeaaaaaaefaaa........",
+          "........aaaagggeegggfaaa........",
+          "........aaaagggeegggaaaa........",
+          "........aaaaggggggggaaaa........",
+          "........aaaaggghhgggaaaa........",
+          "........aaaaggggggggaaaa........",
+          "........aaaaaaaaaaaaaaaa........",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaiiaaaaaaaaaaaaiiaaaaaa..",
+          "..aaaaaaiiiiiiiiiiiiiiiiaaaaaa..",
+          "..aaaaaaaaiiiiiiiiiiiiaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..aaaaaaaaaaaaaaaaaaaaaaaaaaaa..",
+          "..jjjjaaaaaaaaaaaaaaaaaaaajjjj..",
+          "..jjjjaaaaaaaaaaaaaaaaaaaajjjj..",
+          "......aaaaaaaaaaaaaaaaaaaa......",
+          "......aaaaaaaaaaaaaaaaaaaa......",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          "........aaaaaa....aaaaaa........",
+          ".......kkkkkkk....kkkkkkk.......",
+          ".......kkkkkkk....kkkkkkk.......",
+          "................................"
+        ]
+      ]
+    },
+    naitoon: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#6a7a9a", "b": "#3a3a5a", "c": "#ffd040", "d": "#c8d0e0", "e": "#111111", "f": "#ffffff", "g": "#3a2a5a", "h": "#ffe060", "i": "#4a5a7a" },
+      frames: [
+        [
+          "................................",
+          "..........aaa......aaa..........",
+          "..........aaa......aaa..........",
+          "..........aba......aba..........",
+          "..........aba......aba..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaccaaaaccaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaddeeddaaa..........",
+          "..........aaaddddddaaa..........",
+          "..........aaaddddddaaa..........",
+          "..........aaaddddddaaa..........",
+          "..........aaadfddfdaaa..........",
+          "........gggggggggggggggg........",
+          "........ggggggghhggggggg........",
+          "........gggggggggggggggg........",
+          ".......aaaaaaaaaaaaaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa...dd..",
+          ".......aaaaaaddddddaaaaaa...dd..",
+          ".......aaaaaaddddddaaaaaaaaadd..",
+          ".......aaaaaaddddddaaaaaaaaaa...",
+          ".......aaaaaaddddddaaaaaaaaaa...",
+          ".......dddaaaaaaaaaaaaddd.......",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "..........iiiii..iiiii..........",
+          "..........iiiii..iiiii..........",
+          "................................"
+        ],
+        [
+          "................................",
+          "..........aaa......aaa..........",
+          "..........aaa......aaa..........",
+          "..........aba......aba..........",
+          "..........aba......aba..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aafcaaaafcaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaddeeddaaa..........",
+          "..........aaaddddddaaa..........",
+          "..........aaaddddddaaa..........",
+          "..........aaaddddddaaa..........",
+          "..........aaadfddfdaaa..........",
+          "........gggggggggggggggg........",
+          "........ggggggghhggggggg........",
+          "........gggggggggggggggg........",
+          ".......aaaaaaaaaaaaaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa.......",
+          ".......aaaaaaddddddaaaaaa...dd..",
+          ".......aaaaaaddddddaaaaaa...dd..",
+          ".......aaaaaaddddddaaaaaaaaadd..",
+          ".......aaaaaaddddddaaaaaaaaaa...",
+          ".......aaaaaaddddddaaaaaaaaaa...",
+          ".......aaaaaaddddddaaaaaa.......",
+          ".......dddaaaaaaaaaaaaddd.......",
+          "..........aaaaaaaaaaaa..........",
+          "..........aaaaaaaaaaaa..........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "..........iiiii..iiiii..........",
+          "..........iiiii..iiiii..........",
+          "................................"
+        ]
+      ]
+    },
+    yahami: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#7a3ab0", "b": "#f0c8a0", "c": "#d0203a", "d": "#ffffff", "e": "#111111", "f": "#e03a6a", "g": "#2a2238", "h": "#ffd84a", "i": "#ff3a5a", "j": "#c8f0ff" },
+      frames: [
+        [
+          "................................",
+          "................................",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          "........aaaaaaaaaaaaaaaa........",
+          "........aaaaaaaaaaaaaaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaccccccccccccaa........",
+          "........aaccdedccdedccaa........",
+          "........aaccccccccccccaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaabbbbffbbbbaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaa...bbbb...aaa........",
+          "........aaaggggggggggaaa........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggghhhh....",
+          "........gggggggggggggggghjjh....",
+          "........ggghhhhiihhhhggghjjh....",
+          "........gggggggggggggggghhhh....",
+          "........gggggggggggggggg.h......",
+          "........bbbggggggggggbbb.h......",
+          "........bbbggggggggggbbb.h......",
+          "...........gggggggggg...........",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          ".........aaaaaaaaaaaaaa.........",
+          ".....d...aaaaaaaaaaaaaa.........",
+          "....ddd..aaaaaaaaaaaaaa.........",
+          ".....d..aaaaaaaaaaaaaaaa........",
+          "........aaaaaaaaaaaaaaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaccccccccccccaa........",
+          "........aaccdedccdedccaa........",
+          "........aaccccccccccccaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaabbbbffbbbbaaa........",
+          "........aaabbbbbbbbbbaaa........",
+          "........aaa...bbbb...aaa........",
+          "........aaaggggggggggaaa........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggg........",
+          "........gggggggggggggggghhhh....",
+          "........gggggggggggggggghjjh....",
+          "........gggggggggggggggghjjh....",
+          "........ggghhhhiihhhhggghhhh....",
+          "........gggggggggggggggg.h......",
+          "........gggggggggggggggg.h......",
+          "........bbbggggggggggbbb.h......",
+          "........bbbggggggggggbbb........",
+          "...........gggggggggg...........",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "............ggg..ggg............",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "................................"
+        ]
+      ]
+    },
+    maechokkin: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#ff7ab0", "b": "#f0c8a0", "c": "#111111", "d": "#ff9ab0", "e": "#c03a5a", "f": "#3aa05a", "g": "#2a7a4a", "h": "#f4f4f4", "i": "#9a9aa8", "j": "#d0d8e0", "k": "#ff3a5a", "l": "#3a3a48" },
+      frames: [
+        [
+          "................................",
+          "................................",
+          "................................",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaabbbbbbbbaaa.........",
+          ".........aaabbbbbbbbaaa.........",
+          ".........aaacccbbbcccaa.........",
+          ".........aaabccbbbccaaa.........",
+          ".........aaabbbbbbbbaaajj...jj..",
+          ".........aaaddbbbbbddaajj...jj..",
+          ".........aaabbbeebbbaaajj...jj..",
+          "............bbbbbbbb...jj...jj..",
+          "..........ffffffffffff.jj...jj..",
+          "..........ffffffffffff.jj...jj..",
+          "........gggggggggggggggjj...jj..",
+          "........gggggggggggggggjj...jj..",
+          "........ggggghhhhhhggggjj...jj..",
+          "........ggggghhhhhhggggjj...jj..",
+          "........ggggghiiiihggggjj...jj..",
+          "........ggggghhhhhhggggjj...jj..",
+          "........ggggghhhhhhggggjjiiijj..",
+          "........ggggghhhhhhgggkkk...kkk.",
+          "........ggggghhhhhhgggkkk...kkk.",
+          "........bbbgghhhhhhggbkkk...kkk.",
+          "........bbbgghhhhhhggbbb........",
+          "...........gggggggggg...........",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "................................"
+        ],
+        [
+          "................................",
+          "................................",
+          "................................",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaaaaaaaaaaaaa.........",
+          ".........aaabbbbbbbbaaa.........",
+          ".........aaabbbbbbbbaaa.........",
+          ".........aaacccbbbcccaa.........",
+          ".........aaabccbbbccaaa.........",
+          ".........aaabbbbbbbbaaa.jj.jj...",
+          ".........aaaddbbbbbddaa.jj.jj...",
+          ".........aaabbbeebbbaaa.jj.jj...",
+          "............bbbbbbbb....jj.jj...",
+          "..........ffffffffffff..jj.jj...",
+          "..........ffffffffffff..jj.jj...",
+          "........ggggggggggggggggjj.jj...",
+          "........ggggggggggggggggjj.jj...",
+          "........ggggghhhhhhgggggjj.jj...",
+          "........ggggghhhhhhgggggjj.jj...",
+          "........ggggghiiiihgggggjj.jj...",
+          "........ggggghhhhhhgggggjj.jj...",
+          "........ggggghhhhhhgggggjiiij...",
+          "........ggggghhhhhhggggkkk.kkk..",
+          "........ggggghhhhhhggggkkk.kkk..",
+          "........bbbgghhhhhhggbbkkk.kkk..",
+          "........bbbgghhhhhhggbbb........",
+          "...........gggggggggg...........",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "............lll..lll............",
+          "...........aaaa..aaaa...........",
+          "...........aaaa..aaaa...........",
+          "................................"
+        ]
+      ]
+    },
+    norahan: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#ffd860", "b": "#2a3a6a", "c": "#ff9ab0", "d": "#f0c8a0", "e": "#3ac0a0", "f": "#111111", "g": "#c03a5a", "h": "#c8a060", "i": "#8a6a3a", "j": "#ffd84a", "k": "#3a6ad0", "l": "#1a1a2a", "m": "#c08a3a", "n": "#5a3a2a" },
+      frames: [
+        [
+          "................................",
+          ".........bbb........bbb.........",
+          ".........bcb........bcb.........",
+          ".........bbbbbbbbbbbbbb.........",
+          ".........bbbbbbbbbbbbbb.........",
+          ".........bbbbbbbbbbbbbb.........",
+          ".........bbbaaaaaaaabbb.........",
+          ".........bbbaaaaaaaabbb.........",
+          ".........bbbddddddddbbb.........",
+          "......aaabbbdefddefdbbb.........",
+          "......aaabbbdefddefdbbb.........",
+          "......aaabbbddddddddbbb.........",
+          "......aaabbbdddgggddbbb.........",
+          "......aaabbbddddddddbbb.........",
+          "......aaabbbddddddddbbb.........",
+          "......aaabbbbbbbbbbbbbb.........",
+          "......aaakkkkkkkkkkkkkk.........",
+          ".....iiiakkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhjjhhkkkllllllllkkk.........",
+          "...hhjjhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkmmmmmmmmkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          ".........dddllllllllddd.........",
+          ".........dddllllllllddd.........",
+          ".........kkkllllllllkkk.........",
+          ".........kkkllllllllkkk.........",
+          ".........kkkkkkkkkkkkkk.........",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          "............nnnn.nnnn...........",
+          "............nnnn.nnnn...........",
+          "............nnnn.nnnn...........",
+          "................................"
+        ],
+        [
+          "................................",
+          ".........bbb........bbb.........",
+          ".........bcb........bcb.........",
+          ".........bbbbbbbbbbbbbb.........",
+          ".........bbbbbbbbbbbbbb.........",
+          ".........bbbbbbbbbbbbbb.........",
+          ".........bbbaaaaaaaabbb.........",
+          ".........bbbaaaaaaaabbb.........",
+          ".........bbbddddddddbbb.........",
+          "......aaabbbdefddefdbbb.........",
+          "......aaabbbdefddefdbbb.........",
+          "......aaabbbddddddddbbb.........",
+          "......aaabbbdddgggddbbb.........",
+          "......aaabbbddddddddbbb.........",
+          "......aaabbbddddddddbbb.........",
+          "......aaabbbbbbbbbbbbbb.........",
+          ".....iiiakkkkkkkkkkkkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhjjhhkkkllllllllkkk.........",
+          "...hhjjhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkllllllllkkk.........",
+          "...hhhhhhkkkmmmmmmmmkkk.........",
+          ".........kkkllllllllkkk.........",
+          ".........dddllllllllddd.........",
+          ".........dddllllllllddd.........",
+          ".........kkkllllllllkkk.........",
+          ".........kkkllllllllkkk.........",
+          ".........kkkkkkkkkkkkkk.........",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          ".............ll..ll.............",
+          "............nnnn.nnnn...........",
+          "............nnnn.nnnn...........",
+          "............nnnn.nnnn...........",
+          "................................"
+        ]
+      ]
+    },
+    okagappa: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#e8f8ff", "b": "#bfe6f5", "c": "#2f6a2f", "d": "#5ab84a", "e": "#469a3a", "f": "#ffffff", "g": "#111111", "h": "#f0c040", "i": "#c89a20", "j": "#8a6a3a", "k": "#e8e0a0", "l": "#3a8a3a" },
+      frames: [
+        [
+          "................................",
+          "...........aaaaaaaaaa...........",
+          "..........bbbbbbbbbbbb..........",
+          "..........bbbbbbbbbbbb..........",
+          "........cccccccccccccccc........",
+          ".......cccccccccccccccccc.......",
+          ".......cccccccccccccccccc.......",
+          ".......cddddddddddddddddc.......",
+          "........dddddddddddddddd........",
+          "........dddddddddddddddd........",
+          "........dddfffddddfffddd........",
+          "........dddfggddddfggddd........",
+          "........dddfggddddfggddd........",
+          "........dddddddddddddddd........",
+          "........dddddhhhhhhddddd........",
+          "........dddddhhhhhhddddd........",
+          "........dddddhhhhhhddddd........",
+          "........eeeeeeiiiieeeeee........",
+          "........eeeeeeeeeeeeeeee........",
+          ".........dddddddddddddd.........",
+          ".......jjddddddddddddddjj.......",
+          ".......jjdddkkkkkkkkdddjj.......",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          "....eeeejdddkkkkkkkkdddjeeee....",
+          "....eeeejdddkkkkkkkkdddjeeee....",
+          "....eeeejdddkkkkkkkkdddjeeee....",
+          ".........dddddddddddddd.........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          ".........llllllllllllll.........",
+          ".........llllllllllllll.........",
+          "................................"
+        ],
+        [
+          "................................",
+          "...........aaaaaaaaaa...........",
+          "..........bbbbbbbbbbbb..........",
+          "..........bbbbbbbbbbbb..........",
+          "........cccccccccccccccc........",
+          ".......cccccccccccccccccc.......",
+          ".......cccccccccccccccccc.......",
+          ".......cddddddddddddddddc.......",
+          "........dddddddddddddddd........",
+          "........dddddddddddddddd........",
+          "........dddfffddddfffddd........",
+          "........dddfggddddfggddd........",
+          "........dddfggddddfggddd........",
+          "........dddddddddddddddd........",
+          "........dddddhhhhhhddddd........",
+          "........dddddhhhhhhddddd........",
+          "........dddddhhhhhhddddd........",
+          "........eeeeeeiiiieeeeee........",
+          "........eeeeeeeeeeeeeeee........",
+          ".........dddddddddddddd.........",
+          ".......jjddddddddddddddjj.......",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          ".....dddjdddkkkkkkkkdddjddd.....",
+          "....eeeejdddkkkkkkkkdddjeeee....",
+          "....eeeejdddkkkkkkkkdddjeeee....",
+          "....eeeejdddkkkkkkkkdddjeeee....",
+          ".......jjdddkkkkkkkkdddjj.......",
+          ".........dddddddddddddd.........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          "..........eeeee..eeeee..........",
+          ".........llllllllllllll.........",
+          ".........llllllllllllll.........",
+          "................................"
+        ]
+      ]
+    },
+    hibikimakuri: {
+      w: 40,
+      h: 46,
+      palette: { "a": "#151515", "b": "#f2d43a", "c": "#ffffff", "d": "#000000", "e": "#d8b830", "f": "#7a3a10", "g": "#f4f4f4", "h": "#d8d8d8", "i": "#8a8a8a", "j": "#6a6a6a", "k": "#6a3a1a" },
+      frames: [
+        [
+          "........................................",
+          "........................................",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaaaaaaaaa.............",
+          ".............aabbbbbbbbbbaa.............",
+          ".............aabbbbbbbbbbaa.............",
+          ".............aabbbbbbbbbbaa.............",
+          ".............aabcccbbcccbaa.............",
+          ".............aabcdcbbcdcbaa.............",
+          "..............bbcccbbcccbb..............",
+          "..............bbbbbeebbbbb..............",
+          "..............bbbbbeebbbbb..............",
+          "..............bbbbbeebbbbb..............",
+          "..............bbbbbbbbbbbb..............",
+          "..............bbbbbffbbbbb..............",
+          "..............bbbbbffbbbbb..............",
+          "..............bbbbbbbbbbbb..............",
+          "..............bbbbbbbbbbbb..............",
+          "..................bbbb..................",
+          "bb................bbbb................bb",
+          "bbbbbbggggggggggggggggggggggggggggbbbbbb",
+          "bbbbbbggggggggggggggggggggggggggggbbbbbb",
+          "bbbbbbggggggggggggggggggggggggggggbbbbbb",
+          "......gggggggggggggggggggggggggggg......",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............hhhhhhhhhhhh..............",
+          "..............hhhhhhhhhhhh..............",
+          "..............iiiiiiiiiiii..............",
+          "..............iiiiiiiiiiii..............",
+          "..............iiiiijjiiiii..............",
+          "..............iiiiijjiiiii..............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "..............kkkkk..kkkkk..............",
+          "..............kkkkk..kkkkk..............",
+          "........................................"
+        ],
+        [
+          "........................................",
+          "........................................",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaabaaaaaa.............",
+          ".............aaaaaaaaaaaaaa.............",
+          ".............aabbbbbbbbbbaa.............",
+          ".............aabbbbbbbbbbaa.............",
+          ".............aabbbbbbbbbbaa.............",
+          ".............aabcccbbcccbaa.............",
+          ".............aabcdcbbcdcbaa.............",
+          "..............bbcccbbcccbb..............",
+          "..............bbbbbeebbbbb..............",
+          "..............bbbbbeebbbbb..............",
+          "..............bbbbbeebbbbb..............",
+          "..............bbbbbbbbbbbb..............",
+          "..............bbbbbffbbbbb..............",
+          "..............bbbbbffbbbbb..............",
+          "..............bbbbbbbbbbbb..............",
+          "..............bbbbbbbbbbbb..............",
+          "bb................bbbb................bb",
+          "bbbbbbgggggggg....bbbb....ggggggggbbbbbb",
+          "bbbbbbggggggggggggggggggggggggggggbbbbbb",
+          "bbbbbbggggggggggggggggggggggggggggbbbbbb",
+          "......gggggggggggggggggggggggggggg......",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............gggggggggggg..............",
+          "..............hhhhhhhhhhhh..............",
+          "..............hhhhhhhhhhhh..............",
+          "..............iiiiiiiiiiii..............",
+          "..............iiiiiiiiiiii..............",
+          "..............iiiiijjiiiii..............",
+          "..............iiiiijjiiiii..............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "...............bbb....bbb...............",
+          "..............kkkkk..kkkkk..............",
+          "..............kkkkk..kkkkk..............",
+          "........................................"
+        ]
+      ]
+    },
+    yamamou: {
+      w: 32,
+      h: 40,
+      palette: { "a": "#f0e0a0", "b": "#f4f4f4", "c": "#1a1a1a", "d": "#ff9eb5", "e": "#f0c8a0", "f": "#7a4a2a", "g": "#111111", "h": "#a04030", "i": "#7a5a20", "j": "#ffd23a", "k": "#a07a10", "l": "#3a5a8a", "m": "#4a3020" },
+      frames: [
+        [
+          "................................",
+          ".........aa..........aa.........",
+          ".........aa..........aa.........",
+          "........bbbbbbbbbbbbbbbb........",
+          "........bccccbbbbbbcccbb........",
+          "........bccccbbbbbbcccbb........",
+          ".....bbbbccccbbbbbbcccbbbbb.....",
+          ".....bddbbffffffffffffbbddb.....",
+          ".....bbbbbffffffffffffbbbbb.....",
+          "........bbeeefffeeeeeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbeeggeeeeggeebb........",
+          "........bbeeggeeeeggeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbeddeeeeeeddebb........",
+          "........bbeeeehhhheeeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbbbbbbbbbbbbbbb........",
+          "........bbbbbbbiibbbbbbb........",
+          ".....bbbbbbbbbjjjjbbbbbbbbb.....",
+          ".....bbbbbbbbbjjjjbbbbbbbbb.....",
+          ".....bbbbccccbjjjjbbbbbbbbb.....",
+          ".....cccbcccckkkkkkbbbbbbbb.....",
+          ".....cccbccccbbkkbbbbbbbbbb.....",
+          ".....bbbbccccbbbbbbcccbbbbb.....",
+          ".....bbbbbbbbbbbbbbcccbbbbb.....",
+          ".....bbbbbbbbbbbbbbcccbbbbb.....",
+          ".....bbbbbbbbbbbbbbbbbbbbbb.....",
+          ".....bbbbbbcccbbbbbbbbbbbbb.....",
+          ".....eeebbbcccbbbbbbbbbbeee.....",
+          ".....eeebbbbbbbbbbbbbbbbeee.....",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          ".........mmmmmmmmmmmmmm.........",
+          ".........mmmmmmmmmmmmmm.........",
+          "................................"
+        ],
+        [
+          "................................",
+          ".........aa..........aa.........",
+          ".........aa..........aa.........",
+          "........bbbbbbbbbbbbbbbb........",
+          "........bccccbbbbbbcccbb........",
+          "........bccccbbbbbbcccbb........",
+          ".....bbbbccccbbbbbbcccbbbbb.....",
+          ".....bddbbffffffffffffbbddb.....",
+          ".....bbbbbffffffffffffbbbbb.....",
+          "........bbeeefffeeeeeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbeeggeeeeggeebb........",
+          "........bbeeggeeeeggeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbeddeeeeeeddebb........",
+          "........bbeeeehhhheeeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbeeeeeeeeeeeebb........",
+          "........bbbbbbbbbbbbbbbb........",
+          ".....bbbbbbbbbbiibbbbbbbbbb.....",
+          ".....bbbbbbbbbjjjjbbbbbbbbb.....",
+          ".....bbbbbbbbbjjjjbbbbbbbbb.....",
+          ".....cccbccccbjjjjbbbbbbbbb.....",
+          ".....cccbcccckkkkkkbbbbbbbb.....",
+          ".....bbbbccccbbkkbbbbbbbbbb.....",
+          ".....bbbbccccbbbbbbcccbbbbb.....",
+          ".....bbbbbbbbbbbbbbcccbbbbb.....",
+          ".....bbbbbbbbbbbbbbcccbbbbb.....",
+          ".....bbbbbbbbbbbbbbbbbbbbbb.....",
+          ".....eeebbbcccbbbbbbbbbbeee.....",
+          ".....eeebbbcccbbbbbbbbbbeee.....",
+          "........bbbbbbbbbbbbbbbb........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          "..........lllll..lllll..........",
+          ".........mmmmmmmmmmmmmm.........",
+          ".........mmmmmmmmmmmmmm.........",
+          "................................"
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -13077,6 +14417,61 @@ body.nopad #pad { display: none; }
         "......ssss......ssss......",
         "......ssss......ssss......",
         ".....oooooo....oooooo....."
+      ])
+    },
+    // サアラハ (14 章 内定版の ボス。ルキハの 軍勢の 残党。新キャラ・2026-10-30 Claude の 案): 黒い スーツに むらさきの 仮面、
+    //   手には「内定通知」の 紙。胸に 黒い 紋
+    saaraha: {
+      w: 18,
+      h: 19,
+      palette: { o: "#0a0a14", h: "#2a1a3a", m: "#6a2a9a", R: "#ff3040", s: "#e8d0c0", w: "#f0f0f0", k: "#1a1a24", p: "#a040e0", y: "#fff0b0", b: "#000000" },
+      frames: bob$1([
+        ".......oooo.......",
+        ".....oohhhhoo.....",
+        "....ohhhhhhhho....",
+        "....ohmmmmmmho....",
+        "....ohmRmmRmho....",
+        "....ohmmmmmmho....",
+        ".....osssssso.....",
+        "......oswwso......",
+        "....ookkwwkkoo....",
+        "...okkkkwwkkkko...",
+        "..okkkkpwwpkkkko..",
+        "..okkkkkppkkkkko..",
+        "..okk.kkkkkk.kko..",
+        "..oss.kkkkkk.yyo..",
+        "......kkkkkk.yy...",
+        "......kkk.kkk.....",
+        "......kkk.kkk.....",
+        "......kkk.kkk.....",
+        ".....bbbb.bbbb...."
+      ])
+    },
+    // リハマ (14 章 免許版の ボス。ルキハの 軍勢の 残党。新キャラ・2026-10-30 Claude の 案): 赤い ヘルメットに 黒い ライダースーツ、黄色い ライン
+    rihama: {
+      w: 18,
+      h: 19,
+      palette: { o: "#0a0a10", h: "#8a1020", v: "#102030", R: "#ff3040", k: "#1a1a1a", y: "#ffd040", p: "#a040e0", g: "#808890", b: "#000000" },
+      frames: bob$1([
+        ".....oooooooo.....",
+        "....ohhhhhhhho....",
+        "...ohhhhhhhhhho...",
+        "...ohvvvvvvvvho...",
+        "...ohvvRvvRvvho...",
+        "...ohhhhhhhhhho...",
+        "....ohhhhhhhho....",
+        "......okkkko......",
+        "....ookkkkkkoo....",
+        "...okkkyykkkkko...",
+        "..okkkyykkpkkkko..",
+        "..okkyykkpppkkko..",
+        "..okk.kkkkkk.kko..",
+        "..ogg.kkkkkk.ggo..",
+        "......kkkkkk......",
+        "......kkk.kkk.....",
+        "......kkk.kkk.....",
+        "......kkk.kkk.....",
+        ".....bbbb.bbbb...."
       ])
     }
   };
@@ -13559,11 +14954,13 @@ body.nopad #pad { display: none; }
   const mysteriesSolved = (g) => MYSTERIES.filter((m) => g.mysteries && g.mysteries[m.id]).length;
   const allMysteriesSolved = (g) => mysteriesSolved(g) >= MYSTERIES.length;
   function peopleHere(g) {
-    return PEOPLE.filter((p) => !p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "damNushi" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]) || // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
+    return PEOPLE.filter((p) => (!p.version || p.version === g.version) && (!p.only || p.only === "beforeWatch" && g.story === "intro" || p.only === "beforeClear" && !reached(g, "clear") || p.only === "kage" && g.story === "school" && allMysteriesSolved(g) || p.only === "damNushi" && g.story === "yama" && g.flags.oku && SEALS.every((q) => g.mysteries[q.id]) || // 4 章: ライバル探検隊が 通路を ふさぐ → 勝つと 奥に 浦の島重蔵 (ボス)
     p.only === "rival4" && g.story === "umibe" && !g.flags.rival4 || p.only === "urashima4" && g.story === "umibe" && g.flags.rival4 || // 5 章: 紋つきの 3 体を 助けるまでは 和尚の ダイシ、助けたあとは 紋に のまれた ダイシ (ボス)
     p.only === "daishiNpc" && g.story === "netdera" && monsHere(g).length > 0 || p.only === "daishi5" && g.story === "netdera" && !monsHere(g).length || // 6 章: ズミタニ → おにおに → トモオカ の 順に 出る
     p.only === "zumitani6" && g.story === "yashiki" && !g.flags.zumi6 || p.only === "onioni6" && g.story === "yashiki" && g.flags.zumi6 && !g.flags.oni6 || p.only === "tomooka6" && g.story === "yashiki" && g.flags.oni6 || p.only === "runaya7" && g.story === "meikyu" || // 8 章: 大鬼 → 双頭鬼 → 金滅鬼 → おにおに。たおした 幹部は いなくなり、次の 戸口が あく
-    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro");
+    p.only === "ooni8" && g.story === "oshiro" && !g.flags.ooni8 || p.only === "soutou8" && g.story === "oshiro" && !g.flags.soutou8 || p.only === "kinme8" && g.story === "oshiro" && !g.flags.kinme8 || p.only === "onioni8" && g.story === "oshiro" || // 14 章: おにおには 遊園地に いっしょに 来ている。夜に 手がかりが そろうと 広場に 残党の ボス
+    p.only === "park14" && (g.story === "park" || g.story === "yoru") || p.only === "boss14" && g.story === "yoru" && PARK_CLUES.every((c) => g.flags.clue14 && g.flags.clue14[c.id]) || // 15 章: 無限回廊の 番人・まだ 勝って いない ライバル探検隊
+    p.only === "clear14" && reached(g, "clear14") || p.only === "team" && reached(g, "clear14") && !g.flags[`team_${p.team}`]));
   }
   const personArt = (g, p) => p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art;
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
@@ -14864,7 +16261,8 @@ body.nopad #pad { display: none; }
     let fighting = null;
     const hiding = (s) => spotActive(g, s, g.playTime) && !wild.list.some((c) => c.spot === s.id);
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
-    const inShiro = () => g.pos.y >= SHIRO_Y0 * TILE;
+    const inPark = () => g.pos.y >= PARK_Y0 * TILE;
+    const inShiro = () => between(SHIRO_Y0, PARK_Y0);
     const inMoon = () => between(MOON_Y0, SHIRO_Y0);
     const inYashiki = () => between(YASHIKI_Y0, MOON_Y0);
     const inTera = () => between(TERA_Y0, YASHIKI_Y0);
@@ -14911,6 +16309,20 @@ body.nopad #pad { display: none; }
       }
     };
     const rivalLines = () => RIVAL_LINES[g.version] || RIVAL_LINES.naitei;
+    const TEAM_LINES = {
+      "5dx": "イェア！ チーム5DX、ノリで 勝負だバ！ 勝ったら おれたちも なかまに なってやるバ！",
+      ask3: "ルキハの 件では 世話に なったな。……だが 勝負は 別だ！ ワシら ASK-3に 勝てたら、なかまに なってやろう！",
+      kemono: "ピョンッ！ チーム・ケモノミチ、迷宮で きたえた 力を 見せてやる！ 勝ったら なかまだ！",
+      muscle: "我ら お願いマッスル！ 筋肉で 語りあおうではないか！ 勝てば なかまに なってやろう！",
+      bartas: "チームバータスよ。勝てたら わたしたちの 美しさ、あなたに あずけて あげる。"
+    };
+    const TEAM_WIN = {
+      "5dx": "ま～いったバ！ ノリで なかまに なるバ！ イェア！",
+      ask3: "ぐぬぬ……約束は 約束だ。ASK-3、きさまに ついて いこう！",
+      kemono: "ピョンッ……まけた！ 迷宮の 外も 楽しそうだ。なかまに なるぞ！",
+      muscle: "み……見事な 筋肉……いや、見事な なかまたちだ！ 我らも 加わろう！",
+      bartas: "ふふ、負けたわ。いいわ、あなたの なかまに なって あげる。"
+    };
     function meetFurukawa() {
       say([
         furu("あっ、こおりくん！ ちょうど よかった！"),
@@ -14950,8 +16362,24 @@ body.nopad #pad { display: none; }
           meikyu: ["月の迷宮？ まよったら いかんよ。こおり、あんた 方向おんちやけん。"],
           clear7: ["おにおにくんを とりもどしに 行くと？ ……こおり、ちゃんと 連れて 帰ってきなさいよ。"],
           oshiro: ["SE城？ 金ピカの お城なんて、おにおにくんも 出世したもんやね。……え、ちがうと？"],
+          invite: [`${parkName()}、たのしんで おいで！ ……おみやげは まんじゅうで よかよ。`],
+          park: ["遊園地は どうね？ 暗く なる 前に 帰ってきなさいよ。"],
+          yoru: ["ふるカワちゃんが いなく なったと！？ こおり、はよ さがしに 行きなさい！"],
+          clear14: ["ふるカワちゃん、ぶじで よかったねえ。……さあ こおり、今日は 新しい 1 日よ。", `なかまは ${friendCount(g)} 人？ この 町の キャラ、ぜんぶ なかまに できるかもね。`],
           clear8: ["おにおにくん、もどってきたっちゃろ？ よかったやん！ ……ルキハって 人は、まだ どこかに おるとね？"]
         }[g.story];
+        if (startChapter14(g)) {
+          const menkyo = g.version === "menkyo";
+          say([
+            nar(menkyo ? "ルキハとの 戦いから しばらく。こおりくんは 車の 免許を とるため、自動車学校に かよっていた。" : "ルキハとの 戦いから しばらく。こおりくんは 内定を とるため、毎日 がんばっていた。"),
+            tomo("こおり、ふるカワちゃんが 来とるよ。なんか うれしそうな 顔して。"),
+            furu(`こおりくん、見て見て！ 新しく できた アミューズメント${menkyo ? "施設" : "パーク"}「${parkName()}」の 招待券！ 3 まい あるの！`),
+            by("onioni", "おれも 行くぞ！ ……タダなら な。"),
+            furu("石の川駅から 電車で 行けるんだって！ いっしょに 行こう！"),
+            nar(`石の川駅から、電車で ${parkName()}へ 行けるように なった！`)
+          ], { done: () => app2.save() });
+          return;
+        }
         if (startChapter6(g)) {
           say([
             tomo("こおり！ 町の 子たちの メダルが ぬすまれたって 大さわぎよ。あんた なにしよっと！ はよ 行きなさい！"),
@@ -15055,6 +16483,31 @@ body.nopad #pad { display: none; }
           nar("おにおにの 胸の 黒い 紋が、どくん、と 脈うった。"),
           furu("大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni8"), kind: "boss", place: "shiro" }) });
+      } else if (p.id === "oni14") {
+        say([by("onioni", g.story === "yoru" ? cluesFound(g) < PARK_CLUES.length ? `ふるカワの 手がかりは アトラクションの 入り口に あるはずだ！ (${cluesFound(g)}/${PARK_CLUES.length})` : "広場の まんなかだ、こおり！" : "おれは ここで まっとる。……べつに ジェットコースターが こわいわけじゃ ないぞ。")]);
+      } else if (p.id === "boss14") {
+        const menkyo = g.version === "menkyo";
+        const boss = menkyo ? { who: "リハマ", art: "rihama" } : { who: "サアラハ", art: "saaraha" };
+        say([
+          nar("広場の まんなかに、黒い 紋を つけた 人かげが 立っていた。"),
+          { ...boss, text: menkyo ? "ルキハさまの かたき……ここで ノーブレーキで ひいて やるよ！" : "よく ここまで 来たね。ルキハさまに かわって、おまえたちの 未来を とりけして あげる！" },
+          { who: "ふるカワ", art: "furukawa", text: "こおりくん！ たすけて！" },
+          by("onioni", menkyo ? "赤信号の ときは 体が かたい！ 信号機を ねらえ、こおり！" : "おりを ねらえ、こおり！ ふるカワを にがせば あいつも あわてるはずだ！")
+        ], { done: () => app2.startBattle({ enemies: boss14Enemies(g), kind: "boss", place: "yuen" }) });
+      } else if (p.id === "kairou") {
+        const k = kairouOf(g), next = kairouEnemies(g)[0];
+        say([{ who: "回廊の 番人", art: "haridaijin", text: `ここは 無限回廊。強く なった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${BOSSES[next.id].name} Lv${next.lv}じゃ。` }], {
+          choices: [`${k.floor} 階に いどむ`, "やめる"],
+          done: (i) => {
+            if (i === 0) app2.startBattle({ enemies: kairouEnemies(g), kind: "kairou", place: BOSSES[next.id].place });
+          }
+        });
+      } else if (p.team) {
+        const T = TEAMS[p.team];
+        say(
+          [by(T.leader, TEAM_LINES[p.team]), nar(`チーム「${T.name}」が 勝負を いどんできた！`)],
+          { done: () => app2.startBattle({ enemies: teamEnemies(p.team), kind: "team", place: inMoon() ? "moon" : inUmi() ? "umi" : "park", team: p.team }) }
+        );
       } else if (p.id === "daishi5") {
         say([
           nar("ダイシの 体に、黒い 紋が どくどくと 脈うっている……。"),
@@ -15116,6 +16569,26 @@ body.nopad #pad { display: none; }
         readOkunoin();
       } else if (b.id === "station") {
         rideTrain();
+      } else if (b.id === "attrA" || b.id === "attrB" || b.id === "attrC") {
+        lookAttraction(b.id);
+      } else if (b.id === "parkStation") {
+        if (g.story === "park") {
+          if (!g.flags.ride14) {
+            say([furu("まだ ぜんぜん 遊んでないよ！ アトラクションに 乗ろうよ！")]);
+            return;
+          }
+          parkEvening();
+          return;
+        }
+        say([nar(`${parkName()}前駅。石の川 行きの 電車が とまっている。`)], {
+          choices: ["石の川へ もどる", "やめる"],
+          done: (i) => {
+            if (i === 0) {
+              sfx("watch");
+              warp(STATION_OUT);
+            }
+          }
+        });
       } else if (b.id === "gattai") {
         const k = g.flags.fusionHint || 0;
         g.flags.fusionHint = k + 1;
@@ -15291,7 +16764,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const lines = trainLines(g);
-      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く", shiro: "金色のSE城へ 行く" };
+      const names = { umi: "海辺の 町へ 行く", tera: "ネット寺へ 行く", yashiki: "忍びの屋敷へ 行く", moon: "月の迷宮へ 行く", shiro: "金色のSE城へ 行く", park: `${parkName()}へ 行く` };
       say([nar(`石の川駅。${lines.length > 1 ? "どこへ 行こうか？" : lines[0] === "tera" ? "ネット寺 行きの 電車が とまっている。" : "海辺の 町 行きの 電車が とまっている。"}`)], {
         choices: [...lines.map((l) => names[l]), "やめる"],
         done: (i) => {
@@ -15314,6 +16787,10 @@ body.nopad #pad { display: none; }
             goShiro();
             return;
           }
+          if (dest === "park") {
+            goPark();
+            return;
+          }
           warp(UMI_IN);
           if (!arriveUmi(g)) return;
           const L = rivalLines();
@@ -15334,6 +16811,53 @@ body.nopad #pad { display: none; }
         by("daishi", "よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。"),
         by("daishi", "寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。"),
         nar("境内の どこかに、黒い 紋に とりつかれた キャラが 3 体 いる。")
+      ], { done: () => app2.save() });
+    }
+    function parkName() {
+      return PARK_NAME[g.version] || PARK_NAME.naitei;
+    }
+    function goPark() {
+      warp(PARK_IN);
+      if (!arrivePark(g)) return;
+      say([
+        nar(`電車に ゆられて、${parkName()}に 着いた！`),
+        furu(`わあ、${parkName()}！ アトラクションが いっぱい！ ぜんぶ 乗ろうね！`),
+        by("onioni", "おれは 広場で まっとる。……べつに こわいわけじゃ ないぞ。"),
+        nar("アトラクションで 遊ぼう。帰るときは 遊園地前駅へ。")
+      ], { done: () => app2.save() });
+    }
+    const RIDES = {
+      naitei: { attrA: "コースター「内定ジェット」！ 急降下で、内定が 決まる 気が した！", attrB: "かんらん車から 町が ぜんぶ 見えた。石の川も、商店街も、遠くの SE城も……。", attrC: "おばけ屋敷で「面接官の おばけ」に「志望動機は？」と 聞かれた……！ こわい！" },
+      menkyo: { attrA: "ゴーカート「仮免ジェット」！ カーブの 前で ちゃんと 安全確認！", attrB: "かんらん車から 町が ぜんぶ 見えた。石の川も、商店街も、遠くの SE城も……。", attrC: "おばけ屋敷で「教官の おばけ」に「はい、脱輪」と ささやかれた……！ こわい！" }
+    };
+    function lookAttraction(id) {
+      const name = BUILDINGS.find((x) => x.id === id).label;
+      if (g.story === "park") {
+        if (!g.flags.ride14) g.flags.ride14 = {};
+        g.flags.ride14[id] = true;
+        say([nar((RIDES[g.version] || RIDES.naitei)[id]), furu("たのしい～！ つぎは どれに 乗る？")]);
+      } else if (g.story === "yoru") {
+        const c = findClue(g, id);
+        if (!c) {
+          say([nar(`${name}は 夜の 闇に しずんでいる。……ここには もう なにも ない。`)]);
+          return;
+        }
+        const lines = [nar(`${name}の 入り口に、${c.item}が 落ちていた！ (${cluesFound(g)}/${PARK_CLUES.length})`)];
+        if (cluesFound(g) >= PARK_CLUES.length) lines.push(by("onioni", "こおり、広場の まんなかに だれか おるぞ！"));
+        say(lines, { done: () => app2.save() });
+      } else say([nar(`${name}。${g.story === "clear14" ? "ふるカワと もう いちど 乗った。たのしい！" : "いまは しまっている。"}`)]);
+    }
+    function parkEvening() {
+      const menkyo = g.version === "menkyo";
+      parkNight(g);
+      say([
+        nar("夕方。そろそろ 帰ろうと した、そのとき——"),
+        { who: "こおりくん", art: "koori", text: "（あれ？ ふるカワが いない……？）" },
+        by("onioni", "さっきまで そこに おったのに……！"),
+        nar("どこからか、ひくい 笑い声が ひびいた。"),
+        menkyo ? { who: "リハマ", art: "rihama", text: "ルキハさまの かたき……この 子は あずかった。夜の シティを 走りまわって さがすんだな。" } : { who: "サアラハ", art: "saaraha", text: "ルキハさまの かたきは とらせて もらう。……この 子は あずかったよ。かえして ほしければ、夜の パークを さがしてみな。" },
+        by("onioni", "ルキハの 軍勢の 残党か……！ こおり、さがすぞ！"),
+        nar(`あたりが 暗く なった。夜の ${parkName()}で、アトラクションの 入り口を しらべて ふるカワの 手がかりを さがそう！`)
       ], { done: () => app2.save() });
     }
     function goShiro() {
@@ -15452,6 +16976,27 @@ body.nopad #pad { display: none; }
           { who: "こおりくん", art: "koori", text: "（おにおにを とりもどそう！）" },
           nar("７章 クリア！ ルナヤが なかまに なった。"),
           nar("石の川駅から、電車で 金色のSE城へ 行けるように なった！")
+        ], { done: () => app2.save() });
+      } else if (result2.boss && result2.outcome === "win" && result2.bossId === BOSS14[g.version]) {
+        say([
+          nar("残党は 黒い 霧に なって 消えた。"),
+          furu("こおりくん……ありがとう！ こわかった……！"),
+          by("onioni", "……まったく、遊園地くらい ゆっくり 遊ばせろ。"),
+          nar("１４章 クリア！"),
+          nar("―― １５章「新たなる１日」 ――"),
+          nar("こおりくんの 旅は 終わらない。この 世界の キャラを ぜんぶ なかまに しよう！"),
+          nar("石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！")
+        ], { done: () => app2.save() });
+      } else if (result2.kairou && result2.outcome === "win") {
+        const lines = [nar(`無限回廊 ${result2.kairou} 階を 突破！`)];
+        if (result2.prize) lines.push(nar(`ごほうびに ${ITEMS[result2.prize].name}を もらった！`));
+        lines.push({ who: "回廊の 番人", art: "haridaijin", text: `つぎは ${kairouOf(g).floor} 階じゃ。もっと 強い ボスが 待っておるぞ。` });
+        say(lines, { done: () => app2.save() });
+      } else if (result2.team && result2.outcome === "win") {
+        const T = TEAMS[result2.team];
+        say([
+          by(T.leader, TEAM_WIN[result2.team]),
+          nar(`${T.members.map((id) => NAKAMA[id].name).join("・")}が なかまに なった！`)
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "ooni8") {
         say([
@@ -15799,7 +17344,7 @@ body.nopad #pad { display: none; }
         done: () => {
           fighting = c;
           const source = wild.sourceOf(c);
-          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
+          app2.startBattle({ enemies: encounter(g, source, app2.rng, c), kind: "wild", place: inPark() ? "yuen" : inShiro() ? "shiro" : inMoon() ? "moon" : inYashiki() ? "yashiki" : inTera() ? "tera" : inUmi() ? inCave() ? "cave" : "umi" : inYama() ? "yama" : source.id });
         }
       });
     }
@@ -15845,7 +17390,7 @@ body.nopad #pad { display: none; }
           }
         } });
       }
-      if (hasWatch(g)) {
+      if (hasWatch(g) && g.story !== "yoru") {
         const bf = buddy.moving ? Math.floor(buddy.walkT * 6) : Math.floor(t * 1.5);
         list.push({ y: buddy.y - 0.1, draw: () => drawArt(ctx, ART.furukawa, bf, buddy.x - cam.x, buddy.y - cam.y + 1, { flip: buddy.flip }) });
       }
@@ -15857,7 +17402,7 @@ body.nopad #pad { display: none; }
       ensureCanvas(reached(g, "clear3"));
       ctx.drawImage(fieldCanvas, cam.x, cam.y, 400, 240, 0, 0, 400, 240);
       ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && !inMoon() && !inShiro() && i < 6; i++) {
+      for (let i = 0; !inSchool() && !inYama() && !inUmi() && !inTera() && !inYashiki() && !inMoon() && !inShiro() && !inPark() && i < 6; i++) {
         const wy = (i * 97 + t * 30) % ((SCHOOL_Y0 - 1) * TILE);
         ctx.fillRect(30 * TILE + i * 23 % 60 - cam.x, wy - cam.y, 4, 1);
       }
@@ -16008,7 +17553,7 @@ body.nopad #pad { display: none; }
         return;
       }
       const ht = heroTile(g);
-      text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}　${AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
+      text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === "rain" ? "雨" : "はれ"}　${areaAt(ht.x, ht.y) === "park" ? parkName() : AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
       text(ctx, `${g.money}円`, 310, 18, { size: 12, align: "right", color: COLORS.accent });
       panel(ctx, 6, 26, 148, 112, { fill: "#000", r: 3 });
       const [rTop, rBottom] = region();
@@ -16024,7 +17569,7 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = inPark() ? PARK_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -16039,7 +17584,7 @@ body.nopad #pad { display: none; }
         text(ctx, name, x, by2 + 2, { size: 8, align: "center", bold: true, color: b.id === "dagashi" ? COLORS.accent : "#ffffff", shadow: false });
       }
       ctx.restore();
-      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : null;
+      const goal = g.story === "intro" ? { x: 6, y: 5 } : g.story === "bridge" ? { x: 31, y: 17 } : g.story === "clear" ? { x: 19, y: 6 } : g.story === "school" && allMysteriesSolved(g) ? { x: 9, y: 70 } : g.story === "clear2" ? { x: 26.5, y: 0 } : g.story === "yama" && !g.flags.oku ? { x: 7, y: YAMA_Y0 + 5 } : g.story === "yama" && allSealsSolved(g) ? { x: 32, y: YAMA_Y0 + 6 } : g.story === "clear3" ? { x: 8, y: 24 } : g.story === "umi" ? { x: 5, y: 40 } : g.story === "umibe" ? g.flags.rival4 ? { x: 43, y: UMI_Y0 + 1 } : { x: 39, y: UMI_Y0 + 7 } : g.story === "clear4" ? { x: 8, y: 24 } : g.story === "tera" ? { x: 5, y: 40 } : g.story === "netdera" ? monsHere(g)[0] || { x: 26, y: TERA_Y0 + 8 } : g.story === "clear5" ? { x: 8, y: 24 } : g.story === "shinobi" ? { x: 5, y: 40 } : g.story === "yashiki" ? !g.flags.zumi6 ? { x: 24, y: YASHIKI_Y0 + 14 } : !g.flags.oni6 ? { x: 24, y: YASHIKI_Y0 + 5 } : { x: 35, y: YASHIKI_Y0 + 5 } : g.story === "clear6" ? { x: 5, y: 40 } : g.story === "meikyu" ? { x: 24, y: MOON_Y0 + 2 } : g.story === "clear7" ? { x: 5, y: 40 } : g.story === "oshiro" ? { x: 24, y: SHIRO_Y0 + (!g.flags.ooni8 ? 19 : !g.flags.soutou8 ? 15 : !g.flags.kinme8 ? 11 : 7) } : g.story === "clear8" ? { x: 8, y: 24 } : g.story === "invite" ? { x: 5, y: 40 } : g.story === "park" ? g.flags.ride14 ? { x: 5, y: PARK_Y0 + 28 } : { x: 24, y: PARK_Y0 + 6 } : g.story === "yoru" ? PARK_CLUES.map((c) => BUILDINGS.find((x) => x.id === c.id).door).find((d, i) => !(g.flags.clue14 || {})[PARK_CLUES[i].id]) || { x: 24, y: PARK_Y0 + 12 } : null;
       const gy = goal ? 28 + goal.y * 3 + 4 - my : 0;
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
@@ -16509,7 +18054,9 @@ body.nopad #pad { display: none; }
     goukioni: auto("goukioni"),
     kinmetsuki: auto("kinmetsuki"),
     // 合体の館の ハリー一族 (2026-10-30)
-    ...Object.fromEntries(["harryknight", "harrymage", "gargoharry", "iwaharry", "haridaijin", "haridora", "goldharry", "harrymimic", "metalharry", "metalkingharry"].map((k) => [k, auto(k)]))
+    ...Object.fromEntries(["harryknight", "harrymage", "gargoharry", "iwaharry", "haridaijin", "haridora", "goldharry", "harrymimic", "metalharry", "metalkingharry"].map((k) => [k, auto(k)])),
+    // 15 章で なかまに なる ライバル探検隊 (なかまの id は r_ + 絵の 名前。うしろ姿は 絵の 名前で)
+    ...Object.fromEntries(["asahara", "sasaki", "kotani", "ishii", "mazuda", "naitoon", "ueno", "shibata", "ikekimu", "yahami", "maechokkin", "norahan", "okagappa", "hibikimakuri", "yamamou"].map((k) => [k, auto(k)]))
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -16651,6 +18198,22 @@ body.nopad #pad { display: none; }
     setsubunmame: { motion: "rain", color: "#e0e0e0" },
     goukioni: { motion: "dash", color: "#ff8a4a" },
     kinmetsuki: { motion: "beam", color: "#ffd040" },
+    // 15 章で なかまに なる ライバル探検隊
+    r_asahara: { motion: "dash", color: "#ff8a4a" },
+    r_sasaki: { motion: "dash", color: "#e0e0e0" },
+    r_kotani: { motion: "cloud", color: "#c8f08a" },
+    r_ishii: { motion: "dash", color: "#5ad06a" },
+    r_mazuda: { motion: "dash", color: "#e0e0e0" },
+    r_naitoon: { motion: "cloud", color: "#c8f08a" },
+    r_ueno: { motion: "rain", color: "#e0e0e0" },
+    r_shibata: { motion: "dash", color: "#e0e0e0" },
+    r_ikekimu: { motion: "dash", color: "#c8f08a" },
+    r_yahami: { motion: "aura", color: "#d8a8ff" },
+    r_maechokkin: { motion: "multi", color: "#c8f08a" },
+    r_norahan: { motion: "aura", color: "#4aa8e0" },
+    r_okagappa: { motion: "beam", color: "#4aa8e0" },
+    r_hibikimakuri: { motion: "cloud", color: "#d8a8ff" },
+    r_yamamou: { motion: "dash", color: "#e0e0e0" },
     // 合体の館の ハリー一族
     harryknight: { motion: "dash", color: "#e0e0e0" },
     harrymage: { motion: "cloud", color: "#d8a8ff" },
@@ -17590,7 +19153,7 @@ body.nopad #pad { display: none; }
       let skillHit = HIT_DELAY.skill;
       const list = battle.events.splice(0);
       list.forEach((e, idx) => {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         if (e.type === "begin") {
           enterT = t;
           banner = { text: "いけっ！ なかまたち！", color: COLORS.accent, until: t + 1.2 };
@@ -17659,6 +19222,8 @@ body.nopad #pad { display: none; }
           if (e.why === "flip") banner = { text: "ひっくり返った！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           if (e.why === "fall") banner = { text: `${nameOf(e.target)}が 転んだ！ チャンス！`, color: COLORS.accent, until: t + 1.8 };
           if (e.why === "heads") banner = { text: "頭を ふたつとも こわした！ チャンス！", color: COLORS.accent, until: t + 1.8 };
+          if (e.why === "cage") banner = { text: "おりが こわれた！ ふるカワが にげだした！ チャンス！", color: COLORS.accent, until: t + 2 };
+          if (e.why === "signal") banner = { text: "信号機を こわした！ リハマが とまった！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           sfx("special");
         } else if (e.type === "burstBreak") {
           banner = { text: `紋が 暴発した！「${e.name}」！ ${nameOf(e.actor)}が 目を まわした！`, color: "#ffb84a", until: t + 2 };
@@ -17701,7 +19266,8 @@ body.nopad #pad { display: none; }
           const p = posOf(e.target);
           if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: e.clone ? "どれが 本物？" : e.blind ? "めくらまし で ミス" : "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
         } else if (e.type === "shell") {
-          banner = { text: "こうらに こもった！ 頭を ねらえ！", color: "#9ae08a", until: t + 1.8 };
+          const sig = (_f = (_e = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _e.gims) == null ? void 0 : _f.signal;
+          banner = sig ? { text: "赤信号！ 体が かたい！ 信号機を ねらえ！", color: "#ff6a6a", until: t + 1.8 } : { text: "こうらに こもった！ 頭を ねらえ！", color: "#9ae08a", until: t + 1.8 };
           sfx("cancel");
         } else if (e.type === "shellEnd") {
           const p = posOf(e.actor);
@@ -17744,7 +19310,7 @@ body.nopad #pad { display: none; }
           if (p) effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.5, color: "#bfeaff" });
         } else if (e.type === "bigCancel") {
           warn = null;
-          const armName = e.arm ? (_f = Object.values(((_e = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _e.gims) || {}).find((g2) => g2.arm)) == null ? void 0 : _f.name : null;
+          const armName = e.arm ? (_h = Object.values(((_g = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _g.gims) || {}).find((g2) => g2.arm)) == null ? void 0 : _h.name : null;
           banner = { text: e.arm ? armName === "月" ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
           sfx("big");
         } else if (e.type === "food") {
@@ -18306,6 +19872,25 @@ body.nopad #pad { display: none; }
           ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
           ctx.fill();
         }
+      } else if (place === "yuen") {
+        ctx.fillStyle = "#141032";
+        ctx.fillRect(0, 0, 400, HORIZON);
+        ctx.strokeStyle = "#4a3a8a";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(320, 70, 54, 0, Math.PI * 2);
+        ctx.stroke();
+        for (let i = 0; i < 8; i++) {
+          const a = i * Math.PI / 4 + t * 0.2;
+          ctx.beginPath();
+          ctx.moveTo(320, 70);
+          ctx.lineTo(320 + Math.cos(a) * 54, 70 + Math.sin(a) * 54);
+          ctx.stroke();
+        }
+        for (let i = 0; i < 20; i++) {
+          ctx.fillStyle = ["#ff6a8a", "#ffe85a", "#6ae0ff"][i % 3];
+          ctx.fillRect(i * 21 + 4, 24 + Math.sin(i) * 6, 3, 3);
+        }
       } else if (place === "shiro") {
         ctx.fillStyle = "#a07818";
         ctx.fillRect(0, 0, 400, HORIZON);
@@ -18353,7 +19938,7 @@ body.nopad #pad { display: none; }
         ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
         [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
       }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : ["#4a9a3a", "#7ad05a"];
+      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : ["#4a9a3a", "#7ad05a"];
       const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
       gg.addColorStop(0, ground[0]);
       gg.addColorStop(1, ground[1]);
@@ -18470,7 +20055,14 @@ body.nopad #pad { display: none; }
         if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, "#ffb84a");
         text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
       };
-      if (e.shell > 0) {
+      if (e.shell > 0 && e.gims.signal) {
+        ctx.strokeStyle = `rgba(255, 40, 40, ${0.5 + 0.3 * Math.sin(t * 10)})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y - h / 2, w * 0.6, h * 0.58, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        text(ctx, `赤信号 ${Math.ceil(e.shell)}`, p.x, p.y - h * 0.3, { size: 11, align: "center", bold: true, color: "#ffd0d0" });
+      } else if (e.shell > 0) {
         ctx.fillStyle = "rgba(40, 110, 50, 0.92)";
         ctx.beginPath();
         ctx.ellipse(p.x, p.y - h * 0.38, w * 0.62, h * 0.42, 0, Math.PI, 0);
@@ -18574,6 +20166,35 @@ body.nopad #pad { display: none; }
           ctx.restore();
           bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? "#ffe85a" : "#9a9ad8");
           text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
+        } else if (key2 === "cage" && !pt.broken) {
+          drawArt(ctx, ART.furukawa, Math.floor(t * 2), q.x, q.y + 14, { scale: 1.6 });
+          ctx.strokeStyle = "#3a2a4a";
+          ctx.lineWidth = 2;
+          for (let i = -2; i <= 2; i++) {
+            ctx.beginPath();
+            ctx.moveTo(q.x + i * 7, q.y - 22);
+            ctx.lineTo(q.x + i * 7, q.y + 16);
+            ctx.stroke();
+          }
+          ctx.strokeRect(q.x - 16, q.y - 22, 32, 38);
+          label(key2, q, 22);
+        } else if (key2 === "signal") {
+          ctx.fillStyle = "#2a2a2a";
+          ctx.fillRect(q.x - 8, q.y - 22, 16, 40);
+          ctx.fillRect(q.x - 2, q.y + 18, 4, 30);
+          ctx.fillStyle = open ? `rgba(255, 50, 50, ${0.75 + 0.25 * Math.sin(t * 10)})` : "#4a1a1a";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y - 14, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#4a4a1a";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y - 2, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = open ? "#1a3a1a" : "#4aff6a";
+          ctx.beginPath();
+          ctx.arc(q.x, q.y + 10, 5, 0, Math.PI * 2);
+          ctx.fill();
+          if (open) label(key2, q, 24);
         } else if (key2 === "legs" && open) {
           ctx.strokeStyle = `rgba(255, 232, 90, ${0.45 + 0.25 * Math.sin(t * 6)})`;
           ctx.lineWidth = 2;
@@ -19729,10 +21350,12 @@ body.nopad #pad { display: none; }
       else if (name === "title") this.scene = createTitle(this);
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
-    startBattle({ enemies, kind, place, mystery = null }) {
+    // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
+    startBattle({ enemies, kind, place, mystery = null, team = null }) {
       const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id) } : null);
       const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
       battle.mystery = mystery;
+      battle.team = team;
       this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {

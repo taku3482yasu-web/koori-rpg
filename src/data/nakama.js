@@ -249,6 +249,24 @@ export const WAZA = {
     harrymimic: W('たからばこハリ', 'ふつう', 'front', 1.8),
     metalharry: W('メタルたいあたり', 'ふつう', 'front', 1.0),
     metalkingharry: W('メタルキングの威光', 'ふしぎ', 'around', 1.2),
+    // 15 章: なかまに なる ライバル探検隊 (前作の 必殺わざ。ひるみ は こんらん・まひ・しばり・よわき は のろい・めくらまし は めくらまし)
+    r_asahara: W('DOPAPANCHI', 'ほのお', 'front', 2.2),
+    r_sasaki: W('ASAスラッシュ', 'ふつう', 'front', 1.8),
+    r_kotani: W('NABIテンポ', 'ふしぎ', 'around', 0, 'slow', 0.8),
+    r_ishii: W('うさぎ跳びキック', 'しぜん', 'front', 2.0, 'confuse', 0.3),
+    r_mazuda: W('ツキノワベアハッグ', 'ふつう', 'front', 1.6, 'slow', 0.5),
+    r_naitoon: W('ナイトハウル', 'かぜ', 'around', 0.9, 'slow', 0.6),
+    r_ueno: W('マッスルウエノクラッシュ', 'ふつう', 'around', 1.6),
+    r_shibata: W('シバタードライバー', 'ふつう', 'front', 2.0, 'confuse', 0.5),
+    r_ikekimu: W('イケキムドライブ', 'かぜ', 'line', 1.7, 'blind', 0.4),
+    r_yahami: W('みりょうの手鏡', 'ふしぎ', 'around', 1.2, 'confuse', 0.4),
+    r_maechokkin: W('チョッキンカット', 'かぜ', 'front', 1.8, 'slow', 0.5),
+    r_norahan: W('ねこだまし', 'みず', 'front', 1.2, 'confuse', 0.9),
+    r_okagappa: W('おかピポっと光線', 'みず', 'line', 1.6, 'confuse', 0.3),
+    r_hibikimakuri: W('大音響4DX', 'かぜ', 'around', 1.2, 'confuse', 0.4),
+    r_yamamou: W('おちょくりボーンフィーバー', 'ふつう', 'front', 1.6, 'confuse', 0.4),
+    saaraha14: W('内定とりけし', 'ふしぎ', 'around', 0.8, 'possess', 0.3),
+    rihama14: W('ノーブレーキ', 'かぜ', 'line', 1.5),
     ooni8: W('ふみつけ', 'ふつう', 'around', 1),
     soutou8: W('かみつき', 'ふつう', 'front', 1.2),
     kinme8: W('金色の鬼気', 'ふしぎ', 'around', 1.1, 'blind', 0.4),
@@ -1000,6 +1018,100 @@ const LIST = [
         title: '先代のハリーの王', desc: 'ハリー王国の先代の王。どんな攻撃も弾く鋼の肉体を持つ。',
         special: sp('メタルキングの 威光', [atk('all', 1.4, { magic: true }), { kind: 'buff', target: 'party', stat: 'def', amount: 0.5, time: 10 }])
     },
+    // ----- ライバル探検隊 15 人 (15 章「新たなる１日」の 仲間クエスト。2026-10-30) -----
+    //   team: どの チームか (TEAMS)。チームに 勝つと 3 人 ぜんいん なかまに なる。リーダー S・メンバー A (設計書)。
+    //   内定版 ASK-3・ケモノミチ / 免許版 お願いマッスル・バータス / 5DX は 両方。4 章の ライバル戦の キャラ (RIVALS) とは べつ (id に r_)
+    //   名前・属性・役割・口ぐせ・説明は ダンジョンの データから 写した。必殺技は 前作の 必殺技
+    {
+        id: 'r_asahara', name: 'KING.ASAHARA', from: 'ダンジョン ライバル', area: 'tanken', version: 'naitei', team: 'ask3', rank: 'S', element: 'ほのお', role: 'attacker', mul: { atk: 1.2 }, art: 'asahara',
+        line: 'CS城の主の力、見せてやろう！ ひれ伏せ！', favorite: 'choco',
+        title: 'CS城の主', desc: 'チームASK-3 のリーダーで、CS城の主。SE城の主おにおにとはライバル。プライドが高く、思い通りに事が進まないとかんしゃくを起こす。優秀な策略家でもある。',
+        special: sp('DOPAPANCHI', [atk('one', 3.0)])
+    },
+    {
+        id: 'r_sasaki', name: 'Mr.SASAKI', from: 'ダンジョン ライバル', area: 'tanken', version: 'naitei', team: 'ask3', rank: 'A', element: 'ふつう', role: 'supporter', mul: { atk: 1.1 }, art: 'sasaki',
+        line: 'どうも、しご出来です。', favorite: 'onigiri',
+        title: 'イケてる社員', desc: 'チームASK-3 のメンバー。シゴできお兄さん。仕事を一人でこなしすぎて疲れているのか、語彙が死ぬ時がある。口ぐせは「締め切り厳守です。」',
+        special: sp('締め切り厳守', [{ kind: 'buff', target: 'party', stat: 'spd', amount: 0.4, time: 10 }, atk('one', 2.0)])
+    },
+    {
+        id: 'r_kotani', name: 'Mr.KOTANI', from: 'ダンジョン ライバル', area: 'tanken', version: 'naitei', team: 'ask3', rank: 'A', element: 'かぜ', role: 'jammer', mul: { mag: 1.1 }, art: 'kotani',
+        line: '勝率は計算済みです。', favorite: 'cider',
+        title: 'KING.ASAHARA の腹心', desc: 'チームASK-3 の頭脳。クリップボードをいつも持っている。この20年間、遅刻・欠席を一度もしたことがない。数字だけを信じるタイプで、何でも確率で言う。',
+        special: sp('計算どおり', [{ kind: 'status', target: 'all', status: 'slow', chance: 0.9 }])
+    },
+    {
+        id: 'r_ishii', name: 'イシイー', from: 'ダンジョン ライバル', area: 'tanken', version: 'naitei', team: 'kemono', rank: 'S', element: 'しぜん', role: 'attacker', mul: { atk: 1.2 }, art: 'ishii',
+        line: 'ピョンッ！ 迷宮は おれたちの 家だ！', favorite: 'kyuuri',
+        title: 'ど根性ウサギ', desc: '根性の塊。どんな困難も根性で解決できると思っている。しかし、冷静な部分もあり、リーダーとしての資質もある。チーム・ケモノミチ のリーダー。',
+        special: sp('ど根性 キック', [atk('all', 1.9)])
+    },
+    {
+        id: 'r_mazuda', name: 'マズダ', from: 'ダンジョン ライバル', area: 'tanken', version: 'naitei', team: 'kemono', rank: 'A', element: 'ふつう', role: 'defender', mul: { hp: 1.15 }, art: 'mazuda',
+        line: 'ダンジョン育ちを なめるなよ', favorite: 'niboshi',
+        title: '大柄な隣人', desc: '無口な大熊。基本的には温厚だが、キレると何をしでかすかわからない。',
+        special: sp('ベアハッグ', [atk('one', 2.2), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'r_naitoon', name: 'NAITOON', from: 'ダンジョン ライバル', area: 'tanken', version: 'naitei', team: 'kemono', rank: 'A', element: 'かぜ', role: 'jammer', mul: { spd: 1.15 }, art: 'naitoon',
+        line: 'ワォーン……夜の迷宮で おれに 勝てると 思うなよ', favorite: 'niboshi',
+        title: '夜に潜む者', desc: '夜を好む狼。満月の晩にのみ、凄まじき力を発揮するが、光に非常に弱い。',
+        special: sp('満月の 遠吠え', [atk('all', 1.0, { magic: true }), { kind: 'status', target: 'all', status: 'slow', chance: 0.7 }])
+    },
+    {
+        id: 'r_ueno', name: 'マッスルウエノーブル', from: 'ダンジョン ライバル', area: 'tanken', version: 'menkyo', team: 'muscle', rank: 'S', element: 'ふつう', role: 'defender', mul: { hp: 1.2, atk: 1.1 }, art: 'ueno',
+        line: '我が筋肉の前にひれ伏すがよい！', favorite: 'onigiri',
+        title: '筋肉の貴族', desc: 'オープンキャンパスクラブ会長のナカツォー家の主。チームお願いマッスル のリーダー。筋肉をこよなく愛し、1日26時間を筋肉を磨くトレーニングにあてている。愛妻家。',
+        special: sp('マッスルウエノクラッシュ', [atk('all', 1.9)])
+    },
+    {
+        id: 'r_shibata', name: 'シバター', from: 'ダンジョン ライバル', area: 'tanken', version: 'menkyo', team: 'muscle', rank: 'A', element: 'ふつう', role: 'attacker', mul: { atk: 1.15 }, art: 'shibata',
+        line: 'ぶんぶん！ 撮れ高いただき！ んなああ～', favorite: 'cider',
+        title: 'おはしばた', desc: '現代に名をはせるユーチューバー兼プロレスラー。ダンジョンでも撮れ高を探している。たまに「んな～」と鳴く。',
+        special: sp('撮れ高 ばっちり', [atk('one', 2.6)])
+    },
+    {
+        id: 'r_ikekimu', name: 'イケキム', from: 'ダンジョン ライバル', area: 'tanken', version: 'menkyo', team: 'muscle', rank: 'A', element: 'かぜ', role: 'jammer', mul: { spd: 1.1 }, art: 'ikekimu',
+        line: 'チッ…邪魔だ。', favorite: 'choco',
+        title: 'アイドル兼盗賊', desc: '表の顔はアイドルユニットのメンバー。裏の顔は、裏の世界で有名な盗賊一家の長男。暗殺術にたけている。',
+        special: sp('暗殺術', [atk('one', 2.4), { kind: 'status', target: 'one', status: 'blind', chance: 0.6 }])
+    },
+    {
+        id: 'r_yahami', name: 'ヤーハミー', from: 'ダンジョン ライバル', area: 'tanken', version: 'menkyo', team: 'bartas', rank: 'S', element: 'ふしぎ', role: 'healer', mul: { mag: 1.2 }, art: 'yahami',
+        line: 'お宝も 視線も、ぜんぶ いただくわ', favorite: 'choco',
+        title: '美しき大怪盗', desc: '美しさを追い求める怪盗。究極の美を求めるために今日もダンジョンに潜り込む。チームバータス のリーダー。',
+        special: sp('究極の 美', [{ kind: 'heal', target: 'party', power: 0.6 }, { kind: 'status', target: 'all', status: 'confuse', chance: 0.5 }])
+    },
+    {
+        id: 'r_maechokkin', name: 'マエチョッキン', from: 'ダンジョン ライバル', area: 'tanken', version: 'menkyo', team: 'bartas', rank: 'A', element: 'かぜ', role: 'attacker', mul: { atk: 1.15 }, art: 'maechokkin',
+        line: 'チョッキン♪ 前髪も お宝も 切りそろえて あげる', favorite: 'melonpan',
+        title: '鋏の達人', desc: '鋏を扱うことにたけており、肌身離さない。彼女の鋏で切られたものは、切られたことすら気づかない。',
+        special: sp('ぜんぶ 切りそろえ', [atk('all', 1.7)])
+    },
+    {
+        id: 'r_norahan', name: 'ノラハン', from: 'ダンジョン ライバル', area: 'tanken', version: 'menkyo', team: 'bartas', rank: 'A', element: 'みず', role: 'supporter', mul: { spd: 1.1 }, art: 'norahan',
+        line: 'ニャハッ。盗むのは お宝だけじゃないかもね♪', favorite: 'niboshi',
+        title: '猫の怪盗', desc: '１００年生きた猫が人に化け、怪盗になった。長寿ゆえの知恵や経験を用いて、チームのバックアップを行う。',
+        special: sp('百年の 知恵', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, { kind: 'buff', target: 'party', stat: 'spd', amount: 0.3, time: 10 }])
+    },
+    {
+        id: 'r_okagappa', name: 'おかがっぱ', from: 'ダンジョン ライバル', area: 'tanken', team: '5dx', rank: 'S', element: 'みず', role: 'attacker', mul: { mag: 1.15 }, art: 'okagappa',
+        line: 'ま～だまだ戦わねバ！ イェア！', favorite: 'kyuuri',
+        title: '丘に上がったカッパ', desc: '丘に進出したカッパ。チーム5DX のリーダー。ＤＪをしており、山グッチのおかピポとして名も知られている。ノリと勢いで生きている。',
+        special: sp('おかピポっと光線', [atk('all', 1.6, { magic: true, element: 'みず' }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.4 }])
+    },
+    {
+        id: 'r_hibikimakuri', name: 'ひびきまくり', from: 'ダンジョン ライバル', area: 'tanken', team: '5dx', rank: 'A', element: 'ふしぎ', role: 'jammer', mul: { mag: 1.1 }, art: 'hibikimakuri',
+        line: '響きです。', favorite: 'melonpan',
+        title: '響きを伝える妖怪', desc: 'はるか昔から伝わる古典妖怪。広い部屋などで声や物音が響いたりするのはこいつのせい。最近は４ＤＸにはまっている。',
+        special: sp('大音響4DX', [atk('all', 1.2, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'r_yamamou', name: 'やまもぅ', from: 'ダンジョン ライバル', area: 'tanken', team: '5dx', rank: 'A', element: 'ふつう', role: 'defender', mul: { hp: 1.15 }, art: 'yamamou',
+        line: '牛の力を見せてやる！ モォー！', favorite: 'onigiri',
+        title: '牛にあこがれる青年', desc: 'チーム5DX のメンバー。牛にあこがれていて、どんなときも牛へのリスペクトを欠かさない。おちょくられるのが大嫌い。',
+        special: sp('おちょくりボーンフィーバー', [atk('one', 2.4), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
         id: 'kaguyausagi', name: 'カグヤウサギ', from: 'ダンジョン 069', area: 'moon', evo: 'tsukiusagi', rank: 'C', element: 'ふしぎ', role: 'healer', mul: {},
@@ -1155,7 +1267,7 @@ function moves(id, element, rank, upper = false) {
 // ランクが 高いほど 能力も 少し 高い (設計書 4.5)
 export const RANK_K = { E: 1, D: 1.15, C: 1.3, B: 1.45, A: 1.6, S: 1.8 };
 // 地区 (設計書 5.1)。area の ない キャラは 石の川タウン
-export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城' };
+export const AREAS = { ishinokawa: '石の川タウン', shoutengai: '商店街', school: '石の川小学校', yama: '山と ダム', umi: '海辺の 町', tera: 'ネット寺', yashiki: '忍びの屋敷', moon: '月の迷宮', shiro: '金色のSE城', park: '遊園地' };
 
 // 図鑑の番号・ランク・能力・ふだんの わざ を足して 仕上げる
 export const NAKAMA = {};
@@ -1163,13 +1275,24 @@ LIST.forEach((n, i) => {
     const rank = n.rank || 'E';
     const base = {};
     for (const [k, v] of Object.entries(ROLE_BASE[n.role])) base[k] = Math.round(v * (n.mul[k] || 1) * RANK_K[rank]);
-    NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || 'ishinokawa', base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
+    NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || 'ishinokawa', base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.art || n.id };
 });
 export const NAKAMA_IDS = LIST.map(n => n.id);
 // バージョン限定の なかま (2026-10-30。設計書 4.4「バージョンで 仲間に なる キャラが 変わる」。どれに するかは Claude の 案)
 //   version: 'naitei' / 'menkyo' の キャラは その バージョンでしか 町に 出ない。同じ 地区・同じ ランクで 1 組ずつ
 export const VERSION_ONLY = { naitei: '内定版', menkyo: '免許版' };
 export const inVersion = (id, version) => !NAKAMA[id] || !NAKAMA[id].version || NAKAMA[id].version === version;
+// ライバル探検隊 (15 章の 仲間クエスト)。チームに 勝つと 3 人 ぜんいん なかまに なる。version の ない チームは 両方の バージョンに いる
+export const TEAMS = {
+    ask3: { name: 'ASK-3', leader: 'r_asahara', members: ['r_sasaki', 'r_asahara', 'r_kotani'], version: 'naitei' },
+    kemono: { name: 'チーム・ケモノミチ', leader: 'r_ishii', members: ['r_mazuda', 'r_ishii', 'r_naitoon'], version: 'naitei' },
+    muscle: { name: 'お願いマッスル', leader: 'r_ueno', members: ['r_shibata', 'r_ueno', 'r_ikekimu'], version: 'menkyo' },
+    bartas: { name: 'チームバータス', leader: 'r_yahami', members: ['r_maechokkin', 'r_yahami', 'r_norahan'], version: 'menkyo' },
+    '5dx': { name: 'チーム5DX', leader: 'r_okagappa', members: ['r_hibikimakuri', 'r_okagappa', 'r_yamamou'], version: null }
+};
+export const TEAM_LV = 50;
+export const teamsIn = version => Object.keys(TEAMS).filter(k => !TEAMS[k].version || TEAMS[k].version === version);
+
 // 地区で 出会う キャラ (進化で なる キャラ・合体でしか 会えない キャラは 入れない)
 export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
 
@@ -1447,8 +1570,46 @@ export const BOSSES = {
             burst: { name: '紋の 暴発', effects: [atk('all', 0.7, { element: 'ほのお' })] } },
         chanceTurns: 4,
         befriends: null, lv: 35, place: 'shiro'
+    },
+    // ----- 14 章の ボス (バージョンで ちがう。ルキハの 軍勢の 残党。しかけは Claude の 案・2026-10-30) -----
+    // サアラハ (内定版。ナイテイパーク): ふるカワを おりに とじこめている。おりを ねらって こわすと ふるカワが にげて チャンスタイム
+    //   (おりは もどらない)。おりが ある あいだは「ふるカワを 盾に」(まもりが 上がる) を 使う。とりつきが 多い
+    saaraha14: {
+        id: 'saaraha14', name: 'サアラハ', element: 'ふしぎ', role: 'jammer', art: 'saaraha', scale: 1.8, rank: 'A',
+        base: { hp: 1000, atk: 17, def: 15, spd: 13, mag: 18 },
+        moves: [
+            { name: '内定とりけし', w: 3, effects: [atk('all', 0.8, { magic: true, element: 'ふしぎ' }), { kind: 'status', target: 'all', status: 'possess', chance: 0.3 }] },
+            { name: 'お祈りの 手紙', w: 2, effects: [atk('one', 1.5, { magic: true })] },
+            { name: '圧迫 面接', w: 2, effects: [{ kind: 'status', target: 'all', status: 'confuse', chance: 0.5 }] },
+            { name: 'ふるカワを 盾に', w: 2, gim: 'cage', effects: [{ kind: 'buff', target: 'self', stat: 'def', amount: 0.8, time: 8 }] }
+        ],
+        bigMove: { name: '残党の 闇', every: 13, warn: 2.5, effects: [atk('all', 1.6, { magic: true, element: 'ふしぎ' })] },
+        gims: { cage: { name: 'ふるカワの おり', hp: 0.1, when: 'always', pos: [2.4, -0.5], chance: 'cage', move: 'ふるカワを 盾に' } },
+        chanceTurns: 4,
+        befriends: null, lv: 42, place: 'yuen'
+    },
+    // リハマ (免許版。メンキョシティ): ときどき「赤信号」で 体を かためる (体への ダメージ 20%)。赤信号の あいだだけ 出る 信号機を
+    //   ねらって こわすと 止まって チャンスタイム (信号は もどる)。速い
+    rihama14: {
+        id: 'rihama14', name: 'リハマ', element: 'かぜ', role: 'attacker', art: 'rihama', scale: 1.8, rank: 'A',
+        base: { hp: 1000, atk: 19, def: 15, spd: 16, mag: 12 },
+        moves: [
+            { name: 'ノーブレーキ', w: 3, effects: [atk('one', 1.6)] },
+            { name: 'ドリフト', w: 2, effects: [atk('all', 0.8, { element: 'かぜ' })] },
+            { name: 'クラクション', w: 2, effects: [{ kind: 'status', target: 'all', status: 'confuse', chance: 0.4 }] },
+            { name: '赤信号', w: 1.5, shell: 6 }
+        ],
+        bigMove: { name: '暴走 信号無視', every: 13, warn: 2.5, effects: [atk('all', 1.7, { element: 'かぜ' })] },
+        gims: { signal: { name: '信号機', hp: 0.06, when: 'shell', pos: [2.2, -0.9], chance: 'signal', reset: true } },
+        shellCut: 0.2,
+        chanceTurns: 3,
+        befriends: null, lv: 42, place: 'yuen'
     }
 };
+// 14 章の ボスは バージョンで ちがう
+export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
+// 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
+export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'boss14'];
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)

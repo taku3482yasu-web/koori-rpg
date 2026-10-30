@@ -503,3 +503,89 @@ test('バージョン限定の なかま (2026-10-30): その バージョンで
     const ids = v => { const g = newGame(v); receiveWatch(g); g.story = 'clear8'; g.time = 3; return spotKinds(g, roam).map(k => k.id).join(); };
     assert.notEqual(ids('naitei'), ids('menkyo'));
 });
+
+test('14 章 (バージョンで ちがう): 招待券 → 遊園地 → ふるカワが いない → 夜の 手がかり 3 つ → 残党の ボス → 15 章 (2026-10-30)', async () => {
+    const { startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, trainLines } = await import('../src/logic/game.js');
+    const { MAIN_END } = await import('../src/logic/story.js');
+    const { PARK_CLUES } = await import('../src/data/map.js');
+    for (const [version, bossId] of [['naitei', 'saaraha14'], ['menkyo', 'rihama14']]) {
+        const g = newGame(version);
+        receiveWatch(g);
+        const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+        const here = id => peopleHere(g).some(p => p.id === id);
+        g.story = 'oshiro';
+        assert.ok(!startChapter14(g), '本編が おわるまで はじまらない');
+        g.story = MAIN_END;
+        assert.ok(!trainLines(g).includes('park'));
+        assert.ok(startChapter14(g));
+        assert.ok(trainLines(g).includes('park'));
+        assert.match(objective(g), version === 'naitei' ? /ナイテイパーク/ : /メンキョシティ/);
+        assert.ok(arrivePark(g));
+        assert.ok(here('oni14') && !here('boss14'));
+        assert.ok(parkNight(g));
+        assert.equal(g.time, 3, '夜に なる');
+        for (const c of PARK_CLUES) {
+            assert.ok(!here('boss14'), '手がかりが そろうまで ボスは いない');
+            assert.ok(findClue(g, c.id));
+            assert.equal(findClue(g, c.id), null, '同じ 手がかりは 1 回');
+        }
+        assert.equal(cluesFound(g), PARK_CLUES.length);
+        assert.ok(here('boss14'));
+        assert.equal(boss14Enemies(g)[0].id, bossId);
+        const out = applyBattleResult(g, winBattle(g, boss14Enemies(g), 'boss'), rng);
+        assert.equal(out.bossId, bossId);
+        assert.equal(g.story, 'clear14');
+        assert.equal(g.chapter, 15);
+        assert.ok(here('kairou'), '15 章: 無限回廊の 番人');
+    }
+});
+
+test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごとに ごほうび', async () => {
+    const { kairouOf, kairouEnemies } = await import('../src/logic/game.js');
+    const { BOSSES } = await import('../src/data/nakama.js');
+    const g = newGame('menkyo');
+    receiveWatch(g);
+    g.story = 'clear14';
+    const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+    const first = kairouEnemies(g)[0];
+    assert.ok(first.lv > BOSSES[first.id].lv, '強化 (Lv が 高い)');
+    const lvs = [];
+    for (let i = 0; i < 14; i++) {
+        const e = kairouEnemies(g);
+        lvs.push(e[0].lv);
+        const b = winBattle(g, e, 'kairou');
+        const out = applyBattleResult(g, b, rng);
+        assert.equal(out.kairou, i + 1);
+        assert.equal(out.befriend, null);
+        if ((i + 1) % 5 === 0) assert.ok(out.prize && g.items[out.prize] >= 1, `${i + 1} 階の ごほうび`);
+    }
+    assert.equal(kairouOf(g).floor, 15);
+    assert.equal(kairouOf(g).best, 14);
+    assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
+    assert.ok(kairouEnemies(g)[0].lv > lvs[0], '上の 階ほど 強い');
+    // 14 階目は その バージョンの 14 章の ボス
+    g.kairou.floor = 14;
+    assert.equal(kairouEnemies(g)[0].id, 'rihama14');
+});
+
+test('15 章: ライバル探検隊の 仲間クエスト。その バージョンの チーム (+ 5DX) に 勝つと 3 人 なかまに なる', async () => {
+    const { teamEnemies, teamsLeft } = await import('../src/logic/game.js');
+    const { TEAMS, NAKAMA } = await import('../src/data/nakama.js');
+    for (const [version, teams] of [['naitei', ['ask3', 'kemono', '5dx']], ['menkyo', ['muscle', 'bartas', '5dx']]]) {
+        const g = newGame(version);
+        receiveWatch(g);
+        g.story = 'clear14';
+        assert.deepEqual(teamsLeft(g).sort(), [...teams].sort());
+        const shown = peopleHere(g).filter(p => p.team).map(p => p.team).sort();
+        assert.deepEqual(shown, [...teams].sort(), `${version} の チーム`);
+        const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
+        const b = winBattle(g, teamEnemies(teams[0]), 'team');
+        b.team = teams[0];
+        const out = applyBattleResult(g, b, rng);
+        assert.deepEqual(out.joined.map(m => m.id), TEAMS[teams[0]].members);
+        for (const id of TEAMS[teams[0]].members) assert.ok(g.zukan.friends[id]);
+        assert.equal(NAKAMA[TEAMS[teams[0]].leader].rank, 'S', 'リーダーは S');
+        assert.ok(TEAMS[teams[0]].members.filter(id => id !== TEAMS[teams[0]].leader).every(id => NAKAMA[id].rank === 'A'), 'メンバーは A');
+        assert.ok(!peopleHere(g).some(p => p.team === teams[0]), '勝った チームは いなく なる');
+    }
+});

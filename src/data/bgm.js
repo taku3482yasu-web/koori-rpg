@@ -80,6 +80,12 @@ export const SONGS = {
         chords: '1 4 6 5 3 7 4 1', bass: 'r . o . r . o .', drums: 'k . k s . k s .'
     },
 
+    park: {
+        name: 'ようこそ 遊園地へ', bpm: 132, root: 72, mode: 'major', lead: 'square',
+        melody: "5 . 5 6 5 . 3 . | 1' . 7 6 5 - . . | 4 . 4 5 6 . 1' . | 7 - 6 - 5 - . . | 3 . 5 1' 7 . 6 5 | 6 . 4 6 5 . 3 1 | 2 . 3 4 5 . 7, 2 | 1 - - - . . 5, .",
+        chords: '1 4 4 5 1 4 2 5', bass: 'r . f . r . f .', arp: '. 2 . 1 . 2 . 1', drums: 'k h s h k k s h'
+    },
+
     // ----- ふつうの 戦闘・ライバル探検隊 -----
     battle: {
         name: 'なかまと バトル', bpm: 152, root: 69, mode: 'minor', lead: 'square',
@@ -158,6 +164,16 @@ export const SONGS = {
         melody: "1 . 3 . 5 . 1' 7 | 6 - 5 - 4 - 3 - | 4 . 6 . 1' . 3' 2' | 1' - 7 - 5 - . . | 6 . 6 7 1' . 7 6 | 5 . 5 6 7 . 6 5 | 4 . 3 4 6 . 1' 2' | 7 - - - 5 - 7 -",
         chords: '1 6 4 5 6 1 4 5', bass: 'r o r o r o r o', arp: '0 1 2 1 0 1 2 1', drums: 'k h s h k k s h'
     },
+    saaraha14: {
+        name: '内定とりけし (サアラハ)', bpm: 148, root: 63, mode: 'harmonic', lead: 'sawtooth',
+        melody: "1 . 2 3 . 2 1 . | 7, - 1 - 5, - . . | 1 . 2 3 . 5 4 . | 3 - 2 - 7, - . . | 6 . 5 6 . 5 3 . | 4 - 3 - 2 - 1 - | 6, . 7, 1 . 2 3 . | 7, - - - 5, - 7, -",
+        chords: '1 5 1 5 6 4 6 5', bass: 'r o r o r o r o', arp: '0 1 2 1 0 1 2 1', drums: 'k h s h k h s s'
+    },
+    rihama14: {
+        name: '暴走 信号無視 (リハマ)', bpm: 172, root: 64, mode: 'mixolydian', lead: 'square',
+        melody: "1 1 1 . 5 . 4 . | 7, 7, 7, . 4 . 3 . | 1 1 1 . 5 . 6 . | 7 - 6 - 5 - . . | 1' . 7 . 6 . 5 . | 4 . 3 . 2 . 1 . | 4 4 4 . 5 5 5 . | 6 - 7 - 1' - 5 -",
+        chords: '1 7 1 5 4 1 4 5', bass: 'r r o r r r o r', drums: 'x h s h x h s s'
+    },
     // 曲が まだ ない ボス (9 章 から 先) は これ
     boss: {
         name: 'ボス バトル', bpm: 150, root: 69, mode: 'harmonic', lead: 'square',
@@ -230,8 +246,8 @@ export function bgmFor({ scene, area, battle }) {
     if (scene === 'field' || scene === 'menu' || scene === 'fusion') return SONGS[area] ? area : 'ishinokawa';
     if (scene === 'battle' && battle) {
         if (battle.outcome) return null;
-        if (battle.kind === 'boss') return SONGS[battle.bossId] ? battle.bossId : 'boss';
-        if (battle.kind === 'rival') return 'rival';
+        if (battle.kind === 'boss' || battle.kind === 'kairou') return SONGS[battle.bossId] ? battle.bossId : 'boss';
+        if (battle.kind === 'rival' || battle.kind === 'team') return 'rival';
         return 'battle';
     }
     return null;

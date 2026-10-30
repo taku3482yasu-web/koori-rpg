@@ -70,7 +70,9 @@ const AUTO_KEYS = ['enjoubouzu', 'bugmushi', 'htmlmokkun', 'csspakkun', 'nullpon
     // 8 章 金色のSE城の 6 体 (2026-10-30。金滅鬼は 幹部の ボスにも 使う)
     'tsunodaruma', 'onibin', 'onigirin', 'setsubunmame', 'goukioni', 'kinmetsuki',
     // 合体でしか 会えない ハリー一族 10 体 (合体の館。2026-10-30)
-    'harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry'];
+    'harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry',
+    // 15 章で なかまに なる ライバル探検隊 (ASK-3・お願いマッスル は 4 章で 写した。2026-10-30)
+    'ishii', 'mazuda', 'naitoon', 'yahami', 'maechokkin', 'norahan', 'okagappa', 'hibikimakuri', 'yamamou'];
 const out = {};
 for (const k of SPRITE_KEYS) out[k] = fromSprite(KD.Art.SPRITES[k]);
 for (const k of BIG_KEYS) out[k] = fromBig(KD.BigArt.BIG[k]);

@@ -1,6 +1,7 @@
 // データの テスト: なかま (石の川 20 体・商店街 20 体)・わざと 術・絵・道具・地図
 import test from 'node:test';
 import { RECIPES } from '../src/data/fusion.js';
+import { TEAMS } from '../src/data/nakama.js';
 import assert from 'node:assert/strict';
 import { NAKAMA, NAKAMA_IDS, BOSSES, ROLES, ELEMENTS, HERO, JUTSU, HEAL_JUTSU, DRAIN_JUTSU, JUTSU_TYPE, idsInArea } from '../src/data/nakama.js';
 import { ITEMS } from '../src/data/items.js';
@@ -50,7 +51,7 @@ test('バトルの コマンド: 全員に わざ (キャラごと) と 術 (属
     assert.equal(new Set(NAKAMA_IDS.map(id => NAKAMA[id].waza.name)).size, NAKAMA_IDS.length);
     // 術の だんは ランクで 決まる: E・D は 下級・C は 中級 (みずなら 水流の術・ほのおの 中級は 業火の術)
     assert.equal(NAKAMA.kogame.jutsu.name, '水流の術');
-    for (const id of NAKAMA_IDS) assert.equal(NAKAMA[id].jutsu.tier, ['E', 'D'].includes(NAKAMA[id].rank) ? 0 : 1, id);
+    for (const id of NAKAMA_IDS) assert.equal(NAKAMA[id].jutsu.tier, ['E', 'D'].includes(NAKAMA[id].rank) ? 0 : NAKAMA[id].rank === 'S' || (NAKAMA[id].rank === 'A' && NAKAMA[id].upperJutsu) ? 2 : 1, id);
     assert.equal(NAKAMA.yataiman.jutsu.name, '業火の術');
     assert.equal(NAKAMA.gachapon.jutsu.name, '大回復の術');
     assert.ok(HERO.waza && HERO.jutsu && HERO.special);
@@ -159,7 +160,9 @@ test('全員が どこかに 出る。見えている キャラが 大多数・�
     const root = id => (NAKAMA[id].evo ? root(NAKAMA[id].evo) : id);
     //   合体でしか 会えない キャラ (fuse) は 合体の館の レシピで できる
     const fused = new Set(RECIPES.map(r => r.to).filter(c => c.startsWith('n:')).map(c => c.slice(2)));
-    for (const id of NAKAMA_IDS) assert.ok(NAKAMA[id].fuse ? fused.has(id) : hidden.has(root(id)) || roam.has(root(id)), `${id} の 出る場所`);
+    //   ライバル探検隊 (team) は 15 章の 仲間クエストで チームに 勝つと なかまに なる
+    const teamIds = new Set(Object.values(TEAMS).flatMap(t => t.members));
+    for (const id of NAKAMA_IDS) assert.ok(NAKAMA[id].fuse ? fused.has(id) : NAKAMA[id].team ? teamIds.has(id) : hidden.has(root(id)) || roam.has(root(id)), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
     for (const s of SPOTS) assert.ok(s.cue, `${s.id} の 違和感`);
 });
@@ -321,9 +324,9 @@ test('地図: 月の迷宮 (7 章)。入り口から 月の 鏡の 間の ルナ
 });
 
 test('地図: 金色のSE城 (8 章)。駅から 大鬼 → 双頭鬼 → 金滅鬼 → おにおにの 前まで、幹部を たおすたびに 進める', async () => {
-    const { SHIRO_Y0, SHIRO_IN, PROPS } = await import('../src/data/map.js');
+    const { SHIRO_Y0, SHIRO_IN, PROPS, PARK_Y0 } = await import('../src/data/map.js');
     assert.ok([...TILES[SHIRO_Y0]].every(c => c === 'T'));
-    assert.deepEqual(regionOf(SHIRO_IN.y), [SHIRO_Y0, MAP_H]);
+    assert.deepEqual(regionOf(SHIRO_IN.y), [SHIRO_Y0, PARK_Y0]);
     assert.ok(BLOCK.has('k'));
     const order = ['ooni8', 'soutou8', 'kinme8', 'onioni8'].map(id => PEOPLE.find(p => p.id === id));
     // まだ たおして いない 幹部は 通れない。たおした 幹部の 先へ 進める
@@ -331,7 +334,7 @@ test('地図: 金色のSE城 (8 章)。駅から 大鬼 → 双頭鬼 → 金滅
         const stand = order.slice(beaten.length).map(p => `${p.x},${p.y}`);
         const seen = new Set([`${SHIRO_IN.x},${SHIRO_IN.y}`]);
         const q = [[SHIRO_IN.x, SHIRO_IN.y]];
-        const open = (x, y) => y >= SHIRO_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !stand.includes(`${x},${y}`) && !PROPS.some(p => p.x === x && p.y === y);
+        const open = (x, y) => y >= SHIRO_Y0 && y < PARK_Y0 && !BLOCK.has(TILES[y][x]) && !stand.includes(`${x},${y}`) && !PROPS.some(p => p.x === x && p.y === y);
         while (q.length) {
             const [x, y] = q.shift();
             for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
@@ -350,4 +353,26 @@ test('地図: 金色のSE城 (8 章)。駅から 大鬼 → 双頭鬼 → 金滅
     assert.equal(shiro.length, 6);
     const count = rk => shiro.filter(id => NAKAMA[id].rank === rk).length;
     assert.deepEqual([count('D'), count('C'), count('B'), count('A')], [3, 1, 1, 1]);
+});
+
+test('地図: 14 章の 遊園地。駅から アトラクション 3 つの 入り口と 広場の ボスの 前まで 歩いて 行ける', async () => {
+    const { PARK_Y0, PARK_IN, PARK_CLUES } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(PARK_IN.y), [PARK_Y0, MAP_H]);
+    const seen = new Set([`${PARK_IN.x},${PARK_IN.y}`]);
+    const q = [[PARK_IN.x, PARK_IN.y]];
+    const inB = (x, y) => BUILDINGS.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+    const open = (x, y) => y >= PARK_Y0 && y < MAP_H && !BLOCK.has(TILES[y][x]) && !inB(x, y);
+    while (q.length) {
+        const [x, y] = q.shift();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const k = `${x + dx},${y + dy}`;
+            if (!seen.has(k) && open(x + dx, y + dy)) { seen.add(k); q.push([x + dx, y + dy]); }
+        }
+    }
+    for (const c of PARK_CLUES) {
+        const d = BUILDINGS.find(b => b.id === c.id).door;
+        assert.ok(seen.has(`${d.x},${d.y + 1}`), `${c.id} の 入り口`);
+    }
+    const boss = PEOPLE.find(p => p.id === 'boss14');
+    assert.ok(seen.has(`${boss.x},${boss.y + 1}`), 'ボスの 前');
 });

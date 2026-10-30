@@ -23,14 +23,18 @@
 //   clear7   7 章 クリア。ここから 8 章「金色のSE城の 決戦」: 石の川駅から 電車で 金色のSE城へ
 //   oshiro   SE城に 着いた (ライバル探検隊が 門を こじあける)。幹部 3 人: 大広間の 大鬼 (flags.ooni8) → 双頭の間の 双頭鬼
 //            (flags.soutou8) → 金の間の 金滅鬼 (flags.kinme8) → 玉座の 間の おにおに (ボス)
-//   clear8   8 章 クリア。なかまを あつめる (順番は story.js)
+//   clear8   8 章 クリア。(9〜13 章は まだ。本編の さいご = MAIN_END)
+//   invite   14 章: 本編の あと ともいしの 家で ふるカワから 遊園地の 招待券。石の川駅から 電車で 行ける
+//   park     遊園地に 着いた (昼)。アトラクションで 遊んで、駅で 帰ろうとすると ふるカワが いない → yoru
+//   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
+//   clear14  14 章 クリア。15 章「新たなる１日」: 無限回廊 (g.kairou)・ライバル探検隊の 仲間クエスト (flags.team_*)
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES } from '../data/nakama.js';
 import { SPOTS, START } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
-import { reached } from './story.js';
-import { MYSTERIES, SEALS, MONS } from '../data/map.js';
+import { reached, MAIN_END } from './story.js';
+import { MYSTERIES, SEALS, MONS, PARK_CLUES } from '../data/map.js';
 
 export const SAVE_VERSION = 1;
 export const VERSIONS = { naitei: '内定', menkyo: '免許' };
@@ -215,6 +219,26 @@ export function applyBattleResult(g, battle, rng) {
         out.mon = mon.id;
         return out;
     }
+    // 15 章: ライバル探検隊の 仲間クエストに 勝った。チームの 3 人 ぜんいん なかまに なる
+    if (battle.kind === 'team') {
+        const team = battle.team;
+        g.flags[`team_${team}`] = true;
+        out.team = team;
+        out.joined = TEAMS[team].members.map(id => addMedal(g, id, TEAM_LV - 5));
+        return out;
+    }
+    // 15 章: 無限回廊の 階を 突破した。次の 階へ。5 階ごとに ごほうび
+    if (battle.kind === 'kairou') {
+        const k = kairouOf(g);
+        k.floor++;
+        k.best = Math.max(k.best, k.floor - 1);
+        out.kairou = k.floor - 1;
+        if (out.kairou % 5 === 0) {
+            out.prize = KAIROU_PRIZES[(out.kairou / 5 - 1) % KAIROU_PRIZES.length];
+            g.items[out.prize] = (g.items[out.prize] || 0) + 1;
+        }
+        return out;
+    }
     // ライバル探検隊に 勝った (4 章)。なかまには ならない
     if (battle.kind === 'rival') {
         g.flags.rival4 = true;
@@ -240,6 +264,7 @@ export function applyBattleResult(g, battle, rng) {
         if (bossId === 'soutou8') g.flags.soutou8 = true;
         if (bossId === 'kinme8') g.flags.kinme8 = true;
         if (bossId === 'onioni8') { g.story = 'clear8'; g.chapter = 9; }
+        if (bossId === BOSS14[g.version]) { g.story = 'clear14'; g.chapter = 15; }
         return out;
     }
     // 1 回の バトルで 仲間に なりたがるのは 1 体まで。仲間に するかは 結果画面で えらぶ (2026-10-28 ユーザー指定。acceptBefriend)
@@ -329,8 +354,13 @@ export function objective(g) {
         case 'oshiro': return !g.flags.ooni8 ? 'SE城の 大広間で 幹部の 大鬼を たおそう'
             : !g.flags.soutou8 ? '双頭の間で 幹部の 双頭鬼を たおそう'
             : !g.flags.kinme8 ? '金の間で 幹部の 金滅鬼を たおそう' : '玉座の 間で おにおにを とりもどそう';
+        // 14 章 (バージョンで ちがう)
+        case 'invite': return `石の川駅から、電車で ${g.version === 'menkyo' ? 'メンキョシティ' : 'ナイテイパーク'}へ 行こう`;
+        case 'park': return 'アトラクションで 遊ぼう。帰るときは 遊園地前駅へ';
+        case 'yoru': return cluesFound(g) < PARK_CLUES.length
+            ? `夜の 遊園地で ふるカワの 手がかりを さがそう (${cluesFound(g)}/${PARK_CLUES.length})` : '広場の まんなかへ 行こう';
         default: {
-            // 8 章 クリアの あと: なかま あつめ
+            // 15 章「新たなる１日」・それまでの 章の クリアの あと: なかま あつめ
             const here = area => idsInArea(area).filter(id => inVersion(id, g.version));   // ほかの バージョンの キャラは 数えない
             const got = area => here(area).filter(id => g.zukan.friends[id]).length;
             const part = (area, name) => `${name} ${got(area)}/${here(area).length}`;
@@ -354,7 +384,7 @@ export function arriveUmi(g) {
 // 電車に のれるか (4 章)
 export const canRideTrain = g => reached(g, 'umi');
 // 電車の 行き先 (石の川駅から): 海辺の 町 (4 章〜)・ネット寺 (5 章〜)
-export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : [])];
+export const trainLines = g => [...(reached(g, 'umi') ? ['umi'] : []), ...(reached(g, 'tera') ? ['tera'] : []), ...(reached(g, 'shinobi') ? ['yashiki'] : []), ...(reached(g, 'clear6') ? ['moon'] : []), ...(reached(g, 'clear7') ? ['shiro'] : []), ...(reached(g, 'invite') ? ['park'] : [])];
 
 // 金色のSE城に はじめて 着いた (8 章の はじまり)。はじめて なら true
 export function arriveShiro(g) {
@@ -362,6 +392,56 @@ export function arriveShiro(g) {
     g.story = 'oshiro';
     return true;
 }
+
+// ----- 14 章 (2026-10-30。ストーリー工房の 14 章 = 内定・15 章 (no 14) = 免許) -----
+// 本編の あと ともいしの 家で 招待券を もらう。はじめて なら true
+export function startChapter14(g) {
+    if (g.story !== MAIN_END) return false;
+    g.story = 'invite';
+    return true;
+}
+// 遊園地に はじめて 着いた。昼に なる
+export function arrivePark(g) {
+    if (g.story !== 'invite') return false;
+    g.story = 'park';
+    g.time = 1;
+    return true;
+}
+// 駅で 帰ろうとすると ふるカワが いない。夜に なる
+export function parkNight(g) {
+    if (g.story !== 'park') return false;
+    g.story = 'yoru';
+    g.time = 3;
+    if (!g.flags.clue14) g.flags.clue14 = {};
+    return true;
+}
+export const cluesFound = g => PARK_CLUES.filter(c => g.flags.clue14 && g.flags.clue14[c.id]).length;
+// アトラクションの 入り口で 手がかりを しらべる。はじめて 見つけたら その 手がかり
+export function findClue(g, attrId) {
+    const c = PARK_CLUES.find(x => x.id === attrId);
+    if (g.story !== 'yoru' || !c || g.flags.clue14[c.id]) return null;
+    g.flags.clue14[c.id] = true;
+    return c;
+}
+// 14 章の ボス (バージョンで ちがう)
+export const boss14Enemies = g => bossEnemies(BOSS14[g.version] || BOSS14.naitei);
+
+// ----- 15 章「新たなる１日」(2026-10-30) -----
+// 無限回廊: 1 階ごとに これまでの ボスと 順番に 戦う。階が 上がるほど Lv が 上がる (強化ボス)。5 階ごとに ごほうび
+export const KAIROU_PRIZES = ['gattaidango', 'luckycoin', 'tsukishizuku', 'makimono'];
+export function kairouOf(g) {
+    if (!g.kairou) g.kairou = { floor: 1, best: 0 };
+    return g.kairou;
+}
+export function kairouEnemies(g) {
+    const floor = kairouOf(g).floor;
+    const key = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
+    const id = key === 'boss14' ? (BOSS14[g.version] || BOSS14.naitei) : key;
+    return [{ id, lv: Math.min(99, BOSSES[id].lv + 12 + floor * 2) }];
+}
+// ライバル探検隊の 仲間クエスト: その バージョンの チーム (まだ 勝って いない)
+export const teamsLeft = g => teamsIn(g.version).filter(k => !g.flags[`team_${k}`]);
+export const teamEnemies = team => TEAMS[team].members.map(id => ({ id, lv: TEAM_LV + (id === TEAMS[team].leader ? 2 : 0) }));
 
 // 月の迷宮に はじめて 着いた (7 章の はじまり)。はじめて なら true
 export function arriveMoon(g) {

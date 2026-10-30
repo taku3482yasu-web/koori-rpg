@@ -9,7 +9,14 @@
 // 6 章「忍びの屋敷と 消えた メダル」: clear5 → shinobi (ともいしと 話した。電車で 行ける) → yashiki (屋敷に 着いた) → clear6 (トモオカを たおした)
 // 7 章「月の迷宮と 喰らう 者の 伝説」: clear6 → meikyu (電車で 月の迷宮に 着いた) → clear7 (ルナヤに 勝った)
 // 8 章「金色のSE城の 決戦」: clear7 → oshiro (電車で SE城に 着いた) → clear8 (玉座の 間の おにおにを たおした)
+// (9〜13 章は まだ。本編の さいごは MAIN_END)
+// 14 章 (バージョンで ちがう。内定「ナイテイパークにご招待！」/ 免許「メンキョシティにご招待！」):
+//   MAIN_END → invite (ともいしの 家で ふるカワから 招待券。電車で 行ける) → park (遊園地に 着いた。昼) →
+//   yoru (帰ろうとしたら ふるカワが いない。夜の 遊園地で 手がかり 3 つ → 残党の ボス) → clear14
+// 15 章「新たなる１日」: clear14 から。無限回廊・強化ボス・ライバル探検隊の 仲間クエスト (エンドコンテンツ)
 // reached(g, 'clear') は「1 章 クリアの あと」(2 章の あいだも ふくむ)
 // =====================================================================
-export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2', 'yama', 'clear3', 'umi', 'umibe', 'clear4', 'tera', 'netdera', 'clear5', 'shinobi', 'yashiki', 'clear6', 'meikyu', 'clear7', 'oshiro', 'clear8'];
+export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2', 'yama', 'clear3', 'umi', 'umibe', 'clear4', 'tera', 'netdera', 'clear5', 'shinobi', 'yashiki', 'clear6', 'meikyu', 'clear7', 'oshiro', 'clear8', 'invite', 'park', 'yoru', 'clear14'];
+// 本編 (ルキハを たおす 13 章) の さいご。14・15 章は ここから。9〜13 章が できたら 'clear13' に する (2026-10-30)
+export const MAIN_END = 'clear8';
 export const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);

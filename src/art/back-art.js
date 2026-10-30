@@ -381,5 +381,7 @@ export const BACK_ART = {
     goukioni: auto('goukioni'),
     kinmetsuki: auto('kinmetsuki'),
     // 合体の館の ハリー一族 (2026-10-30)
-    ...Object.fromEntries(['harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry'].map(k => [k, auto(k)]))
+    ...Object.fromEntries(['harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry'].map(k => [k, auto(k)])),
+    // 15 章で なかまに なる ライバル探検隊 (なかまの id は r_ + 絵の 名前。うしろ姿は 絵の 名前で)
+    ...Object.fromEntries(['asahara', 'sasaki', 'kotani', 'ishii', 'mazuda', 'naitoon', 'ueno', 'shibata', 'ikekimu', 'yahami', 'maechokkin', 'norahan', 'okagappa', 'hibikimakuri', 'yamamou'].map(k => [k, auto(k)]))
 };

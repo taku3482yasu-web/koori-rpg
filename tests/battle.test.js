@@ -618,3 +618,33 @@ test('8 章の おにおに: ため の あいだに ダメージが たりな�
     assert.ok(b.events.some(e => e.type === 'special' && e.name === oni.bigMove.name));
     assert.ok(!b.events.some(e => e.type === 'burstBreak'));
 });
+
+test('14 章の サアラハ: ふるカワの おりを こわすと チャンスタイム。おりは もどらず「ふるカワを 盾に」も 使わない', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'saaraha14', lv: 42 }], rng: createRng(4), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.ok(lockOn(b, boss.uid, 'cage'));
+    for (let i = 0; i < 2000 && !b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'cage'));
+    for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(boss.gims.cage.broken, 'おりは もどらない');
+    const from = b.events.length;
+    for (let i = 0; i < 600; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(!b.events.slice(from).some(e => e.type === 'skill' && e.name === 'ふるカワを 盾に'));
+});
+
+test('14 章の リハマ: 赤信号の あいだは 体が かたく、信号機を こわすと チャンスタイム (信号は もどる)', async () => {
+    const { lockOn, gimOpen } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'rihama14', lv: 42 }], rng: createRng(9), kind: 'boss' });
+    const boss = b.enemies[0];
+    assert.ok(!gimOpen(b, boss, 'signal'), 'ふだんは 信号機を ねらえない');
+    for (let i = 0; i < 3000 && !(boss.shell > 0); i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(boss.shell > 0, '赤信号');
+    assert.ok(gimOpen(b, boss, 'signal'));
+    assert.ok(lockOn(b, boss.uid, 'signal'));
+    for (let i = 0; i < 2000 && !b.chance; i++) { boss.hp = boss.max; keepAlive(b); if (!(boss.shell > 0) && !boss.gims.signal.broken) boss.shell = 6; step(b, 0.05); }
+    assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'signal'));
+    assert.equal(boss.shell, 0, '赤信号が おわる');
+    for (let i = 0; i < 2000 && b.chance; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
+    assert.ok(!boss.gims.signal.broken, '信号は もどる');
+});

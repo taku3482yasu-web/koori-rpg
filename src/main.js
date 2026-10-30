@@ -69,10 +69,12 @@ const app = {
         else if (name === 'title') this.scene = createTitle(this);
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
-    startBattle({ enemies, kind, place, mystery = null }) {
+    // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
+    startBattle({ enemies, kind, place, mystery = null, team = null }) {
         const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id) } : null));
         const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true });
         battle.mystery = mystery;
+        battle.team = team;
         this.scene = createBattleView(this, battle, place);
     },
     endBattle(battle) {

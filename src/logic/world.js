@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, tileAt } from '../data/map.js';
+import { TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, PARK_CLUES, tileAt } from '../data/map.js';
 import { reached } from './story.js';
 
 const HALF_W = 5, BOX_H = 6;
@@ -13,7 +13,7 @@ export const mysteriesSolved = g => MYSTERIES.filter(m => g.mysteries && g.myste
 export const allMysteriesSolved = g => mysteriesSolved(g) >= MYSTERIES.length;
 
 export function peopleHere(g) {
-    return PEOPLE.filter(p =>
+    return PEOPLE.filter(p => (!p.version || p.version === g.version) && (
         !p.only ||
         (p.only === 'beforeWatch' && g.story === 'intro') ||
         (p.only === 'beforeClear' && !reached(g, 'clear')) ||
@@ -34,7 +34,13 @@ export function peopleHere(g) {
         (p.only === 'ooni8' && g.story === 'oshiro' && !g.flags.ooni8) ||
         (p.only === 'soutou8' && g.story === 'oshiro' && !g.flags.soutou8) ||
         (p.only === 'kinme8' && g.story === 'oshiro' && !g.flags.kinme8) ||
-        (p.only === 'onioni8' && g.story === 'oshiro'));
+        (p.only === 'onioni8' && g.story === 'oshiro') ||
+        // 14 章: おにおには 遊園地に いっしょに 来ている。夜に 手がかりが そろうと 広場に 残党の ボス
+        (p.only === 'park14' && (g.story === 'park' || g.story === 'yoru')) ||
+        (p.only === 'boss14' && g.story === 'yoru' && PARK_CLUES.every(c => g.flags.clue14 && g.flags.clue14[c.id])) ||
+        // 15 章: 無限回廊の 番人・まだ 勝って いない ライバル探検隊
+        (p.only === 'clear14' && reached(g, 'clear14')) ||
+        (p.only === 'team' && reached(g, 'clear14') && !g.flags[`team_${p.team}`])));
 }
 // 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)
 export const personName = (g, p) => (p.nameBy ? p.nameBy[g.version] || p.name : p.name);

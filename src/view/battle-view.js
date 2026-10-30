@@ -254,6 +254,8 @@ export function createBattleView(app, battle, place) {
                 if (e.why === 'flip') banner = { text: 'ひっくり返った！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 if (e.why === 'fall') banner = { text: `${nameOf(e.target)}が 転んだ！ チャンス！`, color: COLORS.accent, until: t + 1.8 };
                 if (e.why === 'heads') banner = { text: '頭を ふたつとも こわした！ チャンス！', color: COLORS.accent, until: t + 1.8 };
+                if (e.why === 'cage') banner = { text: 'おりが こわれた！ ふるカワが にげだした！ チャンス！', color: COLORS.accent, until: t + 2 };
+                if (e.why === 'signal') banner = { text: '信号機を こわした！ リハマが とまった！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 sfx('special');
             } else if (e.type === 'burstBreak') {
                 // 8 章の おにおに: ためている あいだに 攻撃を うけきって 紋が 暴発
@@ -294,7 +296,8 @@ export function createBattleView(app, battle, place) {
                 const p = posOf(e.target);
                 if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: e.clone ? 'どれが 本物？' : e.blind ? 'めくらまし で ミス' : 'ミス', color: '#c0c8e0', small: true, until: t + 0.8 });
             } else if (e.type === 'shell') {
-                banner = { text: 'こうらに こもった！ 頭を ねらえ！', color: '#9ae08a', until: t + 1.8 };
+                const sig = battle.enemies.find(x => x.uid === e.actor)?.gims?.signal;
+                banner = sig ? { text: '赤信号！ 体が かたい！ 信号機を ねらえ！', color: '#ff6a6a', until: t + 1.8 } : { text: 'こうらに こもった！ 頭を ねらえ！', color: '#9ae08a', until: t + 1.8 };
                 sfx('cancel');
             } else if (e.type === 'shellEnd') {
                 const p = posOf(e.actor);
@@ -793,6 +796,13 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
                 ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
             }
+        } else if (place === 'yuen') {
+            // 14 章の 遊園地 (夜): かんらん車の かげと 光る 電球
+            ctx.fillStyle = '#141032'; ctx.fillRect(0, 0, 400, HORIZON);
+            ctx.strokeStyle = '#4a3a8a'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(320, 70, 54, 0, Math.PI * 2); ctx.stroke();
+            for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + t * 0.2; ctx.beginPath(); ctx.moveTo(320, 70); ctx.lineTo(320 + Math.cos(a) * 54, 70 + Math.sin(a) * 54); ctx.stroke(); }
+            for (let i = 0; i < 20; i++) { ctx.fillStyle = ['#ff6a8a', '#ffe85a', '#6ae0ff'][i % 3]; ctx.fillRect(i * 21 + 4, 24 + Math.sin(i) * 6, 3, 3); }
         } else if (place === 'shiro') {
             // 金色のSE城 (8 章): 金の かべと 赤い 柱、ちょうちん
             ctx.fillStyle = '#a07818'; ctx.fillRect(0, 0, 400, HORIZON);
@@ -837,7 +847,7 @@ export function createBattleView(app, battle, place) {
             [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
         }
         // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : ['#4a9a3a', '#7ad05a'];
+        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : ['#4a9a3a', '#7ad05a'];
         const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
         gg.addColorStop(0, ground[0]);
         gg.addColorStop(1, ground[1]);
@@ -960,8 +970,15 @@ export function createBattleView(app, battle, place) {
             if (!pt.noBody) bar(ctx, q.x - 16, q.y + dy, 32, 4, pt.hp / pt.max, '#ffb84a');
             text(ctx, pt.name, q.x, q.y + dy + 13, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
         };
+        // 赤信号 (14 章の リハマ): 体が 赤く 光る
+        if (e.shell > 0 && e.gims.signal) {
+            ctx.strokeStyle = `rgba(255, 40, 40, ${0.5 + 0.3 * Math.sin(t * 10)})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.ellipse(p.x, p.y - h / 2, w * 0.6, h * 0.58, 0, 0, Math.PI * 2); ctx.stroke();
+            text(ctx, `赤信号 ${Math.ceil(e.shell)}`, p.x, p.y - h * 0.3, { size: 11, align: 'center', bold: true, color: '#ffd0d0' });
+        }
         // こうら (こもっている あいだ): 緑の ドームと 頭の すきま
-        if (e.shell > 0) {
+        else if (e.shell > 0) {
             ctx.fillStyle = 'rgba(40, 110, 50, 0.92)';
             ctx.beginPath(); ctx.ellipse(p.x, p.y - h * 0.38, w * 0.62, h * 0.42, 0, Math.PI, 0); ctx.fill();
             ctx.fillRect(p.x - w * 0.62, p.y - h * 0.38, w * 1.24, h * 0.36);
@@ -1020,6 +1037,20 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
                 text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+            } else if (key === 'cage' && !pt.broken) {
+                // ふるカワの おり (14 章の サアラハ): 黒い おりの 中に ふるカワ
+                drawArt(ctx, ART.furukawa, Math.floor(t * 2), q.x, q.y + 14, { scale: 1.6 });
+                ctx.strokeStyle = '#3a2a4a'; ctx.lineWidth = 2;
+                for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(q.x + i * 7, q.y - 22); ctx.lineTo(q.x + i * 7, q.y + 16); ctx.stroke(); }
+                ctx.strokeRect(q.x - 16, q.y - 22, 32, 38);
+                label(key, q, 22);
+            } else if (key === 'signal') {
+                // 信号機 (14 章の リハマ): 赤信号の あいだだけ 赤が 光って ねらえる
+                ctx.fillStyle = '#2a2a2a'; ctx.fillRect(q.x - 8, q.y - 22, 16, 40); ctx.fillRect(q.x - 2, q.y + 18, 4, 30);
+                ctx.fillStyle = open ? `rgba(255, 50, 50, ${0.75 + 0.25 * Math.sin(t * 10)})` : '#4a1a1a'; ctx.beginPath(); ctx.arc(q.x, q.y - 14, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#4a4a1a'; ctx.beginPath(); ctx.arc(q.x, q.y - 2, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = open ? '#1a3a1a' : '#4aff6a'; ctx.beginPath(); ctx.arc(q.x, q.y + 10, 5, 0, Math.PI * 2); ctx.fill();
+                if (open) label(key, q, 24);
             } else if (key === 'legs' && open) {
                 // 大鬼の 足 (8 章): 足もとに 黄色い わく
                 ctx.strokeStyle = `rgba(255, 232, 90, ${0.45 + 0.25 * Math.sin(t * 6)})`; ctx.lineWidth = 2;

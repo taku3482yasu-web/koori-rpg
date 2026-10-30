@@ -128,7 +128,8 @@ function hitGim(b, u, key, dmg) {
     if (!part.noBody) emit(b, 'partBreak', { target: u.uid, part: key, name: part.name, move: part.move || null, gim: true });
     if (b.lock === u.uid && b.lockPart === key) b.lockPart = null;
     // 8 章: こわすと チャンスタイム (大鬼の 足) / 組の 部位が ぜんぶ こわれると チャンスタイム (双頭鬼の 頭)
-    if (part.chance) { startChance(b, u, part.chance); return; }
+    //   14 章: サアラハの おり (ふるカワが にげる。もどらない)・リハマの 信号機 (赤信号の あいだだけ 出る。こわすと 赤信号が おわる)
+    if (part.chance) { if (part.when === 'shell') u.shell = 0; startChance(b, u, part.chance); return; }
     if (part.group && Object.values(u.gims).filter(p => p.group === part.group).every(p => p.broken)) { startChance(b, u, part.group); return; }
     if (key === 'box') {
         // 玉手箱が こわれた: 玉手箱の わざと 必殺技が 使えない。けむりが 出て 味方の 攻撃が 当たりにくい
