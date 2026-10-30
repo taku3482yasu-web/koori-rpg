@@ -21,6 +21,7 @@ import { createField } from './view/field.js';
 import { createBattleView } from './view/battle-view.js';
 import { createResult } from './view/result.js';
 import { createMenu } from './view/menu.js';
+import { createFusion } from './view/fusion.js';
 
 const topCanvas = document.getElementById('top');
 const bottomCanvas = document.getElementById('bottom');
@@ -64,6 +65,7 @@ const app = {
     go(name) {
         if (name === 'field') this.scene = this.field;
         else if (name === 'menu') this.scene = createMenu(this);
+        else if (name === 'fusion') this.scene = createFusion(this);
         else if (name === 'title') this.scene = createTitle(this);
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)

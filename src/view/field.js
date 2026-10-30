@@ -14,6 +14,7 @@ import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCH
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES } from '../data/map.js';
 import { ITEMS, SHOP } from '../data/items.js';
+import { FUSION_HINTS } from '../data/fusion.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
@@ -330,6 +331,14 @@ export function createField(app) {
             readOkunoin();
         } else if (b.id === 'station') {
             rideTrain();
+        } else if (b.id === 'gattai') {
+            // 合体の館 (2026-10-30): 主の ヒントを 聞いてから 合体の 画面へ
+            const k = g.flags.fusionHint || 0;
+            g.flags.fusionHint = k + 1;
+            say([
+                nar('合体の館。むらさきの けむりの 中に、あやしい 魔法陣が 光っている。'),
+                { who: '館の 主', art: 'haridaijin', text: k === 0 ? 'ようこそ 合体の館へ。キャラと キャラ、キャラと 合成アイテム、アイテムと アイテム……2 つを 合わせると 新しい ものが 生まれる。ここでしか 会えない キャラも おるぞ。' : FUSION_HINTS[(k - 1) % FUSION_HINTS.length] }
+            ], { choices: ['合体する', 'やめる'], done: i => { if (i === 0) { sfx('watch'); app.go('fusion'); } } });
         } else if (b.id === 'shiroStation') {
             say([nar('SE城前駅。石の川 行きの 電車が とまっている。')], {
                 choices: ['石の川へ もどる', 'やめる'],

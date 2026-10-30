@@ -925,7 +925,7 @@ body.nopad #pad { display: none; }
   }
   function bgmFor({ scene, area, battle }) {
     if (scene === "title") return "title";
-    if (scene === "field" || scene === "menu") return SONGS[area] ? area : "ishinokawa";
+    if (scene === "field" || scene === "menu" || scene === "fusion") return SONGS[area] ? area : "ishinokawa";
     if (scene === "battle" && battle) {
       if (battle.outcome) return null;
       if (battle.kind === "boss") return SONGS[battle.bossId] ? battle.bossId : "boss";
@@ -940,6 +940,23 @@ body.nopad #pad { display: none; }
   let want = null;
   let cur = null;
   let noise = null;
+  const BGM_KEY = "koori-rpg:bgm";
+  let on = (() => {
+    try {
+      return localStorage.getItem(BGM_KEY) !== "off";
+    } catch (e) {
+      return true;
+    }
+  })();
+  const bgmOn = () => on;
+  function setBgmOn(v) {
+    on = Boolean(v);
+    try {
+      localStorage.setItem(BGM_KEY, on ? "on" : "off");
+    } catch (e) {
+    }
+    schedule();
+  }
   function noiseBuffer(ac2) {
     if (noise) return noise;
     noise = ac2.createBuffer(1, ac2.sampleRate * 0.3, ac2.sampleRate);
@@ -1034,7 +1051,7 @@ body.nopad #pad { display: none; }
     }
   }
   function playBgm(id) {
-    want = id && SONGS[id] ? id : null;
+    want = on && id && SONGS[id] ? id : null;
     schedule();
   }
   const currentBgm = () => (cur == null ? void 0 : cur.id) ?? null;
@@ -1263,6 +1280,17 @@ body.nopad #pad { display: none; }
     setsubunmame: W$1("まめまき", "ふつう", "around", 0.9, "slow", 0.4),
     goukioni: W$1("剛鬼のこぶし", "ほのお", "front", 1.8),
     kinmetsuki: W$1("金滅の一閃", "ほのお", "line", 1.8, "poison", 0.3),
+    // 合体でしか 会えない ハリー一族 (合体の館。2026-10-30)。よわき は のろい・やけど は どく
+    harryknight: W$1("ハリーランス", "ふつう", "front", 1.5),
+    harrymage: W$1("トゲトゲ魔法", "ふしぎ", "line", 1.4),
+    gargoharry: W$1("いしのダイブ", "ふつう", "front", 1.6),
+    iwaharry: W$1("いわばり", "しぜん", "around", 1.2),
+    haridaijin: W$1("大臣のおふれ", "ふしぎ", "around", 0, "slow", 0.8),
+    haridora: W$1("トゲのブレス", "ほのお", "line", 1.6, "poison", 0.3),
+    goldharry: W$1("きんのはり", "ふつう", "line", 1.2),
+    harrymimic: W$1("たからばこハリ", "ふつう", "front", 1.8),
+    metalharry: W$1("メタルたいあたり", "ふつう", "front", 1),
+    metalkingharry: W$1("メタルキングの威光", "ふしぎ", "around", 1.2),
     ooni8: W$1("ふみつけ", "ふつう", "around", 1),
     soutou8: W$1("かみつき", "ふつう", "front", 1.2),
     kinme8: W$1("金色の鬼気", "ふしぎ", "around", 1.1, "blind", 0.4),
@@ -2860,6 +2888,168 @@ body.nopad #pad { display: none; }
       desc: "金でできた鬼。自身の身体に自信を持っており、黄金の身体を見せつけては、周りを嘲笑している。",
       special: sp("金滅 大一閃", [atk("all", 1.9, { element: "ほのお" })])
     },
+    // ----- 合体でしか 会えない ハリー一族 10 体 (合体の館。2026-10-30 ユーザー指定: 合体でしか 取れない キャラ) -----
+    //   fuse: true は 町に 出ない (data/fusion.js の レシピで できる)。名前・属性・役割・口ぐせ・説明は ダンジョンの ハリー王国から 写した
+    {
+      id: "harryknight",
+      name: "ハリーナイト",
+      from: "ダンジョン 147",
+      area: "shoutengai",
+      fuse: true,
+      rank: "B",
+      element: "ふつう",
+      role: "attacker",
+      mul: { atk: 1.1, def: 1.05 },
+      line: "騎士の ほこりに かけて！",
+      favorite: "cider",
+      title: "王国の騎士",
+      desc: "騎士の誇りを胸に戦うハリー。いつかハリー大帝のそばで仕えるのが夢。",
+      special: sp("ハリー 突撃槍", [atk("one", 2.4)])
+    },
+    {
+      id: "harrymage",
+      name: "ハリーメイジ",
+      from: "ダンジョン 148",
+      area: "shoutengai",
+      fuse: true,
+      rank: "B",
+      element: "ふしぎ",
+      role: "jammer",
+      mul: { mag: 1.2 },
+      line: "トゲトゲの 呪文！",
+      favorite: "melonpan",
+      title: "トゲの魔法使い",
+      desc: "トゲトゲの呪文を唱える魔法使い。呪文を噛むと自分にトゲが刺さる。",
+      special: sp("トゲトゲ 大魔法", [atk("all", 1, { magic: true }), { kind: "status", target: "all", status: "confuse", chance: 0.5 }])
+    },
+    {
+      id: "gargoharry",
+      name: "ガーゴハリー",
+      from: "ダンジョン 149",
+      area: "shoutengai",
+      fuse: true,
+      rank: "C",
+      element: "ふつう",
+      role: "defender",
+      mul: { def: 1.15 },
+      line: "……（いしの ふり）",
+      favorite: "onigiri",
+      title: "石像のふり",
+      desc: "石像のふりをして城を見張っている。動いてはいけないので、かゆいところがかけないのが悩み。",
+      special: sp("石像 ダイブ", [atk("one", 2), { kind: "buff", target: "party", stat: "def", amount: 0.4, time: 10 }])
+    },
+    {
+      id: "iwaharry",
+      name: "イワハリー",
+      from: "ダンジョン 150",
+      area: "shoutengai",
+      fuse: true,
+      rank: "C",
+      element: "しぜん",
+      role: "defender",
+      mul: { hp: 1.15, def: 1.1, spd: 0.85 },
+      line: "ゴロゴロ…ハリ",
+      favorite: "kyuuri",
+      title: "岩のハリー",
+      desc: "岩のように固いハリー。ころがって移動するので、坂道は苦手。",
+      special: sp("岩ころがし ハリ", [atk("all", 1.4)])
+    },
+    {
+      id: "haridaijin",
+      name: "ハリダイジン",
+      from: "ダンジョン 151",
+      area: "shoutengai",
+      fuse: true,
+      rank: "C",
+      element: "ふしぎ",
+      role: "supporter",
+      mul: { mag: 1.1 },
+      line: "大帝さまの おなりである",
+      favorite: "choco",
+      title: "大帝の右腕",
+      desc: "ハリー大帝に仕える大臣。王国のお金の管理をしているが、大帝のおやつ代に頭を悩ませている。",
+      special: sp("大臣の 号令", [{ kind: "buff", target: "party", stat: "atk", amount: 0.4, time: 10 }, { kind: "buff", target: "party", stat: "def", amount: 0.3, time: 10 }])
+    },
+    {
+      id: "haridora",
+      name: "ハリドラ",
+      from: "ダンジョン 152",
+      area: "shoutengai",
+      fuse: true,
+      rank: "B",
+      element: "ほのお",
+      role: "attacker",
+      mul: { atk: 1.1, mag: 1.1 },
+      line: "トゲの ドラゴンだハリ！",
+      favorite: "cider",
+      title: "トゲの竜",
+      desc: "トゲをまとった竜。王国の空を守っているが、自分のトゲで背中がかゆい。",
+      special: sp("トゲ竜の 大ブレス", [atk("all", 1.6, { magic: true, element: "ほのお" })])
+    },
+    {
+      id: "goldharry",
+      name: "ゴールドハリー",
+      from: "ダンジョン 153",
+      area: "shoutengai",
+      fuse: true,
+      rank: "C",
+      element: "ふつう",
+      role: "supporter",
+      mul: { spd: 1.1 },
+      line: "きんぴか ハリ！",
+      favorite: "choco",
+      title: "中身がきらりと光ってほしい",
+      desc: "金のメッキを塗ったハリー。はたから見ればプライスレス。",
+      special: sp("きんぴか シャワー", [{ kind: "buff", target: "party", stat: "spd", amount: 0.4, time: 10 }, atk("all", 0.8)])
+    },
+    {
+      id: "harrymimic",
+      name: "ハリーミミック",
+      from: "ダンジョン 154",
+      area: "shoutengai",
+      fuse: true,
+      rank: "C",
+      element: "ふつう",
+      role: "defender",
+      mul: { atk: 1.1 },
+      line: "あけたハリ？",
+      favorite: "niboshi",
+      title: "宝箱のふり",
+      desc: "宝箱に化けたハリー。開けようとした手にトゲを刺してくる。",
+      special: sp("びっくり 宝箱", [atk("one", 2.2), { kind: "status", target: "one", status: "confuse", chance: 0.6 }])
+    },
+    {
+      id: "metalharry",
+      name: "メタルハリー",
+      from: "ダンジョン 155",
+      area: "shoutengai",
+      fuse: true,
+      rank: "C",
+      element: "ふつう",
+      role: "defender",
+      mul: { hp: 0.6, def: 1.9, spd: 1.3 },
+      line: "キーン",
+      favorite: "niboshi",
+      title: "鋼のハリー",
+      desc: "体が鋼でできたハリー。とても硬いが、すぐ逃げる。",
+      special: sp("メタル ガード", [{ kind: "buff", target: "party", stat: "def", amount: 0.6, time: 10 }])
+    },
+    {
+      id: "metalkingharry",
+      name: "メタルキングハリー",
+      from: "ダンジョン 157",
+      area: "shoutengai",
+      fuse: true,
+      rank: "A",
+      element: "ふつう",
+      role: "defender",
+      mul: { hp: 0.8, def: 1.9, spd: 1.2, mag: 1.1 },
+      line: "キィィィン……",
+      favorite: "choco",
+      title: "先代のハリーの王",
+      desc: "ハリー王国の先代の王。どんな攻撃も弾く鋼の肉体を持つ。",
+      special: sp("メタルキングの 威光", [atk("all", 1.4, { magic: true }), { kind: "buff", target: "party", stat: "def", amount: 0.5, time: 10 }])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
       id: "kaguyausagi",
@@ -3249,7 +3439,7 @@ body.nopad #pad { display: none; }
     NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || "ishinokawa", base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
   });
   const NAKAMA_IDS = LIST.map((n) => n.id);
-  const idsInArea = (area) => NAKAMA_IDS.filter((id) => NAKAMA[id].area === area && !NAKAMA[id].evo);
+  const idsInArea = (area) => NAKAMA_IDS.filter((id) => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
   const EVOLVE = {
     haribaby: { to: "harigeneral", lv: 22 },
     mumenbachi: { to: "joubachi", lv: 25 },
@@ -3968,6 +4158,8 @@ body.nopad #pad { display: none; }
     { id: "yashikiStation", label: "忍びの屋敷前駅", x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: "#e8e0d0", roof: "#3a3a3a", door: { x: 5, y: YASHIKI_Y0 + 30 } },
     // 月の迷宮 (7 章)
     { id: "moonStation", label: "月の迷宮前駅", x: 2, y: MOON_Y0 + 27, w: 6, h: 4, wall: "#e0e0f0", roof: "#3a3a6a", door: { x: 5, y: MOON_Y0 + 30 } },
+    // 商店街の 合体の館 (2026-10-30 ユーザー指定。パチンコ店あとの 北)
+    { id: "gattai", label: "合体の館", x: 15, y: 37, w: 6, h: 4, wall: "#d8c8f0", roof: "#6a3a9a", door: { x: 18, y: 40 } },
     // 金色のSE城 (8 章)
     { id: "shiroStation", label: "SE城前駅", x: 2, y: SHIRO_Y0 + 27, w: 6, h: 4, wall: "#f0e0b0", roof: "#a02020", door: { x: 5, y: SHIRO_Y0 + 30 } }
   ];
@@ -4447,7 +4639,16 @@ body.nopad #pad { display: none; }
     choco: { name: "チョコ", heal: 30, gauge: 30, price: 40, desc: "HP を 30 回復し、必殺技ゲージが 30 たまる。あまいもの好きの 好物" },
     cider: { name: "サイダー", heal: 40, price: 40, desc: "なかま 1 体の HP を 40 回復。シュワシュワ好きの 好物" },
     kyuuri: { name: "きゅうり", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。やさい好きの 好物" },
-    niboshi: { name: "にぼし", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。さかな好きの 好物" }
+    niboshi: { name: "にぼし", heal: 35, price: 30, desc: "なかま 1 体の HP を 35 回復。さかな好きの 好物" },
+    // 合体の館で 作る (2026-10-30)
+    gattaidango: { name: "合体だんご", heal: 120, gauge: 50, onlyFusion: true, desc: "HP を 120 回復し、必殺技ゲージが 50 たまる。合体の館で しか 作れない おやつ" },
+    hoshikakera: { name: "星のかけら", material: true, onlyFusion: true, desc: "合成アイテム。キラキラ 光る。チョコと サイダーを 合体させて 作る" },
+    kesshou: { name: "氷の結晶", material: true, onlyFusion: true, desc: "合成アイテム。とけない 氷。サイダーと きゅうりを 合体させて 作る" },
+    onitsuno: { name: "鬼の角", material: true, onlyFusion: true, desc: "合成アイテム。勇ましい 角。おにぎりと にぼしを 合体させて 作る" },
+    tsukishizuku: { name: "月のしずく", material: true, onlyFusion: true, desc: "合成アイテム。月の 光が とけた しずく" },
+    ougonmame: { name: "黄金の豆", material: true, onlyFusion: true, desc: "合成アイテム。金ピカの 豆。鬼には よく 効かない" },
+    luckycoin: { name: "ラッキーコイン", material: true, onlyFusion: true, desc: "合成アイテム。なにか いい ことが ありそうな コイン" },
+    makimono: { name: "伝説の巻物", material: true, onlyFusion: true, desc: "合成アイテム。ハリー王国に つたわる 巻物" }
   };
   const SHOP = ["onigiri", "melonpan", "choco", "cider", "kyuuri", "niboshi"];
   const MAX_LV = 99;
@@ -12039,6 +12240,436 @@ body.nopad #pad { display: none; }
           "........eeeeee....eeeeee........"
         ]
       ]
+    },
+    harryknight: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5ac0", "b": "#9a9aaa", "c": "#b8b8c8", "d": "#10162a", "e": "#ffd840", "f": "#e02a2a", "g": "#d8d8e8", "h": "#5a5a6a" },
+      frames: [
+        [
+          "................",
+          "..........ff....",
+          "..........ff....",
+          "........bbbbbb..",
+          "....aa..bbbbbb.g",
+          "....aa..bddedd.g",
+          "..aaaa..bddddd.g",
+          "..bbbbbbbbbbbggg",
+          "..bcccccbbbbbb.g",
+          "..bccccccb.....g",
+          "..bccccccb......",
+          "..bccccccb......",
+          "..bbbbbbbb......",
+          "...hh...hh......",
+          "...hh...hh......",
+          "................"
+        ],
+        [
+          "................",
+          "..........ff....",
+          "..........ff....",
+          "........bbbbbb.g",
+          "....aa..bbbbbb.g",
+          "....aa..bddedd.g",
+          "..aaaa..bddddggg",
+          "..bbbbbbbbbbbb.g",
+          "..bcccccbbbbbb.g",
+          "..bccccccb......",
+          "..bccccccb......",
+          "..bccccccb......",
+          "..bbbbbbbb......",
+          "...hh...hh......",
+          "...hh...hh......",
+          "................"
+        ]
+      ]
+    },
+    harrymage: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5ac0", "b": "#3a2a7a", "c": "#f0d0a0", "d": "#111111", "e": "#ffd840", "f": "#8a5a2a", "g": "#b08aff", "h": "#ff9ad8" },
+      frames: [
+        [
+          "........bbb.....",
+          "........bbb.....",
+          "......bbbbbbggg.",
+          "......bbbbbbggg.",
+          "......beeeeeggg.",
+          "......bbbbbbbf..",
+          "........cccc.f..",
+          "....aa..ccdc.f..",
+          "..aaaa..cccc.f..",
+          "..bbbbbbcccc.f..",
+          "..bbbbbbbbb..f..",
+          "..bbbbbbbbb..f..",
+          "..bbbbbbbbb..f..",
+          "..bbbbbbbbb..f..",
+          "................",
+          "................"
+        ],
+        [
+          "........bbb.....",
+          "........bbb.....",
+          "......bbbbbbhhh.",
+          "......bbbbbbhhh.",
+          "......beeeeehhh.",
+          "......bbbbbbbf..",
+          "........cccc.f..",
+          "....aa..ccdc.f..",
+          "..aaaa..cccc.f..",
+          "..bbbbbbcccc.f..",
+          "..bbbbbbbbb..f..",
+          "..bbbbbbbbb..f..",
+          "..bbbbbbbbb..f..",
+          "..bbbbbbbbb..f..",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    gargoharry: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#7a7a80", "b": "#6a6a70", "c": "#5a5a60", "d": "#3a3a40", "e": "#ff3030" },
+      frames: [
+        [
+          "................",
+          "................",
+          "......bb.bb.....",
+          "...bb.bb.bb.bb..",
+          "...bb.bb.bb.bb..",
+          ".cccbaaaaaaaccc.",
+          ".cccaaaaaaaaccc.",
+          ".cccaadaadaaccc.",
+          ".cccaaaaaaaaccc.",
+          ".cccaaaaaaaaccc.",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....cccccccc....",
+          "....cccccccc....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "......bb.bb.....",
+          "...bb.bb.bb.bb..",
+          ".cccb.bb.bb.ccc.",
+          ".cccbaaaaaaaccc.",
+          ".cccaaaaaaaaccc.",
+          ".cccaaeaaeaaccc.",
+          ".cccaaaaaaaaccc.",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....aaaaaaaa....",
+          "....cccccccc....",
+          "....cccccccc....",
+          "................"
+        ]
+      ]
+    },
+    iwaharry: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a7a6a", "b": "#6a5a4a", "c": "#3a2a1a" },
+      frames: [
+        [
+          "................",
+          "................",
+          "......bb..bb....",
+          "...bb.bb..bb....",
+          "...bbabbaabb....",
+          "...bbaaaaaaa....",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaccaaccaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aabbbaaaaaaa..",
+          "..aaaaaaaabbba..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "......bb..bb....",
+          "...bb.bb..bb....",
+          "...bbabbaabb....",
+          "...bbaaaaaaa....",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaccaaccaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aabbbaaabbba..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    haridaijin: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5ac0", "b": "#2a4a8a", "c": "#ffd840", "d": "#f0d0a0", "e": "#111111", "f": "#ffffff", "g": "#1a1a2a", "h": "#f4f0e0", "i": "#c8a040" },
+      frames: [
+        [
+          "................",
+          ".......gggggg...",
+          ".......gggggg...",
+          ".....aagggggg...",
+          ".....aa.dddd....",
+          "...aaaa.dded....",
+          "...aa...dddd....",
+          "..bbbbbbdffff...",
+          "..bcccccccb.....",
+          "..bbbbbbbbb.hhh.",
+          "..bbbbbbbbb.iii.",
+          "..bbbbbbbbb.hhh.",
+          "..bbbbbbbbb.hhh.",
+          "..bbbbbbbbb.....",
+          "................",
+          "................"
+        ],
+        [
+          "................",
+          ".......gggggg...",
+          ".......gggggg...",
+          ".....aagggggg...",
+          ".....aa.dddd....",
+          "...aaaa.dded....",
+          "...aa...dddd....",
+          "..bbbbbbdffff...",
+          "..bcccccccb.hhh.",
+          "..bbbbbbbbb.iii.",
+          "..bbbbbbbbb.hhh.",
+          "..bbbbbbbbb.hhh.",
+          "..bbbbbbbbb.....",
+          "..bbbbbbbbb.....",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    haridora: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#6a3a90", "b": "#8a5ac0", "c": "#ffd840", "d": "#ff6a1a", "e": "#b08ae0", "f": "#4a2a6a" },
+      frames: [
+        [
+          "................",
+          "................",
+          ".....bbbb.......",
+          "...bbbbbbbb.....",
+          ".eeebbbbbbaaaaa.",
+          ".eeebbbbbbaaaca.",
+          ".eeebaaaabaaaaad",
+          ".eeeaaaaaaaaaaa.",
+          "...aaaaaaaaa....",
+          "...aaaaaaaaa....",
+          ".aaaaaaaaaaa....",
+          ".aaaaaaaaaaa....",
+          "...aaaaaaaaa....",
+          "....ff...ff.....",
+          "....ff...ff.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          ".....bbbb.......",
+          ".eeebbbbbbb.....",
+          ".eeebbbbbbaaaaa.",
+          ".eeebbbbbbaaaca.",
+          ".eeebaaaabaaaaad",
+          "...aaaaaaaaaaaa.",
+          "...aaaaaaaaa....",
+          "...aaaaaaaaa....",
+          ".aaaaaaaaaaa....",
+          ".aaaaaaaaaaa....",
+          "...aaaaaaaaa....",
+          "....ff...ff.....",
+          "....ff...ff.....",
+          "................"
+        ]
+      ]
+    },
+    goldharry: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#ffd840", "b": "#e0b030", "c": "#ffe8a0", "d": "#111111", "e": "#b08020", "f": "#fff0a0", "g": "#ffffff" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          ".....aaaa.......",
+          ".....aaaaaa.....",
+          "...aaaaaaaa.....",
+          "...bbbbbbbbb....",
+          "...bbbbbbbcccc..",
+          "...bbbbbbbccdc..",
+          "...bbbbbbbcccc..",
+          "...bbbbbbbcccc..",
+          "...bbbbbbbbb....",
+          "....ee...ee.....",
+          "....ee...ee.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          ".g..............",
+          ".....ffff.......",
+          ".....ffffff.....",
+          "...ffffffff.....",
+          "...bbbbbbbbb....",
+          "...bbbbbbbcccc..",
+          "...bbbbbbbccdc..",
+          "...bbbbbbbcccc..",
+          "...bbbbbbbcccc..",
+          "...bbbbbbbbb....",
+          "....ee...ee.....",
+          "....ee...ee.....",
+          "................"
+        ]
+      ]
+    },
+    harrymimic: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#8a5a2a", "b": "#a06a3a", "c": "#ffd840", "d": "#8a5ac0", "e": "#e02a2a", "f": "#ffffff" },
+      frames: [
+        [
+          "................",
+          "......d..d......",
+          "...d..d..d..d...",
+          "...d........d...",
+          "..bbbbbbbbbbbb..",
+          "..bbbbbbbbbbbb..",
+          "..bbbbbbbbbbbb..",
+          "..beeeeeeeeeeb..",
+          "..aafaafaafaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ],
+        [
+          "......d..d......",
+          "...d..d..d..d...",
+          "...d........d...",
+          "..bbbbbbbbbbbb..",
+          "..bbbbbbbbbbbb..",
+          "..bbbbbbbbbbbb..",
+          "..bbbbbbbbbbbb..",
+          "..aeeeeeeeeeea..",
+          "..aafaafaafaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaccaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "..aaaaaaaaaaaa..",
+          "................",
+          "................"
+        ]
+      ]
+    },
+    metalharry: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#b8c8d8", "b": "#a8b8c8", "c": "#ffffff", "d": "#c8d8e8", "e": "#111111", "f": "#7888a0", "g": "#e8f0ff" },
+      frames: [
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          ".....aaaa.......",
+          ".....aaaaaa.....",
+          "...aaaaaaaa.....",
+          "...bbbbbbbbb....",
+          "...bcccbbbdddd..",
+          "...bcccbbbdded..",
+          "...bbbbbbbdddd..",
+          "...bbbbbbbdddd..",
+          "...bbbbbbbbb....",
+          "....ff...ff.....",
+          "....ff...ff.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          "................",
+          "................",
+          ".....gggg.......",
+          ".....gggggg.....",
+          "...gggggggg.....",
+          "...bbbbbbbbb....",
+          "...bcccbbbdddd..",
+          "...bcccbbbdded..",
+          "...bbbbbbbdddd..",
+          "...bbbbbbbdddd..",
+          "...bbbbbbbbb....",
+          "....ff...ff.....",
+          "....ff...ff.....",
+          "................"
+        ]
+      ]
+    },
+    metalkingharry: {
+      w: 16,
+      h: 16,
+      palette: { "a": "#c8d8e8", "b": "#8898a8", "c": "#b8c8d8", "d": "#ffffff", "e": "#d8e4f0", "f": "#111111", "g": "#e8f0ff", "h": "#5ad8ff" },
+      frames: [
+        [
+          "................",
+          "................",
+          ".........g.g.g..",
+          ".........ggggg..",
+          ".........gghgg..",
+          "....aaaa.ggggg..",
+          "....aaaaaa......",
+          "..aaaaaaaeeeee..",
+          ".bbbbbbbbeeefe..",
+          ".bccccccceeeee..",
+          ".bcdddccceeeee..",
+          ".bcdddccceeeee..",
+          ".bccccccccb.....",
+          ".bccccccccb.....",
+          ".bbbbbbbbbb.....",
+          "................"
+        ],
+        [
+          "................",
+          "................",
+          ".........g.g.g..",
+          ".........ggggg..",
+          ".........gghgg..",
+          "....dddd.ggggg..",
+          "....dddddd......",
+          "..dddddddeeeee..",
+          ".bbbbbbbbeeefe..",
+          ".bccccccceeeee..",
+          ".bcdddccceeeee..",
+          ".bcdddccceeeee..",
+          ".bccccccccb.....",
+          ".bccccccccb.....",
+          ".bbbbbbbbbb.....",
+          "................"
+        ]
+      ]
     }
   };
   const bob$1 = (rows) => [rows, [...rows.slice(1), ".".repeat(rows[0].length)]];
@@ -12785,6 +13416,48 @@ body.nopad #pad { display: none; }
     }
     return { name: "title", update, drawTop, drawBottom };
   }
+  const RECIPES = [
+    // ----- アイテム + アイテム → 合成アイテム -----
+    { a: "i:choco", b: "i:cider", to: "i:hoshikakera" },
+    { a: "i:cider", b: "i:kyuuri", to: "i:kesshou" },
+    { a: "i:onigiri", b: "i:niboshi", to: "i:onitsuno" },
+    { a: "i:hoshikakera", b: "i:kesshou", to: "i:tsukishizuku" },
+    { a: "i:onitsuno", b: "i:melonpan", to: "i:ougonmame" },
+    { a: "i:hoshikakera", b: "i:ougonmame", to: "i:luckycoin" },
+    { a: "i:tsukishizuku", b: "i:luckycoin", to: "i:makimono" },
+    { a: "i:onigiri", b: "i:melonpan", to: "i:gattaidango" },
+    // 合体でしか 作れない おやつ
+    // ----- キャラ + 合成アイテム → キャラ (ハリー一族は 合体でしか 手に 入らない) -----
+    { a: "n:haribaby", b: "i:onitsuno", to: "n:harryknight" },
+    { a: "n:haribaby", b: "i:tsukishizuku", to: "n:harrymage" },
+    { a: "n:haribaby", b: "i:ougonmame", to: "n:goldharry" },
+    { a: "n:haribaby", b: "i:kesshou", to: "n:metalharry" },
+    { a: "n:harigeneral", b: "i:makimono", to: "n:haridaijin" },
+    // 進化の 近道 (ダンジョンでは この 道具で 進化した)
+    { a: "n:tsukiusagi", b: "i:tsukishizuku", to: "n:kaguyausagi" },
+    { a: "n:pekorisu", b: "i:luckycoin", to: "n:pekorisuking" },
+    { a: "n:yukimidango", b: "i:hoshikakera", to: "n:yukimidaifuku" },
+    { a: "n:takaramimic", b: "i:ougonmame", to: "n:kinkomimic" },
+    { a: "n:koorimodoki", b: "i:kesshou", to: "n:koorimodokishin" },
+    // ----- キャラ + キャラ → キャラ -----
+    { a: "n:harryknight", b: "n:harrymage", to: "n:haridora" },
+    { a: "n:haribaby", b: "n:ishikoron", to: "n:iwaharry" },
+    { a: "n:haribaby", b: "n:takaramimic", to: "n:harrymimic" },
+    { a: "n:haribaby", b: "n:yoroinukegara", to: "n:gargoharry" },
+    { a: "n:metalharry", b: "n:kingharry", to: "n:metalkingharry" },
+    { a: "n:kogame", b: "n:yukimidango", to: "n:hyougame" },
+    { a: "n:daichouenkin", b: "n:rousokubi", to: "n:hitodamaou" },
+    { a: "n:onibin", b: "n:enjoubouzu", to: "n:daienjou" }
+  ];
+  const FUSION_HINTS = [
+    "ハリーベビーは 合成アイテムと 合わせると、いろいろな すがたに なるらしい……。",
+    "チョコと サイダーを 合わせると「星のかけら」に なるぞ。",
+    "サイダーと きゅうりで「氷の結晶」、おにぎりと にぼしで「鬼の角」じゃ。",
+    "星のかけらと 氷の結晶で「月のしずく」。月の キャラが よろこぶ しずくじゃ。",
+    "ナイトと メイジ、ふたりの ハリーが 合わさると 竜に なると 聞く。",
+    "メタルの ハリーと 王の ハリー……合わせたら どう なるかのう。"
+  ];
+  const findRecipe = (a, b) => RECIPES.find((r2) => r2.a === a && r2.b === b || r2.a === b && r2.b === a) || null;
   const HALF_W = 5, BOX_H = 6;
   const mysteriesSolved = (g) => MYSTERIES.filter((m) => g.mysteries && g.mysteries[m.id]).length;
   const allMysteriesSolved = (g) => mysteriesSolved(g) >= MYSTERIES.length;
@@ -14017,6 +14690,18 @@ body.nopad #pad { display: none; }
         readOkunoin();
       } else if (b.id === "station") {
         rideTrain();
+      } else if (b.id === "gattai") {
+        const k = g.flags.fusionHint || 0;
+        g.flags.fusionHint = k + 1;
+        say([
+          nar("合体の館。むらさきの けむりの 中に、あやしい 魔法陣が 光っている。"),
+          { who: "館の 主", art: "haridaijin", text: k === 0 ? "ようこそ 合体の館へ。キャラと キャラ、キャラと 合成アイテム、アイテムと アイテム……2 つを 合わせると 新しい ものが 生まれる。ここでしか 会えない キャラも おるぞ。" : FUSION_HINTS[(k - 1) % FUSION_HINTS.length] }
+        ], { choices: ["合体する", "やめる"], done: (i) => {
+          if (i === 0) {
+            sfx("watch");
+            app2.go("fusion");
+          }
+        } });
       } else if (b.id === "shiroStation") {
         say([nar("SE城前駅。石の川 行きの 電車が とまっている。")], {
           choices: ["石の川へ もどる", "やめる"],
@@ -15396,7 +16081,9 @@ body.nopad #pad { display: none; }
     onigirin: auto("onigirin"),
     setsubunmame: auto("setsubunmame"),
     goukioni: auto("goukioni"),
-    kinmetsuki: auto("kinmetsuki")
+    kinmetsuki: auto("kinmetsuki"),
+    // 合体の館の ハリー一族 (2026-10-30)
+    ...Object.fromEntries(["harryknight", "harrymage", "gargoharry", "iwaharry", "haridaijin", "haridora", "goldharry", "harrymimic", "metalharry", "metalkingharry"].map((k) => [k, auto(k)]))
   };
   const result = (score, great, ok) => score >= great ? { mult: 1.5, label: "大成功！" } : score >= ok ? { mult: 1, label: "成功！" } : { mult: 0.5, label: "しっぱい…" };
   const SPECIALS = {
@@ -15538,6 +16225,17 @@ body.nopad #pad { display: none; }
     setsubunmame: { motion: "rain", color: "#e0e0e0" },
     goukioni: { motion: "dash", color: "#ff8a4a" },
     kinmetsuki: { motion: "beam", color: "#ffd040" },
+    // 合体の館の ハリー一族
+    harryknight: { motion: "dash", color: "#e0e0e0" },
+    harrymage: { motion: "cloud", color: "#d8a8ff" },
+    gargoharry: { motion: "dash", color: "#a0a0a8" },
+    iwaharry: { motion: "rain", color: "#5ad06a" },
+    haridaijin: { motion: "aura", color: "#d8a8ff" },
+    haridora: { motion: "beam", color: "#ff8a4a" },
+    goldharry: { motion: "aura", color: "#ffd040" },
+    harrymimic: { motion: "dash", color: "#e0e0e0" },
+    metalharry: { motion: "aura", color: "#c0c8d8" },
+    metalkingharry: { motion: "beam", color: "#c0c8d8" },
     // こおりくん: 大腸炎アタック
     koori: { motion: "cloud", color: "#c8a060", glyph: "@" }
   };
@@ -16793,7 +17491,7 @@ body.nopad #pad { display: none; }
       banner = { text: g.fastBattle ? "倍速: オン" : "倍速: オフ", color: COLORS.accent, until: t + 0.8 };
       sfx("cursor");
     }
-    const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0);
+    const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0 && !ITEMS[id].material);
     const menuTargets = () => menu.kind === "item" ? [0, 1, 2, 3, 4, 5].map((i) => battle.wheel[(battle.rot + i) % 6]).filter((u) => u && !u.ko) : battle.enemiesAlive();
     function useMenu(id, uid) {
       const ok = menu.kind === "item" ? useItem(battle, id, uid) : throwFood(battle, id, uid);
@@ -17701,8 +18399,8 @@ body.nopad #pad { display: none; }
       text(ctx, "どうする？", 160, 40, { size: 16, align: "center", bold: true, color: COLORS.accent });
       INTRO_BTN.forEach((bn, k) => {
         const off = bn.key === "run" && !canFlee(battle) || bn.key === "food" && battle.kind !== "wild";
-        const on = k === introIndex;
-        panel(ctx, bn.x, bn.y, bn.w, bn.h, { fill: on ? "#2d5aa8" : "rgba(26,36,64,0.95)", edge: on ? COLORS.accent : "#3a4a70" });
+        const on2 = k === introIndex;
+        panel(ctx, bn.x, bn.y, bn.w, bn.h, { fill: on2 ? "#2d5aa8" : "rgba(26,36,64,0.95)", edge: on2 ? COLORS.accent : "#3a4a70" });
         text(ctx, bn.label, bn.x + bn.w / 2, bn.y + 36, { size: 18, align: "center", bold: true, color: off ? COLORS.dim : "#ffffff" });
         const note2 = bn.key === "item" ? btn("y") : bn.key === "food" ? off ? "投げられない" : btn("x") : bn.key === "run" && off ? "にげられない" : "";
         if (note2) text(ctx, note2, bn.x + bn.w / 2, bn.y + 54, { size: 9.5, align: "center", color: COLORS.dim });
@@ -17934,8 +18632,9 @@ body.nopad #pad { display: none; }
   const T_QUEST = 4, T_SAVE = 5;
   const NT = TABS.length;
   const SLOT_BTN = Array.from({ length: 6 }, (_, i) => ({ x: 8 + i % 3 * 102, y: 38 + Math.floor(i / 3) * 44, w: 98, h: 40 }));
-  const LIST_TOP = 132, ROW_H = 20, ROWS = 5;
+  const LIST_TOP$1 = 132, ROW_H$1 = 20, ROWS$1 = 5;
   const ZUKAN_ROWS = 9;
+  const ITEM_ROWS = 8;
   function createMenu(app2) {
     const g = app2.g;
     let tab = 0, t = 0;
@@ -18002,19 +18701,32 @@ body.nopad #pad { display: none; }
         return;
       }
       if (tab === 0) updateWatch(input2);
-      else if (tab === 1) nIndex = moveList(input2, nIndex, box().length, (k) => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
-      else if (tab === 2) zIndex = moveList(input2, zIndex, NAKAMA_IDS.length, (k) => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
-      else if (tab === 3) iIndex = moveList(input2, iIndex, Object.keys(ITEMS).length, (k) => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), 0, 9);
-      else if (tab === T_QUEST) qIndex = moveList(input2, qIndex, questList(g).length, (k) => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
+      else if (tab === 1) nIndex = moveList(input2, nIndex, box().length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
+      else if (tab === 2) zIndex = moveList(input2, zIndex, NAKAMA_IDS.length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
+      else if (tab === 3) iIndex = moveList(input2, iIndex, Object.keys(ITEMS).length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(iIndex, ITEM_ROWS, Object.keys(ITEMS).length), ITEM_ROWS);
+      else if (tab === T_QUEST) qIndex = moveList(input2, qIndex, questList(g).length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
       else if (tab === T_SAVE) {
-        if (input2.pressed.a || tc.justDown && hit(SAVE_BTN, tc.x, tc.y)) {
+        if (input2.pressed.up || input2.pressed.down) {
+          sIndex = 1 - sIndex;
+          sfx("cursor");
+        }
+        const pick = tc.justDown ? hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : -1 : input2.pressed.a ? sIndex : -1;
+        if (pick === 0) {
+          sIndex = 0;
           app2.save();
           saved = t;
           sfx("ok");
         }
+        if (pick === 1) {
+          sIndex = 1;
+          setBgmOn(!bgmOn());
+          sfx("ok");
+        }
       }
     }
-    const SAVE_BTN = { x: 80, y: 120, w: 160, h: 44, label: "セーブする" };
+    const SAVE_BTN = { x: 80, y: 74, w: 160, h: 40, label: "セーブする" };
+    const BGM_BTN = { x: 80, y: 128, w: 160, h: 40 };
+    let sIndex = 0;
     function moveList(input2, index, len, rowRect, top, rows) {
       if (!len) return 0;
       if (input2.pressed.up) {
@@ -18092,9 +18804,9 @@ body.nopad #pad { display: none; }
         picking = false;
       }
       if (tc.justDown) {
-        const top = scroll(listIndex, ROWS, list.length);
-        for (let k = 0; k < ROWS && top + k < list.length; k++) {
-          if (hit({ x: 8, y: LIST_TOP + k * ROW_H, w: 304, h: ROW_H }, tc.x, tc.y)) {
+        const top = scroll(listIndex, ROWS$1, list.length);
+        for (let k = 0; k < ROWS$1 && top + k < list.length; k++) {
+          if (hit({ x: 8, y: LIST_TOP$1 + k * ROW_H$1, w: 304, h: ROW_H$1 }, tc.x, tc.y)) {
             if (listIndex === top + k) {
               setMedal(list[top + k].uid);
               picking = false;
@@ -18185,9 +18897,10 @@ body.nopad #pad { display: none; }
       else if (tab === 3) drawItems(ctx);
       else if (tab === T_QUEST) drawQuests(ctx);
       else {
-        button(ctx, SAVE_BTN);
-        text(ctx, "ページを 閉じたときも 自動で セーブします", 160, 186, { size: 11, align: "center", color: COLORS.sub });
-        if (saved && t - saved < 1.5) text(ctx, "セーブした！", 160, 104, { size: 14, align: "center", bold: true, color: COLORS.accent });
+        button(ctx, SAVE_BTN, { active: sIndex === 0 });
+        button(ctx, { ...BGM_BTN, label: `BGM: ${bgmOn() ? "オン" : "オフ"}` }, { active: sIndex === 1 });
+        text(ctx, "ページを 閉じたときも 自動で セーブします", 160, 196, { size: 11, align: "center", color: COLORS.sub });
+        if (saved && t - saved < 1.5) text(ctx, "セーブした！", 160, 62, { size: 14, align: "center", bold: true, color: COLORS.accent });
       }
       text(ctx, `${btn("l")}${btn("r")}${isKeyboard() ? "・[Tab]" : ""} タブ`, 8, 232, { size: 10.5, color: COLORS.dim });
       text(ctx, `${btn("b")} もどる`, 312, 232, { size: 10.5, align: "right", color: COLORS.dim });
@@ -18196,9 +18909,9 @@ body.nopad #pad { display: none; }
       const list = box();
       const top = scroll(nIndex, ZUKAN_ROWS, list.length);
       for (let k = 0; k < ZUKAN_ROWS && top + k < list.length; k++) {
-        const m = list[top + k], y = 36 + k * ROW_H;
+        const m = list[top + k], y = 36 + k * ROW_H$1;
         if (top + k === nIndex) {
-          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
           ctx.fillStyle = "#2d5aa8";
           ctx.fill();
         }
@@ -18228,11 +18941,11 @@ body.nopad #pad { display: none; }
         return;
       }
       const list = box();
-      const top = scroll(listIndex, ROWS, list.length);
-      for (let k = 0; k < ROWS && top + k < list.length; k++) {
-        const m = list[top + k], y = LIST_TOP + k * ROW_H;
+      const top = scroll(listIndex, ROWS$1, list.length);
+      for (let k = 0; k < ROWS$1 && top + k < list.length; k++) {
+        const m = list[top + k], y = LIST_TOP$1 + k * ROW_H$1;
         if (top + k === listIndex) {
-          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
           ctx.fillStyle = "#2d5aa8";
           ctx.fill();
         }
@@ -18244,9 +18957,9 @@ body.nopad #pad { display: none; }
     function drawZukan(ctx) {
       const top = scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length);
       for (let k = 0; k < ZUKAN_ROWS && top + k < NAKAMA_IDS.length; k++) {
-        const id = NAKAMA_IDS[top + k], y = 36 + k * ROW_H;
+        const id = NAKAMA_IDS[top + k], y = 36 + k * ROW_H$1;
         if (top + k === zIndex) {
-          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
           ctx.fillStyle = "#2d5aa8";
           ctx.fill();
         }
@@ -18265,9 +18978,9 @@ body.nopad #pad { display: none; }
       }
       const top = scroll(qIndex, ZUKAN_ROWS, list.length);
       list.slice(top, top + ZUKAN_ROWS).forEach((q, k) => {
-        const y = 36 + k * ROW_H, done = questState(g, q.id) === "done", p = questProgress(g, q);
+        const y = 36 + k * ROW_H$1, done = questState(g, q.id) === "done", p = questProgress(g, q);
         if (top + k === qIndex) {
-          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
           ctx.fillStyle = "#2d5aa8";
           ctx.fill();
         }
@@ -18295,19 +19008,252 @@ body.nopad #pad { display: none; }
       text(ctx, `お礼: ${reward}`, 120, 200, { size: 12, color: COLORS.accent });
     }
     function drawItems(ctx) {
-      Object.keys(ITEMS).forEach((id, k) => {
-        const y = 36 + k * ROW_H;
-        if (k === iIndex) {
-          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+      const ids = Object.keys(ITEMS), top = scroll(iIndex, ITEM_ROWS, ids.length);
+      ids.slice(top, top + ITEM_ROWS).forEach((id, k) => {
+        const y = 36 + k * ROW_H$1;
+        if (top + k === iIndex) {
+          roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
           ctx.fillStyle = "#2d5aa8";
           ctx.fill();
         }
         text(ctx, ITEMS[id].name, 16, y + 14, { size: 12 });
+        if (ITEMS[id].material) text(ctx, "合成", 200, y + 14, { size: 10, color: "#c8a8ff" });
         text(ctx, `×${g.items[id] || 0}`, 304, y + 14, { size: 12, align: "right" });
       });
       text(ctx, `お金: ${g.money}円 (駄菓子屋で 買える)`, 8, 200, { size: 11, color: COLORS.sub });
     }
     return { name: "menu", update, drawTop, drawBottom };
+  }
+  function codeOf(g, part) {
+    if (!part) return null;
+    if (part.type === "medal") {
+      const m = medalByUid(g, part.uid);
+      return m && m.id !== HERO_ID ? `n:${m.id}` : null;
+    }
+    return (g.items[part.id] || 0) > 0 ? `i:${part.id}` : null;
+  }
+  function fusionParts(g) {
+    return [
+      ...g.medals.filter((m) => m.id !== HERO_ID).map((m) => ({ type: "medal", uid: m.uid })),
+      ...Object.keys(g.items).filter((id) => g.items[id] > 0).map((id) => ({ type: "item", id }))
+    ];
+  }
+  function canFuse(g, a, b) {
+    const ca = codeOf(g, a), cb = codeOf(g, b);
+    if (!ca || !cb) return null;
+    if (a.type === "medal" && b.type === "medal" && a.uid === b.uid) return null;
+    if (a.type === "item" && b.type === "item" && a.id === b.id && g.items[a.id] < 2) return null;
+    return findRecipe(ca, cb);
+  }
+  function usePart(g, part) {
+    if (part.type === "item") {
+      g.items[part.id]--;
+      return null;
+    }
+    const m = medalByUid(g, part.uid);
+    g.medals = g.medals.filter((x) => x.uid !== part.uid);
+    g.watch = g.watch.map((u) => u === part.uid ? null : u);
+    return m;
+  }
+  function fuse(g, a, b) {
+    const r2 = canFuse(g, a, b);
+    if (!r2) return null;
+    const used = [usePart(g, a), usePart(g, b)].filter(Boolean);
+    const [kind, id] = r2.to.split(":");
+    if (!g.zukan.fused) g.zukan.fused = {};
+    g.zukan.fused[r2.to] = true;
+    if (kind === "i") {
+      g.items[id] = (g.items[id] || 0) + 1;
+      return { kind: "item", id };
+    }
+    const lv = Math.max(1, Math.round(used.reduce((s, m) => s + m.lv, 0) / used.length));
+    const medal = addMedal(g, id, lv);
+    return { kind: "nakama", id, medal };
+  }
+  const ROW_H = 20, ROWS = 8, LIST_TOP = 30;
+  const FUSE_BTN = { x: 200, y: 200, w: 112, h: 30, label: "合体する！" };
+  const BACK_BTN = { x: 8, y: 200, w: 80, h: 30, label: "もどる" };
+  function createFusion(app2) {
+    const g = app2.g;
+    let t = 0, index = 0, a = null, b = null, result2 = null, resultT = 0;
+    const same = (p, q) => p && q && p.type === q.type && (p.type === "medal" ? p.uid === q.uid : p.id === q.id);
+    const nameOf = (p) => p.type === "medal" ? unitOf(medalByUid(g, p.uid).id).name : ITEMS[p.id].name;
+    const scroll = (len) => Math.max(0, Math.min(len - ROWS, index - Math.floor(ROWS / 2)));
+    function pick(p) {
+      if (!a) {
+        a = p;
+        sfx("ok");
+        return;
+      }
+      if (same(a, p) && p.type === "medal") {
+        sfx("cancel");
+        return;
+      }
+      b = p;
+      sfx(canFuse(g, a, b) ? "ok" : "cancel");
+    }
+    function back() {
+      if (b) b = null;
+      else if (a) a = null;
+      else {
+        app2.save();
+        app2.go("field");
+      }
+      sfx("cancel");
+    }
+    function doFuse() {
+      if (!a || !b || !canFuse(g, a, b)) {
+        sfx("cancel");
+        return;
+      }
+      result2 = fuse(g, a, b);
+      resultT = t;
+      a = b = null;
+      index = 0;
+      sfx("friend");
+      app2.save();
+    }
+    function update(dt, input2) {
+      t += dt;
+      g.playTime += dt;
+      const tc = input2.touch;
+      if (result2) {
+        if (t - resultT > 0.6 && (input2.pressed.a || input2.pressed.b || tc.justDown)) {
+          result2 = null;
+          sfx("ok");
+        }
+        return;
+      }
+      const list = fusionParts(g);
+      if (index >= list.length) index = Math.max(0, list.length - 1);
+      if (input2.pressed.b || input2.pressed.x) {
+        back();
+        return;
+      }
+      if (input2.pressed.up && list.length) {
+        index = (index + list.length - 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.pressed.down && list.length) {
+        index = (index + 1) % list.length;
+        sfx("cursor");
+      }
+      if (input2.wheel && list.length) {
+        index = Math.max(0, Math.min(list.length - 1, index + input2.wheel));
+        sfx("cursor");
+      }
+      if (input2.pressed.a) {
+        if (a && b) doFuse();
+        else if (list[index]) pick(list[index]);
+      }
+      if (tc.justDown) {
+        if (hit(BACK_BTN, tc.x, tc.y)) {
+          back();
+          return;
+        }
+        if (a && b && hit(FUSE_BTN, tc.x, tc.y)) {
+          doFuse();
+          return;
+        }
+        const top = scroll(list.length);
+        for (let k = 0; k < ROWS && top + k < list.length; k++) {
+          if (!hit({ x: 8, y: LIST_TOP + k * ROW_H, w: 304, h: ROW_H }, tc.x, tc.y)) continue;
+          if (index === top + k && !(a && b)) pick(list[index]);
+          else {
+            index = top + k;
+            sfx("cursor");
+          }
+        }
+      }
+    }
+    function drawPart(ctx, code, x, y, scale = 3) {
+      const [kind, id] = code.split(":");
+      if (kind === "n") {
+        drawArt(ctx, ART[unitOf(id).art], Math.floor(t * 2), x, y, { scale: ART[unitOf(id).art].h > 24 ? scale * 0.6 : scale });
+        return;
+      }
+      const it = ITEMS[id];
+      ctx.fillStyle = it.material ? "#8a5ac0" : "#c08a3a";
+      ctx.beginPath();
+      ctx.arc(x, y - 20, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffe0a0";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      text(ctx, it.name[0], x, y - 13, { size: 18, align: "center", bold: true });
+    }
+    const codeOfPart = (p) => p.type === "medal" ? `n:${medalByUid(g, p.uid).id}` : `i:${p.id}`;
+    const resultName = (code) => code.startsWith("n:") ? unitOf(code.slice(2)).name : ITEMS[code.slice(2)].name;
+    function drawTop(ctx) {
+      ctx.fillStyle = "#1a1030";
+      ctx.fillRect(0, 0, 400, 240);
+      ctx.strokeStyle = `rgba(200, 160, 255, ${0.35 + 0.15 * Math.sin(t * 2)})`;
+      ctx.lineWidth = 2;
+      for (const r3 of [96, 70]) {
+        ctx.beginPath();
+        ctx.ellipse(200, 170, r3 * 1.6, r3 * 0.45, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      text(ctx, "合体の館", 200, 26, { size: 18, align: "center", bold: true, color: "#e0c8ff" });
+      if (result2) {
+        const code = `${result2.kind === "item" ? "i" : "n"}:${result2.id}`;
+        const k = Math.min(1, (t - resultT) / 0.5);
+        ctx.fillStyle = `rgba(255, 240, 200, ${0.5 * (1 - k)})`;
+        ctx.fillRect(0, 0, 400, 240);
+        drawPart(ctx, code, 200, 160, 5);
+        text(ctx, `${resultName(code)}が できた！`, 200, 200, { size: 18, align: "center", bold: true, color: COLORS.accent });
+        if (result2.medal) text(ctx, `Lv${result2.medal.lv}`, 200, 222, { size: 12, align: "center", color: COLORS.sub });
+        return;
+      }
+      const slots = [[a, 90], [b, 210]];
+      for (const [p, x] of slots) {
+        panel(ctx, x - 50, 50, 100, 120, { fill: "rgba(255,255,255,0.06)", edge: p ? "#c8a8ff" : COLORS.panelEdge });
+        if (p) {
+          drawPart(ctx, codeOfPart(p), x, 140);
+          text(ctx, nameOf(p), x, 162, { size: 11, align: "center", maxWidth: 96 });
+        } else text(ctx, p === a ? "1 つ目" : "2 つ目", x, 112, { size: 12, align: "center", color: COLORS.dim });
+      }
+      text(ctx, "＋", 150, 116, { size: 20, align: "center", bold: true });
+      text(ctx, "＝", 278, 116, { size: 20, align: "center", bold: true });
+      const r2 = a && b ? canFuse(g, a, b) : null;
+      panel(ctx, 296, 50, 96, 120, { fill: "rgba(255,255,255,0.06)", edge: r2 ? COLORS.accent : COLORS.panelEdge });
+      if (r2) {
+        const known = g.zukan.fused && g.zukan.fused[r2.to];
+        drawPart(ctx, r2.to, 344, 140);
+        text(ctx, known ? resultName(r2.to) : "？？？", 344, 162, { size: 11, align: "center", maxWidth: 92, color: COLORS.accent });
+      } else text(ctx, a && b ? "合体 できない" : "？", 344, 112, { size: a && b ? 11 : 20, align: "center", color: COLORS.dim });
+      text(ctx, a && b ? r2 ? `${btn("a")} で 合体！ 使った ものは なくなる` : "べつの 組み合わせを ためそう" : "キャラ・アイテムを 2 つ えらぼう", 200, 200, { size: 12, align: "center", color: COLORS.sub });
+    }
+    function drawBottom(ctx) {
+      ctx.fillStyle = "#16203a";
+      ctx.fillRect(0, 0, 320, 240);
+      const list = fusionParts(g);
+      text(ctx, a ? b ? "この 2 つで 合体する？" : "2 つ目を えらぶ" : "1 つ目を えらぶ", 8, 20, { size: 12, bold: true, color: "#e0c8ff" });
+      text(ctx, `${list.length ? index + 1 : 0}/${list.length}`, 312, 20, { size: 10.5, align: "right", color: COLORS.dim });
+      const top = scroll(list.length);
+      for (let k = 0; k < ROWS && top + k < list.length; k++) {
+        const p = list[top + k], y = LIST_TOP + k * ROW_H;
+        const chosen = same(p, a) || same(p, b);
+        if (top + k === index) {
+          roundRect(ctx, 8, y, 304, ROW_H - 2, 4);
+          ctx.fillStyle = "#5a3a8a";
+          ctx.fill();
+        }
+        if (p.type === "medal") {
+          const m = medalByUid(g, p.uid), inWatch = g.watch.indexOf(m.uid);
+          text(ctx, `${chosen ? "◆ " : ""}${unitOf(m.id).name}`, 16, y + 14, { size: 12, color: chosen ? COLORS.accent : COLORS.ink });
+          text(ctx, `Lv${m.lv}${inWatch >= 0 ? `  [${inWatch + 1}]` : ""}`, 304, y + 14, { size: 11, align: "right", color: COLORS.sub });
+        } else {
+          text(ctx, `${chosen ? "◆ " : ""}${ITEMS[p.id].name}`, 16, y + 14, { size: 12, color: chosen ? COLORS.accent : COLORS.ink });
+          if (ITEMS[p.id].material) text(ctx, "合成", 200, y + 14, { size: 10, color: "#c8a8ff" });
+          text(ctx, `×${g.items[p.id]}`, 304, y + 14, { size: 11, align: "right", color: COLORS.sub });
+        }
+      }
+      button(ctx, BACK_BTN, { size: 11 });
+      if (a && b) button(ctx, FUSE_BTN, { active: Boolean(canFuse(g, a, b)), disabled: !canFuse(g, a, b), size: 12 });
+      text(ctx, `${btn("b")} もどる`, 160, 222, { size: 10, align: "center", color: COLORS.dim });
+    }
+    return { name: "fusion", update, drawTop, drawBottom, debug: { pick, doFuse, state: () => ({ a, b, result: result2, index }) } };
   }
   const topCanvas = document.getElementById("top");
   const bottomCanvas = document.getElementById("bottom");
@@ -18351,6 +19297,7 @@ body.nopad #pad { display: none; }
     go(name) {
       if (name === "field") this.scene = this.field;
       else if (name === "menu") this.scene = createMenu(this);
+      else if (name === "fusion") this.scene = createFusion(this);
       else if (name === "title") this.scene = createTitle(this);
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)

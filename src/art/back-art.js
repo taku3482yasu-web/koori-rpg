@@ -379,5 +379,7 @@ export const BACK_ART = {
     onigirin: auto('onigirin'),
     setsubunmame: auto('setsubunmame'),
     goukioni: auto('goukioni'),
-    kinmetsuki: auto('kinmetsuki')
+    kinmetsuki: auto('kinmetsuki'),
+    // 合体の館の ハリー一族 (2026-10-30)
+    ...Object.fromEntries(['harryknight', 'harrymage', 'gargoharry', 'iwaharry', 'haridaijin', 'haridora', 'goldharry', 'harrymimic', 'metalharry', 'metalkingharry'].map(k => [k, auto(k)]))
 };

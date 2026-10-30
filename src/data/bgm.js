@@ -227,7 +227,7 @@ export function compileSong(song) {
 //   バトルが おわったら 止める (勝ち・負けの 効果音を 聞かせる)。結果画面も 止める
 export function bgmFor({ scene, area, battle }) {
     if (scene === 'title') return 'title';
-    if (scene === 'field' || scene === 'menu') return SONGS[area] ? area : 'ishinokawa';
+    if (scene === 'field' || scene === 'menu' || scene === 'fusion') return SONGS[area] ? area : 'ishinokawa';
     if (scene === 'battle' && battle) {
         if (battle.outcome) return null;
         if (battle.kind === 'boss') return SONGS[battle.bossId] ? battle.bossId : 'boss';

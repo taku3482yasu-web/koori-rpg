@@ -13,6 +13,15 @@ const compiled = {};
 let want = null;       // 鳴らしたい 曲
 let cur = null;        // 鳴っている 曲 { id, song, gain, start, next (次に 予約する step) }
 let noise = null;
+// BGM の オン・オフ (メニューの セーブ タブ。2026-10-30)。バージョンに 関係なく この ブラウザに おぼえる
+const BGM_KEY = 'koori-rpg:bgm';
+let on = (() => { try { return localStorage.getItem(BGM_KEY) !== 'off'; } catch (e) { return true; } })();
+export const bgmOn = () => on;
+export function setBgmOn(v) {
+    on = Boolean(v);
+    try { localStorage.setItem(BGM_KEY, on ? 'on' : 'off'); } catch (e) { /* おぼえられなくても 鳴らし分けは できる */ }
+    schedule();
+}
 
 function noiseBuffer(ac) {
     if (noise) return noise;
@@ -114,7 +123,7 @@ function schedule() {
 
 // 毎コマ 呼ぶ。id: SONGS の 名前 / null で 止める
 export function playBgm(id) {
-    want = id && SONGS[id] ? id : null;
+    want = on && id && SONGS[id] ? id : null;
     schedule();
 }
 export const currentBgm = () => cur?.id ?? null;

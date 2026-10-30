@@ -261,6 +261,8 @@ export const BUILDINGS = [
     { id: 'yashikiStation', label: '忍びの屋敷前駅', x: 2, y: YASHIKI_Y0 + 27, w: 6, h: 4, wall: '#e8e0d0', roof: '#3a3a3a', door: { x: 5, y: YASHIKI_Y0 + 30 } },
     // 月の迷宮 (7 章)
     { id: 'moonStation', label: '月の迷宮前駅', x: 2, y: MOON_Y0 + 27, w: 6, h: 4, wall: '#e0e0f0', roof: '#3a3a6a', door: { x: 5, y: MOON_Y0 + 30 } },
+    // 商店街の 合体の館 (2026-10-30 ユーザー指定。パチンコ店あとの 北)
+    { id: 'gattai', label: '合体の館', x: 15, y: 37, w: 6, h: 4, wall: '#d8c8f0', roof: '#6a3a9a', door: { x: 18, y: 40 } },
     // 金色のSE城 (8 章)
     { id: 'shiroStation', label: 'SE城前駅', x: 2, y: SHIRO_Y0 + 27, w: 6, h: 4, wall: '#f0e0b0', roof: '#a02020', door: { x: 5, y: SHIRO_Y0 + 30 } }
 ];

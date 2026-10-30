@@ -660,6 +660,39 @@ try {
     await skipTalk(30);
     check(await evaluate('window.__app.g.story === "clear7" && window.__app.g.medals.some(m => m.id === "runaya")'), 'ルナヤに 勝つと 7 章 クリア (なかまに なる)');
 
+    // ----- BGM の オン・オフ (メニューの セーブ タブ。2026-10-30) -----
+    await key('KeyI');
+    await sleep(300);
+    await clickBottom(288, 17);
+    await clickBottom(160, 148);
+    await sleep(200);
+    await shot('menu-bgm-off');
+    check(await evaluate('window.__bgm() === null && localStorage.getItem("koori-rpg:bgm") === "off"'), 'メニューで BGM を オフに できる (この ブラウザに おぼえる)');
+    await clickBottom(160, 148);
+    await sleep(200);
+    check(await evaluate('window.__bgm() === "moon" && localStorage.getItem("koori-rpg:bgm") === "on"'), 'もう いちど おすと BGM が オンに もどる');
+    await key('KeyK');
+    await sleep(300);
+
+    // ----- 合体の館 (商店街。2026-10-30): チョコ + サイダー → 星のかけら -----
+    await evaluate('(() => { const g = window.__app.g; g.items.choco = 1; g.items.cider = 1; g.items.hoshikakera = 0; return true; })()');
+    await at(18, 41, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await sceneIs('fusion'), '合体の館に 入ると 合体の 画面');
+    await evaluate('(() => { const s = window.__app.scene; s.debug.pick({ type: "item", id: "choco" }); s.debug.pick({ type: "item", id: "cider" }); return true; })()');
+    await sleep(300);
+    await shot('fusion-pick');
+    await key('KeyJ');
+    await sleep(400);
+    await shot('fusion-result');
+    check(await evaluate('window.__app.g.items.hoshikakera === 1 && window.__app.g.items.choco === 0 && Boolean(window.__app.scene.debug.state().result)'), '合体の館: チョコ + サイダー で 星のかけら が できる');
+    await key('KeyJ');
+    await key('KeyK');
+    await sleep(300);
+    check(await sceneIs('field'), '合体の館から 町に もどる');
+
     // ----- 8 章: 電車で 金色のSE城 → 大鬼 (足) → 双頭鬼 (頭 2 つ) → 金滅鬼 → おにおに (紋の 暴発) (2026-10-30) -----
     await at(5, 41, 'up');
     await key('KeyJ');

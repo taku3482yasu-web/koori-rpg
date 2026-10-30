@@ -1,5 +1,6 @@
 // データの テスト: なかま (石の川 20 体・商店街 20 体)・わざと 術・絵・道具・地図
 import test from 'node:test';
+import { RECIPES } from '../src/data/fusion.js';
 import assert from 'node:assert/strict';
 import { NAKAMA, NAKAMA_IDS, BOSSES, ROLES, ELEMENTS, HERO, JUTSU, HEAL_JUTSU, DRAIN_JUTSU, JUTSU_TYPE, idsInArea } from '../src/data/nakama.js';
 import { ITEMS } from '../src/data/items.js';
@@ -156,7 +157,9 @@ test('全員が どこかに 出る。見えている キャラが 大多数・�
     // 進化で なる キャラ (evo) は 町には 出ない。進化前の キャラが どこかに 出る
     //   2 回 進化する キャラ (ハリーベビー → ハリジェネラル → キングハリー) は いちばん もとの キャラを 見る
     const root = id => (NAKAMA[id].evo ? root(NAKAMA[id].evo) : id);
-    for (const id of NAKAMA_IDS) assert.ok(hidden.has(root(id)) || roam.has(root(id)), `${id} の 出る場所`);
+    //   合体でしか 会えない キャラ (fuse) は 合体の館の レシピで できる
+    const fused = new Set(RECIPES.map(r => r.to).filter(c => c.startsWith('n:')).map(c => c.slice(2)));
+    for (const id of NAKAMA_IDS) assert.ok(NAKAMA[id].fuse ? fused.has(id) : hidden.has(root(id)) || roam.has(root(id)), `${id} の 出る場所`);
     assert.ok(roam.size > hidden.size, `見えている ${roam.size} 種類・かくれている ${hidden.size} 種類`);
     for (const s of SPOTS) assert.ok(s.cue, `${s.id} の 違和感`);
 });

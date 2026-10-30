@@ -156,6 +156,17 @@ export const SPECIALS = {
     setsubunmame: { motion: 'rain', color: '#e0e0e0' },
     goukioni: { motion: 'dash', color: '#ff8a4a' },
     kinmetsuki: { motion: 'beam', color: '#ffd040' },
+    // 合体の館の ハリー一族
+    harryknight: { motion: 'dash', color: '#e0e0e0' },
+    harrymage: { motion: 'cloud', color: '#d8a8ff' },
+    gargoharry: { motion: 'dash', color: '#a0a0a8' },
+    iwaharry: { motion: 'rain', color: '#5ad06a' },
+    haridaijin: { motion: 'aura', color: '#d8a8ff' },
+    haridora: { motion: 'beam', color: '#ff8a4a' },
+    goldharry: { motion: 'aura', color: '#ffd040' },
+    harrymimic: { motion: 'dash', color: '#e0e0e0' },
+    metalharry: { motion: 'aura', color: '#c0c8d8' },
+    metalkingharry: { motion: 'beam', color: '#c0c8d8' },
     // こおりくん: 大腸炎アタック
     koori: { motion: 'cloud', color: '#c8a060', glyph: '@' }
 };

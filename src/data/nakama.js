@@ -238,6 +238,17 @@ export const WAZA = {
     setsubunmame: W('まめまき', 'ふつう', 'around', 0.9, 'slow', 0.4),
     goukioni: W('剛鬼のこぶし', 'ほのお', 'front', 1.8),
     kinmetsuki: W('金滅の一閃', 'ほのお', 'line', 1.8, 'poison', 0.3),
+    // 合体でしか 会えない ハリー一族 (合体の館。2026-10-30)。よわき は のろい・やけど は どく
+    harryknight: W('ハリーランス', 'ふつう', 'front', 1.5),
+    harrymage: W('トゲトゲ魔法', 'ふしぎ', 'line', 1.4),
+    gargoharry: W('いしのダイブ', 'ふつう', 'front', 1.6),
+    iwaharry: W('いわばり', 'しぜん', 'around', 1.2),
+    haridaijin: W('大臣のおふれ', 'ふしぎ', 'around', 0, 'slow', 0.8),
+    haridora: W('トゲのブレス', 'ほのお', 'line', 1.6, 'poison', 0.3),
+    goldharry: W('きんのはり', 'ふつう', 'line', 1.2),
+    harrymimic: W('たからばこハリ', 'ふつう', 'front', 1.8),
+    metalharry: W('メタルたいあたり', 'ふつう', 'front', 1.0),
+    metalkingharry: W('メタルキングの威光', 'ふしぎ', 'around', 1.2),
     ooni8: W('ふみつけ', 'ふつう', 'around', 1),
     soutou8: W('かみつき', 'ふつう', 'front', 1.2),
     kinme8: W('金色の鬼気', 'ふしぎ', 'around', 1.1, 'blind', 0.4),
@@ -927,6 +938,68 @@ const LIST = [
         title: 'いぶし金', desc: '金でできた鬼。自身の身体に自信を持っており、黄金の身体を見せつけては、周りを嘲笑している。',
         special: sp('金滅 大一閃', [atk('all', 1.9, { element: 'ほのお' })])
     },
+    // ----- 合体でしか 会えない ハリー一族 10 体 (合体の館。2026-10-30 ユーザー指定: 合体でしか 取れない キャラ) -----
+    //   fuse: true は 町に 出ない (data/fusion.js の レシピで できる)。名前・属性・役割・口ぐせ・説明は ダンジョンの ハリー王国から 写した
+    {
+        id: 'harryknight', name: 'ハリーナイト', from: 'ダンジョン 147', area: 'shoutengai', fuse: true, rank: 'B', element: 'ふつう', role: 'attacker', mul: { atk: 1.1, def: 1.05 },
+        line: '騎士の ほこりに かけて！', favorite: 'cider',
+        title: '王国の騎士', desc: '騎士の誇りを胸に戦うハリー。いつかハリー大帝のそばで仕えるのが夢。',
+        special: sp('ハリー 突撃槍', [atk('one', 2.4)])
+    },
+    {
+        id: 'harrymage', name: 'ハリーメイジ', from: 'ダンジョン 148', area: 'shoutengai', fuse: true, rank: 'B', element: 'ふしぎ', role: 'jammer', mul: { mag: 1.2 },
+        line: 'トゲトゲの 呪文！', favorite: 'melonpan',
+        title: 'トゲの魔法使い', desc: 'トゲトゲの呪文を唱える魔法使い。呪文を噛むと自分にトゲが刺さる。',
+        special: sp('トゲトゲ 大魔法', [atk('all', 1.0, { magic: true }), { kind: 'status', target: 'all', status: 'confuse', chance: 0.5 }])
+    },
+    {
+        id: 'gargoharry', name: 'ガーゴハリー', from: 'ダンジョン 149', area: 'shoutengai', fuse: true, rank: 'C', element: 'ふつう', role: 'defender', mul: { def: 1.15 },
+        line: '……（いしの ふり）', favorite: 'onigiri',
+        title: '石像のふり', desc: '石像のふりをして城を見張っている。動いてはいけないので、かゆいところがかけないのが悩み。',
+        special: sp('石像 ダイブ', [atk('one', 2.0), { kind: 'buff', target: 'party', stat: 'def', amount: 0.4, time: 10 }])
+    },
+    {
+        id: 'iwaharry', name: 'イワハリー', from: 'ダンジョン 150', area: 'shoutengai', fuse: true, rank: 'C', element: 'しぜん', role: 'defender', mul: { hp: 1.15, def: 1.1, spd: 0.85 },
+        line: 'ゴロゴロ…ハリ', favorite: 'kyuuri',
+        title: '岩のハリー', desc: '岩のように固いハリー。ころがって移動するので、坂道は苦手。',
+        special: sp('岩ころがし ハリ', [atk('all', 1.4)])
+    },
+    {
+        id: 'haridaijin', name: 'ハリダイジン', from: 'ダンジョン 151', area: 'shoutengai', fuse: true, rank: 'C', element: 'ふしぎ', role: 'supporter', mul: { mag: 1.1 },
+        line: '大帝さまの おなりである', favorite: 'choco',
+        title: '大帝の右腕', desc: 'ハリー大帝に仕える大臣。王国のお金の管理をしているが、大帝のおやつ代に頭を悩ませている。',
+        special: sp('大臣の 号令', [{ kind: 'buff', target: 'party', stat: 'atk', amount: 0.4, time: 10 }, { kind: 'buff', target: 'party', stat: 'def', amount: 0.3, time: 10 }])
+    },
+    {
+        id: 'haridora', name: 'ハリドラ', from: 'ダンジョン 152', area: 'shoutengai', fuse: true, rank: 'B', element: 'ほのお', role: 'attacker', mul: { atk: 1.1, mag: 1.1 },
+        line: 'トゲの ドラゴンだハリ！', favorite: 'cider',
+        title: 'トゲの竜', desc: 'トゲをまとった竜。王国の空を守っているが、自分のトゲで背中がかゆい。',
+        special: sp('トゲ竜の 大ブレス', [atk('all', 1.6, { magic: true, element: 'ほのお' })])
+    },
+    {
+        id: 'goldharry', name: 'ゴールドハリー', from: 'ダンジョン 153', area: 'shoutengai', fuse: true, rank: 'C', element: 'ふつう', role: 'supporter', mul: { spd: 1.1 },
+        line: 'きんぴか ハリ！', favorite: 'choco',
+        title: '中身がきらりと光ってほしい', desc: '金のメッキを塗ったハリー。はたから見ればプライスレス。',
+        special: sp('きんぴか シャワー', [{ kind: 'buff', target: 'party', stat: 'spd', amount: 0.4, time: 10 }, atk('all', 0.8)])
+    },
+    {
+        id: 'harrymimic', name: 'ハリーミミック', from: 'ダンジョン 154', area: 'shoutengai', fuse: true, rank: 'C', element: 'ふつう', role: 'defender', mul: { atk: 1.1 },
+        line: 'あけたハリ？', favorite: 'niboshi',
+        title: '宝箱のふり', desc: '宝箱に化けたハリー。開けようとした手にトゲを刺してくる。',
+        special: sp('びっくり 宝箱', [atk('one', 2.2), { kind: 'status', target: 'one', status: 'confuse', chance: 0.6 }])
+    },
+    {
+        id: 'metalharry', name: 'メタルハリー', from: 'ダンジョン 155', area: 'shoutengai', fuse: true, rank: 'C', element: 'ふつう', role: 'defender', mul: { hp: 0.6, def: 1.9, spd: 1.3 },
+        line: 'キーン', favorite: 'niboshi',
+        title: '鋼のハリー', desc: '体が鋼でできたハリー。とても硬いが、すぐ逃げる。',
+        special: sp('メタル ガード', [{ kind: 'buff', target: 'party', stat: 'def', amount: 0.6, time: 10 }])
+    },
+    {
+        id: 'metalkingharry', name: 'メタルキングハリー', from: 'ダンジョン 157', area: 'shoutengai', fuse: true, rank: 'A', element: 'ふつう', role: 'defender', mul: { hp: 0.8, def: 1.9, spd: 1.2, mag: 1.1 },
+        line: 'キィィィン……', favorite: 'choco',
+        title: '先代のハリーの王', desc: 'ハリー王国の先代の王。どんな攻撃も弾く鋼の肉体を持つ。',
+        special: sp('メタルキングの 威光', [atk('all', 1.4, { magic: true }), { kind: 'buff', target: 'party', stat: 'def', amount: 0.5, time: 10 }])
+    },
     // 月の迷宮の キャラの 進化先 3 体 (7 章。町には 出ない)
     {
         id: 'kaguyausagi', name: 'カグヤウサギ', from: 'ダンジョン 069', area: 'moon', evo: 'tsukiusagi', rank: 'C', element: 'ふしぎ', role: 'healer', mul: {},
@@ -1093,8 +1166,8 @@ LIST.forEach((n, i) => {
     NAKAMA[n.id] = { ...n, no: i + 1, rank, area: n.area || 'ishinokawa', base, ...moves(n.id, n.element, rank, n.upperJutsu), art: n.id };
 });
 export const NAKAMA_IDS = LIST.map(n => n.id);
-// 地区で 出会う キャラ (進化で なる キャラは 入れない)
-export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo);
+// 地区で 出会う キャラ (進化で なる キャラ・合体でしか 会えない キャラは 入れない)
+export const idsInArea = area => NAKAMA_IDS.filter(id => NAKAMA[id].area === area && !NAKAMA[id].evo && !NAKAMA[id].fuse);
 
 // ----- 進化 (設計書 4.3。2026-10-29) -----
 //   なかまが 決まった Lv に なると、すがたが 変わって 進化先の キャラに なる (メダルは そのまま。Lv・けいけんちも そのまま)

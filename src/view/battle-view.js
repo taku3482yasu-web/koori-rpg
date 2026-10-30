@@ -505,7 +505,7 @@ export function createBattleView(app, battle, place) {
 
     // ----- どうぐ・おやつ -----
     // 品物を えらんで から、使う 相手を えらぶ (2026-10-28 ユーザー指定)。どうぐは 輪の なかま (前 → 後ろ)、おやつは 敵
-    const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0);
+    const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0 && !ITEMS[id].material);   // 合成アイテムは バトルで 使えない
     const menuTargets = () => menu.kind === 'item'
         ? [0, 1, 2, 3, 4, 5].map(i => battle.wheel[(battle.rot + i) % 6]).filter(u => u && !u.ko)
         : battle.enemiesAlive();
