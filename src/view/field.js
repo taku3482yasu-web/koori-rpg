@@ -27,13 +27,13 @@ import { FUSION_HINTS } from '../data/fusion.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13 } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
-import { btn, moveName } from '../core/keys.js';
+import { btn, moveName, fillKeys } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved, personArt, monsHere } from '../logic/world.js';
 import { reached, chapterOf } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen, seeHelp } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -570,9 +570,11 @@ export function createField(app) {
                 act('enter', { id: 'hyougaryu', art: 'hyougaryu', from: 'ice', x: 290, scale: 5.5 }),
                 act('pose', { id: 'hyougaryu', pose: 'float' }),
                 act('fx', { kind: 'ring', id: 'hyougaryu' }),
-                { who: 'ダムの主', art: 'hyougaryu', text: 'グルルル……こおり族の 子か。封印など もう いらぬ。この 王冠で、山も 町も ぜんぶ こおらせて やる……！' },
+                { who: 'ダムの主', art: 'hyougaryu', text: 'グルルル……ようやく 出られた……数千年ぶりの 自由だ……！ それに 今の わしには 王冠が ある……！' },
+                act('fx', { kind: 'ring', id: 'hyougaryu' }),
+                { who: 'ダムの主', art: 'hyougaryu', text: 'この 王冠が ある かぎり、すべて わしの 意のまま！ 手始めに 貴様らを 凍らせて くれるわ！' },
                 act('fx', { kind: 'exclaim', id: 'furukawa' }),
-                furu('ヒョウガリュウ……！ 王冠の 力に のまれちゃってる！ 王冠を とりもどして、封印を 作りなおそう！'),
+                furu('ダムの主……ヒョウガリュウだ！ 王冠の 力で あばれてるんだ！ 王冠を とりもどして、封印を 作りなおそう！'),
                 furu('来るよ！ こおりくん、がんばって！')
             ], { place: 'damBack', weather: 'cold', done: () => app.startBattle({ enemies: bossEnemies('himuro'), kind: 'boss', place: 'dam' }) });
         } else if (p.id === 'nushi') {
@@ -780,7 +782,7 @@ export function createField(app) {
         say([{ who: '', text: reached(g, 'clear3') ? '石碑の となりの 箱に、こおりの 王冠が もどっている。封印は しっかり とじている。' : '古い 石碑。むかしの こおり族の 言いつたえが 書いてある。' }]);
     }
 
-    // 封印の 柱を 調べる (3 章) → もれだした 冷気で 気が 立った キャラと バトル (勝つと 柱を 作りなおす)
+    // 封印の 柱を 調べる (3 章) → 柱を こわそうと している ルキハの 部下 (紋つき・闇) と バトル (勝つと 柱を 作りなおす。2026-11-02 ユーザー指定)
     function examineSeal(m) {
         if (g.mysteries[m.id]) { say([{ who: '', text: m.done }]); return; }
         if (!g.flags.oku) {
@@ -789,9 +791,14 @@ export function createField(app) {
         }
         const n = NAKAMA[m.nakama];
         g.zukan.seen[m.nakama] = true;
-        say([...m.lines.map(text => ({ who: '', text })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `冷気で 気が 立った ${n.name}が おそいかかってきた！` }], {
-            done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: 'wild', place: 'yama', mystery: m.id })
-        });
+        story([
+            ...m.lines.map(text => nar(text)),
+            act('enter', { id: m.nakama, art: n.art, from: 'dark', x: 290, dark: true }),
+            { who: `${n.name}・闇`, art: n.art, text: m.minion },
+            act('fx', { kind: 'question', id: 'furukawa' }),
+            furu('ルキハ……？ だれだろう。とにかく 柱を まもらなきゃ！'),
+            nar(`ルキハの 部下に された ${n.name}・闇が おそいかかってきた！`)
+        ], { place: 'yama', weather: 'cold', done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv, dark: true }], kind: 'wild', place: 'yama', mystery: m.id }) });
     }
 
     // 七不思議を 調べる → 正体と バトル (勝つと たしかめた ことに なる)
@@ -1103,7 +1110,7 @@ export function createField(app) {
                 act('exit', { id: 'hyougaryu', to: 'fade' }),
                 nar('王冠を 奥の院に もどすと、封印の 柱が 青く 光り、封印が しっかりと とじた。'),
                 act('fx', { kind: 'sparkle', x: 200, y: 90 }),
-                nar('３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。'),
+                nar('３章 クリア！ 山の 沢と 石の川に 水が もどった。紋から 解放された キャラが 山を 歩きまわるように なった。'),
                 furu('こおりくん、いちど 家に 帰ろうか。ともいしさんが 心配してるかも。')
             ], { place: 'damBack', weather: 'cold', done: () => app.save() });
         } else if (result.mon && result.outcome === 'win') {
@@ -1337,11 +1344,12 @@ export function createField(app) {
         } else if (result.mystery && result.outcome === 'win' && SEALS.some(x => x.id === result.mystery)) {
             const m = SEALS.find(x => x.id === result.mystery), n = sealsSolved(g);
             if (!allSealsSolved(g)) {
-                say([{ who: '', text: `しずまった ${NAKAMA[m.nakama].name}と いっしょに、とけかけた「${m.label}」を 作りなおした！ (${n}/${SEALS.length})` }, furu('柱が 青く 光ってる！ この ちょうしで ほかの 柱も 作りなおそう！')], { done: () => app.save() });
+                say([{ who: '', text: `紋が 消えた ${NAKAMA[m.nakama].name}は、われに かえって にげていった。` }, { who: '', text: `こわされかけた「${m.label}」を 作りなおした！ (${n}/${SEALS.length})` }, furu('柱が 青く 光ってる！ この ちょうしで ほかの 柱も まもろう！')], { done: () => app.save() });
                 return;
             }
-            // 3 つ そろうと、王冠に あやつられた ヒョウガリュウが 封印に あらがって 目ざめる
+            // 3 つ そろうと: 柱は もどったが、王冠を かぶせられた ヒョウガリュウが 割れ目から ぬけだしてしまう
             story([
+                nar(`紋が 消えた ${NAKAMA[m.nakama].name}は、われに かえって にげていった。`),
                 act('fx', { kind: 'sparkle', x: 200, y: 100 }),
                 nar(`「${m.label}」を 作りなおした！ これで 封印の 柱は ${n} 本 ぜんぶ もとどおりだ。`),
                 act('jump', { id: 'furukawa' }),
@@ -1353,13 +1361,12 @@ export function createField(app) {
                 act('enter', { id: 'hyougaryu', art: 'hyougaryu', from: 'top', x: 300, scale: 5 }),
                 act('pose', { id: 'hyougaryu', pose: 'float' }),
                 act('fx', { kind: 'ring', id: 'hyougaryu' }),
-                { who: '？？？', art: 'hyougaryu', text: 'グルルル……封印など させぬ……この 王冠が ある かぎり……！' },
                 act('pose', { id: 'furukawa', pose: 'shiver' }),
-                furu('りゅ、龍……！ あれが ヒョウガリュウ！？ 頭に 王冠を かぶってる！'),
+                furu('りゅ、龍……！ 頭に 王冠を かぶってる！ 王冠の 力で 封印の 割れ目から 出てきちゃったんだ！'),
                 act('exit', { id: 'hyougaryu', to: 'up' }),
                 act('pose', { id: 'furukawa', pose: '' }),
-                nar('ヒョウガリュウは 冷気を まきちらしながら、ダムの 封印の 割れ目へ もぐっていった。'),
-                furu('だれかが 王冠で ヒョウガリュウを 起こして、あやつってるんだ……！ ダムへ 行こう！')
+                nar('龍は 冷気を まきちらしながら、ダムの ほうへ 飛んでいった。'),
+                furu('ダムへ 行こう！ 王冠を とりもどして、もう いちど 封印しなきゃ！'),
             ], { place: 'yama', done: () => app.save() });
         } else if (result.mystery && result.outcome === 'win') {
             const m = MYSTERIES.find(x => x.id === result.mystery), n = mysteriesSolved(g);
@@ -1424,17 +1431,29 @@ export function createField(app) {
         }
     }
 
-    // ヘルプに 話題が ふえたら 上画面に お知らせ (2026-11-02)
-    let helpCount = helpTopics(g).length, helpNote = null;
+    // ヘルプ (2026-11-02 ユーザー指定): できる ことが ふえたら、その ヘルプを その場で 流す (メニューの ヘルプで あとから 見かえせる)。
+    //   g.flags.helpShown: もう 流した 話題。前の セーブ (この しくみの 前) は いま 見られる ぶんを 流した ことに する
+    if (!g.flags.helpShown) g.flags.helpShown = Object.fromEntries((g.playTime > 30 ? helpTopics(g) : []).map(h => [h.id, true]));
+    function showNewHelp() {
+        if (app.autoHelp === false) return false;
+        const fresh = helpTopics(g).filter(h => !g.flags.helpShown[h.id]);
+        if (!fresh.length) return false;
+        for (const h of fresh) { g.flags.helpShown[h.id] = true; seeHelp(g, h.id); }
+        sfx('watch');
+        say([
+            ...fresh.flatMap(h => [{ who: 'ヘルプ', text: `【${h.title}】` }, ...h.text.map(line => ({ who: 'ヘルプ', text: fillKeys(line) }))]),
+            { who: 'ヘルプ', text: 'メニューの「ヘルプ」で いつでも 見かえせるよ。' }
+        ], { done: () => app.save() });
+        return true;
+    }
     function update(dt, input) {
         t += dt;
         g.playTime += dt;
-        const hc = helpTopics(g);
-        if (hc.length > helpCount && !app.talk.isActive()) { helpNote = { title: hc[hc.length - 1].title, n: hc.length - helpCount, until: t + 3.5 }; helpCount = hc.length; sfx('watch'); }
         camera();
         wild.update(dt, g.pos);
         if (app.talk.isActive()) return;
         if (lens) { updateLens(dt, input); return; }
+        if (showNewHelp()) return;
         // 10 章の はじまり: 9 章 クリアの あと 石の川タウン・商店街に もどると 黒い 霧 (ストーリー工房 10 章 場面 1)
         if (g.story === 'clear9' && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
             story([
@@ -1712,10 +1731,6 @@ export function createField(app) {
             ctx.stroke();
         }
         if (lens) drawLens(ctx);
-        if (helpNote && helpNote.until > t && !app.talk.isActive()) {
-            panel(ctx, 60, 14, 280, 24, { fill: 'rgba(16,22,42,0.92)', edge: '#ff9ad8' });
-            text(ctx, `ヘルプに「${helpNote.title}」${helpNote.n > 1 ? `など ${helpNote.n} こ` : ''}が ふえた！ (メニュー)`, 200, 31, { size: 11, align: 'center', bold: true, color: '#ff9ad8', maxWidth: 270 });
-        }
         app.talk.drawTop(ctx, t);
     }
 

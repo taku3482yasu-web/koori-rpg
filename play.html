@@ -216,6 +216,8 @@ body.nopad #pad { display: none; }
   const isKeyboard = () => mode === "key";
   const btn = (b) => `[${mode === "key" ? KEY_NAMES[b] : BUTTON_NAMES[b] || b.toUpperCase()}]`;
   const moveName = () => mode === "key" ? "[WASD]" : "[十字キー]";
+  const FILL = ["a", "b", "x", "y", "l", "r", "start", "fast", "help"];
+  const fillKeys = (line2) => line2.replace(/\{(\w+)\}/g, (m, k) => FILL.includes(k) ? btn(k) : m);
   const BUTTONS = ["up", "down", "left", "right", "a", "b", "x", "y", "l", "r", "start", "sp1", "sp2", "sp3", "tab", "fast", "help"];
   const KEYS = {
     ArrowUp: "up",
@@ -6010,7 +6012,8 @@ body.nopad #pad { display: none; }
       prop: "icepillar",
       nakama: "kokemusha",
       lv: 20,
-      lines: ["原っぱの まんなかの 氷の 柱が、ぽたぽたと とけだしている……。", "もれだした 冷気で 気が 立った コケだらけの よろいが、ぬっと 出てきた！"],
+      lines: ["原っぱの まんなかの 氷の 柱が、ぽたぽたと とけだしている……。", "柱の かげで、黒い 紋を つけた コケだらけの よろいが 柱を たたいている！"],
+      minion: "ルキハさまの めいれいだ……この 柱は こわさせて もらう……！",
       done: "作りなおした 氷の 柱が、つめたく 青く 光っている。"
     },
     {
@@ -6021,7 +6024,8 @@ body.nopad #pad { display: none; }
       prop: "icepillar",
       nakama: "koorinokagami",
       lv: 20,
-      lines: ["雪渓の おくの 鏡のような 氷の 柱に、大きな ひびが 入っている。", "ひびから もれる 冷気を あびて、柱に うつった 影が しゃべりだした！"],
+      lines: ["雪渓の おくの 鏡のような 氷の 柱に、大きな ひびが 入っている。", "ひびの 中に、黒い 紋を うかべた 影が うつっている！"],
+      minion: "ジャマ ヲ スルナ……ルキハサマノ タメニ……。",
       done: "鏡のような 氷の 柱に、もう ひびは ない。"
     },
     {
@@ -6032,7 +6036,8 @@ body.nopad #pad { display: none; }
       prop: "icepillar",
       nakama: "yukidarumuscle",
       lv: 21,
-      lines: ["岩の あいだの 大きな 氷の 柱が、半分 とけて かたむいている。", "「冷気が……力が わいてくる！ だれも 近づけさせん！」 ムキムキの 雪だるまが 立ちふさがった！"],
+      lines: ["岩の あいだの 大きな 氷の 柱が、半分 とけて かたむいている。", "黒い 紋を つけた ムキムキの 雪だるまが、柱を おしたおそうと している！"],
+      minion: "ルキハさまに もらった この 力！ 柱ごと おしたおして やる！",
       done: "岩場の 氷の 柱が、まっすぐ 立っている。"
     }
   ];
@@ -6237,7 +6242,7 @@ body.nopad #pad { display: none; }
   const CHAPTERS = [
     [1, "intro", "はじまりの 夏休み"],
     [2, "clear", "学校の七不思議"],
-    [3, "clear2", "ダムの水が消える"],
+    [3, "clear2", "ダムの水の謎を追え"],
     [4, "clear3", "海辺の どうくつと ライバル探検隊"],
     [5, "clear4", "ネット寺の のろい"],
     [6, "clear5", "忍びの屋敷と 消えた メダル"],
@@ -6328,8 +6333,8 @@ body.nopad #pad { display: none; }
       "レベルが 上がると 進化する なかまが いる。",
       "同じ キャラの メダルを 何まいも もっていると「絆」が 上がり、必殺技が 強く なる。"
     ] },
-    { id: "dark", after: "netdera", title: "紋つき", text: [
-      "黒い 紋に とりつかれた「・闇」の キャラは ふつうより 強い。",
+    { id: "dark", after: "yama", title: "紋つき", text: [
+      "黒い 紋に とりつかれた「・闇」の キャラは ふつうより 強い。ルキハの 部下に されている ことも。",
       "紋つきの まま では なかまに ならない。"
     ] },
     { id: "juyosho", after: "clear5", title: "ネット寺の 授与所", text: [
@@ -18079,7 +18084,7 @@ body.nopad #pad { display: none; }
       const xs = side === "left" ? LEFT : RIGHT;
       return xs.find((x) => !actors.some((a) => !a.leaving && Math.abs(a.tx - x) < 20)) ?? xs[xs.length - 1];
     };
-    function add({ id, art = id, x = null, side = null, scale = null, flip = null, from = null }) {
+    function add({ id, art = id, x = null, side = null, scale = null, flip = null, from = null, dark = false }) {
       const s = side || (PARTY.includes(id) ? "left" : "right");
       const tx = x ?? freeSlot(s);
       const a = {
@@ -18097,7 +18102,8 @@ body.nopad #pad { display: none; }
         speed: 160,
         leaving: null,
         dy: 0,
-        born: t
+        born: t,
+        dark
       };
       if (from === "right") a.x = 440;
       else if (from === "left") a.x = -40;
@@ -18389,6 +18395,13 @@ body.nopad #pad { display: none; }
       ctx.beginPath();
       ctx.ellipse(a.x, GROUND + 2, art.w * a.scale * artFit(art) * 0.32, 4, 0, 0, Math.PI * 2);
       ctx.fill();
+      if (a.dark) {
+        const h = art.h * a.scale * artFit(art);
+        ctx.fillStyle = `rgba(30, 0, 40, ${(0.3 + 0.12 * Math.sin(t * 4)) * a.alpha})`;
+        ctx.beginPath();
+        ctx.ellipse(x, y - h / 2, h * 0.55, h * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       const dim = speaking && speaking !== a ? 0.82 : 1;
       drawArt(ctx, art, Math.floor(t * 2), x, y, { scale: a.scale, flip, alpha: a.alpha * dim, sx, sy });
     }
@@ -20689,9 +20702,11 @@ body.nopad #pad { display: none; }
           act2("enter", { id: "hyougaryu", art: "hyougaryu", from: "ice", x: 290, scale: 5.5 }),
           act2("pose", { id: "hyougaryu", pose: "float" }),
           act2("fx", { kind: "ring", id: "hyougaryu" }),
-          { who: "ダムの主", art: "hyougaryu", text: "グルルル……こおり族の 子か。封印など もう いらぬ。この 王冠で、山も 町も ぜんぶ こおらせて やる……！" },
+          { who: "ダムの主", art: "hyougaryu", text: "グルルル……ようやく 出られた……数千年ぶりの 自由だ……！ それに 今の わしには 王冠が ある……！" },
+          act2("fx", { kind: "ring", id: "hyougaryu" }),
+          { who: "ダムの主", art: "hyougaryu", text: "この 王冠が ある かぎり、すべて わしの 意のまま！ 手始めに 貴様らを 凍らせて くれるわ！" },
           act2("fx", { kind: "exclaim", id: "furukawa" }),
-          furu("ヒョウガリュウ……！ 王冠の 力に のまれちゃってる！ 王冠を とりもどして、封印を 作りなおそう！"),
+          furu("ダムの主……ヒョウガリュウだ！ 王冠の 力で あばれてるんだ！ 王冠を とりもどして、封印を 作りなおそう！"),
           furu("来るよ！ こおりくん、がんばって！")
         ], { place: "damBack", weather: "cold", done: () => app2.startBattle({ enemies: bossEnemies("himuro"), kind: "boss", place: "dam" }) });
       } else if (p.id === "nushi") {
@@ -20953,9 +20968,14 @@ body.nopad #pad { display: none; }
       }
       const n = NAKAMA[m.nakama];
       g.zukan.seen[m.nakama] = true;
-      say([...m.lines.map((text2) => ({ who: "", text: text2 })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: "", text: `冷気で 気が 立った ${n.name}が おそいかかってきた！` }], {
-        done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: "wild", place: "yama", mystery: m.id })
-      });
+      story([
+        ...m.lines.map((text2) => nar(text2)),
+        act2("enter", { id: m.nakama, art: n.art, from: "dark", x: 290, dark: true }),
+        { who: `${n.name}・闇`, art: n.art, text: m.minion },
+        act2("fx", { kind: "question", id: "furukawa" }),
+        furu("ルキハ……？ だれだろう。とにかく 柱を まもらなきゃ！"),
+        nar(`ルキハの 部下に された ${n.name}・闇が おそいかかってきた！`)
+      ], { place: "yama", weather: "cold", done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv, dark: true }], kind: "wild", place: "yama", mystery: m.id }) });
     }
     function examineMystery(m) {
       if (g.mysteries[m.id]) {
@@ -21267,7 +21287,7 @@ body.nopad #pad { display: none; }
           act2("exit", { id: "hyougaryu", to: "fade" }),
           nar("王冠を 奥の院に もどすと、封印の 柱が 青く 光り、封印が しっかりと とじた。"),
           act2("fx", { kind: "sparkle", x: 200, y: 90 }),
-          nar("３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。"),
+          nar("３章 クリア！ 山の 沢と 石の川に 水が もどった。紋から 解放された キャラが 山を 歩きまわるように なった。"),
           furu("こおりくん、いちど 家に 帰ろうか。ともいしさんが 心配してるかも。")
         ], { place: "damBack", weather: "cold", done: () => app2.save() });
       } else if (result2.mon && result2.outcome === "win") {
@@ -21488,10 +21508,11 @@ body.nopad #pad { display: none; }
       } else if (result2.mystery && result2.outcome === "win" && SEALS.some((x) => x.id === result2.mystery)) {
         const m = SEALS.find((x) => x.id === result2.mystery), n = sealsSolved(g);
         if (!allSealsSolved(g)) {
-          say([{ who: "", text: `しずまった ${NAKAMA[m.nakama].name}と いっしょに、とけかけた「${m.label}」を 作りなおした！ (${n}/${SEALS.length})` }, furu("柱が 青く 光ってる！ この ちょうしで ほかの 柱も 作りなおそう！")], { done: () => app2.save() });
+          say([{ who: "", text: `紋が 消えた ${NAKAMA[m.nakama].name}は、われに かえって にげていった。` }, { who: "", text: `こわされかけた「${m.label}」を 作りなおした！ (${n}/${SEALS.length})` }, furu("柱が 青く 光ってる！ この ちょうしで ほかの 柱も まもろう！")], { done: () => app2.save() });
           return;
         }
         story([
+          nar(`紋が 消えた ${NAKAMA[m.nakama].name}は、われに かえって にげていった。`),
           act2("fx", { kind: "sparkle", x: 200, y: 100 }),
           nar(`「${m.label}」を 作りなおした！ これで 封印の 柱は ${n} 本 ぜんぶ もとどおりだ。`),
           act2("jump", { id: "furukawa" }),
@@ -21503,13 +21524,12 @@ body.nopad #pad { display: none; }
           act2("enter", { id: "hyougaryu", art: "hyougaryu", from: "top", x: 300, scale: 5 }),
           act2("pose", { id: "hyougaryu", pose: "float" }),
           act2("fx", { kind: "ring", id: "hyougaryu" }),
-          { who: "？？？", art: "hyougaryu", text: "グルルル……封印など させぬ……この 王冠が ある かぎり……！" },
           act2("pose", { id: "furukawa", pose: "shiver" }),
-          furu("りゅ、龍……！ あれが ヒョウガリュウ！？ 頭に 王冠を かぶってる！"),
+          furu("りゅ、龍……！ 頭に 王冠を かぶってる！ 王冠の 力で 封印の 割れ目から 出てきちゃったんだ！"),
           act2("exit", { id: "hyougaryu", to: "up" }),
           act2("pose", { id: "furukawa", pose: "" }),
-          nar("ヒョウガリュウは 冷気を まきちらしながら、ダムの 封印の 割れ目へ もぐっていった。"),
-          furu("だれかが 王冠で ヒョウガリュウを 起こして、あやつってるんだ……！ ダムへ 行こう！")
+          nar("龍は 冷気を まきちらしながら、ダムの ほうへ 飛んでいった。"),
+          furu("ダムへ 行こう！ 王冠を とりもどして、もう いちど 封印しなきゃ！")
         ], { place: "yama", done: () => app2.save() });
       } else if (result2.mystery && result2.outcome === "win") {
         const m = MYSTERIES.find((x) => x.id === result2.mystery), n = mysteriesSolved(g);
@@ -21581,16 +21601,25 @@ body.nopad #pad { display: none; }
         lens.charge = Math.max(0, lens.charge - dt * 2);
       }
     }
-    let helpCount = helpTopics(g).length, helpNote = null;
+    if (!g.flags.helpShown) g.flags.helpShown = Object.fromEntries((g.playTime > 30 ? helpTopics(g) : []).map((h) => [h.id, true]));
+    function showNewHelp() {
+      if (app2.autoHelp === false) return false;
+      const fresh = helpTopics(g).filter((h) => !g.flags.helpShown[h.id]);
+      if (!fresh.length) return false;
+      for (const h of fresh) {
+        g.flags.helpShown[h.id] = true;
+        seeHelp(g, h.id);
+      }
+      sfx("watch");
+      say([
+        ...fresh.flatMap((h) => [{ who: "ヘルプ", text: `【${h.title}】` }, ...h.text.map((line2) => ({ who: "ヘルプ", text: fillKeys(line2) }))]),
+        { who: "ヘルプ", text: "メニューの「ヘルプ」で いつでも 見かえせるよ。" }
+      ], { done: () => app2.save() });
+      return true;
+    }
     function update(dt, input2) {
       t += dt;
       g.playTime += dt;
-      const hc = helpTopics(g);
-      if (hc.length > helpCount && !app2.talk.isActive()) {
-        helpNote = { title: hc[hc.length - 1].title, n: hc.length - helpCount, until: t + 3.5 };
-        helpCount = hc.length;
-        sfx("watch");
-      }
       camera();
       wild.update(dt, g.pos);
       if (app2.talk.isActive()) return;
@@ -21598,6 +21627,7 @@ body.nopad #pad { display: none; }
         updateLens(dt, input2);
         return;
       }
+      if (showNewHelp()) return;
       if (g.story === "clear9" && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
         story([
           nar("町じゅうに 黒い 霧が たちこめている……。"),
@@ -21925,10 +21955,6 @@ body.nopad #pad { display: none; }
         ctx.stroke();
       }
       if (lens) drawLens(ctx);
-      if (helpNote && helpNote.until > t && !app2.talk.isActive()) {
-        panel(ctx, 60, 14, 280, 24, { fill: "rgba(16,22,42,0.92)", edge: "#ff9ad8" });
-        text(ctx, `ヘルプに「${helpNote.title}」${helpNote.n > 1 ? `など ${helpNote.n} こ` : ""}が ふえた！ (メニュー)`, 200, 31, { size: 11, align: "center", bold: true, color: "#ff9ad8", maxWidth: 270 });
-      }
       app2.talk.drawTop(ctx, t);
     }
     function drawSeals(ctx) {
@@ -25746,15 +25772,13 @@ body.nopad #pad { display: none; }
       text(ctx, done ? "おわった 依頼" : questReady(g, q) ? `できた！ ${n.name}に 話しかけよう` : `すすみ: ${p.now} / ${p.need}`, 120, 178, { size: 13, bold: true, color: done ? COLORS.dim : questReady(g, q) ? "#ff9ad8" : COLORS.ink });
       text(ctx, `お礼: ${reward}`, 120, 200, { size: 12, color: COLORS.accent });
     }
-    const KEYS2 = ["a", "b", "x", "y", "l", "r", "start", "fast", "help"];
-    const helpText = (line2) => line2.replace(/\{(\w+)\}/g, (m, k) => KEYS2.includes(k) ? btn(k) : m);
     function drawHelpTop(ctx) {
       const h = helpTopics(g)[hIndex];
       if (!h) return;
       text(ctx, h.title, 200, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
       let y = 66;
       for (const line2 of h.text) {
-        const rows = wrap(ctx, helpText(line2), 356, 12.5);
+        const rows = wrap(ctx, fillKeys(line2), 356, 12.5);
         rows.forEach((r2) => {
           text(ctx, r2, 22, y, { size: 12.5 });
           y += 18;

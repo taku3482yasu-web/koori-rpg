@@ -15,7 +15,7 @@ import { SPOTS, ROAMS } from '../data/map.js';
 import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { bgmOn, setBgmOn } from '../core/bgm.js';
-import { btn, isKeyboard } from '../core/keys.js';
+import { btn, isKeyboard, fillKeys } from '../core/keys.js';
 import { medalByUid, friendCount, bondLevel, specialUpgraded, helpTopics, seeHelp } from '../logic/game.js';
 import { statsAt, expFor } from '../logic/units.js';
 import { questList, questState, questProgress, questReady } from '../logic/quests.js';
@@ -311,15 +311,13 @@ export function createMenu(app) {
     }
 
     // ヘルプ: 上画面に 話題の 中身、下画面に 話題の 一覧
-    const KEYS = ['a', 'b', 'x', 'y', 'l', 'r', 'start', 'fast', 'help'];
-    const helpText = line => line.replace(/\{(\w+)\}/g, (m, k) => (KEYS.includes(k) ? btn(k) : m));
     function drawHelpTop(ctx) {
         const h = helpTopics(g)[hIndex];
         if (!h) return;
         text(ctx, h.title, 200, 34, { size: 18, align: 'center', bold: true, color: COLORS.accent });
         let y = 66;
         for (const line of h.text) {
-            const rows = wrap(ctx, helpText(line), 356, 12.5);
+            const rows = wrap(ctx, fillKeys(line), 356, 12.5);
             rows.forEach(r => { text(ctx, r, 22, y, { size: 12.5 }); y += 18; });
             y += 6;
         }

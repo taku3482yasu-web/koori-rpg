@@ -8,7 +8,7 @@
 //   セリフの 行: 話す キャラが まだ 舞台に いなければ 出てくる (右から 歩いて くる)。話す たびに ぴょんと はねて、
 //                セリフに あわせて ！・？・汗・怒り などの マークが 出る
 //   動きの 行 (do):
-//     enter { id, art, from: 'right'|'left'|'top'|'fade'|'smoke'|'ice'|'dark', x, scale, flip }   出てくる
+//     enter { id, art, from: 'right'|'left'|'top'|'fade'|'smoke'|'ice'|'dark', x, scale, flip, dark }   出てくる (dark: 紋つきの 黒い もや)
 //     exit  { id, to: 'right'|'left'|'up'|'fade'|'smoke' }   いなくなる
 //     move  { id, x, time }          歩く               jump  { id, times }   はねる
 //     turn  { id }                   向きを かえる       pose  { id, pose: 'shiver'|'float'|'spin'|'bow'|'run'|'' }
@@ -54,12 +54,12 @@ export function createStage({ place = 'kawara', time = 0, cast = ['koori', 'furu
         const xs = side === 'left' ? LEFT : RIGHT;
         return xs.find(x => !actors.some(a => !a.leaving && Math.abs(a.tx - x) < 20)) ?? xs[xs.length - 1];
     };
-    function add({ id, art = id, x = null, side = null, scale = null, flip = null, from = null }) {
+    function add({ id, art = id, x = null, side = null, scale = null, flip = null, from = null, dark = false }) {
         const s = side || (PARTY.includes(id) ? 'left' : 'right');
         const tx = x ?? freeSlot(s);
         const a = {
             id, art, x: tx, y: GROUND, tx, scale: scale ?? (big(art) ? 3.4 : 3), flip: flip ?? (s === 'right'),
-            alpha: 1, hop: -9, hops: 0, pose: '', speed: 160, leaving: null, dy: 0, born: t
+            alpha: 1, hop: -9, hops: 0, pose: '', speed: 160, leaving: null, dy: 0, born: t, dark
         };
         if (from === 'right') a.x = 440;
         else if (from === 'left') a.x = -40;
@@ -256,6 +256,12 @@ export function createStage({ place = 'kawara', time = 0, cast = ['koori', 'furu
         // 影
         ctx.fillStyle = 'rgba(0,0,0,0.22)';
         ctx.beginPath(); ctx.ellipse(a.x, GROUND + 2, art.w * a.scale * artFit(art) * 0.32, 4, 0, 0, Math.PI * 2); ctx.fill();
+        // 紋つき (闇): 黒い もや
+        if (a.dark) {
+            const h = art.h * a.scale * artFit(art);
+            ctx.fillStyle = `rgba(30, 0, 40, ${(0.3 + 0.12 * Math.sin(t * 4)) * a.alpha})`;
+            ctx.beginPath(); ctx.ellipse(x, y - h / 2, h * 0.55, h * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+        }
         // 話している キャラは すこし 明るく、ほかは すこし 暗く
         const dim = speaking && speaking !== a ? 0.82 : 1;
         drawArt(ctx, art, Math.floor(t * 2), x, y, { scale: a.scale, flip, alpha: a.alpha * dim, sx, sy });

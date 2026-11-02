@@ -17,3 +17,7 @@ export const isKeyboard = () => mode === 'key';
 export const btn = b => `[${mode === 'key' ? KEY_NAMES[b] : BUTTON_NAMES[b] || b.toUpperCase()}]`;
 // 移動の 名前
 export const moveName = () => (mode === 'key' ? '[WASD]' : '[十字キー]');
+
+// 文の 中の {a} {b} {x} {y} {l} {r} {start} {fast} {help} を ボタンの 名前に かえる (ヘルプ。2026-11-02)
+const FILL = ['a', 'b', 'x', 'y', 'l', 'r', 'start', 'fast', 'help'];
+export const fillKeys = line => line.replace(/\{(\w+)\}/g, (m, k) => (FILL.includes(k) ? btn(k) : m));

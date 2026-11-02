@@ -104,6 +104,11 @@ try {
     check(await evaluate('window.__app.g && window.__app.g.story === "intro"'), 'J キーで 決定して はじめから 始まる');
     await shot('intro-talk');
     await skipTalk();
+    // できる ことが ふえると、その ヘルプが 流れる (2026-11-02)。のこりの テストでは 止めておく
+    await sleep(300);
+    check(await evaluate('window.__app.g.flags.helpShown.move === true && window.__app.g.flags.helpSeen.move === true'), 'はじめると きほんの そうさの ヘルプが 流れる');
+    await skipTalk();
+    await evaluate('window.__app.autoHelp = false; true');
 
     // ----- 歩く -----
     const before = await evaluate('window.__app.g.pos.x');
@@ -305,6 +310,7 @@ try {
     await evaluate('window.__app.save(), true');
     await send('Page.reload');
     await sleep(1200);
+    await evaluate('window.__app.autoHelp = false; true');
     await key('Enter');
     await sleep(300);
     check(await evaluate('window.__app.g && window.__app.g.story === "friends" && window.__app.g.medals.length >= 1'), 'つづきから で 前の 続き');
@@ -364,6 +370,8 @@ try {
     // (A は はじまりの「たたかう」の ときだけ。バトル中に 押すと 必殺技の コマンドが 始まって 止まる ことが ある)
     const winNow = async () => {
         if (await evaluate('Boolean(window.__app.scene.battle && window.__app.scene.battle.waiting)')) await key('KeyJ');
+        // 必殺技の コマンドが 出ていたら おわらせる (時間切れでも おわる)
+        for (let i = 0; i < 60 && await evaluate('Boolean(window.__app.scene.debug && window.__app.scene.debug.mg && window.__app.scene.debug.mg())'); i++) { await key('KeyJ'); await sleep(150); }
         await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
         for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
         for (let i = 0; i < 10 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
@@ -1115,6 +1123,7 @@ try {
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await send('Page.reload');
     await sleep(1200);
+    await evaluate('window.__app.autoHelp = false; true');
     await evaluate('document.body.classList.remove("nopad"); window.dispatchEvent(new Event("resize")); true');
     await sleep(200);
     const pad = await evaluate('(() => { const r = document.getElementById("pad").getBoundingClientRect(); const s = document.getElementById("bottom").getBoundingClientRect(); return { padTop: r.top, padH: r.height, bottom: s.bottom, w: s.width }; })()');
