@@ -930,6 +930,8 @@ test('大魔王ASO: 第 1 形態の HP が なくなると 第 2 形態 (術 ぜ
     b.bossTimer = boss.bigMove.every;
     step(b, 0.05);
     assert.ok(b.burst, '必殺技を ためる');
+    // しくみを 見る テスト (前は ぎりぎりで 通っていて、戦い方 (2026-11-02) で 運しだいに なった) なので、暴発に いる ダメージを 少なく
+    b.burst.need = Math.round(b.burst.need / 3);
     for (let i = 0; i < 400 && b.burst; i++) { boss.hp = boss.max; keepAlive(b); step(b, 0.05); }
     assert.ok(b.events.some(e => e.type === 'chance' && e.why === 'burst'), 'チャンスタイム');
     // 第 2 形態で たおすと 勝ち
@@ -1106,4 +1108,83 @@ test('お店の 道具 (2026-11-02): 全体回復・復活・強化・とりつ�
     assert.equal(throwFood(c, 'onimen'), false, 'お面は 投げられない');
     assert.ok(throwFood(c, 'tomato', null, { start: false }));
     assert.ok(c.waiting, 'start: false なら まだ 始まらない');
+});
+
+test('戦い方と 性格 (2026-11-02): キャラごとに 多用する コマンドが あり、性格で えらびやすさと 能力の のびが かわる', async () => {
+    const { commandWeights } = await import('../src/logic/battle.js');
+    const { styleOf, NATURES, NATURE_IDS } = await import('../src/data/nature.js');
+    const { statsAt } = await import('../src/logic/units.js');
+    assert.ok(NATURE_IDS.length >= 6);
+    for (const id of NAKAMA_IDS) assert.ok(['attack', 'waza', 'jutsu', 'guard', 'balance'].includes(styleOf(NAKAMA[id])), id);
+    const b = createBattle({ allies: [{ id: 'haribaby', lv: 20, nature: 'isamashii' }, { id: 'haribaby', lv: 20, nature: 'shinchou' }], enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(1) });
+    const [brave, careful] = b.wheel;
+    assert.ok(commandWeights(brave).attack > commandWeights(careful).attack, 'いさましいは 攻撃が 多い');
+    assert.ok(commandWeights(careful).guard > commandWeights(brave).guard, 'しんちょうは まもりが 多い');
+    assert.ok(statsAt('haribaby', 50, 'isamashii').atk > statsAt('haribaby', 50).atk, 'いさましいは こうげきが のびる');
+    assert.ok(statsAt('haribaby', 50, 'shinchou').def > statsAt('haribaby', 50).def, 'しんちょうは ぼうぎょが のびる');
+    assert.equal(statsAt('haribaby', 1, 'isamashii').atk, statsAt('haribaby', 1).atk, 'Lv1 は 同じ');
+    assert.ok(Object.values(NATURES).every(n => n.name && n.desc));
+});
+
+test('覇理魔様 (2026-11-02): 赤い 目は 術が きかず 術を 多用・青い 目は 攻撃が きかず 物理だけ。バリア 4 つで チャンスタイム。手は こわすと わざが 止まり 時間で もどる', async () => {
+    const { lockOn } = await import('../src/logic/battle.js');
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'harima', lv: 95 }], rng: createRng(7), kind: 'kairou' });
+    const boss = b.enemies[0];
+    assert.equal(boss.eye, 'red');
+    const before = boss.hp;
+    const mage = b.front().find(u => u.jutsu && u.jutsu.effects.some(f => f.kind === 'attack'));
+    // 赤: 術は きかない
+    b.events.length = 0;
+    const jutsuFx = mage.jutsu.effects.find(f => f.kind === 'attack');
+    keepAlive(b);
+    b.lock = null;
+    // damage は 内部なので わざを ためしに あてる: 術 → immune
+    const { applyEffectsForTest } = await import('../src/logic/battle.js');
+    applyEffectsForTest(b, mage, [{ ...jutsuFx, target: 'one' }]);
+    assert.equal(boss.hp, before, '赤い 目には 術が きかない');
+    assert.ok(b.events.some(e => e.type === 'immune' && e.eye === 'red'));
+    applyEffectsForTest(b, b.front()[0], [{ kind: 'attack', target: 'one', power: 1 }]);
+    assert.ok(boss.hp < before, '赤い 目には 攻撃が きく');
+    // 目が かわる
+    boss.eyeT = boss.eyeDef.every;
+    step(b, 0.01);
+    assert.equal(boss.eye, 'blue');
+    assert.equal(boss.art, 'harima_b');
+    const hp2 = boss.hp;
+    applyEffectsForTest(b, b.front()[0], [{ kind: 'attack', target: 'one', power: 1 }]);
+    assert.equal(boss.hp, hp2, '青い 目には 攻撃が きかない');
+    // 青い 目の ときは 物理の わざだけ
+    b.events.length = 0;
+    keepAliveNoAct(b);
+    for (let i = 0; i < 400; i++) { boss.eye = 'blue'; boss.eyeT = 0; boss.hp = boss.max; b.bossTimer = 0; keepAliveNoAct(b); step(b, 0.05); }
+    const names = b.events.filter(e => e.type === 'skill' && e.actor === boss.uid).map(e => e.name);
+    assert.ok(names.length > 3 && names.every(n => ['剣の手: 千手斬り', 'こぶしの手: 千手拳', '観音の 体当たり'].includes(n)), `物理だけ: ${[...new Set(names)]}`);
+    // 手を こわすと その わざが 使えない → 時間で もどる
+    boss.gims.kenHand.hp = 1;
+    assert.ok(lockOn(b, boss.uid, 'kenHand'));
+    applyEffectsForTest(b, b.front()[0], [{ kind: 'attack', target: 'one', power: 1 }]);
+    assert.ok(boss.gims.kenHand.broken, '剣の手が こわれる (目の 色に かかわらず 手には とどく)');
+    b.events.length = 0;
+    for (let i = 0; i < 200; i++) { boss.eye = 'blue'; boss.eyeT = 0; boss.hp = boss.max; b.bossTimer = 0; keepAliveNoAct(b); step(b, 0.05); }
+    assert.ok(!b.events.some(e => e.type === 'skill' && e.name === '剣の手: 千手斬り'), '剣の手の わざは 使わない');
+    for (let i = 0; i < 400 && boss.gims.kenHand.broken; i++) step(b, 0.05);
+    assert.ok(!boss.gims.kenHand.broken, '時間で もどる');
+    // バリア: 必殺技の ため。体には きかない。4 つ こわすと チャンスタイム
+    boss.eye = 'red';
+    b.bossTimer = boss.bigMove.every;
+    step(b, 0.01);
+    assert.ok(b.barrier, 'バリアを はる');
+    const keys = Object.keys(boss.gims).filter(k => boss.gims[k].barrier);
+    assert.equal(keys.length, 4);
+    const hp3 = boss.hp;
+    b.lock = null; b.lockPart = null;
+    applyEffectsForTest(b, b.front()[0], [{ kind: 'attack', target: 'one', power: 1 }]);
+    assert.equal(boss.hp, hp3, 'バリアの あいだは 体に きかない');
+    for (const k of keys) {
+        boss.gims[k].hp = 1;
+        lockOn(b, boss.uid, k);
+        applyEffectsForTest(b, b.front()[0], [{ kind: 'attack', target: 'one', power: 1 }]);
+    }
+    assert.ok(!b.barrier && b.chance && b.events.some(e => e.type === 'chance' && e.why === 'barrier'), 'バリアを ぜんぶ こわすと チャンスタイム');
+    assert.ok(!Object.values(boss.gims).some(p => p.barrier), 'バリアは 消える');
 });

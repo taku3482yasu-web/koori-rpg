@@ -50,6 +50,10 @@
 //     道具を ロックオンして 攻撃すると 使える: 剣 = 前の 味方の こうげき +40% / 回復の 実 = 前の 味方を 35% 回復 /
 //     水爆弾 = 体が かたまって チャンスタイム。わざの melt (マグマの 波) で 道具は とける
 //   紋つき (dark。2026-10-30 ユーザー指定): 名前は「○○・闇」。少し 強い (HP・こうげき・ぼうぎょ 1.15 倍)
+//   無限回廊の 覇理魔様 (2026-11-02 ユーザー指定。data/kairou.js):
+//     目 (eyes): every 秒ごとに 赤 ⇔ 青。赤は 攻撃 (物理) しか きかず 術を 多用、青は 術しか きかず 物理の わざだけ 使う
+//     バリア (bigMove.trigger 'barrier'): 必殺技の ため の あいだ バリアの かけら 4 つ (gims の barrier) を 出す。体には きかない。
+//       ぜんぶ こわすと 必殺技が 止まって チャンスタイム。手 (gims の regrow) は こわすと その わざが 使えず、regrow 秒で もどる
 //   10 章の タシケダ (2026-10-30 ユーザー指定): 行動不能の とりつき (stun)・レベル ドレイン (なかまを Lv10 / Lv1 に して
 //     左右に 紋つきの 味方を 作る。たおすと レベルが もどる)・左右に 2 体 そろうと「私はハッキングが好きだ！」(b.hack)
 //   9 章 (2026-10-30 ユーザー指定):
@@ -62,6 +66,7 @@
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { speciesOf, statsAt } from './units.js';
+import { NATURES, STYLES, styleOf } from '../data/nature.js';
 
 export const GAUGE_MAX = 100;
 const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10, stun: 7 };
@@ -80,14 +85,15 @@ const ITEM_COOLDOWN = 4;
 let uidSeq = 0;
 // upgrade: こおりくんの 必殺技が 進化している (9 章 クリアから)。dark: 紋つき (「・闇」)
 export const DARK_K = 1.15;
-function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side) {
+// nature: メダルの 性格・style: キャラの 戦い方 (2026-11-02。data/nature.js)
+function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false, nature = null }, side) {
     const sp = speciesOf(id);
-    const st = statsAt(id, lv);
+    const st = statsAt(id, lv, nature);
     const isDark = dark || Boolean(sp.dark);
     if (dark) for (const k of ['hp', 'atk', 'def']) st[k] = Math.round(st[k] * DARK_K);
     return {
         uid: uid ?? `${side}-${++uidSeq}`,
-        id, lv, side, bond,
+        id, lv, side, bond, nature, style: styleOf(sp), shade: Boolean(sp.shade),
         name: dark && !sp.dark ? `${sp.name}・闇` : sp.name, dark: isDark, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
         waza: sp.waza, jutsu: sp.jutsu, special: (upgrade && sp.special2) || sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
         max: st.hp, hp: st.hp, s: st,
@@ -97,7 +103,8 @@ function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side
         gims: sp.throws || sp.ring ? {} : sp.gims ? Object.fromEntries(Object.entries(sp.gims).map(([k, p]) => [k, { ...p, max: Math.max(1, Math.round(st.hp * p.hp)), hp: Math.max(1, Math.round(st.hp * p.hp)), broken: false }])) : null,
         oniDef: sp.oni || null, oni: false, rage: 0, shell: 0, baseMoves: null, shellCut: sp.shellCut ?? 0.15,
         ringDef: sp.ring || null, phase2Def: sp.phase2 || null, phase: 1, bound: false, huge: Boolean(sp.huge),
-        chimera: null, headOut: false, headT: 0, enrageDef: null, enraged: false, stolen: [], eaten: null,
+        chimera: sp.chimera || null, headOut: false, headT: 0, enrageDef: sp.enrage || null, enraged: false, stolen: [], eaten: null,
+        eyeDef: sp.eyes || null, eye: 'red', eyeT: 0,
         regenDef: sp.regen || null, magma: Boolean(sp.magma), throwDef: sp.throws || null, throwT: sp.throws ? sp.throws.every - sp.throws.first : 0, throwNo: 0, summonDef: sp.summons || null, summonNo: 0, drained: null, drainOf: null,
         cloneDef: sp.clones || null, armDef: sp.arm || null, armLv: sp.arm ? sp.arm.start : 0, armDmg: 0, armT: 0, repeat: sp.repeat || 0,
         parts: sp.parts ? Object.fromEntries(Object.entries(sp.parts).map(([k, p]) => [k, { ...p, max: Math.round(st.hp * p.hp), hp: Math.round(st.hp * p.hp), broken: false }])) : null
@@ -141,6 +148,7 @@ export function gimOpen(b, u, key) {
     if (p.when === 'oni') return u.oni;
     if (p.when === 'chant') return Boolean(b.chant && b.chant.uid === u.uid);
     if (p.when === 'exposed') return u.headOut;   // 13 章: キメラの 部位を ぜんぶ こわすと 出る 頭
+    if (p.when === 'barrier') return Boolean(b.barrier && b.barrier.uid === u.uid);   // 覇理魔様の バリア
     return true;
 }
 export const openGims = (b, u) => (u.gims ? Object.keys(u.gims).filter(k => gimOpen(b, u, k)) : []);
@@ -156,6 +164,8 @@ function hitGim(b, u, key, dmg) {
     if (part.chance) { if (part.when === 'shell') u.shell = 0; startChance(b, u, part.chance); return; }
     if (part.group && Object.values(u.gims).filter(p => p.group === part.group).every(p => p.broken)) { startChance(b, u, part.group); return; }
     if (key === 'ring') { releaseBind(b); return; }   // 拘束のリング (大魔王ASO)
+    if (part.regrow) part.regrowT = part.regrow;   // 覇理魔様の 手: 時間で もどる
+    if (part.barrier && Object.values(u.gims).filter(p => p.barrier).every(p => p.broken)) { breakBarrier(b, u); return; }
     if (part.chimeraPart && Object.values(u.gims).filter(p => p.chimeraPart).every(p => p.broken)) {
         u.headOut = true;
         u.headT = u.chimera.regrow;
@@ -300,7 +310,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
         rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
-        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null, hack: null, bind: null
+        bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null, hack: null, bind: null, barrier: null
     };
     // 敵は 少しずつ ずらして 動き出す
     b.enemies.forEach((e, i) => { e.timer = -0.6 - i * 0.5; });
@@ -353,6 +363,7 @@ function afterKo(b, u) {
         for (const m of minionsOf(b, u)) { m.hp = 0; m.ko = true; emit(b, 'ko', { target: m.uid, side: 'enemy' }); restoreLevel(b, m); }
     }
     if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
+    if (b.barrier && b.barrier.uid === u.uid) b.barrier = null;
 }
 
 // ----- 拘束のリング・第 2 形態 (大魔王ASO) -----
@@ -396,6 +407,38 @@ function transform(b, u) {
     b.warned = false;
     emit(b, 'transform', { actor: u.uid, name: p2.name });
 }
+// ----- 覇理魔様 (無限回廊。2026-11-02) -----
+// わざが 物理か (攻撃の 効果が あって、どれも 術では ない)
+const physicalMove = m => (m.effects || []).some(f => f.kind === 'attack') && (m.effects || []).every(f => f.kind !== 'attack' || !f.magic);
+// 目の 色で きかない 攻撃: 赤は 術・青は 物理
+const eyeBlocks = (u, magic) => Boolean(u.eyeDef) && (u.eye === 'red' ? Boolean(magic) : !magic);
+function switchEyes(b, u) {
+    u.eye = u.eye === 'red' ? 'blue' : 'red';
+    u.eyeT = 0;
+    u.art = u.eyeDef[u.eye];
+    emit(b, 'eyes', { actor: u.uid, eye: u.eye });
+}
+function raiseBarrier(b, u) {
+    const m = u.bigMove, n = m.barrier.count, hp = Math.max(1, Math.round(u.max * m.barrier.hp));
+    const POS = [[-1.55, -0.85], [1.55, -0.85], [-1.55, -0.2], [1.55, -0.2]];   // 手と 重ならないように 外がわ
+    for (let i = 0; i < n; i++) u.gims[`barrier${i}`] = { name: `バリア ${i + 1}`, hp, max: hp, when: 'barrier', pos: POS[i % POS.length], barrier: true, broken: false };
+    b.barrier = { uid: u.uid, left: m.charge };
+    emit(b, 'telegraph', { actor: u.uid, name: m.name, warn: m.charge, barrier: true });
+}
+function dropBarrier(b, u) {
+    for (const k of Object.keys(u.gims)) if (u.gims[k].barrier) delete u.gims[k];
+    if (b.lock === u.uid && b.lockPart && b.lockPart.startsWith('barrier')) b.lockPart = null;
+    b.barrier = null;
+    b.bossTimer = 0;
+}
+// バリアを ぜんぶ こわした: 必殺技が 止まって チャンスタイム
+function breakBarrier(b, u) {
+    const name = u.bigMove.name;
+    dropBarrier(b, u);
+    emit(b, 'bigCancel', { actor: u.uid, name, barrier: true });
+    startChance(b, u, 'barrier');
+}
+
 // ----- ライバル探検隊の 加勢 (13 章の 3〜7 階) -----
 //   HELP_EVERY 秒ごとに だれか 1 人が 追加攻撃 (ロックオン中は その 敵・部位へ) か サポートアイテム (回復・こうげきアップ・とりつきを はらう)
 const HELP_FIRST = 3, HELP_EVERY = 5;
@@ -501,7 +544,7 @@ function drainSummon(b, boss) {
     const ratio = to.hp / to.max;
     to.drained = { lv: from, s: to.s, max: to.max };
     to.lv = lv;
-    to.s = statsAt(to.id, lv);
+    to.s = statsAt(to.id, lv, to.nature);
     to.max = to.s.hp;
     to.hp = Math.max(1, Math.round(to.max * ratio));
     const kind = boss.summonDef[boss.summonNo++ % boss.summonDef.length];
@@ -573,8 +616,11 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     // しかけの 部位を ねらっている
     const gim = from.side === 'ally' && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
     // 13 章の ニオニオーテン: 部位が のこっている あいだは 体に とどかない (部位には とどく)
-    const chimeraBlock = to.chimera && from.side === 'ally' && !to.headOut;
-    if (chimeraBlock && !(gim && to.gims[gim].chimeraPart)) { emit(b, 'immune', { target: to.uid, actor: from.uid, chimera: true }); return 0; }
+    // 覇理魔様: 目の 色で きかない 攻撃・バリアの あいだは 体に とどかない (手と バリアには とどく)
+    const harimaBlock = from.side === 'ally' && to.eyeDef && (eyeBlocks(to, magic) || Boolean(b.barrier && b.barrier.uid === to.uid));
+    if (harimaBlock && !gim) { emit(b, 'immune', { target: to.uid, actor: from.uid, eye: to.eye, barrier: Boolean(b.barrier && b.barrier.uid === to.uid) }); return 0; }
+    const chimeraBlock = (to.chimera && from.side === 'ally' && !to.headOut) || harimaBlock;
+    if (chimeraBlock && !harimaBlock && !(gim && to.gims[gim].chimeraPart)) { emit(b, 'immune', { target: to.uid, actor: from.uid, chimera: true }); return 0; }
     // 11 章の バクエンリュウ: 投げられた 道具を ねらうと 使う。体は マグマで チャンスタイム いがいは きかない
     if (to.magma && from.side === 'ally') {
         if (gim && to.gims[gim].thrown) { useThrown(b, to, gim); return 0; }
@@ -602,7 +648,7 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     let dmg = power * A * (40 / (40 + D)) * eff * stab * guard * (0.9 + b.rng.next() * 0.2) * mult * (crit ? 1.5 : 1) * (weak ? WEAK_BONUS : 1) * (headGuard ? HEAD_GUARD : 1) * shell * burstGuard;
     dmg = Math.max(1, Math.round(dmg));
     if (chimeraBlock) {
-        // キメラの 部位だけに 当たる
+        // キメラの 部位 (覇理魔様は 手・バリア) だけに 当たる
         emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, part: gim });
         hitGim(b, to, gim, dmg);
         return dmg;
@@ -661,6 +707,9 @@ function addStatus(b, to, status, chance) {
     to.status[status] = STATUS_TIME[status];
     emit(b, 'status', { target: to.uid, status });
 }
+
+// テスト用: 効果を そのまま あてる
+export const applyEffectsForTest = (b, user, effects) => applyEffects(b, user, effects);
 
 // ----- だれに 当てるか -----
 function opponents(b, side) {
@@ -729,10 +778,20 @@ const BOSS_W = { attack: 55, waza: 25, jutsu: 15, guard: 5 };
 export const LOAF = 0.07;          // さぼる 確率 (こおりくんは さぼらない)
 export const COMMAND_NAMES = { attack: '通常攻撃', waza: 'わざ', loaf: 'さぼり', guard: 'まもり', jutsu: '術' };
 
-export function chooseCommand(b, u) {
-    if (!u.hero && !u.boss && b.rng.chance(LOAF)) return 'loaf';
-    // ボスは 大技 (bigMove) が あるので、ふだんは 通常攻撃が 多い
+// 戦い方 (キャラごと) と 性格 (メダルごと) で えらびやすさが かわる (2026-11-02 ユーザー指定)
+export function commandWeights(u) {
+    const N = u.nature && NATURES[u.nature];
     const w = { ...(u.boss ? BOSS_W : ACTION_W[u.role] || ACTION_W.attacker) };
+    if (N && N.flat) { for (const k of Object.keys(w)) w[k] = 25; return w; }
+    const sw = (!u.boss && STYLES[u.style] && STYLES[u.style].w) || {};
+    for (const k of Object.keys(w)) w[k] *= (sw[k] ?? 1) * ((N && N.w[k]) ?? 1);
+    return w;
+}
+export function chooseCommand(b, u) {
+    const N = u.nature && NATURES[u.nature];
+    if (!u.hero && !u.boss && b.rng.chance(LOAF * ((N && N.loaf) || 1))) return 'loaf';
+    // ボスは 大技 (bigMove) が あるので、ふだんは 通常攻撃が 多い
+    const w = commandWeights(u);
     if (u.eaten) w[u.eaten] = 0;   // 13 章: ニオニオーテンに 喰らわれた コマンドは 使えない
     const hurt = friends(b, u.side).some(f => f.hp < f.max * 0.6);
     if (u.role === 'healer') w.waza = hurt ? 200 : 0;
@@ -782,7 +841,10 @@ function act(b, u) {
         const list = u.bossMoves.filter(m => (!m.part || !u.parts[m.part].broken) && (!m.gim || !u.gims[m.gim].broken) &&
             (!m.drain || (minionsOf(b, u).length < MINION_SLOTS.length && b.frontAlive().some(f => !f.drained))) && (!m.bind || !b.bind) && (!m.summon || (!b.charge && idolsOf(b, u).length < IDOL_SLOTS.length)) && (!m.shell || !(u.shell > 0)) && (!m.clones || !b.clones));
         if (!list.length) { emit(b, 'stunned', { actor: u.uid, left: 0 }); return; }
-        const move = b.rng.weighted(list.map(m => ({ m, w: m.w }))).m;
+        // 覇理魔様: 青い 目は 物理の わざだけ、赤い 目は 術を 多用
+        const pool = u.eyeDef && u.eye === 'blue' ? list.filter(physicalMove) : list;
+        if (!pool.length) { emit(b, 'stunned', { actor: u.uid, left: 0 }); return; }
+        const move = b.rng.weighted(pool.map(m => ({ m, w: m.w * (u.eyeDef && u.eye === 'red' ? (physicalMove(m) ? 0.4 : 2.5) : 1) }))).m;
         emit(b, 'skill', { actor: u.uid, name: move.name, cmd: 'boss', morph: Boolean(move.morph) });
         if (move.summon) summonIdol(b, u);
         else if (move.shell) { u.shell = move.shell; emit(b, 'shell', { actor: u.uid, time: move.shell }); }
@@ -927,6 +989,19 @@ export function step(b, dt) {
             if (b.outcome) return;
         }
     }
+    // 覇理魔様: 目の 色が かわる (チャンスタイム・バリアの あいだは かわらない)・こわれた 手が もどる
+    for (const e of b.enemies) {
+        if (e.ko || !e.eyeDef) continue;
+        if (!(b.chance && b.chance.uid === e.uid) && !(b.barrier && b.barrier.uid === e.uid)) {
+            e.eyeT += dt;
+            if (e.eyeT >= e.eyeDef.every) switchEyes(b, e);
+        }
+        for (const [k, p] of Object.entries(e.gims || {})) {
+            if (!p.regrow || !p.broken) continue;
+            p.regrowT -= dt;
+            if (p.regrowT <= 0) { p.broken = false; p.hp = p.max; emit(b, 'handRegrow', { actor: e.uid, part: k, name: p.name }); }
+        }
+    }
     // 13 章: 頭が 出て しばらく すると キメラの 部位が もとに もどる
     for (const e of b.enemies) {
         if (e.ko || !e.headOut) continue;
@@ -981,6 +1056,20 @@ export function step(b, dt) {
 function bossTick(b, e, dt) {
     if (b.chance && b.chance.uid === e.uid) return;   // チャンスタイムの あいだは 大技も 止まる
     const m = e.bigMove;
+    // 覇理魔様: バリアを はって ためる。ためおわると 必殺技 (バリアは 消える)
+    if (m.trigger === 'barrier') {
+        if (b.barrier && b.barrier.uid === e.uid) {
+            b.barrier.left -= dt;
+            if (b.barrier.left > 0) return;
+            dropBarrier(b, e);
+            emit(b, 'special', { actor: e.uid, name: m.name, side: 'enemy', big: true });
+            applyEffects(b, e, m.effects);
+            return;
+        }
+        b.bossTimer += dt;
+        if (b.bossTimer >= m.every) raiseBarrier(b, e);
+        return;
+    }
     // 偶像で 必殺技を ためる ボス: ため が おわると 打つ (偶像は くだける)
     if (m.trigger === 'idols') {
         if (!b.charge || b.charge.uid !== e.uid) return;
@@ -1138,13 +1227,13 @@ export function resolveRescue(b, unit, ok) {
 export const itemTargetOk = (item, u) => Boolean(u) && (item.revive ? u.ko : !u.ko);
 export function itemTargets(b, itemId) {
     const item = ITEMS[itemId];
-    if (!item || item.material) return [];
+    if (!item || item.material || item.book) return [];
     if (item.all) return b.frontAlive();
     return b.wheel.filter(u => itemTargetOk(item, u));
 }
 export function useItem(b, itemId, uid = null) {
     const item = ITEMS[itemId];
-    if (!item || item.material || b.outcome || b.paused || b.itemCooldown > 0) return false;
+    if (!item || item.material || item.book || b.outcome || b.paused || b.itemCooldown > 0) return false;
     let targets;
     if (item.all) targets = b.frontAlive();
     else if (uid !== null) targets = [b.wheel.find(u => u && u.uid === uid)];

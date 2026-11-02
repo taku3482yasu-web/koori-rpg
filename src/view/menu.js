@@ -16,7 +16,8 @@ import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRec
 import { sfx } from '../core/sound.js';
 import { bgmOn, setBgmOn } from '../core/bgm.js';
 import { btn, isKeyboard, fillKeys } from '../core/keys.js';
-import { medalByUid, friendCount, bondLevel, specialUpgraded, helpTopics, seeHelp } from '../logic/game.js';
+import { medalByUid, friendCount, bondLevel, specialUpgraded, helpTopics, seeHelp, readNatureBook } from '../logic/game.js';
+import { NATURES, STYLES, styleOf } from '../data/nature.js';
 import { statsAt, expFor } from '../logic/units.js';
 import { questList, questState, questProgress, questReady } from '../logic/quests.js';
 import { FRIENDS } from '../data/map.js';
@@ -55,7 +56,7 @@ export function createMenu(app) {
         t += dt;
         g.playTime += dt;
         const tc = input.touch;
-        const switchTab = d => { tab = (tab + d + NT) % NT; picking = false; sfx('cursor'); };
+        const switchTab = d => { tab = (tab + d + NT) % NT; picking = false; bookPick = null; sfx('cursor'); };
         // Tab キー (X と いっしょに 押される) は タブの 切りかえ。メニューは 閉じない
         if (input.pressed.tab) { switchTab(1); return; }
         if (input.pressed.l) { switchTab(-1); return; }
@@ -67,11 +68,11 @@ export function createMenu(app) {
             if (i >= 0) { tab = i; picking = false; sfx('cursor'); return; }
             if (tc.y > 214 && tc.x > 230) { sfx('cancel'); app.go('field'); return; }
         }
-        if ((input.pressed.b && !picking) || input.pressed.x || input.pressed.start) { sfx('cancel'); app.go('field'); return; }
+        if ((input.pressed.b && !picking && !bookPick) || input.pressed.x || input.pressed.start) { sfx('cancel'); app.go('field'); return; }
         if (tab === 0) updateWatch(input);
         else if (tab === 1) nIndex = moveList(input, nIndex, box().length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
         else if (tab === 2) zIndex = moveList(input, zIndex, NAKAMA_IDS.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
-        else if (tab === 3) iIndex = moveList(input, iIndex, Object.keys(ITEMS).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(iIndex, ITEM_ROWS, Object.keys(ITEMS).length), ITEM_ROWS);
+        else if (tab === 3) updateItems(input);
         else if (tab === T_QUEST) qIndex = moveList(input, qIndex, questList(g).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
         else if (tab === T_HELP) {
             const list = helpTopics(g);
@@ -84,6 +85,30 @@ export function createMenu(app) {
             if (pick === 1) { sIndex = 1; setBgmOn(!bgmOn()); sfx('ok'); }
         }
     }
+    // もちもの: 性格の 本 (2026-11-02) を えらんで A → なかまを えらんで 読ませる
+    let bookPick = null;   // { itemId, index }
+    const bookMedals = () => g.medals;
+    function updateItems(input) {
+        const ids = Object.keys(ITEMS);
+        if (!bookPick) {
+            iIndex = moveList(input, iIndex, ids.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(iIndex, ITEM_ROWS, ids.length), ITEM_ROWS);
+            const id = ids[iIndex];
+            if (input.pressed.a && ITEMS[id].book) {
+                if ((g.items[id] || 0) > 0) { bookPick = { itemId: id, index: 0 }; sfx('ok'); } else sfx('cancel');
+            }
+            return;
+        }
+        const list = bookMedals();
+        if (input.pressed.b) { bookPick = null; sfx('cancel'); return; }
+        bookPick.index = moveList(input, bookPick.index, list.length, k => ({ x: 8, y: 52 + k * ROW_H, w: 304, h: ROW_H }), scroll(bookPick.index, ROWS + 2, list.length), ROWS + 2);
+        const pickTap = input.touch.justDown && hit({ x: 8, y: 52, w: 304, h: ROW_H * (ROWS + 2) }, input.touch.x, input.touch.y);
+        if (input.pressed.a || pickTap) {
+            const m = list[bookPick.index];
+            if (readNatureBook(g, m.uid, bookPick.itemId)) { bookNote = { text: `${unitOf(m.id).name}の 性格が「${NATURES[m.nature].name}」に なった！`, t }; sfx('heal'); bookPick = null; }
+            else sfx('cancel');
+        }
+    }
+    let bookNote = null;
     const SAVE_BTN = { x: 80, y: 74, w: 160, h: 40, label: 'セーブする' };
     const BGM_BTN = { x: 80, y: 128, w: 160, h: 40 };
     let sIndex = 0;   // セーブ タブで えらんでいる ボタン (0 セーブ・1 BGM)
@@ -147,6 +172,14 @@ export function createMenu(app) {
             text(ctx, 'まだ 会っていない', 170, 56, { size: 12, color: COLORS.sub });
             return;
         }
+        // 戦い方 (キャラごと)・性格 (メダルごと)。2026-11-02
+        text(ctx, `戦い方: ${STYLES[styleOf(n)].name}`, 85, 160, { size: 11, align: 'center', bold: true, color: COLORS.accent });
+        text(ctx, STYLES[styleOf(n)].desc, 85, 175, { size: 9, align: 'center', color: COLORS.sub, maxWidth: 140 });
+        if (medal && medal.nature && NATURES[medal.nature]) {
+            text(ctx, `性格: ${NATURES[medal.nature].name}`, 85, 196, { size: 11, align: 'center', bold: true, color: '#ff9ad8' });
+            const nd = wrap(ctx, NATURES[medal.nature].desc, 136, 9);
+            nd.slice(0, 2).forEach((r, i) => text(ctx, r, 85, 210 + i * 11, { size: 9, align: 'center', color: COLORS.sub }));
+        }
         text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}${n.version ? `　${VERSION_ONLY[n.version]}だけ` : ''}`, 170, 50, { size: 11.5, color: n.version && n.version !== g.version ? '#ff9a9a' : COLORS.sub, maxWidth: 225 });
         text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
         const ds = fitSize(ctx, n.desc, 215, 11.5, 4, 9);
@@ -160,7 +193,7 @@ export function createMenu(app) {
         const ev = evolveOf(id);
         if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}${ev ? `　Lv${ev.lv}で ${NAKAMA[ev.to].name}に 進化` : n.evo ? `　${NAKAMA[n.evo].name}が 進化した すがた` : ''}`, 170, 182, { size: 11, maxWidth: 220 });
         if (medal) {
-            const s = statsAt(id, medal.lv);
+            const s = statsAt(id, medal.lv, medal.nature);
             text(ctx, `Lv${medal.lv}  HP${s.hp} こうげき${s.atk} ぼうぎょ${s.def}`, 170, 196, { size: 11 });
             text(ctx, `すばやさ${s.spd} ようじゅつ${s.mag}`, 170, 211, { size: 11 });
             const need = expFor(medal.lv + 1) - expFor(medal.lv);
@@ -187,6 +220,9 @@ export function createMenu(app) {
         } else if (tab === 2) {
             const id = NAKAMA_IDS[zIndex];
             drawNakama(ctx, id, null, { known: Boolean(g.zukan.seen[id] || g.zukan.friends[id]) });
+        } else if (tab === 3 && bookPick) {
+            const m = bookMedals()[bookPick.index];
+            if (m) drawNakama(ctx, m.id, m);
         } else if (tab === 3) {
             const id = Object.keys(ITEMS)[iIndex];
             text(ctx, ITEMS[id].name, 200, 80, { size: 20, align: 'center', bold: true });
@@ -333,6 +369,18 @@ export function createMenu(app) {
     }
 
     function drawItems(ctx) {
+        if (bookPick) {
+            const list = bookMedals(), top = scroll(bookPick.index, ROWS + 2, list.length), it = ITEMS[bookPick.itemId];
+            text(ctx, `${it.name}を だれに 読ませる？`, 160, 46, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
+            list.slice(top, top + ROWS + 2).forEach((m, k) => {
+                const y = 52 + k * ROW_H;
+                if (top + k === bookPick.index) { roundRect(ctx, 8, y, 304, ROW_H - 2, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
+                text(ctx, `${unitOf(m.id).name} Lv${m.lv}`, 16, y + 14, { size: 12, maxWidth: 170 });
+                text(ctx, NATURES[m.nature]?.name || '', 304, y + 14, { size: 11, align: 'right', color: m.nature === it.book ? COLORS.dim : '#ff9ad8' });
+            });
+            text(ctx, `${btn('a')} 読ませる・${btn('b')} やめる`, 160, 210, { size: 10.5, align: 'center', color: COLORS.dim });
+            return;
+        }
         const ids = Object.keys(ITEMS), top = scroll(iIndex, ITEM_ROWS, ids.length);
         ids.slice(top, top + ITEM_ROWS).forEach((id, k) => {
             const y = 36 + k * ROW_H;
@@ -341,7 +389,7 @@ export function createMenu(app) {
             if (ITEMS[id].material) text(ctx, '合成', 200, y + 14, { size: 10, color: '#c8a8ff' });
             text(ctx, `×${g.items[id] || 0}`, 304, y + 14, { size: 12, align: 'right' });
         });
-        text(ctx, `お金: ${g.money}円 (駄菓子屋で 買える)`, 8, 200, { size: 11, color: COLORS.sub });
+        text(ctx, bookNote && t - bookNote.t < 2.5 ? bookNote.text : ITEMS[ids[iIndex]].book ? `${btn('a')} で なかまに 読ませる (性格が かわる)` : `お金: ${g.money}円`, 8, 200, { size: 11, color: bookNote && t - bookNote.t < 2.5 ? '#ff9ad8' : COLORS.sub, maxWidth: 304 });
     }
 
     return { name: 'menu', update, drawTop, drawBottom };

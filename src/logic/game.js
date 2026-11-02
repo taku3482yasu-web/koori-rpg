@@ -44,13 +44,14 @@
 //   yoru     夜の 遊園地。アトラクションの 入り口で ふるカワの 手がかりを 3 つ (flags.clue14) → 広場の 残党の ボス
 //   clear14  14 章 クリア。15 章「新たなる１日」: 無限回廊 (g.kairou)・ライバル探検隊の 仲間クエスト (flags.team_*)
 // =====================================================================
-import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES, FLOOR13, HELPER_LV } from '../data/nakama.js';
+import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES, KAIROU_UNITS, FLOOR13, HELPER_LV } from '../data/nakama.js';
 import { SPOTS, START, areaAt } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached, MAIN_END } from './story.js';
 import { MYSTERIES, SEALS, MONS, PARK_CLUES } from '../data/map.js';
 import { HELP } from '../data/help.js';
+import { NATURES, natureFromSeed } from '../data/nature.js';
 
 export const SAVE_VERSION = 1;
 export const VERSIONS = { naitei: '内定', menkyo: '免許' };
@@ -94,6 +95,8 @@ export function migrate(save) {
     const g = { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {} };
     // こおりくんの メダルが ない セーブ (2026-10-27 より 前) は、なかまの いちばん 高い Lv で 足す
     if (g.story !== 'intro' && !heroMedal(g)) addHero(g, Math.max(5, ...g.medals.map(m => m.lv)));
+    // 性格の ない メダル (2026-11-02 より 前) に 性格を つける
+    for (const m of g.medals) if (!m.nature) m.nature = m.uid === 'hero' ? 'nekketsu' : natureFromSeed(`${g.seed ?? ''}:${m.uid}:${m.id}`);
     return g;
 }
 
@@ -103,7 +106,8 @@ export const friendCount = g => Object.keys(g.zukan.friends).length;
 
 // ----- メダル -----
 export function addMedal(g, id, lv) {
-    const medal = { uid: `m${g.nextUid++}`, id, lv, exp: expFor(lv) };
+    const uid = `m${g.nextUid++}`;
+    const medal = { uid, id, lv, exp: expFor(lv), nature: natureFromSeed(`${g.seed ?? ''}:${uid}:${id}`) };   // 性格 (2026-11-02)
     g.medals.push(medal);
     g.zukan.friends[id] = true;
     g.zukan.seen[id] = true;
@@ -118,7 +122,7 @@ export const medalByUid = (g, uid) => g.medals.find(m => m.uid === uid) || null;
 //   ウォッチに あきが あれば 自動で セット。はずすことも できる
 export const heroMedal = g => g.medals.find(m => m.id === HERO_ID) || null;
 export function addHero(g, lv = 5) {
-    const medal = { uid: 'hero', id: HERO_ID, lv, exp: expFor(lv) };
+    const medal = { uid: 'hero', id: HERO_ID, lv, exp: expFor(lv), nature: 'nekketsu' };   // こおりくんは ねっけつ
     g.medals.unshift(medal);
     const free = g.watch.indexOf(null);
     if (free >= 0) g.watch[free] = medal.uid;
@@ -569,7 +573,7 @@ export function findClue(g, attrId) {
 export const boss14Enemies = g => bossEnemies(BOSS14[g.version] || BOSS14.naitei);
 
 // ----- 15 章「新たなる１日」(2026-10-30) -----
-// 無限回廊: 1 階ごとに これまでの ボスと 順番に 戦う。階が 上がるほど Lv が 上がる (強化ボス)。5 階ごとに ごほうび
+// 無限回廊: 1 階ごとに 章の ボスの 色違い (赤黒い) と 順番に 戦い、14 階ごとに 覇理魔様。階が 上がるほど Lv が 上がる。5 階ごとに ごほうび
 export const KAIROU_PRIZES = ['gattaidango', 'luckycoin', 'tsukishizuku', 'makimono'];
 export function kairouOf(g) {
     if (!g.kairou) g.kairou = { floor: 1, best: 0 };
@@ -577,9 +581,8 @@ export function kairouOf(g) {
 }
 export function kairouEnemies(g) {
     const floor = kairouOf(g).floor;
-    const key = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
-    const id = key === 'boss14' ? (BOSS14[g.version] || BOSS14.naitei) : key;
-    return [{ id, lv: Math.min(99, BOSSES[id].lv + 12 + floor * 2) }];
+    const id = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
+    return [{ id, lv: Math.min(99, KAIROU_UNITS[id].lv + 12 + floor * 2) }];
 }
 // ライバル探検隊の 仲間クエスト: その バージョンの チーム (まだ 勝って いない)
 export const teamsLeft = g => teamsIn(g.version).filter(k => !g.flags[`team_${k}`]);
@@ -658,4 +661,13 @@ export const helpUnseen = g => helpTopics(g).filter(h => !(g.flags.helpSeen && g
 export function seeHelp(g, id) {
     g.flags.helpSeen = g.flags.helpSeen || {};
     g.flags.helpSeen[id] = true;
+}
+
+// 性格の 本 (2026-11-02): メダルの 性格を かえる。本は 1 さつ へる
+export function readNatureBook(g, uid, itemId) {
+    const m = medalByUid(g, uid), it = ITEMS[itemId];
+    if (!m || !it || !it.book || !NATURES[it.book] || !(g.items[itemId] > 0) || m.nature === it.book) return false;
+    m.nature = it.book;
+    g.items[itemId]--;
+    return true;
 }

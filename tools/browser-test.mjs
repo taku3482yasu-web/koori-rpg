@@ -990,6 +990,9 @@ try {
     check(await evaluate('window.__bgm() === "niolioten13" && window.__app.scene.battle.enemies[0].huge'), 'ニオニオーテン: つぎはぎの BGM');
     await sleep(1500);
     await shot('kurai-niolioten');
+    // 変身の セリフ (工房の 13 章「本性」。2026-11-02) が 流れる あいだは バトルが 止まる
+    check(await evaluate('window.__app.scene.battle.paused'), '変身の セリフの あいだは バトルが 止まる');
+    check(await waitFor('!window.__app.scene.battle.paused', 25000), '変身の セリフの あと バトルが 動く');
     await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; for (const p of Object.values(e.gims)) if (p.chimeraPart) { p.hp = 1; } e.timer = -999; b.bossTimer = -99; b.wheel.forEach(u => { if (u) u.hp = u.max = 99999; }); b.lock = e.uid; b.lockPart = "wing"; return true; })()');
     check(await waitFor('window.__app.scene.battle.enemies[0].gims.wing.broken'), 'ニオニオーテン: 竜の 翼を ロックオンで こわせる');
     await evaluate('(() => { const b = window.__app.scene.battle, e = b.enemies[0]; for (const p of Object.values(e.gims)) if (p.chimeraPart && !p.broken) p.broken = true; e.headOut = true; e.headT = 99; e.timer = -999; b.lock = e.uid; b.lockPart = "head"; return true; })()');

@@ -11,6 +11,8 @@
 //   favorite: 好物 (items.js の food)。バトルで 投げると 仲間に なりやすい
 // =====================================================================
 
+import { buildKairou, KAIROU_FLOORS } from './kairou.js';
+
 export const ROLES = {
     attacker: '攻める',
     defender: '守る',
@@ -1965,7 +1967,8 @@ export const BOSSES = {
 // 14 章の ボスは バージョンで ちがう
 export const BOSS14 = { naitei: 'saaraha14', menkyo: 'rihama14' };
 // 15 章 無限回廊: 強化された これまでの ボスと 順番に 戦う (14 章の ボスは その バージョンの)
-export const KAIROU_BOSSES = ['nushi', 'kage', 'himuro', 'urashima4', 'daishi5', 'zumitani6', 'onioni6', 'tomooka6', 'runaya7', 'ooni8', 'soutou8', 'kinme8', 'onioni8', 'harukirin9', 'nozoema9', 'tashikeda10', 'bakuen11', 'onioni12', 'rukiha13', 'boss14'];
+// 無限回廊の 階の ならび (2026-11-02 ユーザー指定で 色違いの ボス 13 体 + さいごの 階の 覇理魔様 に かえた。data/kairou.js)
+export const KAIROU_BOSSES = KAIROU_FLOORS;
 Object.values(BOSSES).forEach(b => Object.assign(b, moves(b.id, b.element, b.rank || 'C')));
 
 // ライバル探検隊 (4 章。2026-10-29): バージョンで ちがう チームが 浦の島の海岸どうくつで 勝負を いどんでくる (3 体の バトル)
@@ -2013,7 +2016,9 @@ Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
 // 絵の 名前 (ボスは なかまの 絵を 大きくして 使う)
 export const unitArtKey = id => (NAKAMA[id] ? NAKAMA[id].art : BOSSES[id] ? BOSSES[id].art : RIVALS[id] ? RIVALS[id].art : id);
 // なかま・こおりくん・ボス・ライバル探検隊の どれでも
-export const unitOf = id => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
+// 無限回廊の ボス (色違い 13 体と 覇理魔様。2026-11-02。data/kairou.js)
+export const KAIROU_UNITS = buildKairou(BOSSES);
+export const unitOf = id => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || KAIROU_UNITS[id] || RIVALS[id] || null;
 
 // ----- 13 章「喰らいの 城」の 3〜7 階 (2026-10-30 ユーザー指定) -----
 //   たおしたはずの 幹部 (トモオカ = 3 階・タシケダ = 7 階) が 紋つき (・闇) に なって まっている。前より 強い (Lv が 上がり、紋つきで 1.15 倍)

@@ -11,7 +11,7 @@ import { loadSave, writeSave } from './core/save.js';
 import { unlockSound } from './core/sound.js';
 import { playBgm, currentBgm } from './core/bgm.js';
 import { bgmFor } from './data/bgm.js';
-import { BOSSES } from './data/nakama.js';
+import { BOSSES, KAIROU_UNITS } from './data/nakama.js';
 import { areaAt, TILE } from './data/map.js';
 import { newGame, migrate, VERSIONS, watchMedals, applyBattleResult, bondLevel, specialUpgraded } from './logic/game.js';
 import { createBattle } from './logic/battle.js';
@@ -71,7 +71,7 @@ const app = {
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
     startBattle({ enemies, kind, place, mystery = null, team = null, helpers = null }) {
-        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null));
+        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, nature: m.nature || null, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null));
         const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true, helpers });
         battle.mystery = mystery;
         battle.team = team;
@@ -105,7 +105,7 @@ function wantedBgm() {
         scene: sc.name,
         area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
         story: app.g ? app.g.story : null,
-        battle: b ? (() => { const boss = b.enemies.find(e => BOSSES[e.id]); return { kind: b.kind, outcome: b.outcome, bossId: boss?.id ?? null, phase: boss?.phase ?? 1, enraged: Boolean(boss?.enraged) }; })() : null
+        battle: b ? (() => { const boss = b.enemies.find(e => BOSSES[e.id] || KAIROU_UNITS[e.id]); return { kind: b.kind, outcome: b.outcome, bossId: boss ? (KAIROU_UNITS[boss.id]?.bgm || KAIROU_UNITS[boss.id]?.baseBoss || boss.id) : null, phase: boss?.phase ?? 1, enraged: Boolean(boss?.enraged) }; })() : null
     });
 }
 

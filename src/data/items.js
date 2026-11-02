@@ -4,7 +4,7 @@
 // バトルで なかまに 使うと HP が 回復する。敵に 投げると 仲間に なりやすくなる (好物なら もっと)
 // 合成アイテム (material。2026-10-30): 合体の館 (data/fusion.js) で 作って、キャラと 合体させる。バトルでは 使えない
 //   onlyFusion: 合体でしか 手に 入らない
-// 店ごとの 品物 (2026-11-02 ユーザー指定で ふやした): 駄菓子屋・八百屋・お面屋 (商店街)・海の家 (4 章)・ネット寺の 授与所 (5 章 クリア)
+// 店ごとの 品物 (2026-11-02 ユーザー指定で ふやした): 駄菓子屋・八百屋・お面屋・本屋 (商店街)・海の家 (4 章)・ネット寺の 授与所 (5 章 クリア)
 //   ききめ: heal / healPct (最大 HP の わりあい)・gauge・cure (とりつきを ぬく)・buff { stat, amount, time (秒) }・
 //           revive (たおれた なかまを 復活。最大 HP の わりあい)・all (前の なかま ぜんぶ)
 //   notFood: 食べ物では ないので おやつとして 投げられない
@@ -39,6 +39,15 @@ export const ITEMS = {
     omamori: { name: '筋肉の お守り', buff: { stat: 'def', amount: 0.3, time: 20 }, all: true, notFood: true, price: 450, desc: '前の なかま ぜんぶの まもりが 20 秒 アップ' },
     kiyomizu: { name: '清めの 水', revive: 0.3, cure: true, notFood: true, price: 350, desc: 'たおれた なかま 1 体を HP 3 わりで 復活させる' },
     juzu: { name: '復活の 数珠', revive: 1, notFood: true, price: 1200, desc: 'たおれた なかま 1 体を HP 満タンで 復活させる' },
+    // 本屋 (商店街): 性格の 本 (2026-11-02)。メニューの もちもので なかまに 読ませると 性格が かわる。バトルでは 使えない
+    book_isamashii: { name: '性格の本「いさましい」', book: 'isamashii', notFood: true, price: 800, desc: '読ませると 性格が「いさましい」に なる。通常攻撃が ふえ、こうげきが のびやすい' },
+    book_shinchou: { name: '性格の本「しんちょう」', book: 'shinchou', notFood: true, price: 800, desc: '読ませると 性格が「しんちょう」に なる。まもりが ふえ、ぼうぎょと HP が のびやすい' },
+    book_kashikoi: { name: '性格の本「かしこい」', book: 'kashikoi', notFood: true, price: 800, desc: '読ませると 性格が「かしこい」に なる。術が ふえ、ようじゅつが のびやすい' },
+    book_sekkachi: { name: '性格の本「せっかち」', book: 'sekkachi', notFood: true, price: 800, desc: '読ませると 性格が「せっかち」に なる。わざが ふえ、すばやさが のびやすい' },
+    book_nekketsu: { name: '性格の本「ねっけつ」', book: 'nekketsu', notFood: true, price: 800, desc: '読ませると 性格が「ねっけつ」に なる。攻撃も わざも ふえる' },
+    book_yasashii: { name: '性格の本「やさしい」', book: 'yasashii', notFood: true, price: 800, desc: '読ませると 性格が「やさしい」に なる。まもりと 術が ふえる' },
+    book_nonki: { name: '性格の本「のんき」', book: 'nonki', notFood: true, price: 500, desc: '読ませると 性格が「のんき」に なる。ときどき さぼるが HP が のびやすい' },
+    book_kimagure: { name: '性格の本「きまぐれ」', book: 'kimagure', notFood: true, price: 500, desc: '読ませると 性格が「きまぐれ」に なる。なにを するか わからない' },
     // 合体の館で 作る (2026-10-30)
     gattaidango: { name: '合体だんご', heal: 120, gauge: 50, onlyFusion: true, desc: 'HP を 120 回復し、必殺技ゲージが 50 たまる。合体の館で しか 作れない おやつ' },
     hoshikakera: { name: '星のかけら', material: true, onlyFusion: true, desc: '合成アイテム。キラキラ 光る。チョコと サイダーを 合体させて 作る' },
@@ -57,5 +66,6 @@ export const SHOPS = {
     yaoya: { who: '八百屋の おじさん', greet: 'へい らっしゃい！ とれたての やさいだよ！', items: ['tomato', 'daikon', 'banana', 'ninniku', 'ringo', 'suika'] },
     omenya: { who: 'お面屋の おねえさん', greet: 'いらっしゃい。つけると 力が わく お祭りの お面だよ。', items: ['hyottoko', 'kitsunemen', 'tengumen', 'onimen', 'okamemen'] },
     uminoie: { who: '海の家の おじさん', greet: 'いらっしゃい！ 海の家だよ。なんに する？', items: ['ramune', 'yakisoba', 'kakigoori', 'ikayaki', 'onigiri', 'cider'] },
+    honya: { who: '本屋の おじさん', greet: 'いらっしゃい。読むと 性格が かわる ふしぎな 本が あるよ。', items: ['book_isamashii', 'book_shinchou', 'book_kashikoi', 'book_sekkachi', 'book_nekketsu', 'book_yasashii', 'book_nonki', 'book_kimagure'] },
     juyosho: { who: 'ネット寺の お坊さん', greet: 'ようこそ 授与所へ。ありがたい 品を そろえて おります。', items: ['ofuda', 'omamori', 'kiyomizu', 'juzu'] }
 };

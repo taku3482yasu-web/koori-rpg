@@ -101,6 +101,9 @@ export function createBattleView(app, battle, place) {
     const later = [];              // { at, fn } 当たる ときに やること
     const HIT_DELAY = { attack: 0.14, skill: 0.32, special: 0.5, perf: 0 };
     const unitOf = uid => [...battle.wheel, ...battle.enemies].find(u => u && u.uid === uid);
+    // 無限回廊の 赤黒い ボス (shade) の エフェクトは どす黒い 赤 (2026-11-02 ユーザー指定)
+    const DARK_FX = ['#5a0010', '#8a0a1a', '#2a0008'];
+    const tone = (uid, color) => (unitOf(uid)?.shade ? DARK_FX[Math.floor(Math.random() * DARK_FX.length)] : color);
     // 体の まんなか (足元から 半分 上)
     function centerOf(uid) {
         const p = posOf(uid), u = unitOf(uid);
@@ -225,7 +228,7 @@ export function createBattleView(app, battle, place) {
             if (e.type === 'damage') {
                 const p = posOf(e.target), from = centerOf(actor), to = centerOf(e.target);
                 const delay = actor ? (kind === 'skill' ? skillHit : HIT_DELAY[kind]) : 0;
-                const color = actor ? ELEMENT_COLORS[unitOf(actor)?.element] || '#ffffff' : '#ffffff';
+                const color = actor ? tone(actor, ELEMENT_COLORS[unitOf(actor)?.element] || '#ffffff') : '#ffffff';
                 // わざは わざごとの 絵 (skill-fx.js) が 飛ぶ。玉は 敵の 必殺技だけ
                 if (actor && kind === 'special' && from && to) effects.push({ kind: 'orb', from, to, start: t + (kind === 'special' ? 0.3 : 0.05), dur: delay - (kind === 'special' ? 0.3 : 0.05), color });
                 const by = actor;
@@ -234,7 +237,7 @@ export function createBattleView(app, battle, place) {
                     if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: 'じゃくてん！', color: '#ffe85a', small: true, until: t + 0.9 });
                     flash[e.target] = t + 0.15;
                     if (!motions[e.target] || motions[e.target].kind !== 'ko') startHurt(e.target, by, unitOf(e.target)?.ko);
-                    if (to) effects.push({ kind: 'spark', x: to.x, y: to.y, start: t, dur: 0.3, color: kind === 'attack' ? '#ffffff' : color });
+                    if (to) effects.push({ kind: 'spark', x: to.x, y: to.y, start: t, dur: 0.3, color: kind === 'attack' ? tone(by, '#ffffff') : color });
                     sfx(e.amount > 30 ? 'big' : 'hit');
                 });
             } else if (e.type === 'heal' && e.amount > 0) {
@@ -250,7 +253,7 @@ export function createBattleView(app, battle, place) {
                 banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === 'ally' ? COLORS.accent : '#ff6a6a', until: t + 1.4 };
                 sfx('special');
                 const c = centerOf(e.actor), p = posOf(e.actor);
-                if (c && p && kind !== 'perf') at(0.62, () => effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[unitOf(e.actor)?.element] || '#ffffff' }));
+                if (c && p && kind !== 'perf') at(0.62, () => effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.45, color: tone(e.actor, ELEMENT_COLORS[unitOf(e.actor)?.element] || '#ffffff') }));
                 if (e.big) warn = null;
             } else if (e.type === 'partBreak') {
                 // 部位を こわした (2 章の 影)
@@ -265,6 +268,7 @@ export function createBattleView(app, battle, place) {
                 if (e.why === 'heads') banner = { text: '頭を ふたつとも こわした！ チャンス！', color: COLORS.accent, until: t + 1.8 };
                 if (e.why === 'cage') banner = { text: 'おりが こわれた！ ふるカワが にげだした！ チャンス！', color: COLORS.accent, until: t + 2 };
                 if (e.why === 'signal') banner = { text: '信号機を こわした！ リハマが とまった！ チャンス！', color: COLORS.accent, until: t + 1.8 };
+                if (e.why === 'barrier') banner = { text: 'バリアを ぜんぶ こわした！ 必殺技を 止めた！ チャンス！', color: COLORS.accent, until: t + 2 };
                 sfx('special');
             } else if (e.type === 'bind') {
                 // 大魔王ASO: 拘束のリング
@@ -277,11 +281,16 @@ export function createBattleView(app, battle, place) {
             } else if (e.type === 'transform') {
                 banner = { text: `${e.name}に すがたを かえた！`, color: '#ff6a6a', until: t + 2.2 };
                 if (e.name === 'ルキハ・ニオニオーテン') {
+                    // ストーリー工房 13 章「本性」(2026-11-02: 工房の セリフ ぜんぶ。流れる あいだは バトルを 止める)
                     let at2 = t + 2.2;
-                    for (const [text2, color] of [['ルキハ「くく……ああ、もう 人の まねは あきた。」', '#ff8ab8'], ['ニオニオーテン「ゼンブ……オレノ……モノ……！」', '#ff6a6a'], ['ふるカワ「部位を ぜんぶ こわして、顔を ねらって！」', COLORS.accent]]) {
+                    for (const [text2, color] of [['ルキハ「くく……くくく……ああ、もう 人の まねは あきた。」', '#ff8ab8'], ['ルキハの 体が、内がわから はじけた。', '#ffffff'],
+                        ['竜の 翼、けものの 脚、鳥の くちばし、鬼の 腕……喰らってきた ものが つぎはぎに ふくれあがる。', '#ffffff'], ['まんなかに、ぐちゃぐちゃに くずれた ルキハの 顔だけが のこっていた。', '#ffffff'],
+                        ['ニオニオーテン「ゼンブ……オレノ……モノ……！」', '#ff6a6a'], ['ふるカワ「こおりくん、顔を ねらって！ ASOが 言ってた、あれが 本体だよ！」', COLORS.accent], ['ルキハ・ニオニオーテンが ほえた。', '#ff6a6a']]) {
                         bannerQueue.push({ text: text2, color, at: at2, until: at2 + 2.2 });
                         at2 += 2.2;
                     }
+                    battle.paused = true;
+                    later.push({ at: at2, fn: () => { battle.paused = false; } });
                 }
                 sfx('big');
                 const p = posOf(e.actor);
@@ -302,8 +311,16 @@ export function createBattleView(app, battle, place) {
                 if (t - guardTold > 1.2) {
                     guardTold = t;
                     const p = posOf(e.target);
-                    if (p) pops.push({ x: p.x, y: p.y - 120, text: e.chimera ? 'キメラの 体に はじかれた！ 部位を ねらえ！' : 'マグマの 体で きかない！', color: '#ffb080', small: true, until: t + 1.1 });
+                    const why = e.barrier ? 'バリアに はじかれた！' : e.eye === 'red' ? '赤い 目: 術は きかない！' : e.eye === 'blue' ? '青い 目: 攻撃は きかない！' : e.chimera ? 'キメラの 体に はじかれた！ 部位を ねらえ！' : 'マグマの 体で きかない！';
+                    if (p) pops.push({ x: p.x, y: p.y - 120, text: why, color: e.eye === 'blue' ? '#8ad0ff' : '#ffb080', small: true, until: t + 1.1 });
                 }
+            } else if (e.type === 'eyes') {
+                // 覇理魔様: 目の 色が かわった
+                banner = e.eye === 'red' ? { text: '8 つの 目が 赤く 光った！ 攻撃しか きかない！', color: '#ff5a5a', until: t + 2 } : { text: '8 つの 目が 青く 光った！ 術しか きかない！', color: '#6ab8ff', until: t + 2 };
+                sfx('lens');
+            } else if (e.type === 'handRegrow') {
+                banner = { text: `${e.name}が また 生えてきた……！`, color: '#ff8a8a', until: t + 1.6 };
+                sfx('cancel');
             } else if (e.type === 'help') {
                 // 13 章: ライバル探検隊の 加勢
                 const what = { attack: '追加攻撃！', heal: 'サポートアイテム「回復の 実」！', power: 'サポートアイテム「力の 実」！ こうげき アップ', cure: 'サポートアイテム「おはらいの 札」！ とりつきが ぬけた' }[e.kind];
@@ -315,7 +332,7 @@ export function createBattleView(app, battle, place) {
                 if (q) effects.push({ kind: 'wave', x: q.x, y: q.y - 40, start: t + 0.1, dur: 0.4, color: '#8affc8' });
             } else if (e.type === 'headOut') {
                 // 13 章: キメラの 部位を ぜんぶ こわした → 顔が 出る
-                banner = { text: '部位を ぜんぶ こわした！ ルキハの 顔が 出た！ ねらえ！', color: COLORS.accent, until: t + 2 };
+                banner = { text: `部位を ぜんぶ こわした！ ${Object.values(battle.enemies.find(x => x.uid === e.actor)?.gims || {}).find(p => p.face)?.name || '顔'}が 出た！ ねらえ！`, color: COLORS.accent, until: t + 2 };
                 sfx('big');
             } else if (e.type === 'regrow') {
                 banner = { text: 'キメラの 体が また ふくれあがった……！', color: '#ff6a6a', until: t + 1.8 };
@@ -428,7 +445,7 @@ export function createBattleView(app, battle, place) {
                 banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
-                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack) };
+                warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack), barrier: Boolean(e.barrier) };
                 sfx('cancel');
             } else if (e.type === 'summon') {
                 // 氷の 偶像が できた (3 章の ダムの主)
@@ -482,7 +499,7 @@ export function createBattleView(app, battle, place) {
         const p = posOf(e.actor);
         const scale = u.side === 'ally' ? ALLY_SCALE : (p && p.scale) || 3;
         const spec = SKILL_KIND[m.kind];
-        const color = ELEMENT_COLORS[(move.effects || []).find(f => f.element)?.element || u.element] || '#ffffff';
+        const color = tone(e.actor, ELEMENT_COLORS[(move.effects || []).find(f => f.element)?.element || u.element] || '#ffffff');
         effects.push({ kind: 'skill', skill: m.kind, start: t, dur: spec.dur, fx: {
             kind: m.kind, weapon: m.weapon || null, color, start: t, dur: spec.dur, hit: spec.hit, s: scale / 1.8, seed: Math.random() * 6,
             from: () => actorPoint(e.actor),
@@ -639,7 +656,7 @@ export function createBattleView(app, battle, place) {
 
     // ----- どうぐ・おやつ -----
     // 品物を えらんで から、使う 相手を えらぶ (2026-10-28 ユーザー指定)。どうぐは 輪の なかま (前 → 後ろ)、おやつは 敵
-    const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0 && (menu.kind === 'food' ? isFood(ITEMS[id]) : !ITEMS[id].material));   // 合成アイテムは バトルで 使えない・お面などは 投げられない
+    const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0 && (menu.kind === 'food' ? isFood(ITEMS[id]) : !ITEMS[id].material && !ITEMS[id].book));   // 合成アイテムは バトルで 使えない・お面などは 投げられない
     const menuTargets = () => {
         if (menu.kind === 'rescue') return rescueTargets(battle);
         if (menu.kind === 'food') return battle.enemiesAlive();
@@ -927,6 +944,7 @@ export function createBattleView(app, battle, place) {
             for (let i = 0; i < 2; i++) { ctx.beginPath(); ctx.ellipse(p.x, p.y + bobY - art.h * fk * (0.35 + i * 0.3), art.w * fk / 2 + 6, 6, 0, 0, Math.PI * 2); ctx.stroke(); }
         }
         // とりつき中は むらさきの もや・レベルダウン中 (10 章の レベル ドレイン) は 青い もやが まとわりつく (2026-10-30 ユーザー指定)
+        if (!u.ko && u.shade) drawMist(ctx, p.x, p.y + bobY, art, scale, [120, 0, 20], 3.1);   // 無限回廊の 赤黒い ボス
         if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art, scale, [190, 90, 255], 0);
         if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
         // 氷の 偶像: 水色の 氷を 重ねる
@@ -1046,6 +1064,8 @@ export function createBattleView(app, battle, place) {
             for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(p.x + i * w * 0.22, p.y - h * 0.72); ctx.lineTo(p.x + i * w * 0.26, p.y - h * 0.05); ctx.stroke(); }
             text(ctx, `こうら ${Math.ceil(e.shell)}`, p.x, p.y - h * 0.3, { size: 11, align: 'center', bold: true, color: '#e0ffd0' });
         }
+        // 覇理魔様: 目の 色 (赤 = 攻撃だけ きく・青 = 術だけ きく)
+        if (e.eyeDef && !e.ko) text(ctx, e.eye === 'red' ? '赤い目: 攻撃だけ きく' : '青い目: 術だけ きく', p.x, p.y + 14, { size: 10, align: 'center', bold: true, color: e.eye === 'red' ? '#ff6a6a' : '#7ac0ff' });
         // 鬼の顔: 赤い オーラ
         if (e.oni) {
             ctx.strokeStyle = `rgba(255, 60, 60, ${0.4 + 0.25 * Math.sin(t * 6)})`;
@@ -1066,6 +1086,16 @@ export function createBattleView(app, battle, place) {
                 ctx.restore();
                 bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? '#ffe85a' : '#9a9ad8');
                 text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: 'center', bold: true, color: '#ffe0b0' });
+            } else if (pt.barrier) {
+                // 覇理魔様の バリア: 赤い 六角形の かけら
+                if (!open) continue;
+                const pulse = 0.6 + 0.3 * Math.sin(t * 6 + q.x);
+                ctx.fillStyle = `rgba(200, 30, 50, ${0.35 * pulse})`;
+                ctx.strokeStyle = `rgba(255, 140, 60, ${pulse})`; ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) { const a = Math.PI / 3 * i + Math.PI / 6; ctx.lineTo(q.x + Math.cos(a) * 15, q.y + Math.sin(a) * 15); }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                label(key, q, 18);
             } else if (pt.ring) {
                 // 拘束のリング (大魔王ASO): 金色の 輪が 浮いて まわる
                 const bob = Math.sin(t * 3) * 3, y0 = q.y + bob;
@@ -1185,7 +1215,7 @@ export function createBattleView(app, battle, place) {
         }
         if (pt.broken) {
             drawRegion(ctx, e, k, pt.rect, { tint: '#000000', alpha: 0.6 });
-            text(ctx, '×', q.x, q.y + 8, { size: 20, align: 'center', bold: true, color: '#ff6a6a' });
+            text(ctx, pt.regrow ? `× ${Math.ceil(pt.regrowT || 0)}` : '×', q.x, q.y + 8, { size: pt.regrow ? 14 : 20, align: 'center', bold: true, color: '#ff6a6a' });
             return;
         }
         if (!open) return;
@@ -1195,6 +1225,8 @@ export function createBattleView(app, battle, place) {
         const regen = key === 'horn' && battle.regen && battle.regen.uid === e.uid;
         const color = key === 'mask' ? '#ff2a3a' : key === 'rhead' ? '#c88aff' : key === 'lhead' ? '#78b4ff' : regen ? '#ff8ab8' : '#ffe85a';
         drawRegion(ctx, e, k, pt.rect, { tint: color, alpha: (key === 'mask' || regen ? 0.45 : 0.22) + 0.12 * Math.sin(t * (regen ? 10 : 5)) });
+        // 覇理魔様の 手は 数が 多いので、ねらっている 手だけ 名前を 出す
+        if (pt.regrow && !(battle.lock === e.uid && battle.lockPart === key)) return;
         label(key, q, 14);
     }
 
@@ -1290,13 +1322,19 @@ export function createBattleView(app, battle, place) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
-        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && !warn.hack && warn.until > t) {
+        } else if (battle.barrier && !battle.outcome) {
+            // 覇理魔様: バリアを はって 必殺技を ためている。バリアを 4 つ こわすと 止まる
+            const bu = battle.enemies.find(x => x.uid === battle.barrier.uid), left = bu ? Object.values(bu.gims).filter(p => p.barrier && !p.broken).length : 0;
+            panel(ctx, 30, 8, 340, 40, { fill: 'rgba(70, 0, 20, 0.92)', edge: '#ff8a20' });
+            text(ctx, `!! バリアを はって「${warn ? warn.name : ''}」を ためている！`, 200, 25, { size: 13, align: 'center', bold: true });
+            text(ctx, `バリアを ぜんぶ こわせ！ のこり ${left} (${Math.max(0, battle.barrier.left).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0b0' });
+        } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && !warn.hack && !warn.barrier && warn.until > t) {
             panel(ctx, 30, 8, 340, 40, { fill: 'rgba(120, 10, 20, 0.9)', edge: '#ff6a6a' });
             text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: 'center', bold: true });
             text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: 'center', color: '#ffd0d0' });
         } else if (banner && banner.until > t) {
             panel(ctx, 40, 12, 320, 26, { fill: 'rgba(16,22,42,0.9)', edge: banner.color });
-            text(ctx, banner.text, 200, 30, { size: 13, align: 'center', bold: true, color: banner.color });
+            text(ctx, banner.text, 200, 30, { size: 13, align: 'center', bold: true, color: banner.color, maxWidth: 312 });
         }
         if (battle.waiting && !battle.outcome) {
             panel(ctx, 30, 176, 340, 50, { fill: 'rgba(16,22,42,0.92)', edge: '#ffffff' });

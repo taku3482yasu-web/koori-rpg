@@ -24,7 +24,7 @@ import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCH
     KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE } from '../data/map.js';
 import { ITEMS, SHOPS } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
-import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13 } from '../data/nakama.js';
+import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13, KAIROU_UNITS } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn, moveName, fillKeys } from '../core/keys.js';
@@ -535,11 +535,14 @@ export function createField(app) {
                 by('onioni', 'ふるカワを 取りかえすぞ、こおり！ 来るぞ！')
             ], { done: () => app.startBattle({ enemies: boss14Enemies(g), kind: 'boss', place: 'yuen' }) });
         } else if (p.id === 'kairou') {
-            // 15 章: 無限回廊 (強化ボスと 1 階ずつ)
-            const k = kairouOf(g), next = kairouEnemies(g)[0];
-            say([{ who: '回廊の 番人', art: 'haridaijin', text: `ここは 無限回廊。強く なった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${BOSSES[next.id].name} Lv${next.lv}じゃ。` }], {
+            // 15 章: 無限回廊 (章の ボスの 赤黒い 色違いと 1 階ずつ。14 階ごとに 覇理魔様。2026-11-02)
+            const k = kairouOf(g), next = kairouEnemies(g)[0], nu = KAIROU_UNITS[next.id];
+            const harima = next.id === 'harima';
+            say([{ who: '回廊の 番人', art: 'haridaijin', text: harima
+                ? `${k.floor} 階……さいごの 階じゃ。この 奥には 地獄の 観音、覇理魔様が おられる。Lv${next.lv}。……生きて もどれよ。`
+                : `ここは 無限回廊。赤黒く そまった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${nu.name} Lv${next.lv}じゃ。` }], {
                 choices: [`${k.floor} 階に いどむ`, 'やめる'],
-                done: i => { if (i === 0) app.startBattle({ enemies: kairouEnemies(g), kind: 'kairou', place: BOSSES[next.id].place }); }
+                done: i => { if (i === 0) app.startBattle({ enemies: kairouEnemies(g), kind: 'kairou', place: harima ? 'kurai' : nu.place }); }
             });
         } else if (p.team) {
             // 15 章: ライバル探検隊の 仲間クエスト (勝つと 3 人 なかまに なる)
@@ -616,7 +619,7 @@ export function createField(app) {
                     }
                 }
             });
-        } else if (b.id === 'dagashi' || b.id === 'yaoya' || b.id === 'omenya') {
+        } else if (b.id === 'dagashi' || b.id === 'yaoya' || b.id === 'omenya' || b.id === 'honya') {
             shop(b.id);
         } else if (b.id === 'hondou' && reached(g, 'clear5')) {
             // 5 章 クリアの あと、本堂の 授与所で お札・お守りが 買える (2026-11-02)
@@ -698,7 +701,6 @@ export function createField(app) {
                 kouban: 'おまわりさん「無免許で 飛んでいる ハチを 見かけたら 教えてね」',
                 jansou: '中から「ツモ！」「ロン！」と 声が する。子どもは 入れない。',
                 denkiya: '古い テレビが 山づみ。1 台だけ、電源が 入っていないのに ついている。',
-                honya: '本が ぎっしり。「全部 読んだら ヨシ！」と だれかが 言っていた。',
                 karaoke: '中から 同じ 歌が ずっと 聞こえる。もう 何曲目だろう。',
                 sentou: 'ゆ と 書いた のれん。「こおりの お客さまは とけるので ご注意ください」',
                 // 海辺の 町 (4 章)

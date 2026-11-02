@@ -542,13 +542,13 @@ test('14 章 (バージョンで ちがう): 招待券 → 遊園地 → ふる�
 
 test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごとに ごほうび', async () => {
     const { kairouOf, kairouEnemies } = await import('../src/logic/game.js');
-    const { BOSSES } = await import('../src/data/nakama.js');
+    const { KAIROU_UNITS } = await import('../src/data/nakama.js');
     const g = newGame('menkyo');
     receiveWatch(g);
     g.story = 'clear14';
     const rng = { chance: () => false, int: () => 0, next: () => 0, weighted: l => l[0] };
     const first = kairouEnemies(g)[0];
-    assert.ok(first.lv > BOSSES[first.id].lv, '強化 (Lv が 高い)');
+    assert.ok(first.lv > KAIROU_UNITS[first.id].lv, '強化 (Lv が 高い)');
     const lvs = [];
     for (let i = 0; i < 14; i++) {
         const e = kairouEnemies(g);
@@ -563,9 +563,37 @@ test('15 章: 無限回廊は 1 階ずつ 強化ボスと 戦い、5 階ごと�
     assert.equal(kairouOf(g).best, 14);
     assert.equal(g.story, 'clear14', 'ストーリーは かわらない');
     assert.ok(kairouEnemies(g)[0].lv > lvs[0], '上の 階ほど 強い');
-    // さいごの 階は その バージョンの 14 章の ボス
-    g.kairou.floor = 20;
-    assert.equal(kairouEnemies(g)[0].id, 'rihama14');
+    // 2026-11-02 ユーザー指定: 章の ボスの 色違い (赤黒い) で、14 階ごとに 覇理魔様
+    g.kairou.floor = 1;
+    assert.equal(kairouEnemies(g)[0].id, 'k_kage');
+    assert.equal(KAIROU_UNITS.k_kage.name, 'ポルターガイスト');
+    assert.equal(KAIROU_UNITS.k_kage.bigMove.name, '認識停止');
+    g.kairou.floor = 14;
+    assert.equal(kairouEnemies(g)[0].id, 'harima');
+    g.kairou.floor = 28;
+    assert.equal(kairouEnemies(g)[0].id, 'harima');
+    assert.equal(kairouEnemies(g)[0].lv, 99);
+});
+
+test('無限回廊の 色違いボス (2026-11-02): ユーザー指定の 名前と 必殺技。赤黒い 絵・なかまに ならない', async () => {
+    const { KAIROU_UNITS, BOSSES } = await import('../src/data/nakama.js');
+    const { ART } = await import('../src/art/index.js');
+    const want = [['k_kage', 'ポルターガイスト', '認識停止'], ['k_himuro', '黒氷竜', '暗黒の氷河'], ['k_urashima', '裏の丘修一', '玉手箱・裏'], ['k_daishi', 'やぶれかぶれ僧侶', '敗れ僧侶の呪い'],
+        ['k_zumitani', '影武者・紫煙', '影武者の舞'], ['k_tomooka', '刑務者・怒猛', '怒りの一撃'], ['k_runaya', 'おぼろ月の魔女', '夢幻がごとく'], ['k_onioni', 'おにおにの影', '影の金棒'],
+        ['k_kirin', '淵角', '深淵来る'], ['k_nozoema', '亡霊武者', '兵どもが夢のあと'], ['k_tashikeda', 'ダークウェブ', '制御不能のコンピュータ'], ['k_bakuen', '爆嵐竜', '嵐を呼ぶ火砕流'],
+        ['k_rukiha', 'ハルガ・オニルクーテン', '怒髪天の爆喰らい']];
+    for (const [id, name, big] of want) {
+        const u = KAIROU_UNITS[id];
+        assert.equal(u.name, name);
+        assert.equal((u.bigMove || u.arm.move).name, big, `${name} の 必殺技`);
+        assert.ok(ART[u.art] && u.art.endsWith('_crimson') && u.shade, `${name} は 赤黒い`);
+        assert.equal(u.befriends, null);
+        const base = BOSSES[u.baseBoss], names = d => (d.moves || []).map(m => m.name);
+        const from = id === 'k_rukiha' ? base.phase2 : base;
+        assert.equal(u.moves.length, from.moves.length, `${name} の わざの 数は もとと 同じ`);
+        assert.ok(names(u).every(n => !names(from).includes(n)), `${name} の わざの 名前は ぜんぶ ちがう`);
+    }
+    assert.ok(KAIROU_UNITS.k_onioni.baseBoss === 'onioni12' && KAIROU_UNITS.k_rukiha.chimera, 'おにおにの影・ハルガは 第 2 形態から');
 });
 
 test('15 章: ライバル探検隊の 仲間クエスト。その バージョンの チーム (+ 5DX) に 勝つと 3 人 なかまに なる', async () => {

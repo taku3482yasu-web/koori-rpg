@@ -1258,6 +1258,194 @@ body.nopad #pad { display: none; }
   }
   const currentBgm = () => (cur == null ? void 0 : cur.id) ?? null;
   if (typeof window !== "undefined") setInterval(schedule, 100);
+  const atk$1 = (target, power, extra = {}) => ({ kind: "attack", target, power, ...extra });
+  const status = (target, st, chance) => ({ kind: "status", target, status: st, chance });
+  const KAIROU_VARIANTS = [
+    { from: "kage", id: "k_kage", name: "ポルターガイスト", names: {
+      "たたきつけ": "ポルター・クラッシュ",
+      "未詳の左腕": "見えざる 左腕",
+      "不明の右手": "うかぶ 右手",
+      "振り払い": "ラップ音",
+      "不安の眼": "怪奇の 眼",
+      "呪いの笑み": "騒霊の わらい",
+      "アンノウン": "認識停止",
+      "右手": "うかぶ 右手",
+      "左手": "見えざる 左腕",
+      "頭": "騒霊の 頭"
+    } },
+    { from: "himuro", id: "k_himuro", name: "黒氷竜", names: {
+      "ひょうがブレス": "黒氷の ブレス",
+      "かみつき": "黒牙",
+      "はばたき": "凍てつく 羽ばたき",
+      "大吹雪": "黒い 大吹雪",
+      "氷の偶像": "黒氷の 偶像",
+      "氷河の咆哮": "暗黒の氷河"
+    } },
+    { from: "urashima4", id: "k_urashima", name: "裏の丘修一", names: {
+      "玉手箱": "裏手箱",
+      "つりざお": "裏つりざお",
+      "こうらに こもる": "裏こうらに こもる",
+      "……なんじゃったかの": "……忘れたわい",
+      "黒い紋の 玉手箱": "玉手箱・裏",
+      "頭": "裏の 頭"
+    } },
+    { from: "daishi5", id: "k_daishi", name: "やぶれかぶれ僧侶", names: {
+      "説法": "やけくそ 説法",
+      "錫杖": "折れた 錫杖",
+      "数珠まわし": "ちぎれ 数珠",
+      "配信の お経": "炎上の お経",
+      "ネット念仏": "敗れ僧侶の呪い",
+      "鬼神 ネット念仏": "敗れ僧侶の 大呪い",
+      "鬼の顔": "破戒の 顔",
+      "鬼の 錫杖": "破戒の 錫杖",
+      "鬼の にらみ": "破戒の にらみ",
+      "鬼の 数珠ぜめ": "破戒の 数珠ぜめ",
+      "鬼の面": "破戒の 面",
+      "鐘": "割れ鐘"
+    } },
+    { from: "zumitani6", id: "k_zumitani", name: "影武者・紫煙", names: {
+      "クナイ乱れうち": "紫煙 クナイ",
+      "忍び斬り": "影武者 斬り",
+      "かげぶんしん": "紫煙 ぶんしん",
+      "百影 クナイ": "影武者の舞"
+    } },
+    { from: "tomooka6", id: "k_tomooka", name: "刑務者・怒猛", names: {
+      "右ストレート": "怒りの 鉄拳",
+      "地ならし": "怒号の 地ならし",
+      "にらみ": "看守の にらみ",
+      "丘砕きの一撃": "怒りの一撃",
+      "右腕": "怒りの 右腕"
+    } },
+    { from: "runaya7", id: "k_runaya", name: "おぼろ月の魔女", names: {
+      "ムーンビーム": "おぼろ ビーム",
+      "月の 魔術": "朧の 魔術",
+      "迷宮がえ": "夢うつつ",
+      "満月の ムーンビーム": "夢幻がごとく",
+      "月": "おぼろ月"
+    } },
+    { from: "onioni12", id: "k_onioni", name: "おにおにの影", names: {
+      "鬼神 金棒": "影の 金棒うち",
+      "鬼神パンチ 連打": "影パンチ 連打",
+      "鬼の 大のろい": "影の のろい",
+      "大火炎の術": "黒炎の術",
+      "地獄の 業火": "影の 業火",
+      "鬼神 金棒くだき・極": "影の金棒",
+      "鬼神の 力の 暴発": "影の 暴発"
+    } },
+    { from: "harukirin9", id: "k_kirin", name: "淵角", names: {
+      "春をよぶ角": "深淵の 角",
+      "麒麟のいかずち": "淵の いかずち",
+      "春の そよ風": "冥府の 風",
+      "春麗": "深淵来る",
+      "角": "淵の 角",
+      "春の 目ざめ": "深淵の 目ざめ"
+    } },
+    { from: "nozoema9", id: "k_nozoema", name: "亡霊武者", names: {
+      "刀の一振り": "亡霊の 太刀",
+      "兜割り": "亡霊 兜割り",
+      "大斬撃": "怨念 大斬撃",
+      "筋肉の おたすけ": "怨念の たかまり",
+      "鏡筋一刀斬り": "兵どもが夢のあと"
+    } },
+    { from: "tashikeda10", id: "k_tashikeda", name: "ダークウェブ", names: {
+      "行動不能の とりつき": "フリーズ ウイルス",
+      "レベル ドレイン": "データ ドレイン",
+      "ウイルス さんぷ": "ランサムウェア",
+      "エンターキー連打": "DDoS 攻撃",
+      "私はハッキングが好きだ！": "制御不能のコンピュータ"
+    } },
+    { from: "bakuen11", id: "k_bakuen", name: "爆嵐竜", names: {
+      "ほのおの いき": "爆嵐の いき",
+      "しっぽ たたき": "嵐の しっぽ",
+      "マグマの 波": "火砕の 波",
+      "大噴火": "嵐を呼ぶ火砕流"
+    } },
+    { from: "rukiha13", id: "k_rukiha", name: "ハルガ・オニルクーテン", from2: true, names: {
+      "マジュウノヒトタチ": "ハルガノヒトタチ",
+      "セイレイノウタ": "ドハツノウタ",
+      "チョウジュウノホノオ": "ドハツノホノオ",
+      "チョウジュウノミズ": "ドハツノミズ",
+      "チョウジュウノコオリ": "ドハツノコオリ",
+      "チョウジュウノイカヅチ": "ドハツノイカヅチ",
+      "チョウジュウノツタ": "ドハツノツタ",
+      "チョウジュウノマボロシ": "ドハツノマボロシ",
+      "チョウジュウノイワ": "ドハツノイワ",
+      "ゼンブ オレノ モノ": "怒髪天の爆喰らい",
+      "オオグライノカミツキ": "バクグライノカミツキ",
+      "ルキハの 顔": "ハルガの 顔"
+    } }
+  ];
+  const HARIMA = {
+    id: "harima",
+    name: "覇理魔様",
+    element: "ふしぎ",
+    role: "jammer",
+    art: "harima_r",
+    scale: 2.2,
+    huge: true,
+    rank: "S",
+    shade: true,
+    base: { hp: 1500, atk: 25, def: 21, spd: 15, mag: 26 },
+    moves: [
+      { name: "炎の手: 獄炎", w: 2, gim: "enHand", effects: [atk$1("one", 1.6, { magic: true, element: "ほのお" })] },
+      { name: "炎の手: 炎輪", w: 1.5, gim: "enHand", effects: [atk$1("all", 0.85, { magic: true, element: "ほのお" })] },
+      { name: "氷の手: 獄氷", w: 2, gim: "hyoHand", effects: [atk$1("all", 0.85, { magic: true, element: "こおり" })] },
+      { name: "雷の手: 獄雷", w: 2, gim: "raiHand", effects: [atk$1("one", 1.4, { magic: true, element: "かぜ" }), status("one", "stun", 0.25)] },
+      { name: "数珠の手: 地獄の 数珠", w: 1.5, gim: "juzuHand", effects: [status("all", "possess", 0.4)] },
+      { name: "剣の手: 千手斬り", w: 2, gim: "kenHand", effects: [atk$1("one", 0.7, { hitsMin: 3, hitsMax: 5 })] },
+      { name: "こぶしの手: 千手拳", w: 2, gim: "kobushiHand", effects: [atk$1("all", 0.8)] },
+      { name: "八眼の にらみ", w: 1, effects: [status("all", "slow", 0.5)] },
+      { name: "観音の 体当たり", w: 1, effects: [atk$1("one", 1.2)] }
+    ],
+    bigMove: {
+      name: "千手地獄観音",
+      trigger: "barrier",
+      every: 16,
+      charge: 7,
+      barrier: { hp: 0.025, count: 4 },
+      effects: [atk$1("all", 2.2, { magic: true, element: "ふしぎ" }), status("all", "possess", 0.3)]
+    },
+    // 6 本の 手 (絵の その 部分)。こわすと その 手の わざが 使えない。regrow 秒で もどる
+    gims: {
+      enHand: { name: "炎の手", hp: 0.05, when: "always", rect: [1, 1, 5, 7], move: "炎の わざ", regrow: 18 },
+      hyoHand: { name: "氷の手", hp: 0.05, when: "always", rect: [0, 10, 3, 14], move: "氷の わざ", regrow: 18 },
+      kenHand: { name: "剣の手", hp: 0.05, when: "always", rect: [1, 14, 5, 21], move: "剣の わざ", regrow: 18 },
+      kobushiHand: { name: "こぶしの手", hp: 0.05, when: "always", rect: [26, 2, 30, 7], move: "こぶしの わざ", regrow: 18 },
+      juzuHand: { name: "数珠の手", hp: 0.05, when: "always", rect: [28, 10, 31, 14], move: "数珠の わざ", regrow: 18 },
+      raiHand: { name: "雷の手", hp: 0.05, when: "always", rect: [26, 17, 30, 21], move: "雷の わざ", regrow: 18 }
+    },
+    eyes: { every: 11, red: "harima_r", blue: "harima_b" },
+    bgm: "aso15",
+    // 大魔王ASO の 曲 (さいごの 階に ふさわしい 重い 曲)
+    chanceTurns: 3,
+    befriends: null,
+    lv: 90,
+    place: "kurai"
+  };
+  function rename(obj, names) {
+    if (Array.isArray(obj)) return obj.map((x) => rename(x, names));
+    if (!obj || typeof obj !== "object") return obj;
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) out[k] = (k === "name" || k === "idolName") && typeof v === "string" && names[v] ? names[v] : rename(v, names);
+    return out;
+  }
+  function buildKairou(BOSSES2) {
+    const units = {};
+    for (const v of KAIROU_VARIANTS) {
+      const src = BOSSES2[v.from];
+      let def = { ...src };
+      if (v.from2) {
+        const p2 = src.phase2;
+        def = { ...src, art: p2.art, huge: p2.huge, moves: p2.moves, bigMove: p2.bigMove, gims: p2.gims, chimera: p2.chimera, enrage: p2.enrage };
+        delete def.phase2;
+      }
+      def = rename(def, v.names);
+      units[v.id] = { ...def, id: v.id, name: v.name, art: `${def.art}_crimson`, dark: false, shade: true, base: { ...src.base }, baseBoss: v.from, befriends: null };
+    }
+    units.harima = HARIMA;
+    return units;
+  }
+  const KAIROU_FLOORS = [...KAIROU_VARIANTS.map((v) => v.id), "harima"];
   const ROLES = {
     attacker: "攻める",
     defender: "守る",
@@ -1322,7 +1510,7 @@ body.nopad #pad { display: none; }
     }
     return { name: JUTSU[element][tier], tier, type: "element", effects: [{ kind: "attack", target: tier === 2 ? "all" : "one", power: JUTSU_POWER[tier] * (tier === 2 ? 0.7 : 1), magic: true }] };
   }
-  const W$1 = (name, element, range, power, status = null, chance = 0) => ({ name, element, range, power, status, chance });
+  const W$1 = (name, element, range, power, status2 = null, chance = 0) => ({ name, element, range, power, status: status2, chance });
   const WAZA = {
     haribaby: W$1("はりとげ", "ふつう", "line", 0.9),
     mumenbachi: W$1("つっこみ", "かぜ", "front", 1.3),
@@ -5079,7 +5267,7 @@ body.nopad #pad { display: none; }
     }
   };
   const BOSS14 = { naitei: "saaraha14", menkyo: "rihama14" };
-  const KAIROU_BOSSES = ["nushi", "kage", "himuro", "urashima4", "daishi5", "zumitani6", "onioni6", "tomooka6", "runaya7", "ooni8", "soutou8", "kinme8", "onioni8", "harukirin9", "nozoema9", "tashikeda10", "bakuen11", "onioni12", "rukiha13", "boss14"];
+  const KAIROU_BOSSES = KAIROU_FLOORS;
   Object.values(BOSSES).forEach((b) => Object.assign(b, moves(b.id, b.element, b.rank || "C")));
   const rival = (id, name, element, role, rank, mul, line2, special, extra = {}) => {
     const base = {};
@@ -5138,7 +5326,8 @@ body.nopad #pad { display: none; }
     special2: { ...sp("絶対殺すソード・レクイエム", [atk("all", 2.6, { element: "こおり" }), { kind: "status", target: "all", status: "slow", chance: 0.5 }]), fx: "koori2" }
   };
   Object.assign(HERO, moves(HERO_ID, HERO.element, HERO.rank));
-  const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || RIVALS[id] || null;
+  const KAIROU_UNITS = buildKairou(BOSSES);
+  const unitOf = (id) => NAKAMA[id] || (id === HERO_ID ? HERO : null) || BOSSES[id] || KAIROU_UNITS[id] || RIVALS[id] || null;
   const FLOOR13 = [
     { id: "tomooka13", from: "tomooka6", team: { naitei: "ask3", menkyo: "muscle" }, floor: 3, lv: 64 },
     { id: "tashikeda13", from: "tashikeda10", team: { naitei: "5dx", menkyo: "5dx" }, floor: 7, lv: 68 }
@@ -6195,6 +6384,15 @@ body.nopad #pad { display: none; }
     omamori: { name: "筋肉の お守り", buff: { stat: "def", amount: 0.3, time: 20 }, all: true, notFood: true, price: 450, desc: "前の なかま ぜんぶの まもりが 20 秒 アップ" },
     kiyomizu: { name: "清めの 水", revive: 0.3, cure: true, notFood: true, price: 350, desc: "たおれた なかま 1 体を HP 3 わりで 復活させる" },
     juzu: { name: "復活の 数珠", revive: 1, notFood: true, price: 1200, desc: "たおれた なかま 1 体を HP 満タンで 復活させる" },
+    // 本屋 (商店街): 性格の 本 (2026-11-02)。メニューの もちもので なかまに 読ませると 性格が かわる。バトルでは 使えない
+    book_isamashii: { name: "性格の本「いさましい」", book: "isamashii", notFood: true, price: 800, desc: "読ませると 性格が「いさましい」に なる。通常攻撃が ふえ、こうげきが のびやすい" },
+    book_shinchou: { name: "性格の本「しんちょう」", book: "shinchou", notFood: true, price: 800, desc: "読ませると 性格が「しんちょう」に なる。まもりが ふえ、ぼうぎょと HP が のびやすい" },
+    book_kashikoi: { name: "性格の本「かしこい」", book: "kashikoi", notFood: true, price: 800, desc: "読ませると 性格が「かしこい」に なる。術が ふえ、ようじゅつが のびやすい" },
+    book_sekkachi: { name: "性格の本「せっかち」", book: "sekkachi", notFood: true, price: 800, desc: "読ませると 性格が「せっかち」に なる。わざが ふえ、すばやさが のびやすい" },
+    book_nekketsu: { name: "性格の本「ねっけつ」", book: "nekketsu", notFood: true, price: 800, desc: "読ませると 性格が「ねっけつ」に なる。攻撃も わざも ふえる" },
+    book_yasashii: { name: "性格の本「やさしい」", book: "yasashii", notFood: true, price: 800, desc: "読ませると 性格が「やさしい」に なる。まもりと 術が ふえる" },
+    book_nonki: { name: "性格の本「のんき」", book: "nonki", notFood: true, price: 500, desc: "読ませると 性格が「のんき」に なる。ときどき さぼるが HP が のびやすい" },
+    book_kimagure: { name: "性格の本「きまぐれ」", book: "kimagure", notFood: true, price: 500, desc: "読ませると 性格が「きまぐれ」に なる。なにを するか わからない" },
     // 合体の館で 作る (2026-10-30)
     gattaidango: { name: "合体だんご", heal: 120, gauge: 50, onlyFusion: true, desc: "HP を 120 回復し、必殺技ゲージが 50 たまる。合体の館で しか 作れない おやつ" },
     hoshikakera: { name: "星のかけら", material: true, onlyFusion: true, desc: "合成アイテム。キラキラ 光る。チョコと サイダーを 合体させて 作る" },
@@ -6211,16 +6409,50 @@ body.nopad #pad { display: none; }
     yaoya: { who: "八百屋の おじさん", greet: "へい らっしゃい！ とれたての やさいだよ！", items: ["tomato", "daikon", "banana", "ninniku", "ringo", "suika"] },
     omenya: { who: "お面屋の おねえさん", greet: "いらっしゃい。つけると 力が わく お祭りの お面だよ。", items: ["hyottoko", "kitsunemen", "tengumen", "onimen", "okamemen"] },
     uminoie: { who: "海の家の おじさん", greet: "いらっしゃい！ 海の家だよ。なんに する？", items: ["ramune", "yakisoba", "kakigoori", "ikayaki", "onigiri", "cider"] },
+    honya: { who: "本屋の おじさん", greet: "いらっしゃい。読むと 性格が かわる ふしぎな 本が あるよ。", items: ["book_isamashii", "book_shinchou", "book_kashikoi", "book_sekkachi", "book_nekketsu", "book_yasashii", "book_nonki", "book_kimagure"] },
     juyosho: { who: "ネット寺の お坊さん", greet: "ようこそ 授与所へ。ありがたい 品を そろえて おります。", items: ["ofuda", "omamori", "kiyomizu", "juzu"] }
   };
+  const STYLES = {
+    attack: { name: "こうげき型", desc: "通常攻撃を 多用する", w: { attack: 1.5 } },
+    waza: { name: "わざ型", desc: "わざを 多用する", w: { waza: 1.6 } },
+    jutsu: { name: "術型", desc: "術を 多用する", w: { jutsu: 1.6 } },
+    guard: { name: "まもり型", desc: "まもりを 多用する", w: { guard: 1.3, attack: 1.1 } },
+    balance: { name: "バランス型", desc: "いろいろな コマンドを まんべんなく", w: {} }
+  };
+  const NATURES = {
+    isamashii: { name: "いさましい", desc: "攻撃的。通常攻撃を よく えらび、こうげきが 上がりやすい", w: { attack: 1.6, guard: 0.6 }, grow: { atk: 1.15 } },
+    shinchou: { name: "しんちょう", desc: "慎重。まもりを よく えらび、ぼうぎょと HP が 上がりやすい", w: { guard: 2.2, attack: 0.8 }, grow: { def: 1.15, hp: 1.06 } },
+    kashikoi: { name: "かしこい", desc: "術を よく えらび、ようじゅつが 上がりやすい", w: { jutsu: 1.8 }, grow: { mag: 1.15 } },
+    sekkachi: { name: "せっかち", desc: "わざを よく えらび、すばやさが 上がりやすい", w: { waza: 1.6 }, grow: { spd: 1.15 } },
+    nekketsu: { name: "ねっけつ", desc: "通常攻撃も わざも よく えらび、こうげきと すばやさが 少し 上がりやすい", w: { attack: 1.3, waza: 1.3, guard: 0.5 }, grow: { atk: 1.08, spd: 1.08 } },
+    yasashii: { name: "やさしい", desc: "まもりと 術を よく えらび、ようじゅつと ぼうぎょが 少し 上がりやすい", w: { guard: 1.4, jutsu: 1.3, attack: 0.8 }, grow: { mag: 1.08, def: 1.08 } },
+    nonki: { name: "のんき", desc: "ときどき さぼるが、HP が 上がりやすい", w: {}, loaf: 2.2, grow: { hp: 1.15 } },
+    kimagure: { name: "きまぐれ", desc: "なにを するか わからない。どの 能力も 少しずつ 上がりやすい", w: { attack: 1, waza: 1, jutsu: 1, guard: 1 }, flat: true, grow: { hp: 1.03, atk: 1.03, def: 1.03, spd: 1.03, mag: 1.03 } }
+  };
+  const NATURE_IDS = Object.keys(NATURES);
+  function styleOf(sp2) {
+    if (!sp2) return "balance";
+    if (sp2.style) return sp2.style;
+    const b = sp2.base || {};
+    if (sp2.role === "defender" && (b.def || 0) >= Math.max(b.atk || 0, b.mag || 0) * 1.6) return "guard";
+    if ((b.mag || 0) > (b.atk || 0) * 1.12) return "jutsu";
+    if (sp2.role === "jammer" || sp2.role === "supporter") return "waza";
+    if ((b.atk || 0) > (b.mag || 0) * 1.12) return "attack";
+    return "balance";
+  }
+  function natureFromSeed(seed) {
+    let h = 2166136261;
+    for (const ch of String(seed)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+    return NATURE_IDS[h % NATURE_IDS.length];
+  }
   const MAX_LV = 99;
   const STAT_KEYS = ["hp", "atk", "def", "spd", "mag"];
   const speciesOf = unitOf;
-  function statsAt(id, lv) {
+  function statsAt(id, lv, nature = null) {
     const s = speciesOf(id);
-    const k = 1 + 0.07 * (lv - 1);
+    const grow = nature && NATURES[nature] && NATURES[nature].grow || {};
     const out = {};
-    for (const key2 of STAT_KEYS) out[key2] = Math.round(s.base[key2] * k);
+    for (const key2 of STAT_KEYS) out[key2] = Math.round(s.base[key2] * (1 + 0.07 * (lv - 1) * (grow[key2] || 1)));
     return out;
   }
   const expFor = (lv) => lv <= 1 ? 0 : Math.round(8 * Math.pow(lv - 1, 1.9));
@@ -6309,6 +6541,15 @@ body.nopad #pad { display: none; }
       "駄菓子屋 … おやつ。八百屋 … 回復や 力の つく やさい。お面屋 … 強く なれる お面と 復活の お面 (商店街)。",
       "お店ごとに 品物が ちがう。新しい 町にも お店が ある かも。"
     ] },
+    { id: "nature", after: "friends", title: "戦い方と 性格", text: [
+      "キャラには「戦い方」が あり、こうげき型・わざ型・術型・まもり型など、多用する コマンドが ちがう。",
+      "メダルには 1 まいずつ「性格」が ある。いさましいと 攻撃が 多く こうげきが のびやすい、しんちょうだと まもりが 多く ぼうぎょが のびやすい など。",
+      "メニューの「なかま」で 見られる。"
+    ] },
+    { id: "honya", after: "clear", title: "本屋と 性格の 本", text: [
+      "商店街の 本屋では「性格の本」が 買える。",
+      "メニューの「もちもの」で 本を えらんで {a}、読ませる なかまを えらぶと 性格が かわる。"
+    ] },
     { id: "fusion", after: "clear", title: "合体の館", text: [
       "商店街の 合体の館では、キャラと キャラ・キャラと アイテム・アイテムと アイテムを 合体できる。",
       "合体でしか 会えない キャラや アイテムも いる。"
@@ -6341,7 +6582,8 @@ body.nopad #pad { display: none; }
       "ネット寺の 本堂で、お札・お守り・復活の 数珠などが 買える。"
     ] },
     { id: "kairou", after: "clear14", title: "無限回廊と 仲間クエスト", text: [
-      "石の川駅の 前の 番人に 話すと、強く なった ボスと 1 階ずつ 戦える。5 階ごとに ごほうび。",
+      "石の川駅の 前の 番人に 話すと、赤黒く そまった ボスの 色違いと 1 階ずつ 戦える。5 階ごとに ごほうび。",
+      "さいごの 階には 覇理魔様が いる。目の 色で きく 攻撃が かわり、手を こわすと その わざが 止まる。",
       "ライバル探検隊に 勝つと、チームの 3 人が なかまに なる。"
     ] }
   ];
@@ -6387,13 +6629,15 @@ body.nopad #pad { display: none; }
     const base = newGame(save.version);
     const g = { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {} };
     if (g.story !== "intro" && !heroMedal(g)) addHero(g, Math.max(5, ...g.medals.map((m) => m.lv)));
+    for (const m of g.medals) if (!m.nature) m.nature = m.uid === "hero" ? "nekketsu" : natureFromSeed(`${g.seed ?? ""}:${m.uid}:${m.id}`);
     return g;
   }
   const hasWatch = (g) => g.story !== "intro";
   const timeId = (g) => TIME_IDS[g.time];
   const friendCount = (g) => Object.keys(g.zukan.friends).length;
   function addMedal(g, id, lv) {
-    const medal = { uid: `m${g.nextUid++}`, id, lv, exp: expFor(lv) };
+    const uid = `m${g.nextUid++}`;
+    const medal = { uid, id, lv, exp: expFor(lv), nature: natureFromSeed(`${g.seed ?? ""}:${uid}:${id}`) };
     g.medals.push(medal);
     g.zukan.friends[id] = true;
     g.zukan.seen[id] = true;
@@ -6404,7 +6648,7 @@ body.nopad #pad { display: none; }
   const medalByUid = (g, uid) => g.medals.find((m) => m.uid === uid) || null;
   const heroMedal = (g) => g.medals.find((m) => m.id === HERO_ID) || null;
   function addHero(g, lv = 5) {
-    const medal = { uid: "hero", id: HERO_ID, lv, exp: expFor(lv) };
+    const medal = { uid: "hero", id: HERO_ID, lv, exp: expFor(lv), nature: "nekketsu" };
     g.medals.unshift(medal);
     const free = g.watch.indexOf(null);
     if (free >= 0) g.watch[free] = medal.uid;
@@ -6846,9 +7090,8 @@ body.nopad #pad { display: none; }
   }
   function kairouEnemies(g) {
     const floor = kairouOf(g).floor;
-    const key2 = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
-    const id = key2 === "boss14" ? BOSS14[g.version] || BOSS14.naitei : key2;
-    return [{ id, lv: Math.min(99, BOSSES[id].lv + 12 + floor * 2) }];
+    const id = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
+    return [{ id, lv: Math.min(99, KAIROU_UNITS[id].lv + 12 + floor * 2) }];
   }
   const teamEnemies = (team) => TEAMS[team].members.map((id) => ({ id, lv: TEAM_LV + (id === TEAMS[team].leader ? 2 : 0) }));
   function arriveMoon(g) {
@@ -6905,6 +7148,13 @@ body.nopad #pad { display: none; }
     g.flags.helpSeen = g.flags.helpSeen || {};
     g.flags.helpSeen[id] = true;
   }
+  function readNatureBook(g, uid, itemId) {
+    const m = medalByUid(g, uid), it = ITEMS[itemId];
+    if (!m || !it || !it.book || !NATURES[it.book] || !(g.items[itemId] > 0) || m.nature === it.book) return false;
+    m.nature = it.book;
+    g.items[itemId]--;
+    return true;
+  }
   const GAUGE_MAX = 100;
   const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10, stun: 7 };
   const STATUS_NAMES = { sleep: "ねむり", slow: "のろい", confuse: "こんらん", poison: "どく", possess: "いたずら", blind: "めくらまし", stun: "行動不能" };
@@ -6919,9 +7169,9 @@ body.nopad #pad { display: none; }
   const ITEM_COOLDOWN = 4;
   let uidSeq = 0;
   const DARK_K = 1.15;
-  function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false }, side) {
+  function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false, nature = null }, side) {
     const sp2 = speciesOf(id);
-    const st = statsAt(id, lv);
+    const st = statsAt(id, lv, nature);
     const isDark = dark || Boolean(sp2.dark);
     if (dark) for (const k of ["hp", "atk", "def"]) st[k] = Math.round(st[k] * DARK_K);
     return {
@@ -6930,6 +7180,9 @@ body.nopad #pad { display: none; }
       lv,
       side,
       bond,
+      nature,
+      style: styleOf(sp2),
+      shade: Boolean(sp2.shade),
       name: dark && !sp2.dark ? `${sp2.name}・闇` : sp2.name,
       dark: isDark,
       element: sp2.element,
@@ -6966,13 +7219,16 @@ body.nopad #pad { display: none; }
       phase: 1,
       bound: false,
       huge: Boolean(sp2.huge),
-      chimera: null,
+      chimera: sp2.chimera || null,
       headOut: false,
       headT: 0,
-      enrageDef: null,
+      enrageDef: sp2.enrage || null,
       enraged: false,
       stolen: [],
       eaten: null,
+      eyeDef: sp2.eyes || null,
+      eye: "red",
+      eyeT: 0,
       regenDef: sp2.regen || null,
       magma: Boolean(sp2.magma),
       throwDef: sp2.throws || null,
@@ -7034,6 +7290,7 @@ body.nopad #pad { display: none; }
     if (p.when === "oni") return u.oni;
     if (p.when === "chant") return Boolean(b.chant && b.chant.uid === u.uid);
     if (p.when === "exposed") return u.headOut;
+    if (p.when === "barrier") return Boolean(b.barrier && b.barrier.uid === u.uid);
     return true;
   }
   const openGims = (b, u) => u.gims ? Object.keys(u.gims).filter((k) => gimOpen(b, u, k)) : [];
@@ -7055,6 +7312,11 @@ body.nopad #pad { display: none; }
     }
     if (key2 === "ring") {
       releaseBind(b);
+      return;
+    }
+    if (part.regrow) part.regrowT = part.regrow;
+    if (part.barrier && Object.values(u.gims).filter((p) => p.barrier).every((p) => p.broken)) {
+      breakBarrier(b, u);
       return;
     }
     if (part.chimeraPart && Object.values(u.gims).filter((p) => p.chimeraPart).every((p) => p.broken)) {
@@ -7234,7 +7496,8 @@ body.nopad #pad { display: none; }
       burst: null,
       regen: null,
       hack: null,
-      bind: null
+      bind: null,
+      barrier: null
     };
     b.enemies.forEach((e, i) => {
       e.timer = -0.6 - i * 0.5;
@@ -7293,6 +7556,7 @@ body.nopad #pad { display: none; }
       }
     }
     if (b.hack && (b.hack.uid === u.uid || u.owner === b.hack.uid)) cancelHack(b);
+    if (b.barrier && b.barrier.uid === u.uid) b.barrier = null;
   }
   function bindOne(b, u) {
     const targets = b.frontAlive().filter((a) => !a.bound);
@@ -7333,6 +7597,33 @@ body.nopad #pad { display: none; }
     b.bossTimer = 0;
     b.warned = false;
     emit(b, "transform", { actor: u.uid, name: p2.name });
+  }
+  const physicalMove = (m) => (m.effects || []).some((f) => f.kind === "attack") && (m.effects || []).every((f) => f.kind !== "attack" || !f.magic);
+  const eyeBlocks = (u, magic) => Boolean(u.eyeDef) && (u.eye === "red" ? Boolean(magic) : !magic);
+  function switchEyes(b, u) {
+    u.eye = u.eye === "red" ? "blue" : "red";
+    u.eyeT = 0;
+    u.art = u.eyeDef[u.eye];
+    emit(b, "eyes", { actor: u.uid, eye: u.eye });
+  }
+  function raiseBarrier(b, u) {
+    const m = u.bigMove, n = m.barrier.count, hp = Math.max(1, Math.round(u.max * m.barrier.hp));
+    const POS = [[-1.55, -0.85], [1.55, -0.85], [-1.55, -0.2], [1.55, -0.2]];
+    for (let i = 0; i < n; i++) u.gims[`barrier${i}`] = { name: `バリア ${i + 1}`, hp, max: hp, when: "barrier", pos: POS[i % POS.length], barrier: true, broken: false };
+    b.barrier = { uid: u.uid, left: m.charge };
+    emit(b, "telegraph", { actor: u.uid, name: m.name, warn: m.charge, barrier: true });
+  }
+  function dropBarrier(b, u) {
+    for (const k of Object.keys(u.gims)) if (u.gims[k].barrier) delete u.gims[k];
+    if (b.lock === u.uid && b.lockPart && b.lockPart.startsWith("barrier")) b.lockPart = null;
+    b.barrier = null;
+    b.bossTimer = 0;
+  }
+  function breakBarrier(b, u) {
+    const name = u.bigMove.name;
+    dropBarrier(b, u);
+    emit(b, "bigCancel", { actor: u.uid, name, barrier: true });
+    startChance(b, u, "barrier");
   }
   const HELP_FIRST = 3, HELP_EVERY = 5;
   function helperAct(b) {
@@ -7435,7 +7726,7 @@ body.nopad #pad { display: none; }
     const ratio = to.hp / to.max;
     to.drained = { lv: from, s: to.s, max: to.max };
     to.lv = lv;
-    to.s = statsAt(to.id, lv);
+    to.s = statsAt(to.id, lv, to.nature);
     to.max = to.s.hp;
     to.hp = Math.max(1, Math.round(to.max * ratio));
     const kind = boss.summonDef[boss.summonNo++ % boss.summonDef.length];
@@ -7508,8 +7799,13 @@ body.nopad #pad { display: none; }
       clearClones(b, "found");
     }
     const gim = from.side === "ally" && to.gims && to.uid === b.lock && b.lockPart && gimOpen(b, to, b.lockPart) ? b.lockPart : null;
-    const chimeraBlock = to.chimera && from.side === "ally" && !to.headOut;
-    if (chimeraBlock && !(gim && to.gims[gim].chimeraPart)) {
+    const harimaBlock = from.side === "ally" && to.eyeDef && (eyeBlocks(to, magic) || Boolean(b.barrier && b.barrier.uid === to.uid));
+    if (harimaBlock && !gim) {
+      emit(b, "immune", { target: to.uid, actor: from.uid, eye: to.eye, barrier: Boolean(b.barrier && b.barrier.uid === to.uid) });
+      return 0;
+    }
+    const chimeraBlock = to.chimera && from.side === "ally" && !to.headOut || harimaBlock;
+    if (chimeraBlock && !harimaBlock && !(gim && to.gims[gim].chimeraPart)) {
       emit(b, "immune", { target: to.uid, actor: from.uid, chimera: true });
       return 0;
     }
@@ -7588,12 +7884,12 @@ body.nopad #pad { display: none; }
     to.hp = Math.min(to.max, to.hp + Math.round(amount));
     emit(b, "heal", { target: to.uid, amount: Math.round(to.hp - before) });
   }
-  function addStatus(b, to, status, chance) {
+  function addStatus(b, to, status2, chance) {
     if (to.ko) return;
     const resist = to.boss ? 0.4 : 1;
     if (!b.rng.chance(Math.min(0.95, chance * resist))) return;
-    to.status[status] = STATUS_TIME[status];
-    emit(b, "status", { target: to.uid, status });
+    to.status[status2] = STATUS_TIME[status2];
+    emit(b, "status", { target: to.uid, status: status2 });
   }
   function opponents(b, side) {
     return side === "ally" ? b.enemiesAlive() : b.frontAlive();
@@ -7652,9 +7948,21 @@ body.nopad #pad { display: none; }
   };
   const BOSS_W = { attack: 55, waza: 25, jutsu: 15, guard: 5 };
   const LOAF = 0.07;
-  function chooseCommand(b, u) {
-    if (!u.hero && !u.boss && b.rng.chance(LOAF)) return "loaf";
+  function commandWeights(u) {
+    const N = u.nature && NATURES[u.nature];
     const w = { ...u.boss ? BOSS_W : ACTION_W[u.role] || ACTION_W.attacker };
+    if (N && N.flat) {
+      for (const k of Object.keys(w)) w[k] = 25;
+      return w;
+    }
+    const sw = !u.boss && STYLES[u.style] && STYLES[u.style].w || {};
+    for (const k of Object.keys(w)) w[k] *= (sw[k] ?? 1) * ((N && N.w[k]) ?? 1);
+    return w;
+  }
+  function chooseCommand(b, u) {
+    const N = u.nature && NATURES[u.nature];
+    if (!u.hero && !u.boss && b.rng.chance(LOAF * (N && N.loaf || 1))) return "loaf";
+    const w = commandWeights(u);
     if (u.eaten) w[u.eaten] = 0;
     const hurt = friends(b, u.side).some((f) => f.hp < f.max * 0.6);
     if (u.role === "healer") w.waza = hurt ? 200 : 0;
@@ -7708,7 +8016,12 @@ body.nopad #pad { display: none; }
         emit(b, "stunned", { actor: u.uid, left: 0 });
         return;
       }
-      const move = b.rng.weighted(list.map((m) => ({ m, w: m.w }))).m;
+      const pool = u.eyeDef && u.eye === "blue" ? list.filter(physicalMove) : list;
+      if (!pool.length) {
+        emit(b, "stunned", { actor: u.uid, left: 0 });
+        return;
+      }
+      const move = b.rng.weighted(pool.map((m) => ({ m, w: m.w * (u.eyeDef && u.eye === "red" ? physicalMove(m) ? 0.4 : 2.5 : 1) }))).m;
       emit(b, "skill", { actor: u.uid, name: move.name, cmd: "boss", morph: Boolean(move.morph) });
       if (move.summon) summonIdol(b, u);
       else if (move.shell) {
@@ -7871,6 +8184,22 @@ body.nopad #pad { display: none; }
       }
     }
     for (const e of b.enemies) {
+      if (e.ko || !e.eyeDef) continue;
+      if (!(b.chance && b.chance.uid === e.uid) && !(b.barrier && b.barrier.uid === e.uid)) {
+        e.eyeT += dt;
+        if (e.eyeT >= e.eyeDef.every) switchEyes(b, e);
+      }
+      for (const [k, p] of Object.entries(e.gims || {})) {
+        if (!p.regrow || !p.broken) continue;
+        p.regrowT -= dt;
+        if (p.regrowT <= 0) {
+          p.broken = false;
+          p.hp = p.max;
+          emit(b, "handRegrow", { actor: e.uid, part: k, name: p.name });
+        }
+      }
+    }
+    for (const e of b.enemies) {
       if (e.ko || !e.headOut) continue;
       e.headT -= dt;
       if (e.headT <= 0) {
@@ -7927,6 +8256,19 @@ body.nopad #pad { display: none; }
   function bossTick(b, e, dt) {
     if (b.chance && b.chance.uid === e.uid) return;
     const m = e.bigMove;
+    if (m.trigger === "barrier") {
+      if (b.barrier && b.barrier.uid === e.uid) {
+        b.barrier.left -= dt;
+        if (b.barrier.left > 0) return;
+        dropBarrier(b, e);
+        emit(b, "special", { actor: e.uid, name: m.name, side: "enemy", big: true });
+        applyEffects(b, e, m.effects);
+        return;
+      }
+      b.bossTimer += dt;
+      if (b.bossTimer >= m.every) raiseBarrier(b, e);
+      return;
+    }
     if (m.trigger === "idols") {
       if (!b.charge || b.charge.uid !== e.uid) return;
       b.charge.left -= dt;
@@ -8069,13 +8411,13 @@ body.nopad #pad { display: none; }
   const itemTargetOk = (item, u) => Boolean(u) && (item.revive ? u.ko : !u.ko);
   function itemTargets(b, itemId) {
     const item = ITEMS[itemId];
-    if (!item || item.material) return [];
+    if (!item || item.material || item.book) return [];
     if (item.all) return b.frontAlive();
     return b.wheel.filter((u) => itemTargetOk(item, u));
   }
   function useItem(b, itemId, uid = null) {
     const item = ITEMS[itemId];
-    if (!item || item.material || b.outcome || b.paused || b.itemCooldown > 0) return false;
+    if (!item || item.material || item.book || b.outcome || b.paused || b.itemCooldown > 0) return false;
     let targets;
     if (item.all) targets = b.frontAlive();
     else if (uid !== null) targets = [b.wheel.find((u) => u && u.uid === uid)];
@@ -17522,8 +17864,85 @@ body.nopad #pad { display: none; }
       ])
     }
   };
-  const ART = { ...LEGACY_ART, ...NEW_ART };
+  const ROWS$2 = [
+    "........H.hhGggGGggGhh.H........",
+    "........hhhHgGGGGGGgHhhh........",
+    "......hhhH..oooooooo..Hhhh......",
+    "..fffhhHH.a.SSSSSSSS.a.HHhh.q...",
+    "..SSShH....osssssssso....HhSSS..",
+    "..SfSH.a...oseesseeso...a.HSqS..",
+    "..SSSH.....ossskkssso.....HSSS..",
+    "...haa.....oseesseeso.....aah...",
+    "..hhHaa....osssssssso....aaHhh..",
+    "..hH.aaa...osssssssso...aaa.Hh..",
+    ".ihH...a...osskkkksso...a...Hhb.",
+    "SSSH...aa...SSwSSwSS...aa...HSSS",
+    "SiSa....aa..RRooooR...aa....aSbS",
+    "SSSaaaaaaaa.rrsggsr..aaaaaaaaSSS",
+    ".hhHaaaaaaaarrssssr.aaaaaaaaHhh.",
+    "..hw.....aaaRRRRRRRRRaa.....Hh..",
+    "..hw....aaa.rrrrrrrrraaa....Hh..",
+    "..hwH..aaa..rrrrrrrrr.aaa..Hhh..",
+    "...wHaaa..RRRRRRRRRRR...aaayyy..",
+    "..SSSaa...rrrrrrrrrrr....aaSSS..",
+    "..SwSH....rrrrrrrrrrr.....HSyS..",
+    "..SSShH...RRRRRRRRRRRRR..HhSSS..",
+    ".....hhHH.rrrrrrrrrrrrrHHhh.....",
+    "......hhhHrrrrrrrrrrrrrhhh......",
+    "........RRRRRRRRRRRRRRRh........",
+    "........H.pppppppppppppH........",
+    "........PPPPPPPPPPPPPPP.........",
+    "........ppppppppppppppppp.......",
+    "......PPPPPPPPPPPPPPPPPPP.......",
+    "......ppooooooooooooooooppp....."
+  ];
+  const PALETTE = {
+    o: "#0a0408",
+    h: "#c02010",
+    H: "#ff8a20",
+    a: "#4a2a3a",
+    S: "#7a4a5a",
+    s: "#5a3048",
+    g: "#c09020",
+    G: "#ffe070",
+    r: "#6a0814",
+    R: "#9a1020",
+    k: "#0a0004",
+    w: "#e0e0e8",
+    f: "#ff5010",
+    i: "#8ad8ff",
+    q: "#d8a878",
+    b: "#a040e0",
+    y: "#ffe040",
+    p: "#5a1a3a",
+    P: "#8a2a50"
+  };
+  const flicker = ROWS$2.map((r2) => r2.replace(/[hH]/g, (c) => c === "h" ? "H" : "h"));
+  const art = (eye) => ({ w: 32, h: 30, palette: { ...PALETTE, e: eye }, frames: [ROWS$2, flicker] });
+  const HARIMA_ART = { harima_r: art("#ff2020"), harima_b: art("#30a8ff") };
+  const ART = { ...LEGACY_ART, ...NEW_ART, ...HARIMA_ART };
   ART.onioni2 = { ...ART.onioni, palette: { ...ART.onioni.palette, h: "#ffd040", k: "#1a0a0a", r: "#7a0a1a", d: "#4a0510", y: "#ff3030", t: "#3a3a3a", g: "#ffd040", s: "#fff0a0" } };
+  const hex = (c) => [1, 3, 5].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const toHex = (v) => "#" + v.map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, "0")).join("");
+  function crimson(color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return color;
+    const [r2, g, b] = hex(color);
+    const L = (0.3 * r2 + 0.59 * g + 0.11 * b) / 255;
+    const stops = [[0, [8, 0, 4]], [0.3, [70, 4, 14]], [0.6, [160, 16, 30]], [0.85, [230, 60, 60]], [1, [255, 170, 160]]];
+    for (let i = 1; i < stops.length; i++) {
+      const [l0, c0] = stops[i - 1], [l1, c1] = stops[i];
+      if (L <= l1) {
+        const k = (L - l0) / (l1 - l0);
+        return toHex(c0.map((v, j) => v + (c1[j] - v) * k));
+      }
+    }
+    return toHex(stops[stops.length - 1][1]);
+  }
+  const crimsonArtId = (id) => `${id}_crimson`;
+  for (const id of ["kageboss", "hyougaryu", "urashima", "daishi", "zumitani", "tomooka", "runaya", "onioni2", "harukirin", "nozoema", "tashikeda", "bakuenryu", "niolioten"]) {
+    const a = ART[id];
+    if (a) ART[crimsonArtId(id)] = { ...a, palette: Object.fromEntries(Object.entries(a.palette).map(([k, c]) => [k, crimson(c)])) };
+  }
   const FONT = '"Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", "Yu Gothic", sans-serif';
   const COLORS = {
     ink: "#ffffff",
@@ -17615,15 +18034,15 @@ body.nopad #pad { display: none; }
     ctx.closePath();
     ctx.fill();
   }
-  const artFit = (art) => art && art.w > 24 ? 22 / art.w : 1;
-  function drawArt(ctx, art, frame2, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {
-    if (!art) return;
-    scale *= artFit(art);
-    const n = art.frames.length;
-    const rows = art.frames[(Math.floor(frame2) % n + n) % n];
+  const artFit = (art2) => art2 && art2.w > 24 ? 22 / art2.w : 1;
+  function drawArt(ctx, art2, frame2, x, y, { scale = 1, flip = false, alpha = 1, tint = null, sx = 1, sy = 1 } = {}) {
+    if (!art2) return;
+    scale *= artFit(art2);
+    const n = art2.frames.length;
+    const rows = art2.frames[(Math.floor(frame2) % n + n) % n];
     const pw = scale * sx, ph = scale * sy;
-    const left = Math.round(x - art.w * pw / 2);
-    const top = Math.round(y - art.h * ph);
+    const left = Math.round(x - art2.w * pw / 2);
+    const top = Math.round(y - art2.h * ph);
     const before = ctx.globalAlpha;
     ctx.globalAlpha = before * alpha;
     for (let ry = 0; ry < rows.length; ry++) {
@@ -17631,8 +18050,8 @@ body.nopad #pad { display: none; }
       for (let rx = 0; rx < row2.length; rx++) {
         const ch = row2[rx];
         if (ch === ".") continue;
-        ctx.fillStyle = tint || art.palette[ch];
-        const dx = flip ? art.w - 1 - rx : rx;
+        ctx.fillStyle = tint || art2.palette[ch];
+        const dx = flip ? art2.w - 1 - rx : rx;
         ctx.fillRect(left + dx * pw, top + ry * ph, pw + 0.05, ph + 0.05);
       }
     }
@@ -18061,7 +18480,7 @@ body.nopad #pad { display: none; }
   const LEFT = [118, 70, 164, 30];
   const RIGHT = [300, 350, 252, 206, 380];
   const PARTY = ["koori", "furukawa", "onioni", "tomoishi"];
-  const big = (art) => ART[art] && ART[art].w > 24;
+  const big = (art2) => ART[art2] && ART[art2].w > 24;
   function emoteOf(t) {
     if (/ちぇっ|ぐぬぬ|ゆるさ|だまれ|ふざけ|くそ|なんだと/.test(t)) return "anger";
     if (/ありがと|よかった|うれし|すき|大好き/.test(t)) return "heart";
@@ -18084,16 +18503,16 @@ body.nopad #pad { display: none; }
       const xs = side === "left" ? LEFT : RIGHT;
       return xs.find((x) => !actors.some((a) => !a.leaving && Math.abs(a.tx - x) < 20)) ?? xs[xs.length - 1];
     };
-    function add({ id, art = id, x = null, side = null, scale = null, flip = null, from = null, dark = false }) {
+    function add({ id, art: art2 = id, x = null, side = null, scale = null, flip = null, from = null, dark = false }) {
       const s = side || (PARTY.includes(id) ? "left" : "right");
       const tx = x ?? freeSlot(s);
       const a = {
         id,
-        art,
+        art: art2,
         x: tx,
         y: GROUND,
         tx,
-        scale: scale ?? (big(art) ? 3.4 : 3),
+        scale: scale ?? (big(art2) ? 3.4 : 3),
         flip: flip ?? s === "right",
         alpha: 1,
         hop: -9,
@@ -18376,8 +18795,8 @@ body.nopad #pad { display: none; }
       ctx.globalAlpha = 1;
     }
     function drawActor(ctx, a) {
-      const art = ART[a.art];
-      if (!art) return;
+      const art2 = ART[a.art];
+      if (!art2) return;
       let y = GROUND + a.dy, x = a.x, sx = 1, sy = 1;
       const since = t - a.hop;
       if (since >= 0 && since < 0.35 * (a.hops + 1)) y -= Math.sin(Math.PI * (since % 0.35 / 0.35)) * 12;
@@ -18393,17 +18812,17 @@ body.nopad #pad { display: none; }
       if (a.pose === "spin") flip = Math.floor(t * 8) % 2 === 0;
       ctx.fillStyle = "rgba(0,0,0,0.22)";
       ctx.beginPath();
-      ctx.ellipse(a.x, GROUND + 2, art.w * a.scale * artFit(art) * 0.32, 4, 0, 0, Math.PI * 2);
+      ctx.ellipse(a.x, GROUND + 2, art2.w * a.scale * artFit(art2) * 0.32, 4, 0, 0, Math.PI * 2);
       ctx.fill();
       if (a.dark) {
-        const h = art.h * a.scale * artFit(art);
+        const h = art2.h * a.scale * artFit(art2);
         ctx.fillStyle = `rgba(30, 0, 40, ${(0.3 + 0.12 * Math.sin(t * 4)) * a.alpha})`;
         ctx.beginPath();
         ctx.ellipse(x, y - h / 2, h * 0.55, h * 0.6, 0, 0, Math.PI * 2);
         ctx.fill();
       }
       const dim = speaking && speaking !== a ? 0.82 : 1;
-      drawArt(ctx, art, Math.floor(t * 2), x, y, { scale: a.scale, flip, alpha: a.alpha * dim, sx, sy });
+      drawArt(ctx, art2, Math.floor(t * 2), x, y, { scale: a.scale, flip, alpha: a.alpha * dim, sx, sy });
     }
     function draw(ctx) {
       ctx.save();
@@ -20668,11 +21087,12 @@ body.nopad #pad { display: none; }
           by("onioni", "ふるカワを 取りかえすぞ、こおり！ 来るぞ！")
         ], { done: () => app2.startBattle({ enemies: boss14Enemies(g), kind: "boss", place: "yuen" }) });
       } else if (p.id === "kairou") {
-        const k = kairouOf(g), next = kairouEnemies(g)[0];
-        say([{ who: "回廊の 番人", art: "haridaijin", text: `ここは 無限回廊。強く なった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${BOSSES[next.id].name} Lv${next.lv}じゃ。` }], {
+        const k = kairouOf(g), next = kairouEnemies(g)[0], nu = KAIROU_UNITS[next.id];
+        const harima = next.id === "harima";
+        say([{ who: "回廊の 番人", art: "haridaijin", text: harima ? `${k.floor} 階……さいごの 階じゃ。この 奥には 地獄の 観音、覇理魔様が おられる。Lv${next.lv}。……生きて もどれよ。` : `ここは 無限回廊。赤黒く そまった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${nu.name} Lv${next.lv}じゃ。` }], {
           choices: [`${k.floor} 階に いどむ`, "やめる"],
           done: (i) => {
-            if (i === 0) app2.startBattle({ enemies: kairouEnemies(g), kind: "kairou", place: BOSSES[next.id].place });
+            if (i === 0) app2.startBattle({ enemies: kairouEnemies(g), kind: "kairou", place: harima ? "kurai" : nu.place });
           }
         });
       } else if (p.team) {
@@ -20748,7 +21168,7 @@ body.nopad #pad { display: none; }
             }
           }
         });
-      } else if (b.id === "dagashi" || b.id === "yaoya" || b.id === "omenya") {
+      } else if (b.id === "dagashi" || b.id === "yaoya" || b.id === "omenya" || b.id === "honya") {
         shop(b.id);
       } else if (b.id === "hondou" && reached(g, "clear5")) {
         say([nar("本堂の 中で、ネット配信の お経が しずかに ながれている。よこに 授与所が ある。")], {
@@ -20878,7 +21298,6 @@ body.nopad #pad { display: none; }
           kouban: "おまわりさん「無免許で 飛んでいる ハチを 見かけたら 教えてね」",
           jansou: "中から「ツモ！」「ロン！」と 声が する。子どもは 入れない。",
           denkiya: "古い テレビが 山づみ。1 台だけ、電源が 入っていないのに ついている。",
-          honya: "本が ぎっしり。「全部 読んだら ヨシ！」と だれかが 言っていた。",
           karaoke: "中から 同じ 歌が ずっと 聞こえる。もう 何曲目だろう。",
           sentou: "ゆ と 書いた のれん。「こおりの お客さまは とけるので ご注意ください」",
           // 海辺の 町 (4 章)
@@ -22165,18 +22584,18 @@ body.nopad #pad { display: none; }
     }
     return out.map((r2) => r2.join(""));
   }
-  function backArt(art) {
-    if (!art) return art;
-    if (cache.has(art)) return cache.get(art);
+  function backArt(art2) {
+    if (!art2) return art2;
+    if (cache.has(art2)) return cache.get(art2);
     const freq2 = {};
     let total = 0;
-    for (const row2 of art.frames[0]) for (const ch of row2) if (ch !== ".") {
+    for (const row2 of art2.frames[0]) for (const ch of row2) if (ch !== ".") {
       freq2[ch] = (freq2[ch] || 0) + 1;
       total++;
     }
     const rare = new Set(Object.keys(freq2).filter((ch) => freq2[ch] < total * 0.12));
-    const back = { ...art, frames: art.frames.map((f) => backFrame(f, rare)) };
-    cache.set(art, back);
+    const back = { ...art2, frames: art2.frames.map((f) => backFrame(f, rare)) };
+    cache.set(art2, back);
     return back;
   }
   const FRONT = { ...LEGACY_ART, ...NEW_ART };
@@ -23660,6 +24079,11 @@ body.nopad #pad { display: none; }
     const later = [];
     const HIT_DELAY = { attack: 0.14, skill: 0.32, special: 0.5, perf: 0 };
     const unitOf2 = (uid) => [...battle.wheel, ...battle.enemies].find((u) => u && u.uid === uid);
+    const DARK_FX = ["#5a0010", "#8a0a1a", "#2a0008"];
+    const tone2 = (uid, color) => {
+      var _a;
+      return ((_a = unitOf2(uid)) == null ? void 0 : _a.shade) ? DARK_FX[Math.floor(Math.random() * DARK_FX.length)] : color;
+    };
     function centerOf(uid) {
       const p = posOf(uid), u = unitOf2(uid);
       if (!p || !u) return null;
@@ -23748,7 +24172,7 @@ body.nopad #pad { display: none; }
       let skillHit = HIT_DELAY.skill;
       const list = battle.events.splice(0);
       list.forEach((e, idx) => {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
         if (e.type === "begin") {
           enterT = t;
           banner = { text: "いけっ！ なかまたち！", color: COLORS.accent, until: t + 1.2 };
@@ -23780,7 +24204,7 @@ body.nopad #pad { display: none; }
         if (e.type === "damage") {
           const p = posOf(e.target), from = centerOf(actor), to = centerOf(e.target);
           const delay = actor ? kind === "skill" ? skillHit : HIT_DELAY[kind] : 0;
-          const color = actor ? ELEMENT_COLORS[(_d = unitOf2(actor)) == null ? void 0 : _d.element] || "#ffffff" : "#ffffff";
+          const color = actor ? tone2(actor, ELEMENT_COLORS[(_d = unitOf2(actor)) == null ? void 0 : _d.element] || "#ffffff") : "#ffffff";
           if (actor && kind === "special" && from && to) effects.push({ kind: "orb", from, to, start: t + (kind === "special" ? 0.3 : 0.05), dur: delay - (kind === "special" ? 0.3 : 0.05), color });
           const by = actor;
           at(delay, () => {
@@ -23789,7 +24213,7 @@ body.nopad #pad { display: none; }
             if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: "じゃくてん！", color: "#ffe85a", small: true, until: t + 0.9 });
             flash[e.target] = t + 0.15;
             if (!motions[e.target] || motions[e.target].kind !== "ko") startHurt(e.target, by, (_a2 = unitOf2(e.target)) == null ? void 0 : _a2.ko);
-            if (to) effects.push({ kind: "spark", x: to.x, y: to.y, start: t, dur: 0.3, color: kind === "attack" ? "#ffffff" : color });
+            if (to) effects.push({ kind: "spark", x: to.x, y: to.y, start: t, dur: 0.3, color: kind === "attack" ? tone2(by, "#ffffff") : color });
             sfx(e.amount > 30 ? "big" : "hit");
           });
         } else if (e.type === "heal" && e.amount > 0) {
@@ -23809,7 +24233,7 @@ body.nopad #pad { display: none; }
           const c = centerOf(e.actor), p = posOf(e.actor);
           if (c && p && kind !== "perf") at(0.62, () => {
             var _a2;
-            return effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.45, color: ELEMENT_COLORS[(_a2 = unitOf2(e.actor)) == null ? void 0 : _a2.element] || "#ffffff" });
+            return effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.45, color: tone2(e.actor, ELEMENT_COLORS[(_a2 = unitOf2(e.actor)) == null ? void 0 : _a2.element] || "#ffffff") });
           });
           if (e.big) warn = null;
         } else if (e.type === "partBreak") {
@@ -23824,6 +24248,7 @@ body.nopad #pad { display: none; }
           if (e.why === "heads") banner = { text: "頭を ふたつとも こわした！ チャンス！", color: COLORS.accent, until: t + 1.8 };
           if (e.why === "cage") banner = { text: "おりが こわれた！ ふるカワが にげだした！ チャンス！", color: COLORS.accent, until: t + 2 };
           if (e.why === "signal") banner = { text: "信号機を こわした！ リハマが とまった！ チャンス！", color: COLORS.accent, until: t + 1.8 };
+          if (e.why === "barrier") banner = { text: "バリアを ぜんぶ こわした！ 必殺技を 止めた！ チャンス！", color: COLORS.accent, until: t + 2 };
           sfx("special");
         } else if (e.type === "bind") {
           banner = { text: `拘束のリング！ ${nameOf(e.target)}が うごけない！ 輪も 回せない！`, color: "#ffd040", until: t + 2 };
@@ -23843,10 +24268,22 @@ body.nopad #pad { display: none; }
           banner = { text: `${e.name}に すがたを かえた！`, color: "#ff6a6a", until: t + 2.2 };
           if (e.name === "ルキハ・ニオニオーテン") {
             let at2 = t + 2.2;
-            for (const [text2, color] of [["ルキハ「くく……ああ、もう 人の まねは あきた。」", "#ff8ab8"], ["ニオニオーテン「ゼンブ……オレノ……モノ……！」", "#ff6a6a"], ["ふるカワ「部位を ぜんぶ こわして、顔を ねらって！」", COLORS.accent]]) {
+            for (const [text2, color] of [
+              ["ルキハ「くく……くくく……ああ、もう 人の まねは あきた。」", "#ff8ab8"],
+              ["ルキハの 体が、内がわから はじけた。", "#ffffff"],
+              ["竜の 翼、けものの 脚、鳥の くちばし、鬼の 腕……喰らってきた ものが つぎはぎに ふくれあがる。", "#ffffff"],
+              ["まんなかに、ぐちゃぐちゃに くずれた ルキハの 顔だけが のこっていた。", "#ffffff"],
+              ["ニオニオーテン「ゼンブ……オレノ……モノ……！」", "#ff6a6a"],
+              ["ふるカワ「こおりくん、顔を ねらって！ ASOが 言ってた、あれが 本体だよ！」", COLORS.accent],
+              ["ルキハ・ニオニオーテンが ほえた。", "#ff6a6a"]
+            ]) {
               bannerQueue.push({ text: text2, color, at: at2, until: at2 + 2.2 });
               at2 += 2.2;
             }
+            battle.paused = true;
+            later.push({ at: at2, fn: () => {
+              battle.paused = false;
+            } });
           }
           sfx("big");
           const p = posOf(e.actor);
@@ -23866,8 +24303,15 @@ body.nopad #pad { display: none; }
           if (t - guardTold > 1.2) {
             guardTold = t;
             const p = posOf(e.target);
-            if (p) pops.push({ x: p.x, y: p.y - 120, text: e.chimera ? "キメラの 体に はじかれた！ 部位を ねらえ！" : "マグマの 体で きかない！", color: "#ffb080", small: true, until: t + 1.1 });
+            const why = e.barrier ? "バリアに はじかれた！" : e.eye === "red" ? "赤い 目: 術は きかない！" : e.eye === "blue" ? "青い 目: 攻撃は きかない！" : e.chimera ? "キメラの 体に はじかれた！ 部位を ねらえ！" : "マグマの 体で きかない！";
+            if (p) pops.push({ x: p.x, y: p.y - 120, text: why, color: e.eye === "blue" ? "#8ad0ff" : "#ffb080", small: true, until: t + 1.1 });
           }
+        } else if (e.type === "eyes") {
+          banner = e.eye === "red" ? { text: "8 つの 目が 赤く 光った！ 攻撃しか きかない！", color: "#ff5a5a", until: t + 2 } : { text: "8 つの 目が 青く 光った！ 術しか きかない！", color: "#6ab8ff", until: t + 2 };
+          sfx("lens");
+        } else if (e.type === "handRegrow") {
+          banner = { text: `${e.name}が また 生えてきた……！`, color: "#ff8a8a", until: t + 1.6 };
+          sfx("cancel");
         } else if (e.type === "help") {
           const what = { attack: "追加攻撃！", heal: "サポートアイテム「回復の 実」！", power: "サポートアイテム「力の 実」！ こうげき アップ", cure: "サポートアイテム「おはらいの 札」！ とりつきが ぬけた" }[e.kind];
           banner = { text: `${e.team}の ${e.name}: ${what}`, color: "#8affc8", until: t + 1.5 };
@@ -23877,7 +24321,7 @@ body.nopad #pad { display: none; }
           if (p) effects.push({ kind: "wave", x: p.x, y: p.y - 10, start: t, dur: 0.4, color: "#8affc8" });
           if (q) effects.push({ kind: "wave", x: q.x, y: q.y - 40, start: t + 0.1, dur: 0.4, color: "#8affc8" });
         } else if (e.type === "headOut") {
-          banner = { text: "部位を ぜんぶ こわした！ ルキハの 顔が 出た！ ねらえ！", color: COLORS.accent, until: t + 2 };
+          banner = { text: `部位を ぜんぶ こわした！ ${((_f = Object.values(((_e = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _e.gims) || {}).find((p) => p.face)) == null ? void 0 : _f.name) || "顔"}が 出た！ ねらえ！`, color: COLORS.accent, until: t + 2 };
           sfx("big");
         } else if (e.type === "regrow") {
           banner = { text: "キメラの 体が また ふくれあがった……！", color: "#ff6a6a", until: t + 1.8 };
@@ -23952,7 +24396,7 @@ body.nopad #pad { display: none; }
           const p = posOf(e.target);
           if (p) pops.push({ x: p.x + (Math.random() - 0.5) * 40, y: p.y - 70, text: e.clone ? "どれが 本物？" : e.blind ? "めくらまし で ミス" : "ミス", color: "#c0c8e0", small: true, until: t + 0.8 });
         } else if (e.type === "shell") {
-          const sig = (_f = (_e = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _e.gims) == null ? void 0 : _f.signal;
+          const sig = (_h = (_g = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _g.gims) == null ? void 0 : _h.signal;
           banner = sig ? { text: "赤信号！ 体が かたい！ 信号機を ねらえ！", color: "#ff6a6a", until: t + 1.8 } : { text: "こうらに こもった！ 頭を ねらえ！", color: "#9ae08a", until: t + 1.8 };
           sfx("cancel");
         } else if (e.type === "shellEnd") {
@@ -23972,7 +24416,7 @@ body.nopad #pad { display: none; }
           const p = posOf(e.actor);
           if (p) pops.push({ x: p.x, y: p.y - 112, text: "うごけない！", color: "#ffe85a", until: t + 1 });
         } else if (e.type === "chanceEnd") {
-          const magma = (_g = battle.enemies.find((x) => x.uid === e.target)) == null ? void 0 : _g.magma;
+          const magma = (_i = battle.enemies.find((x) => x.uid === e.target)) == null ? void 0 : _i.magma;
           banner = { text: magma ? "マグマの 体に もどった！" : "こわした ところが もとに もどった！", color: "#ff6a6a", until: t + 1.8 };
           sfx("cancel");
         } else if (e.type === "partGuard") {
@@ -23988,7 +24432,7 @@ body.nopad #pad { display: none; }
           banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : "おたすけ しっぱい… すこし まってから もう いちど", color: e.ok ? "#7aff8a" : "#c88aff", until: t + 1.6 };
           sfx(e.ok ? "heal" : "cancel");
         } else if (e.type === "telegraph") {
-          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack) };
+          warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack), barrier: Boolean(e.barrier) };
           sfx("cancel");
         } else if (e.type === "summon") {
           banner = { text: `${nameOf(e.target)}が あらわれた！`, color: "#bfeaff", until: t + 1.4 };
@@ -23997,7 +24441,7 @@ body.nopad #pad { display: none; }
           if (p) effects.push({ kind: "wave", x: p.x, y: p.y, start: t, dur: 0.5, color: "#bfeaff" });
         } else if (e.type === "bigCancel") {
           warn = null;
-          const armName = e.arm ? (_i = Object.values(((_h = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _h.gims) || {}).find((g2) => g2.arm)) == null ? void 0 : _i.name : null;
+          const armName = e.arm ? (_k = Object.values(((_j = battle.enemies.find((x) => x.uid === e.actor)) == null ? void 0 : _j.gims) || {}).find((g2) => g2.arm)) == null ? void 0 : _k.name : null;
           if (e.hack) banner = { text: "となりの 紋つきを たおした！ ハッキングを 止めた！", color: COLORS.accent, until: t + 2 };
           else banner = { text: e.arm ? armName === "月" ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！` : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
           sfx("big");
@@ -24037,7 +24481,7 @@ body.nopad #pad { display: none; }
       const p = posOf(e.actor);
       const scale = u.side === "ally" ? ALLY_SCALE : p && p.scale || 3;
       const spec = SKILL_KIND[m.kind];
-      const color = ELEMENT_COLORS[((_a = (move.effects || []).find((f) => f.element)) == null ? void 0 : _a.element) || u.element] || "#ffffff";
+      const color = tone2(e.actor, ELEMENT_COLORS[((_a = (move.effects || []).find((f) => f.element)) == null ? void 0 : _a.element) || u.element] || "#ffffff");
       effects.push({ kind: "skill", skill: m.kind, start: t, dur: spec.dur, fx: {
         kind: m.kind,
         weapon: m.weapon || null,
@@ -24073,11 +24517,11 @@ body.nopad #pad { display: none; }
       sfx("cursor");
     }
     function partPos(k, key2) {
-      const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-      const fk = p.scale * artFit(art), h = art.h * fk, side = art.w * fk / 2 + 26;
+      const p = enemyPos(k), e = battle.enemies[k], art2 = ART[e.art];
+      const fk = p.scale * artFit(art2), h = art2.h * fk, side = art2.w * fk / 2 + 26;
       const pt = e.gims && e.gims[key2] || e.parts && e.parts[key2];
       if (pt && pt.rect) {
-        const [x0, y0, x1, y1] = pt.rect, left = p.x - art.w * fk / 2, top = p.y - h;
+        const [x0, y0, x1, y1] = pt.rect, left = p.x - art2.w * fk / 2, top = p.y - h;
         let cx = left + (x0 + x1 + 1) / 2 * fk, cy = top + (y0 + y1 + 1) / 2 * fk;
         if (pt.arm && pt.anchor) {
           const ax = left + pt.anchor[0] * fk, ay = top + pt.anchor[1] * fk, g2 = armScale(e);
@@ -24088,7 +24532,7 @@ body.nopad #pad { display: none; }
       }
       if (e.gims && e.gims[key2]) {
         const [fx, fy] = e.gims[key2].pos;
-        return { x: p.x + fx * art.w * fk / 2, y: p.y + fy * h };
+        return { x: p.x + fx * art2.w * fk / 2, y: p.y + fy * h };
       }
       const bob2 = Math.sin(t * 3 + (key2 === "lhand" ? 1.5 : 0)) * 3;
       if (key2 === "rhand") return { x: p.x - side, y: p.y - h * 0.42 + bob2 };
@@ -24102,16 +24546,16 @@ body.nopad #pad { display: none; }
       return PART_ORDER.find((key2) => !e.parts[key2].broken && Math.hypot(partPos(k, key2).x - x, partPos(k, key2).y - y) < 24) || null;
     }
     function hitEnemy(k, x, y) {
-      const p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-      const fk = p.scale * artFit(art), w = art.w * fk / 2 + 8, h = art.h * fk;
+      const p = enemyPos(k), e = battle.enemies[k], art2 = ART[e.art];
+      const fk = p.scale * artFit(art2), w = art2.w * fk / 2 + 8, h = art2.h * fk;
       return x >= p.x - w && x <= p.x + w && y >= p.y - h - 10 && y <= p.y + 6;
     }
     function drawLock(ctx) {
       const k = battle.enemies.findIndex((e2) => e2.uid === battle.lock);
       if (k < 0) return;
-      let p = enemyPos(k), e = battle.enemies[k], art = ART[e.art];
-      const fk = p.scale * artFit(art);
-      let cy = p.y - art.h * fk / 2, r2 = Math.max(art.w, art.h) * fk / 2 + 6;
+      let p = enemyPos(k), e = battle.enemies[k], art2 = ART[e.art];
+      const fk = p.scale * artFit(art2);
+      let cy = p.y - art2.h * fk / 2, r2 = Math.max(art2.w, art2.h) * fk / 2 + 6;
       if (battle.lockPart) {
         const pp = partPos(k, battle.lockPart);
         p = { ...p, x: pp.x };
@@ -24210,7 +24654,7 @@ body.nopad #pad { display: none; }
       banner = { text: g.fastBattle ? "倍速: オン" : "倍速: オフ", color: COLORS.accent, until: t + 0.8 };
       sfx("cursor");
     }
-    const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0 && (menu.kind === "food" ? isFood(ITEMS[id]) : !ITEMS[id].material));
+    const owned = () => Object.keys(ITEMS).filter((id) => (g.items[id] || 0) > 0 && (menu.kind === "food" ? isFood(ITEMS[id]) : !ITEMS[id].material && !ITEMS[id].book));
     const menuTargets = () => {
       if (menu.kind === "rescue") return rescueTargets(battle);
       if (menu.kind === "food") return battle.enemiesAlive();
@@ -24569,36 +25013,37 @@ body.nopad #pad { display: none; }
       ctx.beginPath();
       ctx.ellipse(ground.x, ground.y + 2, 8 * scale / 3 * 2, 3 * scale / 3 * 2, 0, 0, Math.PI * 2);
       ctx.fill();
-      const art = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
+      const art2 = back ? BACK_ART[u.art] || backArt(ART[u.art]) : ART[u.art];
       if (u.dark && !u.ko) {
-        const fk = scale * artFit(art);
+        const fk = scale * artFit(art2);
         ctx.fillStyle = `rgba(30, 6, 40, ${0.4 + 0.12 * Math.sin(t * 4 + p.x)})`;
         ctx.beginPath();
-        ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2);
+        ctx.ellipse(p.x, p.y - art2.h * fk / 2, art2.w * fk / 2 + 8, art2.h * fk / 2 + 8, 0, 0, Math.PI * 2);
         ctx.fill();
       }
-      drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? "#ffffff" : null, sx, sy });
+      drawArt(ctx, art2, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? "#ffffff" : null, sx, sy });
       if (u.enraged && !u.ko) {
-        drawArt(ctx, art, Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: 0.42 + 0.1 * Math.sin(t * 6), tint: "#7a0010", sx, sy });
+        drawArt(ctx, art2, Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: 0.42 + 0.1 * Math.sin(t * 6), tint: "#7a0010", sx, sy });
       }
       if (u.eaten && !u.ko) text(ctx, `${{ attack: "こうげき", waza: "わざ", jutsu: "術", guard: "まもり" }[u.eaten]}× 喰われた`, p.x, p.y + 12, { size: 9, align: "center", bold: true, color: "#ff6a6a" });
       if (!u.ko && u.bound) {
-        const fk = scale * artFit(art);
+        const fk = scale * artFit(art2);
         ctx.strokeStyle = "#ffd040";
         ctx.lineWidth = 3;
         for (let i = 0; i < 2; i++) {
           ctx.beginPath();
-          ctx.ellipse(p.x, p.y + bobY - art.h * fk * (0.35 + i * 0.3), art.w * fk / 2 + 6, 6, 0, 0, Math.PI * 2);
+          ctx.ellipse(p.x, p.y + bobY - art2.h * fk * (0.35 + i * 0.3), art2.w * fk / 2 + 6, 6, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
       }
-      if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art, scale, [190, 90, 255], 0);
-      if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art, scale, [80, 170, 255], 1.7);
-      if (u.idol) drawArt(ctx, art, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
-      const w = u.parts || u.boss && u.side === "enemy" ? battle.enemies.filter((x) => !x.idol && !x.ko).length > 1 ? 100 : 150 : 44, head = p.y - art.h * scale * artFit(art);
+      if (!u.ko && u.shade) drawMist(ctx, p.x, p.y + bobY, art2, scale, [120, 0, 20], 3.1);
+      if (!u.ko && isPossessed(u)) drawMist(ctx, p.x, p.y + bobY, art2, scale, [190, 90, 255], 0);
+      if (!u.ko && u.drained) drawMist(ctx, p.x, p.y + bobY, art2, scale, [80, 170, 255], 1.7);
+      if (u.idol) drawArt(ctx, art2, 0, p.x, p.y + bobY, { scale, flip, alpha: 0.45 + Math.sin(t * 4) * 0.08, tint: "#cdf2ff", sx, sy });
+      const w = u.parts || u.boss && u.side === "enemy" ? battle.enemies.filter((x) => !x.idol && !x.ko).length > 1 ? 100 : 150 : 44, head = p.y - art2.h * scale * artFit(art2);
       const barY = head - 10, nameY = head - 14;
       if (!u.ko && battle.chance && battle.chance.uid === u.uid && !battle.outcome) {
-        const rx = Math.min(70, art.w * scale * artFit(art) * 0.32 + 14), cy = head + 14;
+        const rx = Math.min(70, art2.w * scale * artFit(art2) * 0.32 + 14), cy = head + 14;
         for (let i = 0; i < 6; i++) {
           const a = t * 3 + i * Math.PI / 3, front = Math.sin(a) > 0;
           const x = p.x + Math.cos(a) * rx, y = cy + Math.sin(a) * 7;
@@ -24630,8 +25075,8 @@ body.nopad #pad { display: none; }
         ctx.strokeStyle = "#8ad0ff";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        const fk = scale * artFit(art);
-        ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 4, art.h * fk / 2 + 4, 0, 0, Math.PI * 2);
+        const fk = scale * artFit(art2);
+        ctx.ellipse(p.x, p.y - art2.h * fk / 2, art2.w * fk / 2 + 4, art2.h * fk / 2 + 4, 0, 0, Math.PI * 2);
         ctx.stroke();
         ctx.globalAlpha = 1;
         drawShield(ctx, p.x - w / 2 - 8, barY + 1, 0.55);
@@ -24669,7 +25114,7 @@ body.nopad #pad { display: none; }
       }
     }
     function drawGims(ctx, e, k) {
-      const p = enemyPos(k), art = ART[e.art], fk = p.scale * artFit(art), h = art.h * fk, w = art.w * fk;
+      const p = enemyPos(k), art2 = ART[e.art], fk = p.scale * artFit(art2), h = art2.h * fk, w = art2.w * fk;
       const label = (key2, q, dy = 22) => {
         const pt = e.gims[key2];
         if (!gimOpen(battle, e, key2)) return;
@@ -24711,6 +25156,7 @@ body.nopad #pad { display: none; }
         }
         text(ctx, `こうら ${Math.ceil(e.shell)}`, p.x, p.y - h * 0.3, { size: 11, align: "center", bold: true, color: "#e0ffd0" });
       }
+      if (e.eyeDef && !e.ko) text(ctx, e.eye === "red" ? "赤い目: 攻撃だけ きく" : "青い目: 術だけ きく", p.x, p.y + 14, { size: 10, align: "center", bold: true, color: e.eye === "red" ? "#ff6a6a" : "#7ac0ff" });
       if (e.oni) {
         ctx.strokeStyle = `rgba(255, 60, 60, ${0.4 + 0.25 * Math.sin(t * 6)})`;
         ctx.lineWidth = 4;
@@ -24744,6 +25190,21 @@ body.nopad #pad { display: none; }
           ctx.restore();
           bar(ctx, q.x - 20, q.y + 22, 40, 4, lv / mx, hot ? "#ffe85a" : "#9a9ad8");
           text(ctx, `月 ${lv}/${mx}`, q.x, q.y + 35, { size: 9.5, align: "center", bold: true, color: "#ffe0b0" });
+        } else if (pt.barrier) {
+          if (!open) continue;
+          const pulse = 0.6 + 0.3 * Math.sin(t * 6 + q.x);
+          ctx.fillStyle = `rgba(200, 30, 50, ${0.35 * pulse})`;
+          ctx.strokeStyle = `rgba(255, 140, 60, ${pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const a = Math.PI / 3 * i + Math.PI / 6;
+            ctx.lineTo(q.x + Math.cos(a) * 15, q.y + Math.sin(a) * 15);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          label(key2, q, 18);
         } else if (pt.ring) {
           const bob2 = Math.sin(t * 3) * 3, y0 = q.y + bob2;
           ctx.strokeStyle = "#ffd040";
@@ -24852,8 +25313,8 @@ body.nopad #pad { display: none; }
         }
       }
     }
-    function drawMist(ctx, x, y, art, scale, [r2, g2, b2], phase) {
-      const fk = scale * artFit(art), w = art.w * fk / 2, h = art.h * fk, cy = y - h / 2;
+    function drawMist(ctx, x, y, art2, scale, [r2, g2, b2], phase) {
+      const fk = scale * artFit(art2), w = art2.w * fk / 2, h = art2.h * fk, cy = y - h / 2;
       ctx.fillStyle = `rgba(${r2}, ${g2}, ${b2}, ${0.14 + 0.06 * Math.sin(t * 3 + phase)})`;
       ctx.beginPath();
       ctx.ellipse(x, cy, w + 6, h / 2 + 6, 0, 0, Math.PI * 2);
@@ -24868,11 +25329,11 @@ body.nopad #pad { display: none; }
       }
     }
     function drawRegion(ctx, e, k, [x0, y0, x1, y1], { tint = null, alpha = 1, gscale = 1, anchor = null } = {}) {
-      const p = enemyPos(k), art = ART[e.art], fk = p.scale * artFit(art);
+      const p = enemyPos(k), art2 = ART[e.art], fk = p.scale * artFit(art2);
       const { ox, oy } = offsetOf(e);
       const x = p.x + ox, y = p.y + oy + (e.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5);
-      const rows = art.frames[(e.status.sleep > 0 || e.ko ? 0 : Math.floor(t * 2)) % art.frames.length];
-      const left = Math.round(x - art.w * fk / 2), top = Math.round(y - art.h * fk);
+      const rows = art2.frames[(e.status.sleep > 0 || e.ko ? 0 : Math.floor(t * 2)) % art2.frames.length];
+      const left = Math.round(x - art2.w * fk / 2), top = Math.round(y - art2.h * fk);
       ctx.save();
       if (anchor && gscale !== 1) {
         const ax = left + anchor[0] * fk, ay = top + anchor[1] * fk;
@@ -24886,7 +25347,7 @@ body.nopad #pad { display: none; }
         for (let rx = x0; rx <= x1; rx++) {
           const ch = row2[rx];
           if (!ch || ch === ".") continue;
-          ctx.fillStyle = tint || art.palette[ch];
+          ctx.fillStyle = tint || art2.palette[ch];
           ctx.fillRect(left + rx * fk, top + ry * fk, fk + 0.05, fk + 0.05);
         }
       }
@@ -24915,7 +25376,7 @@ body.nopad #pad { display: none; }
       }
       if (pt.broken) {
         drawRegion(ctx, e, k, pt.rect, { tint: "#000000", alpha: 0.6 });
-        text(ctx, "×", q.x, q.y + 8, { size: 20, align: "center", bold: true, color: "#ff6a6a" });
+        text(ctx, pt.regrow ? `× ${Math.ceil(pt.regrowT || 0)}` : "×", q.x, q.y + 8, { size: pt.regrow ? 14 : 20, align: "center", bold: true, color: "#ff6a6a" });
         return;
       }
       if (!open) return;
@@ -24923,6 +25384,7 @@ body.nopad #pad { display: none; }
       const regen = key2 === "horn" && battle.regen && battle.regen.uid === e.uid;
       const color = key2 === "mask" ? "#ff2a3a" : key2 === "rhead" ? "#c88aff" : key2 === "lhead" ? "#78b4ff" : regen ? "#ff8ab8" : "#ffe85a";
       drawRegion(ctx, e, k, pt.rect, { tint: color, alpha: (key2 === "mask" || regen ? 0.45 : 0.22) + 0.12 * Math.sin(t * (regen ? 10 : 5)) });
+      if (pt.regrow && !(battle.lock === e.uid && battle.lockPart === key2)) return;
       label(key2, q, 14);
     }
     function drawShield(ctx, x, y, s = 1) {
@@ -25013,13 +25475,18 @@ body.nopad #pad { display: none; }
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 必殺技「${warn.name}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `氷の偶像を こわせば 止められる！ (${Math.max(0, battle.charge.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
-      } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && !warn.hack && warn.until > t) {
+      } else if (battle.barrier && !battle.outcome) {
+        const bu = battle.enemies.find((x) => x.uid === battle.barrier.uid), left = bu ? Object.values(bu.gims).filter((p) => p.barrier && !p.broken).length : 0;
+        panel(ctx, 30, 8, 340, 40, { fill: "rgba(70, 0, 20, 0.92)", edge: "#ff8a20" });
+        text(ctx, `!! バリアを はって「${warn ? warn.name : ""}」を ためている！`, 200, 25, { size: 13, align: "center", bold: true });
+        text(ctx, `バリアを ぜんぶ こわせ！ のこり ${left} (${Math.max(0, battle.barrier.left).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0b0" });
+      } else if (warn && !warn.idols && !warn.chant && !warn.arm && !warn.burst && !warn.regen && !warn.hack && !warn.barrier && warn.until > t) {
         panel(ctx, 30, 8, 340, 40, { fill: "rgba(120, 10, 20, 0.9)", edge: "#ff6a6a" });
         text(ctx, `!! 大技「${warn.name}」が くる！`, 200, 25, { size: 13, align: "center", bold: true });
         text(ctx, `輪を まわして じょうぶな なかまを 前に！ (${Math.max(0, warn.until - t).toFixed(1)})`, 200, 41, { size: 11, align: "center", color: "#ffd0d0" });
       } else if (banner && banner.until > t) {
         panel(ctx, 40, 12, 320, 26, { fill: "rgba(16,22,42,0.9)", edge: banner.color });
-        text(ctx, banner.text, 200, 30, { size: 13, align: "center", bold: true, color: banner.color });
+        text(ctx, banner.text, 200, 30, { size: 13, align: "center", bold: true, color: banner.color, maxWidth: 312 });
       }
       if (battle.waiting && !battle.outcome) {
         panel(ctx, 30, 176, 340, 50, { fill: "rgba(16,22,42,0.92)", edge: "#ffffff" });
@@ -25061,8 +25528,8 @@ body.nopad #pad { display: none; }
       const target = battle.enemiesAlive()[0] || battle.enemies[0];
       const e = centerOf(target.uid) || { x: 200, y: 110 };
       const [dur] = MOTION_TIME[mg.sp.motion];
-      const art = BACK_ART[mg.unit.art] || backArt(ART[mg.unit.art]);
-      const drawActor = (x, y, o) => drawArt(ctx, art, Math.floor(t * 8), x, y, { scale: o.scale || ALLY_SCALE, flip: o.flip, alpha: o.alpha ?? 1, sx: o.sx || 1, sy: o.sy || 1 });
+      const art2 = BACK_ART[mg.unit.art] || backArt(ART[mg.unit.art]);
+      const drawActor = (x, y, o) => drawArt(ctx, art2, Math.floor(t * 8), x, y, { scale: o.scale || ALLY_SCALE, flip: o.flip, alpha: o.alpha ?? 1, sx: o.sx || 1, sy: o.sy || 1 });
       const allies = battle.front().map((u, i) => u && !u.ko ? ALLY_POS[i] : null).filter(Boolean);
       drawPerformance(ctx, mg.sp, a, e, Math.min(1, mg.t / dur), t, drawActor, allies);
     }
@@ -25414,6 +25881,7 @@ body.nopad #pad { display: none; }
       const switchTab = (d) => {
         tab = (tab + d + NT) % NT;
         picking = false;
+        bookPick = null;
         sfx("cursor");
       };
       if (input2.pressed.tab) {
@@ -25450,7 +25918,7 @@ body.nopad #pad { display: none; }
           return;
         }
       }
-      if (input2.pressed.b && !picking || input2.pressed.x || input2.pressed.start) {
+      if (input2.pressed.b && !picking && !bookPick || input2.pressed.x || input2.pressed.start) {
         sfx("cancel");
         app2.go("field");
         return;
@@ -25458,7 +25926,7 @@ body.nopad #pad { display: none; }
       if (tab === 0) updateWatch(input2);
       else if (tab === 1) nIndex = moveList(input2, nIndex, box().length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
       else if (tab === 2) zIndex = moveList(input2, zIndex, NAKAMA_IDS.length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
-      else if (tab === 3) iIndex = moveList(input2, iIndex, Object.keys(ITEMS).length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(iIndex, ITEM_ROWS, Object.keys(ITEMS).length), ITEM_ROWS);
+      else if (tab === 3) updateItems(input2);
       else if (tab === T_QUEST) qIndex = moveList(input2, qIndex, questList(g).length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
       else if (tab === T_HELP) {
         const list = helpTopics(g);
@@ -25483,6 +25951,39 @@ body.nopad #pad { display: none; }
         }
       }
     }
+    let bookPick = null;
+    const bookMedals = () => g.medals;
+    function updateItems(input2) {
+      const ids = Object.keys(ITEMS);
+      if (!bookPick) {
+        iIndex = moveList(input2, iIndex, ids.length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(iIndex, ITEM_ROWS, ids.length), ITEM_ROWS);
+        const id = ids[iIndex];
+        if (input2.pressed.a && ITEMS[id].book) {
+          if ((g.items[id] || 0) > 0) {
+            bookPick = { itemId: id, index: 0 };
+            sfx("ok");
+          } else sfx("cancel");
+        }
+        return;
+      }
+      const list = bookMedals();
+      if (input2.pressed.b) {
+        bookPick = null;
+        sfx("cancel");
+        return;
+      }
+      bookPick.index = moveList(input2, bookPick.index, list.length, (k) => ({ x: 8, y: 52 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(bookPick.index, ROWS$1 + 2, list.length), ROWS$1 + 2);
+      const pickTap = input2.touch.justDown && hit({ x: 8, y: 52, w: 304, h: ROW_H$1 * (ROWS$1 + 2) }, input2.touch.x, input2.touch.y);
+      if (input2.pressed.a || pickTap) {
+        const m = list[bookPick.index];
+        if (readNatureBook(g, m.uid, bookPick.itemId)) {
+          bookNote = { text: `${unitOf(m.id).name}の 性格が「${NATURES[m.nature].name}」に なった！`, t };
+          sfx("heal");
+          bookPick = null;
+        } else sfx("cancel");
+      }
+    }
+    let bookNote = null;
     const SAVE_BTN = { x: 80, y: 74, w: 160, h: 40, label: "セーブする" };
     const BGM_BTN = { x: 80, y: 128, w: 160, h: 40 };
     let sIndex = 0;
@@ -25597,6 +26098,13 @@ body.nopad #pad { display: none; }
         text(ctx, "まだ 会っていない", 170, 56, { size: 12, color: COLORS.sub });
         return;
       }
+      text(ctx, `戦い方: ${STYLES[styleOf(n)].name}`, 85, 160, { size: 11, align: "center", bold: true, color: COLORS.accent });
+      text(ctx, STYLES[styleOf(n)].desc, 85, 175, { size: 9, align: "center", color: COLORS.sub, maxWidth: 140 });
+      if (medal && medal.nature && NATURES[medal.nature]) {
+        text(ctx, `性格: ${NATURES[medal.nature].name}`, 85, 196, { size: 11, align: "center", bold: true, color: "#ff9ad8" });
+        const nd = wrap(ctx, NATURES[medal.nature].desc, 136, 9);
+        nd.slice(0, 2).forEach((r2, i) => text(ctx, r2, 85, 210 + i * 11, { size: 9, align: "center", color: COLORS.sub }));
+      }
       text(ctx, `${n.rank}ランク　${n.element}　${ROLES[n.role]}${n.version ? `　${VERSION_ONLY[n.version]}だけ` : ""}`, 170, 50, { size: 11.5, color: n.version && n.version !== g.version ? "#ff9a9a" : COLORS.sub, maxWidth: 225 });
       text(ctx, n.title, 170, 70, { size: 12, color: COLORS.accent });
       const ds = fitSize(ctx, n.desc, 215, 11.5, 4, 9);
@@ -25608,7 +26116,7 @@ body.nopad #pad { display: none; }
       const ev = evolveOf(id);
       if (n.favorite) text(ctx, `好物: ${ITEMS[n.favorite].name}${ev ? `　Lv${ev.lv}で ${NAKAMA[ev.to].name}に 進化` : n.evo ? `　${NAKAMA[n.evo].name}が 進化した すがた` : ""}`, 170, 182, { size: 11, maxWidth: 220 });
       if (medal) {
-        const s = statsAt(id, medal.lv);
+        const s = statsAt(id, medal.lv, medal.nature);
         text(ctx, `Lv${medal.lv}  HP${s.hp} こうげき${s.atk} ぼうぎょ${s.def}`, 170, 196, { size: 11 });
         text(ctx, `すばやさ${s.spd} ようじゅつ${s.mag}`, 170, 211, { size: 11 });
         const need = expFor(medal.lv + 1) - expFor(medal.lv);
@@ -25635,6 +26143,9 @@ body.nopad #pad { display: none; }
       } else if (tab === 2) {
         const id = NAKAMA_IDS[zIndex];
         drawNakama(ctx, id, null, { known: Boolean(g.zukan.seen[id] || g.zukan.friends[id]) });
+      } else if (tab === 3 && bookPick) {
+        const m = bookMedals()[bookPick.index];
+        if (m) drawNakama(ctx, m.id, m);
       } else if (tab === 3) {
         const id = Object.keys(ITEMS)[iIndex];
         text(ctx, ITEMS[id].name, 200, 80, { size: 20, align: "center", bold: true });
@@ -25800,6 +26311,23 @@ body.nopad #pad { display: none; }
       });
     }
     function drawItems(ctx) {
+      if (bookPick) {
+        const list = bookMedals(), top2 = scroll(bookPick.index, ROWS$1 + 2, list.length), it = ITEMS[bookPick.itemId];
+        text(ctx, `${it.name}を だれに 読ませる？`, 160, 46, { size: 11.5, align: "center", bold: true, color: COLORS.accent });
+        list.slice(top2, top2 + ROWS$1 + 2).forEach((m, k) => {
+          var _a;
+          const y = 52 + k * ROW_H$1;
+          if (top2 + k === bookPick.index) {
+            roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
+            ctx.fillStyle = "#2d5aa8";
+            ctx.fill();
+          }
+          text(ctx, `${unitOf(m.id).name} Lv${m.lv}`, 16, y + 14, { size: 12, maxWidth: 170 });
+          text(ctx, ((_a = NATURES[m.nature]) == null ? void 0 : _a.name) || "", 304, y + 14, { size: 11, align: "right", color: m.nature === it.book ? COLORS.dim : "#ff9ad8" });
+        });
+        text(ctx, `${btn("a")} 読ませる・${btn("b")} やめる`, 160, 210, { size: 10.5, align: "center", color: COLORS.dim });
+        return;
+      }
       const ids = Object.keys(ITEMS), top = scroll(iIndex, ITEM_ROWS, ids.length);
       ids.slice(top, top + ITEM_ROWS).forEach((id, k) => {
         const y = 36 + k * ROW_H$1;
@@ -25812,7 +26340,7 @@ body.nopad #pad { display: none; }
         if (ITEMS[id].material) text(ctx, "合成", 200, y + 14, { size: 10, color: "#c8a8ff" });
         text(ctx, `×${g.items[id] || 0}`, 304, y + 14, { size: 12, align: "right" });
       });
-      text(ctx, `お金: ${g.money}円 (駄菓子屋で 買える)`, 8, 200, { size: 11, color: COLORS.sub });
+      text(ctx, bookNote && t - bookNote.t < 2.5 ? bookNote.text : ITEMS[ids[iIndex]].book ? `${btn("a")} で なかまに 読ませる (性格が かわる)` : `お金: ${g.money}円`, 8, 200, { size: 11, color: bookNote && t - bookNote.t < 2.5 ? "#ff9ad8" : COLORS.sub, maxWidth: 304 });
     }
     return { name: "menu", update, drawTop, drawBottom };
   }
@@ -26095,7 +26623,7 @@ body.nopad #pad { display: none; }
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
     startBattle({ enemies, kind, place, mystery = null, team = null, helpers = null }) {
-      const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null);
+      const allies = watchMedals(this.g).map((m) => m ? { uid: m.uid, id: m.id, lv: m.lv, nature: m.nature || null, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null);
       const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true, helpers });
       battle.mystery = mystery;
       battle.team = team;
@@ -26131,8 +26659,9 @@ body.nopad #pad { display: none; }
       area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
       story: app.g ? app.g.story : null,
       battle: b ? (() => {
-        const boss = b.enemies.find((e) => BOSSES[e.id]);
-        return { kind: b.kind, outcome: b.outcome, bossId: (boss == null ? void 0 : boss.id) ?? null, phase: (boss == null ? void 0 : boss.phase) ?? 1, enraged: Boolean(boss == null ? void 0 : boss.enraged) };
+        var _a, _b;
+        const boss = b.enemies.find((e) => BOSSES[e.id] || KAIROU_UNITS[e.id]);
+        return { kind: b.kind, outcome: b.outcome, bossId: boss ? ((_a = KAIROU_UNITS[boss.id]) == null ? void 0 : _a.bgm) || ((_b = KAIROU_UNITS[boss.id]) == null ? void 0 : _b.baseBoss) || boss.id : null, phase: (boss == null ? void 0 : boss.phase) ?? 1, enraged: Boolean(boss == null ? void 0 : boss.enraged) };
       })() : null
     });
   }
