@@ -62,3 +62,10 @@ test('13 章: ルキハ → ニオニオーテン (つぎはぎ) → HP 半分�
     assert.ok(SONGS.final13.bpm > SONGS.title.bpm + 30, '決戦用に はやく');
     assert.equal(SONGS.niolioten13.melody.split('|').length, 8, '8 小節');
 });
+
+test('覇理魔様 (2026-11-03): 専用の 曲。無限回廊の さいごの 階で 鳴る', async () => {
+    const { KAIROU_UNITS } = await import('../src/data/nakama.js');
+    assert.ok(SONGS.harima && SONGS.harima.mode === 'phrygian' && SONGS.harima.bpm < 100, 'ゆっくり・フリギア');
+    assert.equal(KAIROU_UNITS.harima.bgm, 'harima');
+    assert.equal(bgmFor({ scene: 'battle', battle: { kind: 'kairou', bossId: KAIROU_UNITS.harima.bgm } }), 'harima');
+});

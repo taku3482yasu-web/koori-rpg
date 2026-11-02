@@ -966,6 +966,21 @@ body.nopad #pad { display: none; }
       arp: "0 1 2 3 2 1 0 1",
       drums: "x h s h x h s s"
     },
+    // 覇理魔様 (無限回廊の さいごの 階。2026-11-03 ユーザー指定: 地獄の ボスらしく まがまがしいが 荘厳)
+    //   フリギア (半音 上の 2 度が 不気味) で ゆっくり。2 度の 長三和音 (ナポリの 和音) で 荘厳に、のばした 音と パイプオルガンの ような 分散和音、
+    //   お寺の 木魚と 重い キックで 地獄の お堂
+    harima: {
+      name: "千手地獄観音 (覇理魔様)",
+      bpm: 88,
+      root: 57,
+      mode: "phrygian",
+      lead: "sawtooth",
+      melody: "1 - - - 2 - 1 - | 7, - - - 1 - - . | 5 - - - 6 - 5 - | 4 - 2 - 1 - - . | 1' - - - 7 - 6 - | 5 - 6 - 7 - 1' - | 2' - - - 1' - 7 - | 1' - - - 5 - 1 -",
+      chords: "1 7 6 2 6 5 2 1",
+      bass: "r - - - f - o -",
+      arp: "0 1 2 3 2 1 0 1",
+      drums: "k . . b k . s b"
+    },
     aso15: {
       name: "大魔王ASO",
       bpm: 128,
@@ -1415,8 +1430,8 @@ body.nopad #pad { display: none; }
       raiHand: { name: "雷の手", hp: 0.05, when: "always", rect: [26, 17, 30, 21], move: "雷の わざ", regrow: 18 }
     },
     eyes: { every: 11, red: "harima_r", blue: "harima_b" },
-    bgm: "aso15",
-    // 大魔王ASO の 曲 (さいごの 階に ふさわしい 重い 曲)
+    bgm: "harima",
+    // 専用の 曲 (data/bgm.js。2026-11-03)
     chanceTurns: 3,
     befriends: null,
     lv: 90,

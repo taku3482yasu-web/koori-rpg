@@ -74,7 +74,7 @@ export const HARIMA = {
         raiHand: { name: '雷の手', hp: 0.05, when: 'always', rect: [26, 17, 30, 21], move: '雷の わざ', regrow: 18 }
     },
     eyes: { every: 11, red: 'harima_r', blue: 'harima_b' },
-    bgm: 'aso15',   // 大魔王ASO の 曲 (さいごの 階に ふさわしい 重い 曲)
+    bgm: 'harima',   // 専用の 曲 (data/bgm.js。2026-11-03)
     chanceTurns: 3,
     befriends: null, lv: 90, place: 'kurai'
 };
