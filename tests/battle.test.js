@@ -239,9 +239,7 @@ test('いたずらの とりつき: なまけたり 味方を 攻めたり す�
     assert.ok(b.paused, 'ミニゲームの あいだは 止まる');
     resolveRescue(b, r, false);
     assert.ok(u.status.possess > 0, 'しっぱいでは 治らない');
-    assert.equal(canRescue(b, u.uid), false, 'しっぱいの あとは 少し 待つ');
-    for (let i = 0; i < 70; i++) step(b, 0.05);
-    assert.ok(canRescue(b, u.uid));
+    assert.ok(canRescue(b, u.uid), 'しっぱいしても すぐ もう いちど できる (2026-11-02)');
     resolveRescue(b, startRescue(b, u.uid), true);
     assert.ok(!u.status.possess, '成功で 治る');
 });
@@ -1078,3 +1076,34 @@ test('むずかしい 章 (6・8・13 章) の ボスは 適正レベルで 撃�
     }
 });
 
+
+test('お店の 道具 (2026-11-02): 全体回復・復活・強化・とりつきを ぬく。お面などは おやつに できない', async () => {
+    const { itemTargets, isFood } = await import('../src/logic/battle.js');
+    const { ITEMS, SHOPS } = await import('../src/data/items.js');
+    for (const [k, sh] of Object.entries(SHOPS)) for (const id of sh.items) assert.ok(ITEMS[id] && ITEMS[id].price > 0 && ITEMS[id].desc, `${k} の ${id}`);
+    const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron', 'jimihabu', 'kadohone'].filter(id => NAKAMA[id]).map(id => ({ id, lv: 10 }));
+    const b = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(5) });
+    b.front().forEach(u => { u.hp = 1; });
+    assert.ok(useItem(b, 'suika'));
+    assert.ok(b.front().every(u => u.hp > 1), 'すいかは 前の ぜんぶ');
+    b.itemCooldown = 0;
+    const down = b.front()[1];
+    down.hp = 0; down.ko = true;
+    assert.deepEqual(itemTargets(b, 'okamemen').map(u => u.uid), [down.uid], '復活は たおれた なかまだけ');
+    assert.ok(useItem(b, 'okamemen'));
+    assert.ok(!down.ko && Math.abs(down.hp - Math.round(down.max * 0.5)) <= 1, 'HP 半分で 復活');
+    b.itemCooldown = 0;
+    assert.equal(useItem(b, 'juzu'), false, 'たおれた なかまが いないと 使えない');
+    const u = b.front()[0];
+    assert.ok(useItem(b, 'onimen', u.uid));
+    assert.equal(u.buffs.atk.amount, 0.5);
+    b.itemCooldown = 0;
+    u.status = { sleep: 9 };
+    assert.ok(useItem(b, 'daikon', u.uid));
+    assert.deepEqual(u.status, {});
+    assert.ok(isFood(ITEMS.tomato) && !isFood(ITEMS.onimen) && !isFood(ITEMS.hoshikakera));
+    const c = createBattle({ allies, enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(6), intro: true });
+    assert.equal(throwFood(c, 'onimen'), false, 'お面は 投げられない');
+    assert.ok(throwFood(c, 'tomato', null, { start: false }));
+    assert.ok(c.waiting, 'start: false なら まだ 始まらない');
+});

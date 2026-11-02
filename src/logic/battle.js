@@ -70,7 +70,6 @@ export const STATUS_NAMES = { sleep: 'ねむり', slow: 'のろい', confuse: '�
 export const toritsukiName = k => `${STATUS_NAMES[k]}の とりつき`;
 export const isPossessed = u => Object.keys(u.status).length > 0;
 export const BLIND_MISS = 0.4;  // めくらましの とりつき: 攻撃が 4 わり 当たらない
-const RESCUE_COOLDOWN = 3;     // おたすけに しっぱい したら 3 秒 待つ
 export const WEAK_EVERY = 6, WEAK_TIME = 2, WEAK_BONUS = 1.2;
 export const PART_ORDER = ['rhand', 'lhand', 'head'];
 export const HEAD_GUARD = 0.15;   // 手が のこっている うちに 頭を ねらうと 手で ガードされる (ダメージ 15%。2026-10-28 ユーザー指定)
@@ -1123,43 +1122,73 @@ export function startRescue(b, uid) {
     b.paused = true;
     return unitByUid(b, uid);
 }
-// ok: ミニゲームが 成功 (しっぱいなら 治らず、少し 待つ)
+// ok: ミニゲームが 成功 (しっぱいなら 治らない。2026-11-02 ユーザー指定で、しっぱいしても すぐ もう いちど できる)
 export function resolveRescue(b, unit, ok) {
     b.paused = false;
     if (!unit) return;
     if (ok) unit.status = {};
-    else b.rescueCooldown = RESCUE_COOLDOWN;
     emit(b, 'rescue', { target: unit.uid, ok });
 }
 
 // 道具を なかまに 使う。uid で 輪の だれにでも (後ろも) 使える (2026-10-28 ユーザー指定: 使う キャラを えらぶ)
-// uid を 決めなければ、前で いちばん HP の 少ない なかま
+// uid を 決めなければ、前で いちばん HP の 少ない なかま (復活の 道具は たおれた なかま)
+// 道具の ききめ (2026-11-02 ユーザー指定で ふやした。data/items.js):
+//   heal / healPct (最大 HP の わりあい)・gauge・cure (とりつきを ぜんぶ ぬく)・buff { stat, amount, time }・
+//   revive (たおれた なかまを 最大 HP の その わりあいで 復活)・all (前の なかま ぜんぶに きく。uid は 見ない)
+export const itemTargetOk = (item, u) => Boolean(u) && (item.revive ? u.ko : !u.ko);
+export function itemTargets(b, itemId) {
+    const item = ITEMS[itemId];
+    if (!item || item.material) return [];
+    if (item.all) return b.frontAlive();
+    return b.wheel.filter(u => itemTargetOk(item, u));
+}
 export function useItem(b, itemId, uid = null) {
     const item = ITEMS[itemId];
-    if (!item || b.outcome || b.paused || b.itemCooldown > 0) return false;
-    const target = uid === null
-        ? b.frontAlive().reduce((a, c) => (!a || c.hp / c.max < a.hp / a.max ? c : a), null)
-        : b.wheel.find(u => u && u.uid === uid);
-    if (!target || target.ko) return false;
-    heal(b, target, target, item.heal);
-    if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
+    if (!item || item.material || b.outcome || b.paused || b.itemCooldown > 0) return false;
+    let targets;
+    if (item.all) targets = b.frontAlive();
+    else if (uid !== null) targets = [b.wheel.find(u => u && u.uid === uid)];
+    else if (item.revive) targets = [b.wheel.find(u => u && u.ko)];
+    else targets = [b.frontAlive().reduce((a, c) => (!a || c.hp / c.max < a.hp / a.max ? c : a), null)];
+    targets = targets.filter(u => itemTargetOk(item, u));
+    if (!targets.length) return false;
+    for (const target of targets) {
+        if (item.revive) {
+            target.ko = false;
+            target.hp = Math.max(1, Math.round(target.max * item.revive));
+            target.status = {};
+            emit(b, 'revive', { target: target.uid });
+        }
+        const amount = (item.heal || 0) + (item.healPct || 0) * target.max;
+        if (amount > 0) heal(b, target, target, amount);
+        if (item.gauge) target.gauge = Math.min(GAUGE_MAX, target.gauge + item.gauge);
+        if (item.cure) target.status = {};
+        if (item.buff) {
+            target.buffs[item.buff.stat] = { amount: item.buff.amount, t: item.buff.time };
+            emit(b, 'buff', { target: target.uid, stat: item.buff.stat });
+        }
+        emit(b, 'item', { target: target.uid, itemId });
+    }
     b.itemCooldown = ITEM_COOLDOWN;
-    emit(b, 'item', { target: target.uid, itemId });
     begin(b);
     return true;
 }
 
 // 食べ物を 敵に 投げる (1 回の バトルで 1 回。投げた 敵が 仲間に なりやすくなる)。uid で どの 敵か えらぶ
-export function throwFood(b, itemId, uid = null) {
-    if (b.food || b.kind !== 'wild' || b.outcome || b.paused || !ITEMS[itemId]) return false;
+// start: false なら まだ バトルを 始めない (はじまりに 投げたとき、画面が 反応を 見せてから begin する)
+export function throwFood(b, itemId, uid = null, { start = true } = {}) {
+    if (b.food || b.kind !== 'wild' || b.outcome || b.paused || !ITEMS[itemId] || !isFood(ITEMS[itemId])) return false;
     const to = uid === null ? b.enemiesAlive()[0] : b.enemiesAlive().find(e => e.uid === uid);
     if (!to) return false;
     const fav = speciesOf(to.id).favorite === itemId;
     b.food = { itemId, target: to.id, favorite: fav };
     emit(b, 'food', { target: to.uid, itemId, favorite: fav });
-    begin(b);
+    if (start) begin(b);
     return true;
 }
+
+// 投げられる おやつ (食べ物)。お面・お札・お守りなどは 投げられない
+export const isFood = it => Boolean(it) && !it.material && !it.notFood;
 
 // ----- はじまり: たたかう・にげる -----
 export function begin(b) {

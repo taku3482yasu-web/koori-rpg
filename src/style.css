@@ -77,7 +77,8 @@ body.nopad #pad { display: none; }
     font-weight: bold;
     touch-action: none;
 }
-#pad button.on { filter: brightness(1.8); }
+/* 押している ボタンだけ 赤く する (2026-11-02 ユーザー指定。前は A が いつも 赤かった) */
+#pad button.on { background: #d03048; color: #fff; }
 .sh { top: 8px; width: 30%; height: 34px; font-size: 15px; }
 .sh[data-btn="l"] { left: 0; border-radius: 6px 18px 18px 6px; }
 .sh[data-btn="r"] { right: 0; border-radius: 18px 6px 6px 18px; }
@@ -115,7 +116,7 @@ body.nopad #pad { display: none; }
 .f.x { left: 46px; top: 0; }
 .f.b { left: 46px; top: 84px; }
 .f.y { left: 0; top: 42px; }
-.f.a { left: 92px; top: 42px; background: #b03048 !important; }
+.f.a { left: 92px; top: 42px; }
 
 #start {
     left: 50%;

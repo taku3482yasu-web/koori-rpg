@@ -18,7 +18,7 @@ import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, artFit, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, GAUGE_MAX, STATUS_NAMES, toritsukiName, isPossessed, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, chanceTime, begin, flee, canFlee, gimOpen, openGims } from '../logic/battle.js';
+import { step, rotate, canSpecial, startSpecial, resolveSpecial, useItem, throwFood, itemTargets, isFood, GAUGE_MAX, STATUS_NAMES, toritsukiName, isPossessed, rescueTargets, startRescue, resolveRescue, lockOn, weakActive, PART_ORDER, chanceTime, begin, flee, canFlee, gimOpen, openGims } from '../logic/battle.js';
 
 const WHEEL = { x: 100, y: 126, r: 70 };
 const SP_BTN = [0, 1, 2].map(i => ({ x: 204, y: 10 + i * 52, w: 110, h: 46 }));
@@ -50,7 +50,8 @@ export function createBattleView(app, battle, place) {
     let t = 0, endT = 0;
     let shownRot = battle.rot;     // 輪の 回る アニメーション
     let cursor = 0;                // 必殺技を えらぶ カーソル (前の 3 体)
-    let menu = null;               // { kind: 'item' | 'food', index, pick: null | { id, index } (だれに 使うか えらぶ) }
+    let menu = null;               // { kind: 'item' | 'food' | 'rescue', index, top, pick: null | { id, index } (だれに 使うか えらぶ) }
+    let foodShow = null;           // はじまりに おやつを 投げた ときの 反応 { text, until } (見せおわったら バトル開始)
     let mg = null;                 // 必殺技 (コマンド → カットイン → 動き)
     let drag = null;
     let banner = null;             // { text, color, until }
@@ -443,9 +444,27 @@ export function createBattleView(app, battle, place) {
                 else banner = { text: e.arm ? (armName === '月' ? `月が 欠けた！「${e.name}」を 止めた！` : `右腕が しぼんだ！「${e.name}」を 止めた！`) : `偶像を こわした！「${e.name}」を 止めた！`, color: COLORS.accent, until: t + 2 };
                 sfx('big');
             } else if (e.type === 'food') {
-                banner = { text: e.favorite ? `${ITEMS[e.itemId].name}を 投げた！ とても よろこんでいる！` : `${ITEMS[e.itemId].name}を 投げた！`, color: '#ff9ad8', until: t + 1.6 };
+                // 「○○が あらわれた！」の あとに 反応を 出す (2026-11-02 ユーザー指定: はじまりに 投げると 反応が 見えなかった)
+                const name = nameOf(e.target), food = ITEMS[e.itemId].name;
+                const react = e.favorite ? `${name}は ${food}を 食べた！ とても よろこんでいる！` : `${name}は ${food}を 食べた。まんざらでも なさそうだ。`;
+                if (battle.waiting) foodShow = { text: react, favorite: e.favorite, until: t + 2.2 };
+                else banner = { text: react, color: '#ff9ad8', until: t + 1.8 };
+                const p = posOf(e.target);
+                if (p) {
+                    pops.push({ x: p.x, y: p.y - 60, text: e.favorite ? '♥ ♥ ♥' : '♪', color: '#ff9ad8', big: e.favorite, until: t + 2 });
+                    effects.push({ kind: 'heal', x: p.x, y: p.y - 40, start: t, dur: 0.9 });
+                }
                 sfx(e.favorite ? 'friend' : 'ok');
-            } else if (e.type === 'item') sfx('heal');
+            } else if (e.type === 'item') {
+                banner = { text: `${ITEMS[e.itemId].name}を 使った！`, color: '#7aff8a', until: t + 1.2 };
+                sfx('heal');
+            } else if (e.type === 'revive') {
+                const p = posOf(e.target);
+                if (p) pops.push({ x: p.x, y: p.y - 70, text: '復活！', color: '#ffe85a', until: t + 1.2 });
+            } else if (e.type === 'buff') {
+                const p = posOf(e.target);
+                if (p && BUFF_NAMES[e.stat]) pops.push({ x: p.x, y: p.y - 70, text: BUFF_NAMES[e.stat], color: '#ffb84a', small: true, until: t + 1.2 });
+            }
             else if (e.type === 'rotate') sfx('rotate');
             else if (e.type === 'win') sfx('win');
             else if (e.type === 'lose') sfx('lose');
@@ -561,10 +580,17 @@ export function createBattleView(app, battle, place) {
     }
 
     // おたすけ (2 章。2026-10-30 に いったん「おはらい」に したが、ユーザー指定で おたすけに もどした): 後ろの とりつかれた なかまを コマンドで 治す。成功 (大成功を ふくむ) で とりつきが ぜんぶ ぬける
+    // とりつかれた なかまが 2 体 いじょう 後ろに いるときは、だれを おたすけ するか えらぶ (2026-11-02 ユーザー指定)
     function tryRescue() {
-        const u = rescueTargets(battle)[0];
-        if (!u) { sfx('cancel'); return; }
-        const unit = startRescue(battle, u.uid);
+        const list = rescueTargets(battle);
+        if (!list.length) { sfx('cancel'); return; }
+        if (list.length === 1) { rescueOn(list[0].uid); return; }
+        menu = { kind: 'rescue', index: 0, top: 0, pick: { id: null, index: 0 } };
+        sfx('ok');
+    }
+    function rescueOn(uid) {
+        const unit = startRescue(battle, uid);
+        if (!unit) { sfx('cancel'); return; }
         const command = app.rng.pick(COMMANDS);
         mg = { rescue: true, unit, command, phase: 'cmd', t: 0, cmd: createCommand(command, app.rng), mult: 1 };
         sfx('ok');
@@ -614,50 +640,88 @@ export function createBattleView(app, battle, place) {
 
     // ----- どうぐ・おやつ -----
     // 品物を えらんで から、使う 相手を えらぶ (2026-10-28 ユーザー指定)。どうぐは 輪の なかま (前 → 後ろ)、おやつは 敵
-    const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0 && !ITEMS[id].material);   // 合成アイテムは バトルで 使えない
-    const menuTargets = () => menu.kind === 'item'
-        ? [0, 1, 2, 3, 4, 5].map(i => battle.wheel[(battle.rot + i) % 6]).filter(u => u && !u.ko)
-        : battle.enemiesAlive();
+    const owned = () => Object.keys(ITEMS).filter(id => (g.items[id] || 0) > 0 && (menu.kind === 'food' ? isFood(ITEMS[id]) : !ITEMS[id].material));   // 合成アイテムは バトルで 使えない・お面などは 投げられない
+    const menuTargets = () => {
+        if (menu.kind === 'rescue') return rescueTargets(battle);
+        if (menu.kind === 'food') return battle.enemiesAlive();
+        const ok = itemTargets(battle, menu.pick.id);
+        return [0, 1, 2, 3, 4, 5].map(i => battle.wheel[(battle.rot + i) % 6]).filter(u => ok.includes(u));
+    };
+    // どうぐ・おやつを 開く。どうぐは 次に 使える ように なるまで、おやつは 1 回 投げたら 開かない (2026-11-02 ユーザー指定)
+    function openMenu(kind) {
+        if (kind === 'item' && battle.itemCooldown > 0) {
+            banner = { text: `どうぐは あと ${battle.itemCooldown.toFixed(1)} 秒 まってね`, color: '#ff9a9a', until: t + 1.2 };
+            sfx('cancel');
+            return;
+        }
+        if (kind === 'food' && battle.kind !== 'wild') { banner = { text: 'この あいてには おやつを 投げられない', color: '#ff6a6a', until: t + 1.2 }; sfx('cancel'); return; }
+        if (kind === 'food' && battle.food) { banner = { text: 'おやつは 1 回の バトルで 1 回だけ', color: '#ff9a9a', until: t + 1.2 }; sfx('cancel'); return; }
+        menu = { kind, index: 0, top: 0 };
+        sfx('ok');
+    }
     function useMenu(id, uid) {
-        const ok = menu.kind === 'item' ? useItem(battle, id, uid) : throwFood(battle, id, uid);
+        if (menu.kind === 'rescue') { menu = null; rescueOn(uid); return; }
+        const ok = menu.kind === 'item' ? useItem(battle, id, uid) : throwFood(battle, id, uid, { start: !battle.waiting });
         if (ok) { g.items[id]--; menu = null; sfx('ok'); } else sfx('cancel');
     }
     function pickItem(id) {
+        const it = ITEMS[id];
+        if (menu.kind === 'item' && it.all) { useMenu(id, null); return; }   // 前の なかま ぜんぶに きく
+        menu.pick = { id, index: 0 };
         const list = menuTargets();
+        if (!list.length) {
+            menu.pick = null;
+            banner = { text: it.revive ? 'たおれている なかまが いない' : '使える なかまが いない', color: '#ff9a9a', until: t + 1.2 };
+            sfx('cancel');
+            return;
+        }
         if (list.length === 1) { useMenu(id, list[0].uid); return; }
         // どうぐは HP の 少ない なかまに カーソルを 合わせて おく
-        const start = menu.kind === 'item' ? list.reduce((a, u, i) => (u.hp / u.max < list[a].hp / list[a].max ? i : a), 0) : 0;
-        menu.pick = { id, index: start };
+        menu.pick.index = menu.kind === 'item' && !it.revive ? list.reduce((a, u, i) => (u.hp / u.max < list[a].hp / list[a].max ? i : a), 0) : 0;
         sfx('ok');
+    }
+    function closePick() {
+        menu.pick = null;
+        if (menu.kind === 'rescue') menu = null;
+        sfx('cancel');
     }
     function updatePick(input) {
         const list = menuTargets();
-        if (input.pressed.b) { menu.pick = null; sfx('cancel'); return; }
+        if (input.pressed.b) { closePick(); return; }
         if (!list.length) { menu = null; return; }
         const p = menu.pick;
         p.index = Math.min(p.index, list.length - 1);
         if (input.pressed.up || input.pressed.left) { p.index = (p.index + list.length - 1) % list.length; sfx('cursor'); }
         if (input.pressed.down || input.pressed.right) { p.index = (p.index + 1) % list.length; sfx('cursor'); }
-        if (input.pressed.a) { useMenu(p.id, list[p.index].uid); return; }
+        if (input.pressed.a || (menu.kind === 'rescue' && input.pressed.help)) { useMenu(p.id, list[p.index].uid); return; }
         if (input.touch.justDown) {
             const i = list.findIndex((_, k) => hit(menuRow(k), input.touch.x, input.touch.y));
             if (i >= 0) useMenu(p.id, list[i].uid);
-            else if (!hit({ x: 20, y: 14, w: 280, h: 212 }, input.touch.x, input.touch.y)) { menu.pick = null; sfx('cancel'); }
+            else if (!hit({ x: 20, y: 14, w: 280, h: 212 }, input.touch.x, input.touch.y)) closePick();
         }
     }
+    // 品物が 多いときは 5 つずつ 見せて、カーソルに 合わせて ずらす
+    const MENU_ROWS = 5;
+    const SCROLL_UP = { x: 250, y: 22, w: 46, h: 22 }, SCROLL_DOWN = { x: 250, y: 184, w: 46, h: 22 };
     function updateMenu(input) {
         if (menu.pick) { updatePick(input); return; }
         const list = owned();
         if (input.pressed.b || (menu.kind === 'item' && input.pressed.y) || (menu.kind === 'food' && input.pressed.x)) { menu = null; sfx('cancel'); return; }
-        if (!list.length) return;
+        if (!list.length) { if (input.touch.justDown) menu = null; return; }
         if (input.pressed.up) { menu.index = (menu.index + list.length - 1) % list.length; sfx('cursor'); }
         if (input.pressed.down) { menu.index = (menu.index + 1) % list.length; sfx('cursor'); }
         menu.index = Math.min(menu.index, list.length - 1);
-        if (input.pressed.a) pickItem(list[menu.index]);
+        menu.top = Math.max(0, Math.min(menu.top || 0, list.length - MENU_ROWS));
+        if (menu.index < menu.top) menu.top = menu.index;
+        if (menu.index >= menu.top + MENU_ROWS) menu.top = menu.index - MENU_ROWS + 1;
+        if (input.pressed.a) { pickItem(list[menu.index]); return; }
         if (input.touch.justDown) {
-            const i = list.findIndex((_, k) => hit(menuRow(k), input.touch.x, input.touch.y));
-            if (i >= 0) pickItem(list[i]);
-            else if (!hit({ x: 20, y: 20, w: 280, h: 200 }, input.touch.x, input.touch.y)) menu = null;
+            const { x, y } = input.touch;
+            if (list.length > MENU_ROWS && hit(SCROLL_UP, x, y)) { menu.top = Math.max(0, menu.top - 1); menu.index = Math.min(menu.index, menu.top + MENU_ROWS - 1); sfx('cursor'); return; }
+            if (list.length > MENU_ROWS && hit(SCROLL_DOWN, x, y)) { menu.top = Math.min(list.length - MENU_ROWS, menu.top + 1); menu.index = Math.max(menu.index, menu.top); sfx('cursor'); return; }
+            const k = [0, 1, 2, 3, 4].findIndex(r => hit(menuRow(r), x, y));
+            if (k >= 0 && list[menu.top + k]) { menu.index = menu.top + k; pickItem(list[menu.index]); }
+            else if (!hit({ x: 20, y: 20, w: 280, h: 200 }, x, y)) menu = null;
         }
     }
     const menuRow = k => ({ x: 30, y: 46 + k * 28, w: 260, h: 24 });
@@ -730,12 +794,9 @@ export function createBattleView(app, battle, place) {
 
     function chooseIntro(key) {
         if (key === 'fight') begin(battle);
-        else if (key === 'item') { menu = { kind: 'item', index: 0 }; sfx('ok'); }
-        else if (key === 'food') {
-            if (battle.kind !== 'wild') { banner = { text: 'この あいてには おやつを 投げられない', color: '#ff6a6a', until: t + 1.2 }; sfx('cancel'); return; }
-            menu = { kind: 'food', index: 0 };
-            sfx('ok');
-        } else if (key === 'run') {
+        else if (key === 'item') openMenu('item');
+        else if (key === 'food') openMenu('food');
+        else if (key === 'run') {
             if (flee(battle)) { banner = { text: 'うまく にげきれた！', color: '#8ad0ff', until: t + 1.6 }; sfx('ok'); } else sfx('cancel');
         }
     }
@@ -760,7 +821,10 @@ export function createBattleView(app, battle, place) {
         if (mg) { updateMinigame(dt, input); readEvents(); return; }
         // はじまり: たたかう・どうぐ・おやつ・にげる を えらぶ あいだは バトルは 止まっている
         if (battle.waiting && !battle.outcome) {
-            if (menu) updateMenu(input);
+            if (foodShow) {
+                // おやつの 反応を 見せてから バトル開始 (A・タッチで とばせる)
+                if (t >= foodShow.until || input.pressed.a || input.touch.justDown) { foodShow = null; begin(battle); }
+            } else if (menu) updateMenu(input);
             else updateIntro(input);
             readEvents();
             return;
@@ -790,8 +854,8 @@ export function createBattleView(app, battle, place) {
         if (input.pressed.sp1) trySpecial(0);
         if (input.pressed.sp2) trySpecial(1);
         if (input.pressed.sp3) trySpecial(2);
-        if (input.pressed.y) { menu = { kind: 'item', index: 0 }; sfx('ok'); }
-        if (input.pressed.x && battle.kind === 'wild') { menu = { kind: 'food', index: 0 }; sfx('ok'); }
+        if (input.pressed.y) openMenu('item');
+        if (input.pressed.x && battle.kind === 'wild') openMenu('food');
         if (input.pressed.help) tryRescue();
         // ロックオン: 上下で ねらう 敵を かえる (はしまで 行くと はずす)・上画面の 敵を タップ
         if (input.pressed.up || input.pressed.down) cycleLock(input.pressed.down ? 1 : -1);
@@ -808,7 +872,7 @@ export function createBattleView(app, battle, place) {
         if (tc.justDown) {
             const sp = SP_BTN.findIndex(bn => hit(bn, tc.x, tc.y));
             if (rescueTargets(battle).length && hit(RESCUE_BTN, tc.x, tc.y)) tryRescue();
-            else if (sp >= 0) { cursor = sp; trySpecial(sp); } else if (hit(ITEM_BTN, tc.x, tc.y)) { menu = { kind: 'item', index: 0 }; sfx('ok'); } else if (hit(FOOD_BTN, tc.x, tc.y) && battle.kind === 'wild') { menu = { kind: 'food', index: 0 }; sfx('ok'); } else if (Math.hypot(tc.x - WHEEL.x, tc.y - WHEEL.y) < WHEEL.r + 30) {
+            else if (sp >= 0) { cursor = sp; trySpecial(sp); } else if (hit(ITEM_BTN, tc.x, tc.y)) openMenu('item'); else if (hit(FOOD_BTN, tc.x, tc.y) && battle.kind === 'wild') openMenu('food'); else if (Math.hypot(tc.x - WHEEL.x, tc.y - WHEEL.y) < WHEEL.r + 30) {
                 drag = { a: Math.atan2(tc.y - WHEEL.y, tc.x - WHEEL.x), acc: 0 };
             }
         }
@@ -1417,7 +1481,8 @@ export function createBattleView(app, battle, place) {
         }
         if (battle.waiting && !battle.outcome) {
             panel(ctx, 30, 176, 340, 50, { fill: 'rgba(16,22,42,0.92)', edge: '#ffffff' });
-            text(ctx, appearText, 200, 208, { size: 16, align: 'center', bold: true, maxWidth: 320 });
+            if (foodShow) text(ctx, foodShow.text, 200, 206, { size: 13, align: 'center', bold: true, maxWidth: 324, color: foodShow.favorite ? '#ff9ad8' : '#ffffff' });
+            else text(ctx, appearText, 200, 208, { size: 16, align: 'center', bold: true, maxWidth: 320 });
         }
         // 最後の 一撃の 動きが 見えるように、少し 待ってから「かった！」
         if (battle.outcome && battle.outcome !== 'flee' && endT > 0.5) {
@@ -1565,32 +1630,36 @@ export function createBattleView(app, battle, place) {
         panel(ctx, 20, 14, 280, 212);
         if (menu.pick) { drawPick(ctx); return; }
         text(ctx, menu.kind === 'item' ? 'どうぐ: なかまに 使う' : 'おやつ: 敵に 投げる (好物なら 大よろこび)', 160, 34, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
-        const list = owned();
+        const list = owned(), top = menu.top || 0;
         if (!list.length) text(ctx, 'なにも もっていない', 160, 110, { size: 13, align: 'center', color: COLORS.sub });
-        list.forEach((id, k) => {
+        list.slice(top, top + MENU_ROWS).forEach((id, k) => {
             const r = menuRow(k);
-            if (k === menu.index) { roundRect(ctx, r.x, r.y, r.w, r.h, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
+            if (top + k === menu.index) { roundRect(ctx, r.x, r.y, r.w, r.h, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
             text(ctx, `${ITEMS[id].name}`, r.x + 10, r.y + 17, { size: 13 });
             text(ctx, `×${g.items[id]}`, r.x + r.w - 10, r.y + 17, { size: 13, align: 'right' });
         });
+        if (top > 0) text(ctx, '▲', SCROLL_UP.x + SCROLL_UP.w / 2, SCROLL_UP.y + 16, { size: 12, align: 'center', color: COLORS.accent });
+        if (top + MENU_ROWS < list.length) text(ctx, '▼', SCROLL_DOWN.x + SCROLL_DOWN.w / 2, SCROLL_DOWN.y + 16, { size: 12, align: 'center', color: COLORS.accent });
+        const cur = list[menu.index];
+        if (cur) text(ctx, ITEMS[cur].desc, 160, 200, { size: 9.5, align: 'center', color: COLORS.sub, maxWidth: 270 });
         text(ctx, `${btn('b')} で とじる　(えらんでいる あいだ バトルは 止まる)`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
     }
 
     // だれに 使うか (名前・Lv・HP。どうぐは 前 / 後ろ も)
     function drawPick(ctx) {
         const item = ITEMS[menu.pick.id], list = menuTargets();
-        text(ctx, menu.kind === 'item' ? `${item.name}を だれに 使う？` : `${item.name}を どの 敵に 投げる？`, 160, 34, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
+        text(ctx, menu.kind === 'rescue' ? 'だれを おたすけ する？' : menu.kind === 'item' ? `${item.name}を だれに 使う？` : `${item.name}を どの 敵に 投げる？`, 160, 34, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
         const front = battle.front();
         list.forEach((u, k) => {
             const r = menuRow(k);
             if (k === menu.pick.index) { roundRect(ctx, r.x, r.y, r.w, r.h, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
-            if (menu.kind === 'item') text(ctx, front.includes(u) ? 'まえ' : 'うしろ', r.x + 8, r.y + 16, { size: 9.5, color: front.includes(u) ? COLORS.accent : COLORS.sub, bold: true });
+            if (menu.kind !== 'food') text(ctx, front.includes(u) ? 'まえ' : 'うしろ', r.x + 8, r.y + 16, { size: 9.5, color: front.includes(u) ? COLORS.accent : COLORS.sub, bold: true });
             text(ctx, `${u.name} Lv${u.lv}`, r.x + 44, r.y + 17, { size: 12, maxWidth: 120 });
             if (u.side === 'enemy' && g.zukan.friends[u.id]) drawFriendMark(ctx, r.x + 36, r.y + 12, 4);
             bar(ctx, r.x + 170, r.y + 9, 60, 6, u.hp / u.max, u.hp / u.max < 0.3 ? COLORS.hpLow : COLORS.hp);
             text(ctx, `${Math.ceil(u.hp)}`, r.x + r.w - 6, r.y + 17, { size: 10, align: 'right', color: COLORS.sub });
         });
-        text(ctx, `${btn('a')} で 使う・${btn('b')} で もどる`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
+        text(ctx, menu.kind === 'rescue' ? `${btn('a')} で おたすけ・${btn('b')} で やめる` : `${btn('a')} で 使う・${btn('b')} で もどる`, 160, 220, { size: 10, align: 'center', color: COLORS.dim });
     }
 
     // 上画面: えらんでいる 相手の 頭の 上に ▼

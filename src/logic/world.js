@@ -102,11 +102,28 @@ function charFree(solids, x0, y0, x, y) {
     return true;
 }
 
+// 1 マスの 細道に 入りやすく する (2026-11-02: 筋肉の山の 氷河から 北への 細道に 入れなかった)。
+//   まっすぐ 進めない とき、その 先の マスが あいていれば 道の まんなかへ 少し よせる
+function nudge(g, p, axis, d, step) {
+    const other = axis === 'y' ? 'x' : 'y';
+    const c = Math.floor((other === 'x' ? p.x : p.y - 3) / TILE);
+    const center = other === 'x' ? c * TILE + TILE / 2 : c * TILE + TILE / 2 + 3;
+    const off = center - p[other];
+    if (Math.abs(off) < 0.01) return;
+    const ahead = axis === 'y' ? { x: center, y: p.y + Math.sign(d) * TILE } : { x: p.x + Math.sign(d) * TILE, y: center };
+    if (blockedTile(g, Math.floor(ahead.x / TILE), Math.floor((ahead.y - 3) / TILE))) return;
+    const m = Math.sign(off) * Math.min(Math.abs(off), step);
+    const nx = other === 'x' ? p.x + m : p.x, ny = other === 'y' ? p.y + m : p.y;
+    if (boxFree(g, nx, ny)) { p.x = nx; p.y = ny; }
+}
+
 // 横と 縦を べつべつに 動かす (かべに そって すべれる)
 export function moveHero(g, dx, dy, solids = []) {
     const p = g.pos;
     if (dx && boxFree(g, p.x + dx, p.y) && charFree(solids, p.x, p.y, p.x + dx, p.y)) p.x += dx;
+    else if (dx && !dy) nudge(g, p, 'x', dx, Math.abs(dx));
     if (dy && boxFree(g, p.x, p.y + dy) && charFree(solids, p.x, p.y, p.x, p.y + dy)) p.y += dy;
+    else if (dy && !dx) nudge(g, p, 'y', dy, Math.abs(dy));
     if (Math.abs(dx) > Math.abs(dy)) p.dir = dx > 0 ? 'right' : 'left';
     else if (dy) p.dir = dy > 0 ? 'down' : 'up';
 }

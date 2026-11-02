@@ -22,7 +22,7 @@ import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCH
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES, PARK_Y0, PARK_IN, PARK_PLACES, PARK_NAME, PARK_CLUES,
     KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE } from '../data/map.js';
-import { ITEMS, SHOP } from '../data/items.js';
+import { ITEMS, SHOPS } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13 } from '../data/nakama.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, drawFriendMark } from '../core/draw.js';
@@ -591,8 +591,14 @@ export function createField(app) {
                     }
                 }
             });
-        } else if (b.id === 'dagashi') {
-            shop();
+        } else if (b.id === 'dagashi' || b.id === 'yaoya' || b.id === 'omenya') {
+            shop(b.id);
+        } else if (b.id === 'hondou' && reached(g, 'clear5')) {
+            // 5 章 クリアの あと、本堂の 授与所で お札・お守りが 買える (2026-11-02)
+            say([nar('本堂の 中で、ネット配信の お経が しずかに ながれている。よこに 授与所が ある。')], {
+                choices: ['授与所で 買う', 'やめる'],
+                done: i => { if (i === 0) shop('juyosho'); }
+            });
         } else if (b.id === 'school') {
             enterSchool();
         } else if (b.id === 'okunoin') {
@@ -655,7 +661,7 @@ export function createField(app) {
                 done: i => { if (i === 0) { sfx('watch'); warp(STATION_OUT); } }
             });
         } else if (b.id === 'uminoie') {
-            shop('いらっしゃい！ 海の家だよ。なんに する？', '海の家の おじさん');
+            shop('uminoie');
         } else {
             const msg = {
                 shrine: 'おさいせんを 入れて おまいりした。なかまが たくさん 見つかりますように……',
@@ -664,8 +670,6 @@ export function createField(app) {
                 // 商店街 (段階 2)
                 gamecenter: '「じゅんび中」の はり紙が ある。中から ピコピコ 音が する……。',
                 pachinkoAto: 'つぶれた パチンコ店。シャッターの すきまから、ジャラジャラ 聞こえた 気が する。',
-                yaoya: '八百屋の おじさん「へい らっしゃい！ きゅうりは かっぱの 好物だよ！」',
-                omenya: 'お祭り用の お面が ずらりと ならんでいる。ひとつ、こっちを 見ている 気が する……。',
                 kouban: 'おまわりさん「無免許で 飛んでいる ハチを 見かけたら 教えてね」',
                 jansou: '中から「ツモ！」「ロン！」と 声が する。子どもは 入れない。',
                 denkiya: '古い テレビが 山づみ。1 台だけ、電源が 入っていないのに ついている。',
@@ -677,7 +681,7 @@ export function createField(app) {
                     : '漁師の おじさん「さいきん どうくつの 奥で、浦の島の じいさんが あばれとるらしい。いつもは 釣りばっかり しとる おとなしい じいさんなのに……」',
                 tsuriguya: '釣具屋の おばさん「夜の 桟橋には、大きな 黒い 坊主が 出るって うわさだよ。こわいねえ」',
                 // ネット寺 (5 章)
-                hondou: reached(g, 'clear5') ? '本堂の 中で、ネット配信の お経が しずかに ながれている。' : '本堂の 中から、ノイズまじりの お経が 聞こえる……。',
+                hondou: '本堂の 中から、ノイズまじりの お経が 聞こえる……。',
                 shouro: '鐘楼の 鐘に「通知を オンに してね」と 書いた 札が はってある。',
                 shoko: reached(g, 'clear5') ? '書庫には 古い 書と、ノートパソコンが ならんでいる。' : '書庫の とびらに カギが かかっている。'
             }[b.id];
@@ -962,28 +966,29 @@ export function createField(app) {
         });
     }
 
-    // 品物を えらんで、何こ 買うか えらぶ (2026-10-28 ユーザー指定)。海の家 (4 章) でも 同じ 品物
-    function shop(greet = 'いらっしゃい。なにに するかね？', OBA = '駄菓子屋の おばあちゃん') {
-        const labels = SHOP.map(id => `${ITEMS[id].name}  ${ITEMS[id].price}円 (${g.items[id] || 0}こ)`);
+    // 品物を えらんで、何こ 買うか えらぶ (2026-10-28 ユーザー指定)。店ごとに 品物が ちがう (2026-11-02。data/items.js の SHOPS)
+    function shop(key, greet = SHOPS[key].greet) {
+        const S = SHOPS[key], OBA = S.who;
+        const labels = S.items.map(id => `${ITEMS[id].name}  ${ITEMS[id].price}円 (${g.items[id] || 0}こ)`);
         say([{ who: OBA, text: `${greet} (おこづかい ${g.money}円)` }], {
             choices: [...labels, 'やめる'],
             done: i => {
-                const id = SHOP[i];
+                const id = S.items[i];
                 if (!id) return;
                 const it = ITEMS[id], max = maxBuy(g, id);
                 if (max === 0) {
                     sfx('cancel');
                     const full = (g.items[id] || 0) >= MAX_ITEM;
-                    say([{ who: OBA, text: full ? `${it.name}は もう もちきれないよ。` : 'おこづかいが たりないねえ。' }], { done: () => shop(undefined, OBA) });
+                    say([{ who: OBA, text: full ? `${it.name}は もう もちきれないよ。` : 'おこづかいが たりないねえ。' }], { done: () => shop(key, 'ほかには？') });
                     return;
                 }
-                say([{ who: OBA, text: `${it.name}を いくつ ほしいかね？ (おこづかい ${g.money}円)` }], {
+                say([{ who: OBA, text: `${it.desc}。いくつ ほしいかね？ (おこづかい ${g.money}円)` }], {
                     count: { max, label: n => `${it.name} × ${n} = ${it.price * n}円` },
                     done: n => {
-                        if (!n) { shop(undefined, OBA); return; }
+                        if (!n) { shop(key, 'ほかには？'); return; }
                         buyItem(g, id, n);
                         sfx('ok');
-                        shop(`まいど。${it.name}を ${n}こ だね。ほかには？`, OBA);
+                        shop(key, `まいど。${it.name}を ${n}こ だね。ほかには？`);
                     }
                 });
             }

@@ -219,6 +219,9 @@ try {
     await key('KeyJ');
     await sleep(100);
     check(await evaluate('(() => { const b = window.__app.scene.battle, u = b.wheel.find(x => x && x.uid === window.__pickUid); return u.hp > window.__pickHp && !window.__app.scene.debug.menu(); })()'), 'えらんだ なかまに おにぎりを 使う');
+    // どうぐを 使ったあと、次に 使える ように なるまでは どうぐ欄が 開かない (2026-11-02 ユーザー指定)
+    await key('KeyU');
+    check(await evaluate('!window.__app.scene.debug.menu() && window.__app.scene.battle.itemCooldown > 0'), 'どうぐを 使ったあと しばらくは どうぐ欄が 開かない');
     await evaluate('(() => { window.__app.scene.battle.wheel.forEach(u => { if (u) { u.hp = u.max; u.ko = false; } }); return true; })()');
 
     // ----- バトル: ロックオン (↑↓・上画面の タップ。設計書 3.2) -----
@@ -355,8 +358,9 @@ try {
 
     // ----- 3 章: 町の 北の 山道から 山へ → 奥の院 → 氷の 封印 → ダムの主 (2026-10-29) -----
     const at = (x, y, dir = 'up') => evaluate(`(() => { const g = window.__app.g; g.pos.x = ${x} * 16 + 8; g.pos.y = ${y} * 16 + 12; g.pos.dir = "${dir}"; window.__app.field.debug.wild.list.length = 0; return true; })()`);
+    // (A は はじまりの「たたかう」の ときだけ。バトル中に 押すと 必殺技の コマンドが 始まって 止まる ことが ある)
     const winNow = async () => {
-        await key('KeyJ');
+        if (await evaluate('Boolean(window.__app.scene.battle && window.__app.scene.battle.waiting)')) await key('KeyJ');
         await evaluate('(() => { const b = window.__app.scene.battle; b.enemies.forEach(e => { e.hp = 0; e.ko = true; }); return true; })()');
         for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(200);
         for (let i = 0; i < 10 && !(await sceneIs('field')); i++) { await key('KeyJ'); await sleep(300); }
@@ -1122,6 +1126,21 @@ try {
     await key('KeyJ');
     for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(150);
     check(await sceneIs('field') && await evaluate('window.__app.g.money === window.__money'), '「にげる」で バトルから にげられる (お金は へらない)');
+    // はじまりに おやつを 投げると「あらわれた！」の あとに 反応を 見せてから 始まる (2026-11-02 ユーザー指定)
+    await evaluate('(() => { const a = window.__app; window.__items = a.g.items; a.g.items = { tomato: 2 }; a.startBattle({ enemies: [{ id: "saikoron", lv: 3 }], kind: "wild", place: "kawara" }); return true; })()');
+    await sleep(100);
+    await key('KeyI');
+    await key('KeyJ');
+    await sleep(200);
+    check(await evaluate('(() => { const b = window.__app.scene.battle; return b.waiting && b.food && b.food.itemId === "tomato"; })()'), 'はじまりに おやつを 投げると 反応を 見せる あいだ 待つ');
+    await shot('food-react');
+    await sleep(2600);
+    check(await evaluate('!window.__app.scene.battle.waiting'), 'おやつの 反応の あと バトル開始');
+    await key('KeyI');
+    check(await evaluate('!window.__app.scene.debug.menu()'), 'おやつを 投げたあとは おやつ欄が 開かない');
+    await evaluate('(() => { const a = window.__app, b = a.scene.battle; a.g.items = window.__items; b.outcome = "flee"; a.endBattle(b); return true; })()');
+    await skipTalk();
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(150);
     await skipTalk();
     await evaluate('(() => { const a = window.__app; a.startBattle({ enemies: [{ id: "nushi", lv: 8 }], kind: "boss", place: "bridge" }); return true; })()');
     await sleep(100);
