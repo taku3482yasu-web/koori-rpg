@@ -1,7 +1,7 @@
 // =====================================================================
 // 町の 場面: 上画面で 歩く・調べる・レンズで さがす、下画面に 地図と ボタン (設計書 5 章・7 章)
 // 2 章: 小学校の 入り口 (夕方・夜) から 校舎の 中へ。七不思議を 調べると バトル。げた箱の マットで 外へ
-// 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → 氷の 封印 3 つ → ダムの主 (ヒョウガリュウ)
+// 3 章: 町の 北の 山道から 山と ダムへ。奥の院の 言いつたえ → とけかけた 封印の 柱 3 つを 作りなおす → ダムの主 (ヒョウガリュウ)
 // 4 章: ともいしと 話す → 商店街の 石の川駅から 電車で 海辺の 町へ → ライバル探検隊 (バージョンで ちがう) → 黒い 紋の 浦の島重蔵
 // 5 章: ともいし → ダイシの 手紙 → 電車で ネット寺 → 黒い 紋の 3 体を 助ける → コオニンの かげ → 紋に のまれた ダイシ
 // 6 章: ともいし → 電車で 忍びの屋敷 → 庭の ズミタニ (影分身) → 奥の 間で ルキハ と おにおに → 東の 蔵の 幹部 トモオカ (右腕)
@@ -29,11 +29,11 @@ import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit, dr
 import { sfx } from '../core/sound.js';
 import { btn, moveName } from '../core/keys.js';
 import { moveHero, lookAt, peopleHere, inShrine, gatesHere, sealsHere, heroTile, mysteriesSolved, allMysteriesSolved, personArt, monsHere } from '../logic/world.js';
-import { reached } from '../logic/story.js';
+import { reached, chapterOf } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -96,6 +96,17 @@ export function createField(app) {
     const inSchool = () => g.pos.y >= SCHOOL_Y0 * TILE && g.pos.y < YAMA_Y0 * TILE;
     const inCave = () => { const ht = heroTile(g); return inCaveTile(ht.x, ht.y); };
     const region = () => regionOf(Math.floor(g.pos.y / TILE));
+    // いま いる 場所の 背景 (ストーリーの ムービー。backdrop.js)
+    function backdropHere() {
+        const ht = heroTile(g), area = areaAt(ht.x, ht.y);
+        if (inShrine(g)) return 'shrine';
+        if (area === 'ishinokawa') return darkHere() ? 'town' : 'machi';
+        if (area === 'shoutengai') return darkHere() ? 'town' : 'street';
+        if (area === 'umi') return inCave() ? 'cave' : 'umi';
+        if (area === 'kinniku') return inHyouga() ? 'hyouga' : 'kinniku';
+        if (area === 'park') return 'yuen';
+        return area;
+    }
     function camera() {
         const [top, bottom] = region().map(v => v * TILE);
         cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
@@ -114,6 +125,14 @@ export function createField(app) {
 
     // ----- できごと -----
     const say = (lines, opts) => app.talk.open(lines, opts);
+    // ストーリーの ムービー (2026-11-02 ユーザー指定)。上画面 ぜんぶが 舞台に なり、キャラが 動く (movie.js)。
+    //   opts.place: 背景 (backdrop.js。なければ いま いる 場所)・cast: はじめから 立っている キャラ・weather: 冷気 など
+    //   lines の あいだに act('move', { id, x }) などの 動きを はさめる
+    const story = (lines, opts = {}) => say(lines, { ...opts, movie: { place: opts.place || backdropHere(), title: opts.title || chapterTitle(), cast: opts.cast || partyCast(), weather: opts.weather || '', time: g.time } });
+    const act = (what, o = {}) => ({ do: what, ...o });
+    const chapterTitle = () => { const [n, name] = chapterOf(g.story); return `${n}章「${name}」`; };
+    // いっしょに いる なかま (はじめから 舞台の 左に 立つ)
+    const partyCast = () => ['koori', ...(reached(g, 'friends') && g.story !== 'yoru' ? ['furukawa'] : []), ...(reached(g, 'onijoin') && g.story !== 'shuuketsu' ? ['onioni'] : [])];
     const furu = text => ({ who: 'ふるカワ', art: 'furukawa', text });
     const tomo = text => ({ who: 'ともいし', art: 'tomoishi', text });
     const nar = text => ({ who: '', text });
@@ -149,7 +168,7 @@ export function createField(app) {
     };
 
     function meetFurukawa() {
-        say([
+        story([
             furu('あっ、こおりくん！ ちょうど よかった！'),
             furu('この 町には、ふしぎな キャラが いっぱい かくれてるの。この「さがすレンズ」で のぞくと 見つかるんだよ。'),
             furu('それと これ！「おなかまウォッチ」。おなかまメダルを セットすると、なかまを 呼び出せるの。'),
@@ -209,7 +228,7 @@ export function createField(app) {
             }[g.story];
             if (startChapter9(g)) {
                 // 9 章の はじまり「おにおにと いっしょに」(ストーリー工房 9 章 場面 1)
-                say([
+                story([
                     by('onioni', 'おい、こおり。おれも 行くぞ。ルキハには たっぷり 借りを 返して もらわんとな！ ……おまえの 借金は べつだぞ。'),
                     tomo('あら、おにおにくん。ごはん 食べていきなさい。……こおり、おにおにくんに お金 返したと？ 今すぐ 返しなさい！'),
                     nar('おにおにが なかまに なった！'),
@@ -220,7 +239,7 @@ export function createField(app) {
             }
             if (startChapter13(g)) {
                 // 13 章の はじまり「出発」(ストーリー工房 12 章 場面 3 の つづき。セリフは Claude の 仮組)
-                say([
+                story([
                     nar('朝。黒い 空の むこうに、ルキハの 城が うかんでいる。'),
                     tomo('……行って らっしゃい、こおり。'),
                     furu('山の ダムの ヒョウガリュウが、城まで 乗せて いって くれるって！'),
@@ -231,7 +250,7 @@ export function createField(app) {
             }
             if (startChapter12(g)) {
                 // 12 章の はじまり「黒い 空」(ストーリー工房 12 章 場面 1)
-                say([
+                story([
                     nar('空が 黒く そまり、世界じゅうに 紋つきの 軍勢が あらわれた。'),
                     furu('ルキハが 本気で 世界を 喰おうと してる……！'),
                     tomo('こおり、神社に みんなが あつまっとるらしいよ。行って きなさい。'),
@@ -241,7 +260,7 @@ export function createField(app) {
             }
             if (startChapter11(g)) {
                 // 11 章の はじまり (ストーリー工房 11 章 あらすじ。セリフは Claude の 仮組)
-                say([
+                story([
                     furu('こおりくん！ ルナヤさんから 手紙が きたよ！'),
                     furu('「ルキハの 城へ 行く 道は、ASOの壺の底に ある。……壺の 底よ、壺の 底。わすれないでね？」だって。'),
                     by('onioni', 'ASOの壺……大魔王が ねむっとる 所か。おもしろい、行ってやろうじゃないか。'),
@@ -253,7 +272,7 @@ export function createField(app) {
             if (startChapter14(g)) {
                 // 14 章の はじまり (ストーリー工房 14 章 = 内定・15 章 = 免許 の あらすじから。仮組)
                 const menkyo = g.version === 'menkyo';
-                say([
+                story([
                     nar(menkyo ? 'ルキハとの 戦いから しばらく。こおりくんは 車の 免許を とるため、自動車学校に かよっていた。' : 'ルキハとの 戦いから しばらく。こおりくんは 内定を とるため、毎日 がんばっていた。'),
                     tomo('こおり、ふるカワちゃんが 来とるよ。なんか うれしそうな 顔して。'),
                     furu(`こおりくん、見て見て！ 新しく できた アミューズメント${menkyo ? '施設' : 'パーク'}「${parkName()}」の 招待券！ 3 まい あるの！`),
@@ -265,7 +284,7 @@ export function createField(app) {
             }
             if (startChapter6(g)) {
                 // 6 章の はじまり「ねらわれた メダル」(ストーリー工房 6 章 場面 1)
-                say([
+                story([
                     tomo('こおり！ 町の 子たちの メダルが ぬすまれたって 大さわぎよ。あんた なにしよっと！ はよ 行きなさい！'),
                     furu('鬼鬼団の しわざだって うわさだよ。忍びの屋敷の ズミタニさんが 追ってるみたい！'),
                     nar('石の川駅から、電車で 忍びの屋敷へ 行けるように なった！')
@@ -274,7 +293,7 @@ export function createField(app) {
             }
             if (startChapter5(g)) {
                 // 5 章の はじまり「ダイシの 手紙」(ストーリー工房 5 章 場面 1)
-                say([
+                story([
                     tomo('こおり、あんた あてに 手紙が きとるよ。'),
                     nar('ネット寺の ダイシから 手紙が とどいた。'),
                     nar('「寺の 者たちが 黒い 紋に のろわれた。たすけて ほしい。」'),
@@ -285,7 +304,7 @@ export function createField(app) {
             }
             if (startChapter4(g)) {
                 // 4 章の はじまり「王冠の なぞ」(ストーリー工房 4 章 場面 1)
-                say([
+                story([
                     tomo('こおり、ダムの 水 よう もどしたね！ ……で、王冠を ぬすんだ 人は まだ つかまっとらんと？'),
                     furu('うん……。王冠の 箱の まわりに、黒い すすみたいな ものが のこってたの。'),
                     furu('海辺の 町でも、なかまが 急に あばれだす 事件が あるんだって。もしかしたら 関係 あるかも！'),
@@ -297,29 +316,32 @@ export function createField(app) {
             say(lines.map(text => tomo(text)));
         } else if (p.id === 'rival4') {
             // 4 章: ライバル探検隊が どうくつの 通路を ふさいでいる → 3 体の バトル
-            const L = rivalLines();
-            say([...L.block.map(([id, text]) => by(id, text)), nar(`チーム「${rivalTeam(g.version).name}」が 勝負を いどんできた！`)],
-                { done: () => app.startBattle({ enemies: rivalEnemies(g), kind: 'rival', place: 'cave' }) });
+            const L = rivalLines(), team = rivalTeam(g.version);
+            story([
+                ...team.members.map((id, k) => act('enter', { id, from: 'right', x: [250, 300, 350][k], wait: k === team.members.length - 1 })),
+                ...L.block.flatMap(([id, text]) => [by(id, text), act('jump', { id })]),
+                act('fx', { kind: 'exclaim', id: 'koori' }),
+                nar(`チーム「${team.name}」が 勝負を いどんできた！`)
+            ], { place: 'cave', done: () => app.startBattle({ enemies: rivalEnemies(g), kind: 'rival', place: 'cave' }) });
         } else if (p.id === 'urashima4') {
             // 4 章の ボス: 黒い 紋に とりつかれた 浦の島重蔵 (ストーリー工房 4 章 場面 3)
-            say([
+            story([
                 nar('どうくつの 主の 体に、ドクドクと 動く 黒い 紋が うかんでいる……。'),
                 by('urashima', 'わしは……えーと……なんじゃったかの……。体が かってに……うごくんじゃ……！ ……つり？'),
                 furu('あの 紋、王冠の 箱に のこってた 黒い すすと 同じだ！'),
-                furu('かかえてる 玉手箱を ねらって こわせば、玉手箱の わざを 止められるよ！ でも けむりが 出るかも……！'),
-                furu('こうらに こもったら、すきまから 出てる 頭を ねらって！ ひっくり返せるかも！')
+                furu('来るよ、こおりくん！ がんばって！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('urashima4'), kind: 'boss', place: 'cave' }) });
         } else if (p.id === 'daishiNpc') {
             say([by('daishi', `紋つきの 者たちを、どうか 救って くだされ。……紋を はらえば、きっと 正気に もどりますぞ。(${monsSaved(g)}/${MONS.length})`)]);
         } else if (p.id === 'zumitani6') {
             // 6 章 1 回目: ズミタニ (影分身。ストーリー工房 6 章 場面 2)
-            say([
+            story([
                 by('zumitani', 'やっほー、77代目の ズミタニだよ！ メダルどろぼうを 追ってるんだ。……で、きみ、役に 立つの？ ためして あげるね♪'),
-                furu('分身して くるよ！ 本物を 見つけて ロックオンして！ まちがえると しかえし されちゃう！')
+                furu('は、はやい……！ こおりくん、よく 見て！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('zumitani6'), kind: 'boss', place: 'yashiki' }) });
         } else if (p.id === 'onioni6' || p.id === 'rukiha6') {
             // 6 章 2 回目: 奥の 間で ルキハ と あやつられた おにおに (ストーリー工房 6 章 場面 3)
-            say([
+            story([
                 nar('奥の 間に、ひとりの 男が 座っていた。'),
                 nar('人と おなじ 顔。けれど 片目は 赤黒く にごり、首すじには うろこの ような ものが のぞいている。'),
                 { who: 'ルキハ', art: 'rukiha', text: 'はじめまして だな、こおり族の 子。王冠の 味は……なかなか だったぞ。' },
@@ -329,55 +351,54 @@ export function createField(app) {
             ], { done: () => app.startBattle({ enemies: bossEnemies('onioni6'), kind: 'boss', place: 'yashiki' }) });
         } else if (p.id === 'tomooka6') {
             // 6 章 3 回目: 鬼鬼団の 幹部 トモオカ (右腕)
-            say([
+            story([
                 { who: 'トモオカ', art: 'tomooka', text: 'メダルは わたさんぞ！ 鬼鬼団 幹部、トモオカさまの 右腕を 見せてやる！' },
-                furu('たたかれるほど 右腕が 大きく なるみたい！ 右腕を ねらって しぼませて！ 大きく なりきったら 防げない 一撃が くるよ！')
+                furu('すごい 力……！ 気を ぬかないで、こおりくん！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('tomooka6'), kind: 'boss', place: 'yashiki' }) });
         } else if (p.id === 'runaya7') {
             // 7 章: 月の 鏡の 回想 (ストーリー工房 7 章 場面 2) → 力を ためす バトル
-            say([
+            story([
                 by('runaya', 'ここが 月の 鏡よ。……鏡を のぞいて ごらんなさい。'),
                 nar('鏡の 中に、むかしの 景色が うかんだ。'),
                 nar('ひとりの 男が、大きな 竜を、鳥を、けものを……ひとつずつ 喰らっていく。'),
                 nar('喰らう たびに、男の 体の どこかが ゆがんで いった。'),
                 by('runaya', 'あの 男は、人の すがたを 着ているだけ。中身は……喰らった ものの かたまりよ。'),
                 by('runaya', '……あの 男に 立ちむかうなら、その 前に あなたたちの 力を ためさせて もらうわ。ためさせて もらうわ。……あら、これも 言ったかしら？'),
-                furu('月が 満ちたら 大技が くるよ！ 空の 月を ねらって 欠けさせて！')
+                furu('来るよ！ こおりくん、がんばって！')
             ], { done: () => { g.flags.mirror7 = true; app.startBattle({ enemies: bossEnemies('runaya7'), kind: 'boss', place: 'moon' }); } });
         } else if (p.id === 'ooni8') {
             // 8 章 幹部 1 人目: 大鬼 (ストーリー工房 8 章 場面 2「幹部たち」)
-            say([
+            story([
                 nar('大広間の 奥に、天井に 頭が とどきそうな 大きな 鬼が 立ちふさがった。胸には 黒い 紋。'),
                 { who: '大鬼', art: 'ooni', text: 'ここから 先は 通さん！ ルキハさまの ため……つぶれろ……！' },
-                furu('大きすぎて、どの わざも みんなに とどくよ！ 足を ねらって 当てつづけて！ 転ばせれば チャンス！')
+                furu('で、でっかい……！ みんな、がんばって！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('ooni8'), kind: 'boss', place: 'shiro' }) });
         } else if (p.id === 'soutou8') {
             // 8 章 幹部 2 人目: 双頭鬼
-            say([
+            story([
                 { who: '双頭鬼 (右の頭)', art: 'soutouki', text: 'ケケケ……とりついて やろうか？' },
                 { who: '双頭鬼 (左の頭)', art: 'soutouki', text: 'いや、術で 焼いて やろう。' },
-                furu('右の 頭は とりつき、左の 頭は 術を 使うみたい！ 頭を こわせば その わざは 止まるよ。両方 こわせば チャンス！'),
-                furu('とりつかれたら 後ろに 回して「おたすけ」だよ！')
+                furu('頭が ふたつも……！ 来るよ、こおりくん！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('soutou8'), kind: 'boss', place: 'shiro' }) });
         } else if (p.id === 'kinme8') {
             // 8 章 幹部 3 人目: 金滅鬼 (ストーリー工房 8 章 場面 2)
-            say([
+            story([
                 by('kinmetsuki', '金色の 鬼に ひれ伏せ！ ルキハさまの ために……！ この 黄金の 体、きずひとつ つけられまい！'),
-                furu('金ピカで 目が くらんじゃう……！ めくらましの とりつきに 気を つけて！ この 鬼に すきは ない、まっこう 勝負だよ！')
+                furu('金ピカで まぶしい……！ こおりくん、負けないで！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('kinme8'), kind: 'boss', place: 'shiro' }) });
         } else if (p.id === 'onioni8') {
             // 8 章の 山場: 玉座の 間の おにおに (ストーリー工房 8 章 場面 3)
-            say([
+            story([
                 by('onioni', '……来たか、こおり。'),
                 by('onioni', 'ルキハさまの じゃまは させん。……借金ごと ここで 消えて もらうぞ！'),
                 furu('おにおに、目を さまして！'),
                 nar('おにおにの 胸の 黒い 紋が、どくん、と 脈うった。'),
-                furu('大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！')
+                furu('こおりくん、おにおにを 止めて あげて！ がんばって！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('onioni8'), kind: 'boss', place: 'shiro' }) });
         } else if (p.id === 'onioni12') {
             // 12 章: みんなが 来た (ストーリー工房 12 章 場面 2) → おにおにの 勝負 (ユーザー指定)
             const L = rivalLines();
-            say([
+            story([
                 nar('石の川神社に、これまで 出会った みんなが あつまっていた。'),
                 by(L.meet[0], 'ライバルは ライバルでも、世界が なくなったら 勝負も できないからな。'),
                 by('onioni', '氷隊と 鬼鬼団が いっしょに 戦うとはな。……足を ひっぱるなよ、こおり。'),
@@ -385,7 +406,7 @@ export function createField(app) {
                 by('onioni', '……その 前に だ。こおり、おれと 勝負しろ。'),
                 by('onioni', 'ルキハに あやつられて いた おれじゃ ない、ほんとうの おれの 力を 見せてやる。……本気で 来い！'),
                 nar('おにおにの 体が 赤黒く 燃えあがった……！ 鬼神の すがただ！'),
-                furu('大技を ためてる あいだに 攻撃を あてれば、力が 暴発するはず！ 2 回目からは ガードしてくるよ！')
+                furu('来るよ！ ぜったい 負けないで！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('onioni12'), kind: 'boss', place: 'shrine' }) });
         } else if (p.only === 'gather12') {
             // 12 章: 神社に あつまった みんな (Claude の 仮組)
@@ -399,17 +420,16 @@ export function createField(app) {
             say([by(lines[0], lines[1])]);
         } else if (p.id === 'bakuen11') {
             // 11 章の ボス: 火山の 底に ねむる バクエンリュウ・闇 (ASO と 出会う 前。ASO は 声だけ)
-            say([
+            story([
                 nar('火山の 底で、マグマの 竜が ねむっていた。胸には 黒い 紋が どくどくと 脈うっている。'),
                 { who: 'バクエンリュウ', art: 'bakuenryu', text: 'グオオオ……ルキハ……さま……。ここは……通さぬ……！' },
                 furu('体が マグマで できてる……！ これじゃ 攻撃が とどかないよ！'),
                 { who: '？？？', art: 'maou', text: '……こおり族の 子よ。その 竜の 体は マグマ、ふつうの 攻撃は とどかぬ。我が 道具を 投げてやる。うまく 使え！' },
-                furu('投げられた 道具を ねらって 攻撃すると 使えるよ！ 剣なら 力が 上がって、実なら 回復、水爆弾なら 体が かたまるはず！'),
-                furu('マグマの 波で 道具が とけちゃうから、いそいで！')
+                furu('……でも、なにか 手が あるはず！ こおりくん、がんばって！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('bakuen11'), kind: 'boss', place: 'tsubo' }) });
         } else if (p.id === 'hyouga13') {
             // 13 章: ヒョウガリュウに 乗って 喰らいの 城へ (2026-10-30 ユーザー指定。電車では 行かない)
-            say([
+            story([
                 { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'こおり族の 子よ。わしの 背に 乗れ。ルキハの 城まで ひとっとびだ。' }
             ], {
                 choices: ['喰らいの 城へ 行く', 'やめる'],
@@ -423,7 +443,7 @@ export function createField(app) {
         } else if (p.only === 'floor13') {
             // 13 章 3〜7 階: たおした はずの 幹部が 紋つきで よみがえって いる。ライバル探検隊が 加勢 (階ごとに ちがう チーム)
             const f = FLOOR13.find(x => x.id === p.boss), tk = floor13Team(f, g.version), team = TEAMS[tk];
-            say([
+            story([
                 { who: p.name, art: p.art, text: FLOOR13_LINES[f.id] },
                 nar(`${p.name}の 体に、黒い 紋が どくどくと 脈うっている……！ 前より ずっと 強い！`),
                 by(team.leader, HELPER_LINES[tk]),
@@ -439,18 +459,18 @@ export function createField(app) {
                 nar('ライバル探検隊 ぜんぶの チームが 軍勢を ひきうけて くれた！')
             ];
             g.flags.top13 = true;
-            say([
+            story([
                 ...army,
                 rk('来たか、こおり族の 子。王冠の 味が、まだ 舌に のこっているぞ。'),
                 rk('おまえも、おまえの なかまも、みんな オレの 中で ひとつに なれば いい。'),
                 { who: 'こおりくん', art: 'koori', text: '（そんな こと させない！）' },
-                furu('ルキハは 体を 変形させて 攻撃してくるよ！ 気を つけて！')
+                furu('こおりくん……ぜったい 勝とうね！ 来るよ！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('rukiha13'), kind: 'boss', place: 'kurai' }) });
         } else if (p.id === 'aso11') {
             // 11 章: ASO の 間の 大魔王ASO (ストーリー工房 11 章 場面 2・3。ASO とは 戦わない)
             if (canFightAso(g)) {
                 // 14 章 クリアの あと: 大魔王ASO と 勝負 (推奨 Lv90。2026-10-30 ユーザー指定)
-                say([
+                story([
                     { who: '大魔王ASO', art: 'maou', text: '……ルキハを たおし、残党まで かたづけたか。こおり族の 子よ、きさまの 力、この 我が ためして やろう。' },
                     { who: '大魔王ASO', art: 'maou', text: '我に 勝てたなら……きさまの なかまに なって やっても よい。' },
                     nar('(推奨 Lv90 の 強敵)')
@@ -458,14 +478,14 @@ export function createField(app) {
                     choices: ['勝負する', 'やめる'],
                     done: i => {
                         if (i !== 0) return;
-                        say([furu('拘束のリングに つかまったら、浮いてる リングを ねらって こわして！ 輪が 回せなく なるよ！')],
+                        say([furu('大魔王ASO……！ 来るよ、こおりくん！ がんばって！')],
                             { done: () => app.startBattle({ enemies: bossEnemies('aso15'), kind: 'boss', place: 'tsubo' }) });
                     }
                 });
                 return;
             }
             if (!meetAso(g)) { say([{ who: '大魔王ASO', art: 'maou', text: g.flags.aso15 ? '……我は きさまの なかまだ。ウォッチで 呼ぶが よい。' : '……きさまに たくしたぞ、こおり族の 子よ。あの 男の 顔を ねらえ。' }]); return; }
-            say([
+            story([
                 nar('ASO の 間に、大きな 影が しずかに すわっていた。'),
                 { who: '大魔王ASO', art: 'maou', text: 'この 我が……このASOが……人の すがたを した 男ごときに、力を 半分 喰われるとは……！' },
                 { who: '大魔王ASO', art: 'maou', text: '聞くがよい、こおり族の 子よ。あの 男は 喰った ものを 自身の身体に反映させることができる。だが 顔だけは……あの 男 自身の ものだ。' },
@@ -476,28 +496,28 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (p.id === 'tashikeda10') {
             // 10 章の ボス: ともいしを ねらう 幹部 タシケダ (ストーリー工房 10 章 場面 2)
-            say([
+            story([
                 tomo('こおり！ 来たら いかん！'),
                 { who: 'タシケダ', art: 'tashikeda', text: 'こおり族の 母か。ルキハさまへの いい みやげに なる。' },
                 { who: 'こおりくん', art: 'koori', text: '（おかあさんに さわるな！）' },
                 { who: 'タシケダ', art: 'tashikeda', text: 'ワタシは ルキハさまの 軍勢の 幹部、タシケダ。……きみの なかまの レベル、ぜんぶ いただくよ。' },
-                furu('レベルを 吸われたら、出てきた 紋つきを たおせば もどるよ！ 左右に 2 体 そろうと 大技が くる！')
+                furu('おかあさんを まもろう！ 来るよ、こおりくん！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('tashikeda10'), kind: 'boss', place: 'town' }) });
         } else if (p.id === 'harukirin9') {
             // 9 章 1 回目: 雪どけの 氷河の ハル麒麟 (セリフは ダンジョンの ハル麒麟から)
-            say([
+            story([
                 nar('とけかけた 氷河の 上に、桜の 花びらを まとった 麒麟が 立っていた。'),
                 by('harukirin', '氷は とけ、春が 来る。それが さだめ。こおりの子よ、そなたも 溶けて 賢者と なりなさい。'),
                 { who: 'こおりくん', art: 'koori', text: '（こおりは とけないよ！）' },
-                furu('HP が 半分に なると 春の 力を ためて、全回復しちゃうみたい！ 角を ねらって こわして！')
+                furu('来るよ！ こおりくん、がんばって！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('harukirin9'), kind: 'boss', place: 'hyouga' }) });
         } else if (p.id === 'nozoema9') {
             // 9 章 2 回目: 山頂の 道場の ノゾエマ (ストーリー工房 9 章 場面 2)
-            say([
+            story([
                 by('nozoema', 'よくぞ 来た。……だが その 前に 見よ、この 鍛えぬかれた 筋肉を！ 力が ほしくば、この 山を のぼりきって みせよ！'),
                 by('nozoema', '名刀江波と 筋肉は、心が くもった 者には こたえぬ。毎朝 鏡に むかい、筋肉と 語りあうのだ。'),
                 by('nozoema', '……さあ、修行の しあげだ。この 刀を 越えてみせよ！'),
-                furu('ノゾエマさんは「筋肉の おたすけ」で どんどん 強く なるよ！ 長引くと あぶない、いっきに たたみかけて！')
+                furu('すごい 筋肉……！ こおりくん、がんばって！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('nozoema9'), kind: 'boss', place: 'kinniku' }) });
         } else if (p.id === 'oni14') {
             // 14 章: いっしょに 来た おにおに
@@ -508,11 +528,11 @@ export function createField(app) {
             // 14 章の ボス (内定 サアラハ / 免許 リハマ)
             const menkyo = g.version === 'menkyo';
             const boss = menkyo ? { who: 'リハマ', art: 'rihama' } : { who: 'サアラハ', art: 'saaraha' };
-            say([
+            story([
                 nar('広場の まんなかに、黒い 紋を つけた 人かげが 立っていた。'),
                 { ...boss, text: menkyo ? 'ルキハさまの かたき……ここで ノーブレーキで ひいて やるよ！' : 'よく ここまで 来たね。ルキハさまに かわって、おまえたちの 未来を とりけして あげる！' },
                 { who: 'ふるカワ', art: 'furukawa', text: 'こおりくん！ たすけて！' },
-                by('onioni', menkyo ? '赤信号の ときは 体が かたい！ 信号機を ねらえ、こおり！' : 'おりを ねらえ、こおり！ ふるカワを にがせば あいつも あわてるはずだ！')
+                by('onioni', 'ふるカワを 取りかえすぞ、こおり！ 来るぞ！')
             ], { done: () => app.startBattle({ enemies: boss14Enemies(g), kind: 'boss', place: 'yuen' }) });
         } else if (p.id === 'kairou') {
             // 15 章: 無限回廊 (強化ボスと 1 階ずつ)
@@ -528,33 +548,36 @@ export function createField(app) {
                 { done: () => app.startBattle({ enemies: teamEnemies(p.team), kind: 'team', place: inMoon() ? 'moon' : inUmi() ? 'umi' : 'park', team: p.team }) });
         } else if (p.id === 'daishi5') {
             // 5 章の ボス: 紋に のまれた ダイシ (仏の顔 → HP が 半分で 鬼の顔)
-            say([
+            story([
                 nar('ダイシの 体に、黒い 紋が どくどくと 脈うっている……。'),
                 by('daishi', '……ぐ……拙僧は……鬼に……なっては……ならぬ……！'),
-                furu('ダイシさんまで 紋に のまれちゃった！ 攻撃しつづけると 鬼の 顔に なって 強く なるよ。そしたら 顔の 鬼の面を ねらって！'),
-                furu('お経が 聞こえたら、うしろの 鐘を ねらって 鳴らして！ びっくりして すきが できるはず！')
+                furu('ダイシさんまで 紋に のまれちゃった……！ こおりくん、たすけて あげて！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('daishi5'), kind: 'boss', place: 'tera' }) });
         } else if (p.id === 'furukawaShrine') {
             meetFurukawa();
         } else if (p.id === 'kage') {
             // 2 章の ボス: 七不思議の 8 つ目
-            say([
+            story([
                 { who: '', text: 'ろうかの おくに、まっくろな 影が 立っている……。' },
                 { who: 'ろうかの カゲ', art: 'lunashadow', text: '…………。' },
-                furu('これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！')
+                furu('これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ 来るよ、こおりくん！')
             ], { done: () => app.startBattle({ enemies: bossEnemies('kage'), kind: 'boss', place: 'school' }) });
         } else if (p.id === 'damNushi') {
-            // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)
-            say([
-                { who: '', text: '氷の 城の 前に、王冠を かぶった 大きな 龍が いる……！' },
-                { who: 'ダムの主', art: 'hyougaryu', text: 'グルルル……氷河の 底で 眠っていた わしを 起こしたのは だれだ……。' },
-                { who: 'ダムの主', art: 'hyougaryu', text: 'この 王冠が ある かぎり、山の 水は すべて わしの 氷よ！' },
-                furu('ダムの主……ヒョウガリュウだ！ 王冠の 力で あばれてるんだ！'),
-                furu('「氷の偶像」を 2 つ 作られたら、大技の ために 入るよ。ためて いる あいだに 偶像を こわせば 止められる！')
-            ], { done: () => app.startBattle({ enemies: bossEnemies('himuro'), kind: 'boss', place: 'dam' }) });
+            // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)。封印の 割れ目から 冷気と いっしょに あらわれる
+            story([
+                nar('こおりついた ダムの まんなか。封印の 割れ目から、白い 冷気が ふきだしている……。'),
+                act('shake', { power: 5, time: 1 }),
+                act('enter', { id: 'hyougaryu', art: 'hyougaryu', from: 'ice', x: 290, scale: 5.5 }),
+                act('pose', { id: 'hyougaryu', pose: 'float' }),
+                act('fx', { kind: 'ring', id: 'hyougaryu' }),
+                { who: 'ダムの主', art: 'hyougaryu', text: 'グルルル……こおり族の 子か。封印など もう いらぬ。この 王冠で、山も 町も ぜんぶ こおらせて やる……！' },
+                act('fx', { kind: 'exclaim', id: 'furukawa' }),
+                furu('ヒョウガリュウ……！ 王冠の 力に のまれちゃってる！ 王冠を とりもどして、封印を 作りなおそう！'),
+                furu('来るよ！ こおりくん、がんばって！')
+            ], { place: 'damBack', weather: 'cold', done: () => app.startBattle({ enemies: bossEnemies('himuro'), kind: 'boss', place: 'dam' }) });
         } else if (p.id === 'nushi') {
             if (g.story === 'bridge') {
-                say([
+                story([
                     { who: 'ヌシ', art: 'hashishita', text: 'ひとつ、ふたつ、みっつ……だれだ！ おれの 数を じゃまするのは！' },
                     furu('こおりくん、ウォッチで なかまを 呼び出して！')
                 ], { done: () => app.startBattle({ enemies: bossEnemies(), kind: 'boss', place: 'bridge' }) });
@@ -573,7 +596,7 @@ export function createField(app) {
                     if (i === 0 && nightBefore(g)) {
                         // 12 章 クリア: 出発の 前の 夜 (ストーリー工房 12 章 場面 3)
                         g.time = 3;
-                        say([
+                        story([
                             tomo('こおり、おべんとう つくっといたよ。'),
                             tomo('……ちゃんと 帰って きなさい！ 借金も 返さんまま いなくなるのは ゆるさんけんね！'),
                             nar('こおりくんは しずかに ねむった。'),
@@ -700,7 +723,7 @@ export function createField(app) {
         warp(SCHOOL_IN);
         if (g.story !== 'clear') return;
         g.story = 'school';
-        say([
+        story([
             { who: '', text: '入り口の カギが あいていた……。' },
             furu('夜の 学校って、なんだか ドキドキするね。この 学校には「七不思議」が あるって うわさなんだ。'),
             furu('理科室の 動く ガイコツ、音楽室で 夜中に 鳴る 音、図書室の わすれられた 本、おどり場の 大鏡、体育倉庫の かけ声、開かずの ロッカー、プールの 手……。'),
@@ -712,46 +735,61 @@ export function createField(app) {
     }
 
     // 山 (3 章): 町の 北の 山道から 入る。はじめて 入ると 3 章が 始まる
+    // (2026-11-02 ユーザー指定で 話を かえた: ダムの 底に 封じられた ヒョウガリュウの 封印が とけかけて、冷気が もれだしている。
+    //  封印を とくのでは なく、とけかけた 封印の 柱を 作りなおす)
     function enterYama() {
         warp(YAMA_IN);
         if (g.story !== 'clear2') return;
         g.story = 'yama';
-        say([
-            { who: '', text: '山道を のぼって、山の 上に 来た。' },
-            furu('見て、こおりくん！ 沢が からっぽだよ……。ダムの 水が ぜんぶ 消えちゃったんだ。'),
+        story([
+            nar('山道を のぼって、山の 上に 来た。……夏なのに、はく 息が 白い。'),
+            act('pose', { id: 'furukawa', pose: 'shiver' }),
+            furu('さ、さむい……！ 見て、こおりくん！ 沢が からっぽだよ。'),
+            act('move', { id: 'koori', x: 180 }),
+            act('fx', { kind: 'question', id: 'koori' }),
+            furu('上の ダムの 湖が、ぜんぶ こおりついちゃってるんだ。だから 水が 流れて こないんだよ！'),
+            act('pose', { id: 'furukawa', pose: '' }),
+            act('move', { id: 'koori', x: 118 }),
             furu('このままじゃ 石の川の 水も なくなっちゃう。山の 上の「奥の院」には、むかしの 言いつたえが あるんだって。行ってみよう！'),
-            { who: '', text: '山の 南の はしの 入り口から 町に もどれる。' }
-        ], { done: () => app.save() });
+            nar('山の 南の はしの 入り口から 町に もどれる。')
+        ], { place: 'yama', weather: 'cold', done: () => app.save() });
     }
 
-    // 奥の院の 石碑 (3 章): こおり族の 言いつたえ。読むと 氷の 封印を 調べられる
+    // 奥の院の 石碑 (3 章): こおり族の 言いつたえ。読むと 封印の 柱を 調べられる
     function readOkunoin() {
         if (readLegend(g)) {
             sfx('watch');
-            say([
-                { who: '', text: '奥の院の 中に、古い 石碑が ある……。' },
-                { who: '', text: '「むかし、この 山の 水は こおり族が まもっていた。」' },
-                { who: '', text: '「こおり族の 王冠を かぶる者は、山の 水を すべて こおらせ、思いのままに できる。ゆえに 王冠は ここに ねむらせる。」' },
-                { who: '', text: '石碑の となりの 箱は……からっぽだ！' },
-                furu('王冠が ない……！ こおり族って、こおりくんの ご先祖さまだよね？ だれかが 王冠を ぬすんで、ダムの 水を こおらせたんだ！'),
-                furu('山の あちこちに、夏なのに とけない 氷の 柱が 立ってたよね。あれが 水を とじこめる「封印」かも。ぜんぶ とかそう！'),
-                { who: '', text: '氷の 封印は 3 つ。森の 原っぱ・雪渓・岩場に ある。' }
-            ], { done: () => app.save() });
+            story([
+                nar('奥の院の 中に、古い 石碑が ある……。'),
+                act('move', { id: 'koori', x: 200 }),
+                nar('「むかし、氷の 龍 ヒョウガリュウが 目ざめ、山を ぜんぶ こおらせた。」'),
+                act('fx', { kind: 'ice', x: 300, y: 100 }),
+                nar('「こおり族は 王冠の 力で 龍を ダムの 底に ねむらせ、3 本の 氷の 柱で 封印を ささえた。」'),
+                nar('「王冠は 封印の かなめ。ゆえに ここに ねむらせる。」'),
+                act('wait', { time: 0.4 }),
+                nar('石碑の となりの 箱は……からっぽだ！ 黒い すすが のこっている。'),
+                act('jump', { id: 'furukawa' }),
+                furu('王冠が ない……！ かなめが なくなったから、封印が とけかけてるんだ！'),
+                furu('ダムが こおりついたのも、封印の すきまから 冷気が もれだしてる せいだよ。このままじゃ ヒョウガリュウが 目を さましちゃう！'),
+                act('jump', { id: 'koori', times: 2 }),
+                furu('山の あちこちの 氷の 柱が とけかけてたよね。あれを 作りなおして、封印を もとに もどそう！'),
+                nar('封印の 柱は 3 つ。森の 原っぱ・雪渓・岩場に ある。')
+            ], { place: 'yama', weather: 'cold', done: () => app.save() });
             return;
         }
-        say([{ who: '', text: reached(g, 'clear3') ? '石碑の となりの 箱に、こおりの 王冠が もどっている。' : '古い 石碑。むかしの こおり族の 言いつたえが 書いてある。' }]);
+        say([{ who: '', text: reached(g, 'clear3') ? '石碑の となりの 箱に、こおりの 王冠が もどっている。封印は しっかり とじている。' : '古い 石碑。むかしの こおり族の 言いつたえが 書いてある。' }]);
     }
 
-    // 氷の 封印を 調べる (3 章) → 封印を まもる キャラと バトル (勝つと とける)
+    // 封印の 柱を 調べる (3 章) → もれだした 冷気で 気が 立った キャラと バトル (勝つと 柱を 作りなおす)
     function examineSeal(m) {
         if (g.mysteries[m.id]) { say([{ who: '', text: m.done }]); return; }
         if (!g.flags.oku) {
-            say([{ who: '', text: '夏なのに とけない 氷の 柱だ。さわると すごく つめたい……。' }, furu('奥の院に 行けば、なにか わかるかも。')]);
+            say([{ who: '', text: '氷の 柱が とけかけて、ぽたぽた しずくが 落ちている。まわりは すごく つめたい……。' }, furu('奥の院に 行けば、なにか わかるかも。')]);
             return;
         }
         const n = NAKAMA[m.nakama];
         g.zukan.seen[m.nakama] = true;
-        say([...m.lines.map(text => ({ who: '', text })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `封印を まもる ${n.name}が おそいかかってきた！` }], {
+        say([...m.lines.map(text => ({ who: '', text })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `冷気で 気が 立った ${n.name}が おそいかかってきた！` }], {
             done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: 'wild', place: 'yama', mystery: m.id })
         });
     }
@@ -786,13 +824,25 @@ export function createField(app) {
                 if (dest === 'tsubo') { goTsubo(); return; }
                 warp(UMI_IN);
                 if (!arriveUmi(g)) return;
-                const L = rivalLines();
-                say([
-                    nar('電車に ゆられて、海辺の 町に 着いた。'),
+                // 駅の ホームの ムービー (2026-11-02 ユーザー指定: 町の 中で 話すと 場所が 合わなかった)
+                const L = rivalLines(), team = rivalTeam(g.version);
+                story([
+                    act('caption', { text: '海辺駅', sub: '電車に ゆられて、海辺の 町に 着いた' }),
+                    act('enter', { id: 'koori', from: 'left', x: 118 }),
+                    act('enter', { id: 'furukawa', from: 'left', x: 70 }),
+                    act('jump', { id: 'furukawa' }),
+                    furu('海の においが する～！ こおりくん、とけないように 気を つけてね！'),
+                    ...team.members.map((id, k) => act('enter', { id, from: 'right', x: [250, 300, 350][k], wait: k === team.members.length - 1 })),
+                    act('fx', { kind: 'exclaim', id: 'koori' }),
                     by(L.meet[0], L.meet[1]),
+                    act('jump', { id: team.members[0] }),
+                    act('jump', { id: team.members[2] }),
                     furu('ライバル探検隊だ……！ どっちが 先に 奥まで 行けるか 勝負だね！'),
-                    nar(`チーム「${rivalTeam(g.version).name}」は 東の 浦の島の海岸どうくつへ 走っていった！`)
-                ], { done: () => app.save() });
+                    act('pose', { id: L.meet[0], pose: 'run' }),
+                    ...team.members.map((id, k) => act('exit', { id, to: 'right', wait: k === team.members.length - 1 })),
+                    act('fx', { kind: 'smoke', x: 380, y: 140 }),
+                    nar(`チーム「${team.name}」は 東の 浦の島の海岸どうくつへ 走っていった！`)
+                ], { place: 'station:海辺駅', cast: [], done: () => app.save() });
             }
         });
     }
@@ -801,7 +851,7 @@ export function createField(app) {
     function goTera() {
         warp(TERA_IN);
         if (!arriveTera(g)) return;
-        say([
+        story([
             nar('電車に ゆられて、ネット寺に 着いた。'),
             by('daishi', 'よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。'),
             by('daishi', '寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。'),
@@ -837,7 +887,7 @@ export function createField(app) {
         warp(KURAI_IN);
         if (!arriveKurai(g)) return;
         // ストーリー工房 13 章 場面 1「喰らいの 城」(2026-10-30 ユーザー指定で 元四天王が 集結)
-        say([
+        story([
             nar('ヒョウガリュウの 背に 乗って 空を かけぬけ、喰らいの 城の 前に おりた。'),
             nar('城の まわりを、紋つきの 軍勢が うめつくしている。'),
             by('daishi', '……こおりどの。ここは 拙僧らが 引き受けましょう。'),
@@ -855,7 +905,7 @@ export function createField(app) {
         warp(TSUBO_IN);
         if (!arriveTsubo(g)) return;
         // ストーリー工房 11 章 場面 1「壺の 底へ」
-        say([
+        story([
             nar('電車に ゆられて、ASOの壺の 口に 着いた。'),
             furu('ここ……すごく 熱い……！'),
             by('onioni', 'ASOの壺の底か……。おれも 来るのは はじめてだ。'),
@@ -867,7 +917,7 @@ export function createField(app) {
     function goKinniku() {
         warp(KINNIKU_IN);
         if (!arriveKinniku(g)) return;
-        say([
+        story([
             nar('電車に ゆられて、筋肉の山の 登山口に 着いた。'),
             by('onioni', 'ここが 筋肉の山か……。上の ほうは 雪が のこっとるな。'),
             furu('とちゅうに「雪どけの 氷河」が あるんだって。ノゾエマさんの 道場は 山頂だよ！')
@@ -879,7 +929,7 @@ export function createField(app) {
     function goPark() {
         warp(PARK_IN);
         if (!arrivePark(g)) return;
-        say([
+        story([
             nar(`電車に ゆられて、${parkName()}に 着いた！`),
             furu(`わあ、${parkName()}！ アトラクションが いっぱい！ ぜんぶ 乗ろうね！`),
             by('onioni', 'おれは 広場で まっとる。……べつに こわいわけじゃ ないぞ。'),
@@ -909,7 +959,7 @@ export function createField(app) {
     function parkEvening() {
         const menkyo = g.version === 'menkyo';
         parkNight(g);
-        say([
+        story([
             nar('夕方。そろそろ 帰ろうと した、そのとき——'),
             { who: 'こおりくん', art: 'koori', text: '（あれ？ ふるカワが いない……？）' },
             by('onioni', 'さっきまで そこに おったのに……！'),
@@ -927,20 +977,36 @@ export function createField(app) {
         warp(SHIRO_IN);
         if (!arriveShiro(g)) return;
         const L = rivalLines(), team = rivalTeam(g.version);
-        say([
-            nar('電車に ゆられて、金色のSE城に 着いた。城門の 前には、鬼鬼団の 鬼たちが ずらりと ならんでいる……！'),
+        story([
+            act('caption', { text: '金色のSE城', sub: '城門の 前' }),
+            nar('城門の 前には、鬼鬼団の 鬼たちが ずらりと ならんでいる……！'),
+            act('enter', { id: 'oni_a', art: 'onioni', from: 'dark', x: 260 }),
+            act('enter', { id: 'oni_b', art: 'onioni', from: 'dark', x: 320 }),
+            act('pose', { id: 'furukawa', pose: 'shiver' }),
+            furu('こ、こんなに いっぱい……！'),
+            act('fx', { kind: 'exclaim', id: 'koori' }),
             nar(`そこへ、チーム「${team.name}」が かけつけた！`),
+            ...team.members.map((id, k) => act('enter', { id, from: 'left', x: [170, 210, 30][k], wait: k === team.members.length - 1 })),
+            act('pose', { id: 'furukawa', pose: '' }),
             by(L.meet[0], 'ここは おれたちが ひきうける！ 行け、こおりくん！'),
+            ...team.members.map((id, k) => act('move', { id, x: [300, 340, 260][k], time: 0.4, wait: k === team.members.length - 1 })),
+            act('shake', { power: 6, time: 0.8 }),
+            act('fx', { kind: 'burst', x: 300, y: 120 }),
+            act('exit', { id: 'oni_a', to: 'smoke', wait: false }),
+            act('exit', { id: 'oni_b', to: 'smoke' }),
+            act('fx', { kind: 'flash' }),
+            nar('ライバル探検隊が 鬼たちを けちらして、城門を こじあけた！'),
+            act('jump', { id: 'furukawa' }),
             furu('ありがとう！ こおりくん、行こう！'),
-            nar('ライバル探検隊が 城門を こじあけた！ 城の 中では 鬼鬼団の 幹部が 待ちかまえている。')
-        ], { done: () => app.save() });
+            nar('城の 中では 鬼鬼団の 幹部が 待ちかまえている。')
+        ], { place: 'shiro', done: () => app.save() });
     }
 
     // 月の迷宮に 着く (7 章)。はじめて なら ルナヤが まねく (ストーリー工房 7 章 場面 1)
     function goMoon() {
         warp(MOON_IN);
         if (!arriveMoon(g)) return;
-        say([
+        story([
             nar('電車に ゆられて、月の迷宮に 着いた。'),
             by('runaya', 'ルキハを 追って いるのね。月の 鏡なら、あの 男の むかしを 見せて くれるわ。……月の 鏡なら……あら、これ もう 言ったかしら？'),
             nar('ルナヤは 迷宮の 奥へ 消えた。月の 鏡は 迷宮の いちばん 奥に ある らしい。')
@@ -951,7 +1017,7 @@ export function createField(app) {
     function goYashiki() {
         warp(YASHIKI_IN);
         if (!arriveYashiki(g)) return;
-        say([
+        story([
             nar('電車に ゆられて、忍びの屋敷に 着いた。'),
             nar('板べいの 門の 中で、だれかが 待っている……。')
         ], { done: () => app.save() });
@@ -1004,7 +1070,7 @@ export function createField(app) {
             fighting = null;
         }
         if (result.boss && result.outcome === 'win' && result.bossId === 'kage') {
-            say([
+            story([
                 { who: 'ルナシャドウ', art: 'lunashadow', text: '…………（ぺこり）。' },
                 furu('影が おとなしく なった……！ あれ？ 窓の 外に だれか いる！'),
                 { who: 'おにおに', art: 'onioni', text: 'ちぇっ、七不思議で 町の こどもを こわがらせる 作戦は しっぱいか。おぼえてろよ、こおりくん！' },
@@ -1015,17 +1081,31 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'himuro') {
             warp(YAMA_AFTER_BOSS);
-            say([
+            story([
+                act('enter', { id: 'hyougaryu', art: 'hyougaryu', x: 290, scale: 5.5 }),
                 { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'グ……王冠の 力に のまれて おったか……。' },
-                { who: '', text: '王冠が コロンと 落ちた。氷の 城が とけはじめる……！' },
-                { who: '', text: 'ゴゴゴゴ……！ ダムに 水が もどってきた！' },
-                { who: 'おにおに', art: 'onioni', text: 'ちぇっ、王冠で ヒョウガリュウを あやつって、水を 止めて 町を こまらせる 作戦も しっぱいか。' },
-                { who: 'おにおに', art: 'onioni', text: 'つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！' },
-                furu('おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。'),
-                { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'こおり族の 子よ……王冠を まもれなかった わびだ。わしも 力を かそう。' },
-                { who: '', text: '３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。' },
+                act('fx', { kind: 'sparkle', id: 'hyougaryu' }),
+                nar('王冠が コロンと 落ちた。'),
+                act('move', { id: 'koori', x: 220 }),
+                act('jump', { id: 'koori' }),
+                nar('こおりくんが 王冠を ひろうと、割れ目から ふきだしていた 冷気が すうっと おさまっていく……。'),
+                act('weather', { kind: '' }),
+                act('move', { id: 'koori', x: 118 }),
+                act('shake', { power: 4, time: 1.4 }),
+                nar('ゴゴゴゴ……！ 湖の 氷が とけて、ダムに 水が もどってきた！'),
+                act('enter', { id: 'onioni', art: 'onioni', from: 'right', x: 200 }),
+                by('onioni', 'ちぇっ、王冠で ヒョウガリュウを あやつって、水を 止めて 町を こまらせる 作戦も しっぱいか。'),
+                by('onioni', 'つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！'),
+                act('exit', { id: 'onioni', to: 'right' }),
+                furu('おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠を 奥の院に もどして、封印を ちゃんと とじようね。'),
+                { who: 'ヒョウガリュウ', art: 'hyougaryu', text: 'こおり族の 子よ……かたじけない。わしは また ダムの 底で ねむろう。こまった ときは 呼ぶが よい。わしの 力も かそう。' },
+                act('fx', { kind: 'ring', id: 'hyougaryu' }),
+                act('exit', { id: 'hyougaryu', to: 'fade' }),
+                nar('王冠を 奥の院に もどすと、封印の 柱が 青く 光り、封印が しっかりと とじた。'),
+                act('fx', { kind: 'sparkle', x: 200, y: 90 }),
+                nar('３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。'),
                 furu('こおりくん、いちど 家に 帰ろうか。ともいしさんが 心配してるかも。')
-            ], { done: () => app.save() });
+            ], { place: 'damBack', weather: 'cold', done: () => app.save() });
         } else if (result.mon && result.outcome === 'win') {
             // 5 章: 紋が 消えて なかまに。3 体 ぜんぶ 助けると 鬼鬼団の かげ → ダイシが 紋に のまれる (ストーリー工房 5 章 場面 3)
             const m = MONS.find(x => x.id === result.mon), n = monsSaved(g);
@@ -1039,10 +1119,10 @@ export function createField(app) {
                     nar('そのとき、本堂の 前の ダイシの 体に、黒い 紋が うかびあがった！')
                 );
             }
-            say(lines, { done: () => app.save() });
+            (allMonsSaved(g) ? story : say)(lines, { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'runaya7') {
             // 7 章 クリア: ねらいは 鬼鬼団 (ストーリー工房 7 章 場面 3)
-            say([
+            story([
                 by('runaya', '……ふふ、合格よ。合格。……あら、これは まだ 言って なかったわね。'),
                 furu('王冠も メダルも、ルキハが 力を 喰らう ために あつめてたんだ……！'),
                 by('runaya', '鬼鬼団の 金色のSE城に、ぬすんだ 力が あつめられて いるはず。おにおにも そこに いるわ。……SE城よ、SE城。わすれないでね？ SE城よ？'),
@@ -1052,7 +1132,7 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === BOSS14[g.version]) {
             // 14 章 クリア → 15 章「新たなる１日」(ストーリー工房 15 章 = no 15 の あらすじ)
-            say([
+            story([
                 nar('残党は 黒い 霧に なって 消えた。'),
                 furu('こおりくん……ありがとう！ こわかった……！'),
                 by('onioni', '……まったく、遊園地くらい ゆっくり 遊ばせろ。'),
@@ -1062,7 +1142,7 @@ export function createField(app) {
                 nar('石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'onioni12') {
-            say([
+            story([
                 by('onioni', '……ぐ……。まいった。おまえ、ほんとうに 強く なったな、こおり。'),
                 by('onioni', 'だが おれも 負けっぱなしじゃ おらん。……見とけ、これが 鬼の 王の 力だ！'),
                 nar('おにおにの 必殺技が「鬼の王の金棒」に 進化した！'),
@@ -1070,7 +1150,7 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.floor13 && result.outcome === 'win') {
             const f = FLOOR13.find(x => x.floor === result.floor13), team = TEAMS[floor13Team(f, g.version)];
-            say([
+            story([
                 nar(`${BOSSES[f.id].name}の 紋が くだけ、黒い 霧に なって 消えた。`),
                 by(team.leader, f.floor < 7 ? 'この 先の 階は 幹部は いない。宝箱も あるらしいぞ。気を つけて のぼれ！' : 'あとは 最上階だけだ！ 行け、こおり！'),
                 nar(`${f.floor} 階を 突破した！`)
@@ -1087,7 +1167,7 @@ export function createField(app) {
                 done: () => {
                     warp({ x: 6, y: 24, dir: 'up' });
                     g.time = 0;
-                    say([
+                    story([
                         tomo(`おかえり、こおり。……さ、つぎは ${g.version === 'menkyo' ? '免許' : '内定'} とりなさい！`),
                         nar('―― こおりくんの 大冒険 ～大集合だヨ！おともだち！～ ――'),
                         nar('ストーリー: こおりくんの 作者　／　キャラ: こおりくんシリーズの みんな　／　プログラム・音楽: Claude'),
@@ -1098,13 +1178,13 @@ export function createField(app) {
                 }
             });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'aso15') {
-            say([
+            story([
                 { who: '大魔王ASO', art: 'maou', text: '……見事だ。この 我を 二度も 地に つけるとはな。' },
                 { who: '大魔王ASO', art: 'maou', text: 'よかろう。約束どおり、きさまの 力と なろう。' },
                 nar('大魔王ASOが なかまに なった！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'bakuen11') {
-            say([
+            story([
                 nar('バクエンリュウの 紋が、ぱきんと くだけた。'),
                 { who: 'バクエンリュウ', art: 'bakuenryu', text: 'グ……オオ……。からだが……かるい……。……おまえたちに ついて いこう。' },
                 nar('バクエンリュウが なかまに なった！'),
@@ -1118,7 +1198,7 @@ export function createField(app) {
             say(lines, { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'tashikeda10') {
             // 10 章 クリア: 町の 夜明け (ストーリー工房 10 章 場面 3)
-            say([
+            story([
                 { who: 'タシケダ', art: 'tashikeda', text: 'エラー……エラー……。ルキハさまに 報告……しなきゃ……。' },
                 nar('タシケダは 黒い 霧に なって 消えた。'),
                 nar('霧が はれ、町に 朝が もどった。'),
@@ -1130,7 +1210,7 @@ export function createField(app) {
                 nar('―― １１章は つぎの アップデートで。')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'harukirin9') {
-            say([
+            story([
                 by('harukirin', '……春を はねかえす 氷か。見事だ。'),
                 by('harukirin', 'そなたの 道を 春風で ひらこう。……わたしも ともに 行こう。'),
                 nar('ハル麒麟が なかまに なった！ 北の 細道が 通れるように なった。'),
@@ -1138,7 +1218,7 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'nozoema9') {
             // 9 章 クリア: 必殺技の 進化 → ひろがる 紋 (ストーリー工房 9 章 場面 3)
-            say([
+            story([
                 by('nozoema', '……見事な 筋肉だ。'),
                 by('nozoema', 'こおりくん、そなたの 剣には まだ 眠っている 力が ある。……わが 名刀江波の 型、受けとるがよい！'),
                 nar('こおりくんの 必殺技が「絶対殺すソード・レクイエム」に 進化した！'),
@@ -1155,25 +1235,25 @@ export function createField(app) {
             say(lines, { done: () => app.save() });
         } else if (result.team && result.outcome === 'win') {
             const T = TEAMS[result.team];
-            say([
+            story([
                 by(T.leader, TEAM_WIN[result.team]),
                 nar(`${T.members.map(id => NAKAMA[id].name).join('・')}が なかまに なった！`)
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'ooni8') {
-            say([
+            story([
                 { who: '大鬼', art: 'ooni', text: 'ぐ……おお……。' },
                 nar('大鬼の 紋が、ぱきんと くだけた。大鬼は その場に すわりこんで、ねむって しまった。'),
                 furu('紋が とけた！ 次の 部屋へ 行こう！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'soutou8') {
-            say([
+            story([
                 { who: '双頭鬼 (右の頭)', art: 'soutouki', text: '……あれ？ おれたち、なんで けんか してたんだっけ？' },
                 { who: '双頭鬼 (左の頭)', art: 'soutouki', text: 'さあ……。頭が 2 つ あっても、思い出せん……。' },
                 nar('双頭鬼の 紋が くだけた！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'kinme8') {
             // ストーリー工房 8 章 場面 2
-            say([
+            story([
                 by('kinmetsuki', '……ぐぬぬ、金ピカが……はがれる……。'),
                 nar('金滅鬼の 紋が、ぱきんと くだけた。'),
                 by('kinmetsuki', '……その 心、本物か。この 金滅鬼、きさまらに ついて いこう。'),
@@ -1182,7 +1262,7 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'onioni8') {
             // 8 章 クリア: とけた 紋 → ルキハ (ストーリー工房 8 章 場面 4・5)
-            say([
+            story([
                 nar('おにおにの 紋が くだけ、目に 光が もどった。'),
                 by('onioni', '……う、ここは……おれの SE城か？ なんで こおりが ここに……。'),
                 by('onioni', 'そうだ……ルキハって 男に 会って、目を 見た とたん……そこから なにも おぼえとらん……。'),
@@ -1195,13 +1275,13 @@ export function createField(app) {
                 nar('いったん 石の川タウンの 家に 帰ろう。')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'zumitani6') {
-            say([
+            story([
                 by('zumitani', 'へえ、思ったより やるじゃん♪ 鬼鬼団は この 屋敷の 奥に メダルを はこんでるよ。ただの どろぼうに しては、手ぎわが よすぎるんだよね～。'),
                 nar('ズミタニが 道を あけた。屋敷の 奥へ 行けるように なった！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'onioni6') {
             // ルキハと おにおにが 消える → のこされた メダル (ストーリー工房 6 章 場面 4)
-            say([
+            story([
                 by('onioni', '……ぐっ……。'),
                 nar('黒い 霧が おにおにを つつみ、ルキハと いっしょに 消えた……。'),
                 furu('おにおに、ぜんぜん いつもと ちがった……。'),
@@ -1209,7 +1289,7 @@ export function createField(app) {
                 nar('東の 蔵から、ガタガタと 音が する。だれかが メダルを はこび出そうと している！')
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'tomooka6') {
-            say([
+            story([
                 { who: 'トモオカ', art: 'tomooka', text: 'ぐぬぬ……この 右腕が……しぼむとは……！ おぼえとけよ！' },
                 nar('トモオカは メダルの 袋を 落として にげていった！'),
                 nar('町の 子たちの メダルを 少し とりもどした！'),
@@ -1219,7 +1299,7 @@ export function createField(app) {
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'daishi5') {
             // 5 章 クリア: 書庫で ルキハの 名前 (ストーリー工房 5 章 場面 4)
             warp(TERA_AFTER_BOSS);
-            say([
+            story([
                 nar('ダイシの 黒い 紋が、けむりの ように 消えた。'),
                 by('daishi', '……かたじけない。拙僧も 紋に のまれ、鬼の 顔に なって おりました。'),
                 by('daishi', '紋を つけた 者の 名は……「ルキハ」。人の すがたを した、なにか ですぞ。'),
@@ -1229,11 +1309,21 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.rival && result.outcome === 'win') {
             // 4 章: ライバル探検隊に 勝つと 通路を ゆずって くれる
-            say([...rivalLines().lose.map(([id, text]) => by(id, text)), nar('ライバル探検隊は 道を ゆずった。'), furu('奥から だれかの 声が する……！ 行ってみよう！')], { done: () => app.save() });
+            const team = rivalTeam(g.version);
+            story([
+                ...team.members.map(id => act('enter', { id, x: { [team.members[0]]: 250, [team.members[1]]: 300, [team.members[2]]: 350 }[id], wait: false })),
+                act('pose', { id: team.leader, pose: 'bow' }),
+                ...rivalLines().lose.map(([id, text]) => by(id, text)),
+                act('pose', { id: team.leader, pose: '' }),
+                ...team.members.map((id, k) => act('move', { id, x: [380, 400, 420][k], time: 0.6, wait: k === team.members.length - 1 })),
+                nar('ライバル探検隊は 道を ゆずった。'),
+                act('fx', { kind: 'question', id: 'furukawa' }),
+                furu('奥から だれかの 声が する……！ 行ってみよう！')
+            ], { place: 'cave', done: () => app.save() });
         } else if (result.boss && result.outcome === 'win' && result.bossId === 'urashima4') {
             // 4 章 クリア: 紋が 消える → どうくつの 出口に フードの 人かげ (ストーリー工房 4 章 場面 4)
             warp(UMI_AFTER_BOSS);
-            say([
+            story([
                 nar('浦の島重蔵の 黒い 紋が、けむりの ように 消えた。'),
                 by('urashima', '……はて。わしは なにを しておったんじゃ……。ほっほっほ。強い 若者じゃのう。ひさしぶりに 脳汁が でたわい。'),
                 by('urashima', 'お礼に 力を かそう。……なんの お礼じゃったかの。'),
@@ -1246,18 +1336,39 @@ export function createField(app) {
             ], { done: () => app.save() });
         } else if (result.mystery && result.outcome === 'win' && SEALS.some(x => x.id === result.mystery)) {
             const m = SEALS.find(x => x.id === result.mystery), n = sealsSolved(g);
-            say([
-                { who: '', text: `氷の 封印「${m.label}」が とけた！ (${n}/${SEALS.length})` },
-                ...(allSealsSolved(g) ? [furu('これで 封印は ぜんぶ とけた！ ……ダムの ほうから ゴゴゴって 音が する！'), { who: '', text: 'ダムの 湖の 底の 氷の 城へ 行ってみよう。' }] : [])
-            ], { done: () => app.save() });
+            if (!allSealsSolved(g)) {
+                say([{ who: '', text: `しずまった ${NAKAMA[m.nakama].name}と いっしょに、とけかけた「${m.label}」を 作りなおした！ (${n}/${SEALS.length})` }, furu('柱が 青く 光ってる！ この ちょうしで ほかの 柱も 作りなおそう！')], { done: () => app.save() });
+                return;
+            }
+            // 3 つ そろうと、王冠に あやつられた ヒョウガリュウが 封印に あらがって 目ざめる
+            story([
+                act('fx', { kind: 'sparkle', x: 200, y: 100 }),
+                nar(`「${m.label}」を 作りなおした！ これで 封印の 柱は ${n} 本 ぜんぶ もとどおりだ。`),
+                act('jump', { id: 'furukawa' }),
+                furu('やったね！ あとは 王冠さえ とりもどせば……'),
+                act('shake', { power: 6, time: 1.4 }),
+                act('fx', { kind: 'exclaim', id: 'koori' }),
+                nar('ダムの ほうから、ゴゴゴゴ……と 地ひびきが した。'),
+                act('weather', { kind: 'cold' }),
+                act('enter', { id: 'hyougaryu', art: 'hyougaryu', from: 'top', x: 300, scale: 5 }),
+                act('pose', { id: 'hyougaryu', pose: 'float' }),
+                act('fx', { kind: 'ring', id: 'hyougaryu' }),
+                { who: '？？？', art: 'hyougaryu', text: 'グルルル……封印など させぬ……この 王冠が ある かぎり……！' },
+                act('pose', { id: 'furukawa', pose: 'shiver' }),
+                furu('りゅ、龍……！ あれが ヒョウガリュウ！？ 頭に 王冠を かぶってる！'),
+                act('exit', { id: 'hyougaryu', to: 'up' }),
+                act('pose', { id: 'furukawa', pose: '' }),
+                nar('ヒョウガリュウは 冷気を まきちらしながら、ダムの 封印の 割れ目へ もぐっていった。'),
+                furu('だれかが 王冠で ヒョウガリュウを 起こして、あやつってるんだ……！ ダムへ 行こう！')
+            ], { place: 'yama', done: () => app.save() });
         } else if (result.mystery && result.outcome === 'win') {
             const m = MYSTERIES.find(x => x.id === result.mystery), n = mysteriesSolved(g);
-            say([
+            story([
                 { who: '', text: `七不思議「${m.label}」の 正体は ${NAKAMA[m.nakama].name}だった！ (${n}/${MYSTERIES.length})` },
                 ...(allMysteriesSolved(g) ? [furu('これで 七つ ぜんぶ たしかめた！ ……あれ？ ろうかの おくに、黒い 影が 走っていった！'), { who: '', text: 'ろうかの 西の はしに 行ってみよう。' }] : [])
             ], { done: () => app.save() });
         } else if (result.boss && result.outcome === 'win') {
-            say([
+            story([
                 { who: 'ハシシタボウズ', art: 'hashishita', text: '数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。' },
                 furu('やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！'),
                 { who: '', text: '１章 クリア！' },
@@ -1265,7 +1376,7 @@ export function createField(app) {
                 { who: '', text: '商店街に 行けるように なった！ ―― ２章は つぎの アップデートで。' }
             ], { done: () => app.save() });
         } else if (result.storyChanged === 'bridge') {
-            say([furu('なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！')], { done: () => app.save() });
+            story([furu('なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！')], { done: () => app.save() });
         } else if (result.outcome === 'lose') {
             say([{ who: '', text: `こおりくんは 家に 逃げかえった……。(${-result.money}円 落とした)` }]);
         }
@@ -1313,16 +1424,20 @@ export function createField(app) {
         }
     }
 
+    // ヘルプに 話題が ふえたら 上画面に お知らせ (2026-11-02)
+    let helpCount = helpTopics(g).length, helpNote = null;
     function update(dt, input) {
         t += dt;
         g.playTime += dt;
+        const hc = helpTopics(g);
+        if (hc.length > helpCount && !app.talk.isActive()) { helpNote = { title: hc[hc.length - 1].title, n: hc.length - helpCount, until: t + 3.5 }; helpCount = hc.length; sfx('watch'); }
         camera();
         wild.update(dt, g.pos);
         if (app.talk.isActive()) return;
         if (lens) { updateLens(dt, input); return; }
         // 10 章の はじまり: 9 章 クリアの あと 石の川タウン・商店街に もどると 黒い 霧 (ストーリー工房 10 章 場面 1)
         if (g.story === 'clear9' && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
-            say([
+            story([
                 nar('町じゅうに 黒い 霧が たちこめている……。'),
                 furu('みんなの 体に 紋が……！ はやく 助けなきゃ！'),
                 by('onioni', 'ルキハの 軍勢の しわざか……！ 町の やつらも 商店街の やつらも、ぜんぶ 紋つきに なっとるぞ。'),
@@ -1363,7 +1478,9 @@ export function createField(app) {
         const ht = heroTile(g);
         if (tileAt(ht.x, ht.y) === 'M') { warp(SCHOOL_OUT); return; }
         // 山道の 入り口 (町の 北の はし → 山 / 山の 南の はし → 町)
-        if (tileAt(ht.x, ht.y) === 'U') { if (inYama()) warp(YAMA_OUT); else enterYama(); return; }
+        // 筋肉の山の 登山道も 同じ 'U' の 地面なので、町と 山の 中だけで ワープする (2026-11-02: 筋肉の山で 階段を のぼると 神社へ 飛ばされた)
+        const area = areaAt(ht.x, ht.y);
+        if (tileAt(ht.x, ht.y) === 'U' && (area === 'yama' || area === 'ishinokawa')) { if (inYama()) warp(YAMA_OUT); else enterYama(); return; }
         if (input.pressed.a) {
             const c = wild.facing(g.pos);
             if (c) { sfx('ok'); talkToWild(c); return; }
@@ -1565,6 +1682,7 @@ export function createField(app) {
         for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
         drawGates(ctx);
         drawSeals(ctx);
+        drawColdLeak(ctx);
         drawMons(ctx);
         drawPeople(ctx);
         // 時間帯の 色・雨
@@ -1594,20 +1712,49 @@ export function createField(app) {
             ctx.stroke();
         }
         if (lens) drawLens(ctx);
+        if (helpNote && helpNote.until > t && !app.talk.isActive()) {
+            panel(ctx, 60, 14, 280, 24, { fill: 'rgba(16,22,42,0.92)', edge: '#ff9ad8' });
+            text(ctx, `ヘルプに「${helpNote.title}」${helpNote.n > 1 ? `など ${helpNote.n} こ` : ''}が ふえた！ (メニュー)`, 200, 31, { size: 11, align: 'center', bold: true, color: '#ff9ad8', maxWidth: 270 });
+        }
         app.talk.drawTop(ctx, t);
     }
 
-    // 氷の 封印 (3 章): まだ とけて いない 氷の 柱。言いつたえを 読んだ あとは「？」
+    // 封印の 柱 (3 章): 作りなおす 前は とけかけて しずくが 落ちる。作りなおすと 青く 光る。言いつたえを 読んだ あとは「？」
     function drawSeals(ctx) {
-        for (const m of sealsHere(g)) {
+        for (const m of SEALS) {
             const x = m.x * TILE - cam.x, y = m.y * TILE - cam.y;
             if (x < -30 || x > 430 || y < -40 || y > 270) continue;
+            const fixed = Boolean(g.mysteries[m.id]);
             ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(x + 1, y + 13, 14, 3);
-            ctx.fillStyle = '#7ac8e8'; ctx.fillRect(x + 3, y - 10, 10, 25);
-            ctx.fillStyle = '#bfeaff'; ctx.fillRect(x + 4, y - 13, 8, 4); ctx.fillRect(x + 5, y - 8, 3, 18);
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 5, y - 9, 1, 6);
-            ctx.fillStyle = '#5aa8d0'; ctx.fillRect(x + 11, y - 8, 1, 20);
-            if (g.flags.oku) text(ctx, '？', x + 8, y - 20 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: 'center', bold: true, color: '#8ae0ff' });
+            if (fixed) {
+                ctx.fillStyle = `rgba(140, 220, 255, ${0.25 + 0.15 * Math.sin(t * 3 + m.x)})`;
+                ctx.beginPath(); ctx.ellipse(x + 8, y + 2, 12, 18, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#7ac8e8'; ctx.fillRect(x + 3, y - 10, 10, 25);
+                ctx.fillStyle = '#bfeaff'; ctx.fillRect(x + 4, y - 13, 8, 4); ctx.fillRect(x + 5, y - 8, 3, 18);
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 5, y - 9, 1, 6);
+                ctx.fillStyle = '#5aa8d0'; ctx.fillRect(x + 11, y - 8, 1, 20);
+                continue;
+            }
+            // とけかけ: 背が ひくく、ひびが 入り、しずくが 落ちて 水たまり
+            ctx.fillStyle = 'rgba(90, 160, 210, 0.45)'; ctx.beginPath(); ctx.ellipse(x + 8, y + 14, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#8ac8e0'; ctx.fillRect(x + 3, y - 4, 10, 19);
+            ctx.fillStyle = '#c8eeff'; ctx.fillRect(x + 4, y - 6, 7, 3); ctx.fillRect(x + 5, y - 2, 2, 12);
+            ctx.fillStyle = '#4a88b0'; ctx.fillRect(x + 8, y - 3, 1, 5); ctx.fillRect(x + 9, y + 2, 1, 4); ctx.fillRect(x + 7, y + 6, 1, 4);
+            const d = (t * 1.4 + m.x * 0.37) % 1;
+            ctx.fillStyle = '#bfeaff'; ctx.fillRect(x + 12, y + 4 + d * 9, 1, 2);
+            if (g.flags.oku) text(ctx, '？', x + 8, y - 14 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: 'center', bold: true, color: '#8ae0ff' });
+        }
+    }
+
+    // 3 章: ダムの 封印の 割れ目から もれる 冷気 (山に いて、3 章 クリアまで)
+    function drawColdLeak(ctx) {
+        if (!inYama() || reached(g, 'clear3')) return;
+        for (let i = 0; i < 14; i++) {
+            const bx = (30 + (i % 7) * 2.2) * TILE + Math.sin(t * 0.7 + i) * 30, by = (YAMA_Y0 + 2 + (i % 5) * 2) * TILE - ((t * 10 + i * 13) % 60);
+            const x = bx - cam.x, y = by - cam.y;
+            if (x < -60 || x > 460 || y < -40 || y > 280) continue;
+            ctx.fillStyle = `rgba(235, 250, 255, ${0.18 + 0.08 * Math.sin(t * 2 + i)})`;
+            ctx.beginPath(); ctx.ellipse(x, y, 34, 10, 0, 0, Math.PI * 2); ctx.fill();
         }
     }
 
@@ -1780,6 +1927,7 @@ export function createField(app) {
         if (goal && gy > 30 && gy < 136) text(ctx, '!', 8 + goal.x * 3, gy, { size: 12, bold: true, align: 'center', color: COLORS.accent });
         button(ctx, BTN.lens, { disabled: !hasWatch(g) });
         button(ctx, BTN.menu);
+        if (helpUnseen(g).length) text(ctx, 'NEW', BTN.menu.x + BTN.menu.w - 4, BTN.menu.y + 2, { size: 9, align: 'right', bold: true, color: '#ff9ad8' });
         text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : 'ウォッチを まだ もっていない', 238, 132, { size: 11, align: 'center', color: COLORS.sub });
         panel(ctx, 6, 146, 308, 52);
         text(ctx, 'もくてき', 14, 162, { size: 10, color: COLORS.accent, bold: true });

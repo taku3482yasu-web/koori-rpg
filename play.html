@@ -4434,7 +4434,7 @@ body.nopad #pad { display: none; }
       lv: 18,
       place: "school"
     },
-    // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)。こおりの 王冠で 目ざめ、ダムの 水を ぜんぶ 氷の 城に した
+    // 3 章の ボス: ダムの主 (ヒョウガリュウ。2026-10-29 ユーザー指定)。王冠で あやつられ、とけかけた 封印から 目ざめて ダムを こおらせた (2026-11-02 ユーザー指定で 話を かえた)
     //   わざ: ひょうがブレス (全体に こおり 中)・かみつき (1 体に 中)・はばたき (全体に ふつう 中〜小)・大吹雪 (全体に こおり 中〜大)
     //   氷の偶像: 左右 どちらかに 自分の 偶像を 1 体 作る。2 体 そろうと 必殺技 氷河の咆哮 (全体に こおり 大) の ため に 入る。
     //     ためて いる あいだに 偶像を こわすと 必殺技は 止まる (battle.js の summonIdol)。チャンスタイムは なし
@@ -5842,7 +5842,7 @@ body.nopad #pad { display: none; }
     { id: "nushi", name: "ヌシ", art: "hashishita", x: 31, y: 17, h: 2, only: "beforeClear", scale: 2 },
     // 2 章: 七不思議を 7 つ たしかめると、ろうかの おくに 8 つ目の ふしぎ (ボス) が 出る
     { id: "kage", name: "ろうかの カゲ", art: "lunashadow", x: 9, y: 70, only: "kage", scale: 2 },
-    // 3 章: 氷の 封印を 3 つ とくと、氷の 城の 前に ダムの主 (ボス・ヒョウガリュウ) が 出る
+    // 3 章: 封印の 柱を 3 つ 作りなおすと、封印の 割れ目から ダムの主 (ボス・ヒョウガリュウ) が 出る
     { id: "damNushi", name: "ダムの主", art: "hyougaryu", x: 32, y: YAMA_Y0 + 6, h: 2, only: "damNushi", scale: 2 },
     // 4 章: ライバル探検隊の リーダーが どうくつの せまい 通路を ふさぐ (バージョンで ちがう。artBy・nameBy)。
     //   勝つと 通れる。いちばん 奥には 黒い 紋に とりつかれた 浦の島重蔵 (ボス)
@@ -6010,8 +6010,8 @@ body.nopad #pad { display: none; }
       prop: "icepillar",
       nakama: "kokemusha",
       lv: 20,
-      lines: ["原っぱの まんなかに、大きな 氷の 柱が 立っている。夏なのに とけない……。", "柱の うしろから、コケだらけの よろいが ぬっと 出てきた！"],
-      done: "氷の 柱が あった ところに、水たまりが できている。"
+      lines: ["原っぱの まんなかの 氷の 柱が、ぽたぽたと とけだしている……。", "もれだした 冷気で 気が 立った コケだらけの よろいが、ぬっと 出てきた！"],
+      done: "作りなおした 氷の 柱が、つめたく 青く 光っている。"
     },
     {
       id: "sealSekkei",
@@ -6021,8 +6021,8 @@ body.nopad #pad { display: none; }
       prop: "icepillar",
       nakama: "koorinokagami",
       lv: 20,
-      lines: ["雪渓の おくに、鏡のように ぴかぴかの 氷の 柱が ある。", "柱に こおりくんが うつった……と 思ったら、柱が しゃべった！"],
-      done: "とけた 氷の 柱から、水が ちょろちょろ 流れている。"
+      lines: ["雪渓の おくの 鏡のような 氷の 柱に、大きな ひびが 入っている。", "ひびから もれる 冷気を あびて、柱に うつった 影が しゃべりだした！"],
+      done: "鏡のような 氷の 柱に、もう ひびは ない。"
     },
     {
       id: "sealIwa",
@@ -6032,8 +6032,8 @@ body.nopad #pad { display: none; }
       prop: "icepillar",
       nakama: "yukidarumuscle",
       lv: 21,
-      lines: ["岩の あいだに、ひときわ 大きな 氷の 柱が ある。", "「この 柱は 通さん！」 ムキムキの 雪だるまが 立ちふさがった！"],
-      done: "岩の すきまに 水が しみこんで いく。"
+      lines: ["岩の あいだの 大きな 氷の 柱が、半分 とけて かたむいている。", "「冷気が……力が わいてくる！ だれも 近づけさせん！」 ムキムキの 雪だるまが 立ちふさがった！"],
+      done: "岩場の 氷の 柱が、まっすぐ 立っている。"
     }
   ];
   const UMI_IN = { x: 5, y: UMI_Y0 + 5, dir: "down" };
@@ -6234,6 +6234,112 @@ body.nopad #pad { display: none; }
   const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "tsuboe", "tsubo", "clear11", "shuuketsu", "clear12", "kuraie", "kurai", "clear13", "invite", "park", "yoru", "clear14"];
   const MAIN_END = "clear13";
   const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
+  const CHAPTERS = [
+    [1, "intro", "はじまりの 夏休み"],
+    [2, "clear", "学校の七不思議"],
+    [3, "clear2", "ダムの水が消える"],
+    [4, "clear3", "海辺の どうくつと ライバル探検隊"],
+    [5, "clear4", "ネット寺の のろい"],
+    [6, "clear5", "忍びの屋敷と 消えた メダル"],
+    [7, "clear6", "月の迷宮と 喰らう 者の 伝説"],
+    [8, "clear7", "金色のSE城の 決戦"],
+    [9, "clear8", "筋肉の山と 新しい なかま"],
+    [10, "clear9", "石の川タウン しゅうげき"],
+    [11, "clear10", "ASOの壺の底"],
+    [12, "clear11", "集結"],
+    [13, "clear12", "喰らいの 城"],
+    [14, "clear13", "ご招待！"],
+    [15, "clear14", "新たなる１日"]
+  ];
+  function chapterOf(story) {
+    const i = STORY.indexOf(story);
+    if (/^clear\d*$/.test(story)) {
+      const n = story === "clear" ? 1 : Number(story.slice(5));
+      const c = CHAPTERS.find((x) => x[0] === n);
+      if (c) return [c[0], c[2]];
+    }
+    let cur2 = CHAPTERS[0];
+    for (const c of CHAPTERS) if (STORY.indexOf(c[1]) <= i) cur2 = c;
+    return [cur2[0], cur2[2]];
+  }
+  const HELP = [
+    { id: "move", after: "intro", title: "きほんの そうさ", text: [
+      "十字キーで 歩く。{b} を 押しながら 歩くと 走る。",
+      "人や 物の 前で {a} … 話す・調べる。{x} … メニュー。",
+      "ストーリーの ムービーは {a} で すすみ、{start} で とばせる。"
+    ] },
+    { id: "save", after: "intro", title: "セーブ", text: [
+      "町に もどる たび・メニューを 開いた とき・ページを 閉じた ときに 自動で セーブ。",
+      "こおりくんの 家や メニューの「セーブ」でも できる。"
+    ] },
+    { id: "watch", after: "friends", title: "おなかまウォッチと レンズ", text: [
+      "{y} で レンズを 出して、あやしい ところに 合わせると かくれた キャラが 見つかる。",
+      "町を 歩いている キャラに 話しかけると バトル。勝つと なかまに なる ことが ある。",
+      "メニューの「へんせい」で、ウォッチの 6 つの 場所に メダルを セットする。"
+    ] },
+    { id: "battle", after: "friends", title: "バトルの きほん", text: [
+      "なかまは 自動で 戦う。戦うのは 輪の 上の 3 体 (まえ)。",
+      "{l} {r} か 輪を なぞって 回すと、まえの なかまが 入れかわる。HP が へった なかまは 後ろで 休ませよう。",
+      "十字キーの 上下か 上画面の タップで、ねらう 敵を えらべる (ロックオン)。",
+      "{fast} で 倍速。"
+    ] },
+    { id: "special", after: "friends", title: "必殺技", text: [
+      "ゲージが たまった なかまは、{a} (または 下画面の ボタン) で 必殺技。",
+      "れんだ・目押し・なぞる・ぐるぐる の どれかが 出る。うまく できると 大成功！"
+    ] },
+    { id: "items", after: "friends", title: "どうぐと おやつ", text: [
+      "{y} … どうぐ。なかまを 回復したり、強く したり できる。1 回 使うと しばらく 使えない。",
+      "{x} … おやつ。敵に 投げると なかまに なりやすい。好物なら 大よろこび！ 1 回の バトルで 1 回だけ。",
+      "バトルの はじめに 使うと、そのまま バトルが 始まる。"
+    ] },
+    { id: "time", after: "friends", title: "時間と 天気", text: [
+      "家で ねると 朝 → 昼 → 夕方 → 夜 と 時間が すすむ。",
+      "夜しか 出ない キャラや、雨の 日だけの キャラも いる。"
+    ] },
+    { id: "quest", after: "friends", title: "いらい", text: [
+      "頭に「！」の ある 人に 話しかけると、たのみごとを うけられる。",
+      "できたら もう いちど 話しかけよう。メニューの「いらい」で すすみを 見られる。"
+    ] },
+    { id: "shop", after: "clear", title: "お店", text: [
+      "駄菓子屋 … おやつ。八百屋 … 回復や 力の つく やさい。お面屋 … 強く なれる お面と 復活の お面 (商店街)。",
+      "お店ごとに 品物が ちがう。新しい 町にも お店が ある かも。"
+    ] },
+    { id: "fusion", after: "clear", title: "合体の館", text: [
+      "商店街の 合体の館では、キャラと キャラ・キャラと アイテム・アイテムと アイテムを 合体できる。",
+      "合体でしか 会えない キャラや アイテムも いる。"
+    ] },
+    { id: "toritsuki", after: "school", title: "とりつきと おたすけ", text: [
+      "ねむり・のろい・こんらん・どく・いたずら・めくらまし は ぜんぶ「とりつき」。",
+      "とりつかれた なかまを 輪の 後ろに 回して、まんなかの「おたすけ」({help}) で はらおう。しっぱい しても すぐ やりなおせる。",
+      "大根や おはらいの お札でも ぬける。"
+    ] },
+    { id: "boss", after: "clear2", title: "ボスとの 戦い", text: [
+      "ボスには、ねらって こわせる 部位や、大技の 前ぶれが ある ことも。上画面を よく 見よう。",
+      "ボスが うごけない「チャンスタイム」は 大きな ダメージの チャンス！"
+    ] },
+    { id: "train", after: "umi", title: "電車", text: [
+      "商店街の 西の はしの 石の川駅から、電車で ほかの 町へ 行ける。",
+      "行ける 町は ストーリーが すすむと ふえる。海の家にも お店が ある。"
+    ] },
+    { id: "rival", after: "umibe", title: "ライバル探検隊と バージョン", text: [
+      "バージョン (内定 / 免許) で、出会う ライバル探検隊や なかまに なる キャラが ちがう。"
+    ] },
+    { id: "evolve", after: "clear4", title: "進化と 絆", text: [
+      "レベルが 上がると 進化する なかまが いる。",
+      "同じ キャラの メダルを 何まいも もっていると「絆」が 上がり、必殺技が 強く なる。"
+    ] },
+    { id: "dark", after: "netdera", title: "紋つき", text: [
+      "黒い 紋に とりつかれた「・闇」の キャラは ふつうより 強い。",
+      "紋つきの まま では なかまに ならない。"
+    ] },
+    { id: "juyosho", after: "clear5", title: "ネット寺の 授与所", text: [
+      "ネット寺の 本堂で、お札・お守り・復活の 数珠などが 買える。"
+    ] },
+    { id: "kairou", after: "clear14", title: "無限回廊と 仲間クエスト", text: [
+      "石の川駅の 前の 番人に 話すと、強く なった ボスと 1 階ずつ 戦える。5 階ごとに ごほうび。",
+      "ライバル探検隊に 勝つと、チームの 3 人が なかまに なる。"
+    ] }
+  ];
   const SAVE_VERSION = 1;
   const VERSIONS = { naitei: "内定", menkyo: "免許" };
   const TIMES = ["朝", "昼", "夕方", "夜"];
@@ -6265,7 +6371,7 @@ body.nopad #pad { display: none; }
       gifts: {},
       // 話せる キャラから 道具を もらった 日 (1 日 1 回)
       mysteries: {},
-      // たしかめた 七不思議 (2 章)・といた 氷の 封印 (3 章)
+      // たしかめた 七不思議 (2 章)・作りなおした 封印の 柱 (3 章)
       flags: {},
       // ストーリーの できごと (oku: 奥の院で 言いつたえを 読んだ。3 章)
       quests: {}
@@ -6557,7 +6663,7 @@ body.nopad #pad { display: none; }
       case "yama": {
         if (!g.flags.oku) return "山の 奥の院を 調べてみよう (山道を 北へ 行って 西)";
         const n = sealsSolved(g);
-        return n < SEALS.length ? `山の どこかに ある 氷の 封印を とこう (${n}/${SEALS.length})` : "ダムの 湖の 底の 氷の 城へ 行こう";
+        return n < SEALS.length ? `とけかけた 封印の 柱を 作りなおそう (${n}/${SEALS.length})` : "ダムの 封印の 割れ目へ 行こう";
       }
       case "clear3":
         return "こおりくんの 家の 前の ともいしと 話そう";
@@ -6787,6 +6893,12 @@ body.nopad #pad { display: none; }
     g.gifts[friend.id] = g.day;
     g.items[friend.gift.item] = (g.items[friend.gift.item] || 0) + friend.gift.n;
     return friend.gift;
+  }
+  const helpTopics = (g) => HELP.filter((h) => reached(g, h.after));
+  const helpUnseen = (g) => helpTopics(g).filter((h) => !(g.flags.helpSeen && g.flags.helpSeen[h.id]));
+  function seeHelp(g, id) {
+    g.flags.helpSeen = g.flags.helpSeen || {};
+    g.flags.helpSeen[id] = true;
   }
   const GAUGE_MAX = 100;
   const STATUS_TIME = { sleep: 5, slow: 8, confuse: 7, poison: 8, possess: 25, blind: 10, stun: 7 };
@@ -17527,8 +17639,811 @@ body.nopad #pad { display: none; }
     ctx.fillStyle = color;
     ctx.fillRect(x, y, Math.max(0, Math.min(1, ratio)) * w, h);
   }
+  const HORIZON = 70;
+  const RIVER = ["kawara", "kawaraN", "kawaraS", "hashiue", "hashishita", "kawakami", "bridge"];
+  function drawSchoolBackground(ctx, t) {
+    ctx.fillStyle = "#2a2438";
+    ctx.fillRect(0, 0, 400, HORIZON);
+    for (let i = 0; i < 4; i++) {
+      const x = 30 + i * 96;
+      ctx.fillStyle = "#141a3a";
+      ctx.fillRect(x, 14, 56, 40);
+      ctx.fillStyle = "#6a5a7a";
+      ctx.fillRect(x + 27, 14, 2, 40);
+      ctx.fillRect(x, 33, 56, 2);
+    }
+    ctx.fillStyle = "#fff6c8";
+    ctx.beginPath();
+    ctx.arc(76, 26, 6, 0, Math.PI * 2);
+    ctx.fill();
+    const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+    gg.addColorStop(0, "#6a4a2a");
+    gg.addColorStop(1, "#b08a5a");
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.fillRect(0, HORIZON, 400, 4);
+    ctx.strokeStyle = "rgba(60, 30, 10, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = -6; i <= 6; i++) {
+      ctx.moveTo(200 + i * 14, HORIZON);
+      ctx.lineTo(200 + i * 90, 240);
+    }
+    ctx.stroke();
+  }
+  function drawCaveBackground(ctx, t) {
+    const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
+    grad.addColorStop(0, "#141820");
+    grad.addColorStop(1, "#2a3440");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 400, HORIZON);
+    ctx.fillStyle = "#3a4654";
+    for (let i = 0; i < 9; i++) ctx.fillRect(i * 46 - 8, HORIZON - 18 - i % 3 * 9, 40, 30);
+    ctx.fillStyle = "#222a34";
+    for (let i = 0; i < 12; i++) {
+      const x = i * 35 + 6;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 8, 0);
+      ctx.lineTo(x + 4, 10 + i % 4 * 6);
+      ctx.fill();
+    }
+    const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+    gg.addColorStop(0, "#3a4048");
+    gg.addColorStop(1, "#6a7078");
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+    ctx.fillStyle = "rgba(60, 140, 200, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(70, 200, 50, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(340, 170, 40, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    for (let i = 0; i < 4; i++) ctx.fillRect(40 + i * 20 + Math.sin(t * 2 + i) * 4, 198, 6, 1);
+  }
+  const skyOf = (time) => time === 3 ? ["#141a3a", "#2a2a5a"] : time === 2 ? ["#f08a4a", "#f8c070"] : ["#7ac8f8", "#c8ecff"];
+  function skyAndGround(ctx, sky, ground) {
+    const g1 = ctx.createLinearGradient(0, 0, 0, HORIZON);
+    g1.addColorStop(0, sky[0]);
+    g1.addColorStop(1, sky[1]);
+    ctx.fillStyle = g1;
+    ctx.fillRect(0, 0, 400, HORIZON);
+    const g2 = ctx.createLinearGradient(0, HORIZON, 0, 240);
+    g2.addColorStop(0, ground[0]);
+    g2.addColorStop(1, ground[1]);
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+  }
+  const rect = (ctx, x, y, w, h, c) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(x, y, w, h);
+  };
+  function drawMachi(ctx, t, time) {
+    skyAndGround(ctx, skyOf(time), ["#8a9a6a", "#c8d0a0"]);
+    [[10, "#c84a3a"], [110, "#3a6ab0"], [250, "#5a9a4a"], [330, "#c89a3a"]].forEach(([x, roof]) => {
+      rect(ctx, x, HORIZON - 34, 70, 34, "#f0e6d0");
+      ctx.fillStyle = roof;
+      ctx.beginPath();
+      ctx.moveTo(x - 6, HORIZON - 32);
+      ctx.lineTo(x + 35, HORIZON - 56);
+      ctx.lineTo(x + 76, HORIZON - 32);
+      ctx.fill();
+      rect(ctx, x + 12, HORIZON - 24, 14, 12, "#8ac8f0");
+      rect(ctx, x + 44, HORIZON - 26, 14, 26, "#8a6a4a");
+    });
+    rect(ctx, 214, 6, 4, HORIZON, "#6a5a4a");
+    rect(ctx, 200, 14, 32, 3, "#6a5a4a");
+    ctx.strokeStyle = "#3a3a3a";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 22);
+    ctx.quadraticCurveTo(110, 32, 216, 16);
+    ctx.quadraticCurveTo(320, 30, 400, 20);
+    ctx.stroke();
+    rect(ctx, 0, HORIZON + 30, 400, 34, "#a8a8a0");
+    rect(ctx, 0, HORIZON + 46, 400, 2, "#f0f0e8");
+  }
+  function drawStreet(ctx, t, time) {
+    skyAndGround(ctx, skyOf(time), ["#b8a890", "#e0d4bc"]);
+    const shops = [["#f8e8c0", "#3a9a4a", "八百屋"], ["#f8e0d0", "#c83a3a", "お面"], ["#e8e8f0", "#5a5aa8", "ゲーセン"], ["#f0e0c0", "#c8883a", "だがし"]];
+    shops.forEach(([wall, roof, name], i) => {
+      const x = 8 + i * 98;
+      rect(ctx, x, HORIZON - 46, 90, 46, wall);
+      rect(ctx, x, HORIZON - 50, 90, 8, roof);
+      for (let k = 0; k < 5; k++) rect(ctx, x + 4 + k * 17, HORIZON - 40, 14, 14, k % 2 ? roof : "#ffffff");
+      text(ctx, name, x + 45, HORIZON - 8, { size: 10, align: "center", bold: true, color: "#3a2a1a" });
+    });
+    rect(ctx, 0, 0, 400, 6, "#8a8a90");
+    for (let i = 0; i < 8; i++) {
+      ctx.fillStyle = i % 2 ? "#ff6a6a" : "#ffe85a";
+      ctx.beginPath();
+      ctx.arc(25 + i * 50, 14, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  function drawStation(ctx, t, time, name = "") {
+    skyAndGround(ctx, skyOf(time), ["#9a9a9a", "#c8c8c0"]);
+    rect(ctx, 0, HORIZON - 30, 400, 22, "#3a8ad0");
+    for (let i = 0; i < 8; i++) rect(ctx, 10 + i * 50, HORIZON - 26, 30, 10, "#bfe8ff");
+    rect(ctx, 0, HORIZON - 12, 400, 4, "#f0f0f0");
+    rect(ctx, 0, HORIZON - 8, 400, 8, "#5a4a3a");
+    rect(ctx, 0, 0, 400, 12, "#6a6a72");
+    for (let i = 0; i < 5; i++) rect(ctx, 30 + i * 86, 12, 5, HORIZON - 42, "#8a8a92");
+    rect(ctx, 0, HORIZON + 4, 400, 6, "#ffe85a");
+    if (name) {
+      rect(ctx, 150, 18, 100, 18, "#ffffff");
+      text(ctx, name, 200, 31, { size: 10, align: "center", bold: true, color: "#2a2a2a" });
+    }
+  }
+  function drawHome(ctx, t, time) {
+    rect(ctx, 0, 0, 400, HORIZON, "#e8dcc0");
+    for (let i = 0; i < 4; i++) {
+      rect(ctx, 20 + i * 96, 8, 88, HORIZON - 10, "#f6f0e0");
+      rect(ctx, 20 + i * 96 + 42, 8, 2, HORIZON - 10, "#c8b890");
+    }
+    rect(ctx, 0, HORIZON - 4, 400, 4, "#8a6a4a");
+    const g2 = ctx.createLinearGradient(0, HORIZON, 0, 240);
+    g2.addColorStop(0, "#b8c070");
+    g2.addColorStop(1, "#d8e090");
+    ctx.fillStyle = g2;
+    ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+    ctx.strokeStyle = "rgba(80, 90, 30, 0.35)";
+    ctx.beginPath();
+    for (let k = 1; k < 4; k++) {
+      const y = HORIZON + k * 44;
+      ctx.moveTo(0, y);
+      ctx.lineTo(400, y);
+    }
+    ctx.moveTo(200, HORIZON);
+    ctx.lineTo(200, 240);
+    ctx.stroke();
+    if (time >= 2) {
+      ctx.fillStyle = "rgba(20, 20, 60, 0.35)";
+      ctx.fillRect(0, 0, 400, 240);
+    }
+  }
+  function drawDamBack(ctx, t, time) {
+    skyAndGround(ctx, skyOf(time), ["#9ac0d8", "#d8eef8"]);
+    ctx.fillStyle = "#6a7a8a";
+    [[0, 30, 90], [70, 40, 70], [300, 24, 100]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
+    rect(ctx, 90, HORIZON - 30, 220, 30, "#a8acb4");
+    rect(ctx, 90, HORIZON - 30, 220, 4, "#d0d4da");
+    for (let i = 0; i < 10; i++) rect(ctx, 96 + i * 22, HORIZON - 24, 1, 22, "#8a9098");
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    for (let i = 0; i < 6; i++) ctx.fillRect(20 + i * 70, HORIZON + 20 + i % 3 * 40, 30, 2);
+  }
+  function drawBackdrop(ctx, place, t, time = 0) {
+    if (place === "machi") {
+      drawMachi(ctx, t, time);
+      return;
+    }
+    if (place === "street") {
+      drawStreet(ctx, t, time);
+      return;
+    }
+    if (place === "station" || place.startsWith("station:")) {
+      drawStation(ctx, t, time, place.split(":")[1] || "");
+      return;
+    }
+    if (place === "home") {
+      drawHome(ctx, t, time);
+      return;
+    }
+    if (place === "damBack") {
+      drawDamBack(ctx, t, time);
+      return;
+    }
+    if (place === "school") {
+      drawSchoolBackground(ctx);
+      return;
+    }
+    if (place === "cave") {
+      drawCaveBackground(ctx, t);
+      return;
+    }
+    const river = RIVER.includes(place);
+    const sky = time === 3 ? ["#141a3a", "#2a2a5a"] : time === 2 ? ["#f08a4a", "#f8c070"] : ["#7ac8f8", "#c8ecff"];
+    const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
+    grad.addColorStop(0, sky[0]);
+    grad.addColorStop(1, sky[1]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 400, HORIZON);
+    const yama = place === "yama" || place === "dam";
+    if (yama) {
+      for (const [x, w, h] of [[-20, 160, 62], [90, 200, 80], [250, 190, 66], [340, 140, 50]]) {
+        const top = HORIZON - h;
+        ctx.fillStyle = "rgba(50, 80, 110, 0.55)";
+        ctx.beginPath();
+        ctx.moveTo(x, HORIZON);
+        ctx.lineTo(x + w / 2, top);
+        ctx.lineTo(x + w, HORIZON);
+        ctx.fill();
+        ctx.fillStyle = "rgba(240, 248, 255, 0.85)";
+        ctx.beginPath();
+        ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18);
+        ctx.lineTo(x + w / 2, top);
+        ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
+        ctx.fill();
+      }
+    } else if (place === "shrine") {
+      ctx.fillStyle = "#2a0a12";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = `rgba(80, 10, 30, ${0.3 + 0.1 * Math.sin(t + i)})`;
+        ctx.beginPath();
+        ctx.ellipse((i * 79 + t * 8) % 480 - 40, 20 + i % 3 * 18, 60, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#c03a2a";
+      ctx.fillRect(140, 30, 120, 10);
+      ctx.fillRect(150, 46, 100, 6);
+      ctx.fillRect(160, 40, 8, HORIZON - 40);
+      ctx.fillRect(232, 40, 8, HORIZON - 40);
+    } else if (place === "kurai") {
+      ctx.fillStyle = "#1a0a24";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      for (let i = 0; i < 7; i++) {
+        ctx.fillStyle = `rgba(90, 30, 120, ${0.3 + 0.1 * Math.sin(t * 1.5 + i)})`;
+        ctx.beginPath();
+        ctx.ellipse((i * 71 + t * 22) % 480 - 40, 16 + i % 3 * 16, 64, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (Math.floor(t * 3) % 11 === 0) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+        ctx.fillRect(0, 0, 400, HORIZON);
+      }
+      [[20, "#3a2a4a"], [96, "#4a2a3a"], [290, "#2a3a4a"], [366, "#3a2a4a"]].forEach(([x, c]) => {
+        ctx.fillStyle = c;
+        ctx.fillRect(x, 20, 18, HORIZON - 20);
+        ctx.fillStyle = "#5a3a6a";
+        ctx.fillRect(x, 44, 18, 4);
+        ctx.fillRect(x, 70, 18, 4);
+      });
+    } else if (place === "tsubo") {
+      ctx.fillStyle = "#1a0c0a";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.fillStyle = "#2a1410";
+      [[0, 50], [70, 30], [150, 56], [250, 26], [330, 44]].forEach(([x, y]) => {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + 40, y);
+        ctx.lineTo(x + 80, 0);
+        ctx.fill();
+      });
+      const lg = ctx.createLinearGradient(0, HORIZON - 30, 0, HORIZON);
+      lg.addColorStop(0, "rgba(255, 90, 20, 0)");
+      lg.addColorStop(1, `rgba(255, 90, 20, ${0.45 + 0.1 * Math.sin(t * 2)})`);
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, HORIZON - 30, 400, 30);
+    } else if (place === "town") {
+      ctx.fillStyle = "#2a1a3a";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.fillStyle = "#1a1028";
+      [[10, 40, 60], [90, 30, 50], [170, 46, 70], [260, 34, 56], [330, 44, 64]].forEach(([x, y, w]) => {
+        ctx.fillRect(x, y, w, HORIZON - y);
+        ctx.beginPath();
+        ctx.moveTo(x - 4, y);
+        ctx.lineTo(x + w / 2, y - 16);
+        ctx.lineTo(x + w + 4, y);
+        ctx.fill();
+      });
+      for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = `rgba(140, 60, 180, ${0.15 + 0.08 * Math.sin(t + i)})`;
+        ctx.beginPath();
+        ctx.ellipse((i * 67 + t * 12) % 460 - 30, 30 + i % 3 * 22, 50, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (place === "kinniku" || place === "hyouga") {
+      ctx.fillStyle = place === "hyouga" ? "#9ad0f0" : "#7ab8e8";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.fillStyle = "#7a6a5a";
+      ctx.beginPath();
+      ctx.moveTo(-20, HORIZON);
+      ctx.lineTo(80, 30);
+      ctx.lineTo(180, HORIZON);
+      ctx.lineTo(240, 50);
+      ctx.lineTo(330, 20);
+      ctx.lineTo(430, HORIZON);
+      ctx.fill();
+      ctx.fillStyle = "#f4f8ff";
+      [[80, 30], [240, 50], [330, 20]].forEach(([x, y]) => {
+        ctx.beginPath();
+        ctx.moveTo(x - 22, y + 22);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + 22, y + 22);
+        ctx.fill();
+      });
+      if (place === "hyouga") {
+        ctx.fillStyle = "#ffb0c8";
+        for (let i = 0; i < 14; i++) ctx.fillRect((i * 61 + t * 20) % 400, (i * 29 + t * 14) % HORIZON, 3, 2);
+      }
+    } else if (place === "yuen") {
+      ctx.fillStyle = "#141032";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.strokeStyle = "#4a3a8a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(320, 70, 54, 0, Math.PI * 2);
+      ctx.stroke();
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4 + t * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(320, 70);
+        ctx.lineTo(320 + Math.cos(a) * 54, 70 + Math.sin(a) * 54);
+        ctx.stroke();
+      }
+      for (let i = 0; i < 20; i++) {
+        ctx.fillStyle = ["#ff6a8a", "#ffe85a", "#6ae0ff"][i % 3];
+        ctx.fillRect(i * 21 + 4, 24 + Math.sin(i) * 6, 3, 3);
+      }
+    } else if (place === "shiro") {
+      ctx.fillStyle = "#a07818";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.fillStyle = "#e0b840";
+      ctx.fillRect(0, HORIZON - 40, 400, 40);
+      ctx.fillStyle = "#fff0a0";
+      ctx.fillRect(0, HORIZON - 40, 400, 2);
+      ctx.fillStyle = "#a02020";
+      for (let i = 0; i < 6; i++) ctx.fillRect(20 + i * 72, 0, 12, HORIZON);
+      ctx.fillStyle = "#ff6a3a";
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.ellipse(62 + i * 72, 26, 9, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (place === "moon") {
+      ctx.fillStyle = "#0c0a24";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      ctx.fillStyle = "#ffffff";
+      for (let i = 0; i < 24; i++) ctx.fillRect(i * 97 % 400, i * 37 % (HORIZON - 10), 1, 1);
+      ctx.fillStyle = "#2a2050";
+      for (let i = 0; i < 7; i++) ctx.fillRect(i * 64 - 10, HORIZON - 24 - i % 2 * 10, 44, 34);
+    } else if (place === "yashiki") {
+      ctx.fillStyle = "#4a3624";
+      ctx.fillRect(0, 0, 400, HORIZON);
+      for (let i = 0; i < 6; i++) {
+        ctx.fillStyle = "#e8e0c8";
+        ctx.fillRect(14 + i * 66, 12, 52, HORIZON - 18);
+        ctx.fillStyle = "#6a5038";
+        for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66 + k * 17, 12, 2, HORIZON - 18);
+        for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66, 12 + k * 17, 52, 2);
+      }
+    } else if (place === "tera") {
+      ctx.fillStyle = "rgba(40, 30, 50, 0.45)";
+      for (let i = 0; i < 5; i++) ctx.fillRect(300 + i * 2, HORIZON - 14 - i * 12, 40 - i * 4, 4);
+      ctx.fillRect(318, HORIZON - 70, 4, 70);
+      ctx.fillStyle = "rgba(40, 90, 50, 0.4)";
+      for (let i = 0; i < 9; i++) ctx.fillRect(10 + i * 26, HORIZON - 50 - i % 3 * 8, 4, 60);
+    } else if (place === "umi") {
+      ctx.fillStyle = "#2a7ac0";
+      ctx.fillRect(0, HORIZON - 22, 400, 22);
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
+      for (let i = 0; i < 7; i++) ctx.fillRect((i * 67 + t * 12) % 420 - 10, HORIZON - 18 + i % 3 * 6, 10, 1);
+    } else {
+      ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
+      [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
+    }
+    const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "tsubo" ? ["#4a1a10", "#7a3a20"] : place === "kurai" ? ["#2a1a34", "#4a3058"] : place === "shrine" ? ["#8a8070", "#b0a890"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
+    const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
+    gg.addColorStop(0, ground[0]);
+    gg.addColorStop(1, ground[1]);
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
+    ctx.fillStyle = river ? "#c8c0b0" : "rgba(0,0,0,0.12)";
+    ctx.fillRect(0, HORIZON, 400, 4);
+    ctx.strokeStyle = "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = -6; i <= 6; i++) {
+      ctx.moveTo(200 + i * 12, HORIZON);
+      ctx.lineTo(200 + i * 80, 240);
+    }
+    for (let k = 1; k <= 5; k++) {
+      const y = HORIZON + (240 - HORIZON) * Math.pow(k / 5, 1.8);
+      ctx.moveTo(0, y);
+      ctx.lineTo(400, y);
+    }
+    ctx.stroke();
+    if (river) {
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, HORIZON + 20 + i * 17 % 140, 18, 2);
+    }
+  }
+  const GROUND = 150;
+  const LEFT = [118, 70, 164, 30];
+  const RIGHT = [300, 350, 252, 206, 380];
+  const PARTY = ["koori", "furukawa", "onioni", "tomoishi"];
+  const big = (art) => ART[art] && ART[art].w > 24;
+  function emoteOf(t) {
+    if (/ちぇっ|ぐぬぬ|ゆるさ|だまれ|ふざけ|くそ|なんだと/.test(t)) return "anger";
+    if (/ありがと|よかった|うれし|すき|大好き/.test(t)) return "heart";
+    if (/ほっほ|くく|ふふ|あはは|わはは|ガハハ|♪/.test(t)) return "note";
+    if (/^(……|…)/.test(t) || /(……|…)$/.test(t)) return "dots";
+    if (/[？?]/.test(t)) return "question";
+    if (/こわ|あせ|まずい|やばい|うそ|ひぃ|えっ/.test(t)) return "sweat";
+    if (/！/.test(t)) return "exclaim";
+    return null;
+  }
+  function createStage({ place = "kawara", time = 0, cast = ["koori", "furukawa"], weather = "" } = {}) {
+    const actors = [];
+    const fx = [];
+    let t = 0, shakeT = 0, shakePow = 0, fadeA = 0, fadeTo = 0, fadeSpeed = 2, caption = null;
+    let curPlace = place, sky = weather, pendingPlace = null;
+    let busyUntil = 0;
+    let speaking = null;
+    const find = (id) => actors.find((a) => a.id === id);
+    const freeSlot = (side) => {
+      const xs = side === "left" ? LEFT : RIGHT;
+      return xs.find((x) => !actors.some((a) => !a.leaving && Math.abs(a.tx - x) < 20)) ?? xs[xs.length - 1];
+    };
+    function add({ id, art = id, x = null, side = null, scale = null, flip = null, from = null }) {
+      const s = side || (PARTY.includes(id) ? "left" : "right");
+      const tx = x ?? freeSlot(s);
+      const a = {
+        id,
+        art,
+        x: tx,
+        y: GROUND,
+        tx,
+        scale: scale ?? (big(art) ? 3.4 : 3),
+        flip: flip ?? s === "right",
+        alpha: 1,
+        hop: -9,
+        hops: 0,
+        pose: "",
+        speed: 160,
+        leaving: null,
+        dy: 0,
+        born: t
+      };
+      if (from === "right") a.x = 440;
+      else if (from === "left") a.x = -40;
+      else if (from === "top") a.dy = -240;
+      else if (from === "fade" || from === "smoke" || from === "ice" || from === "dark") {
+        a.alpha = 0;
+        a.fadeIn = true;
+      }
+      if (from === "smoke") burst("smoke", a.tx, GROUND - 20);
+      if (from === "ice") {
+        burst("ice", a.tx, GROUND - 24);
+        sfx("lens");
+      }
+      if (from === "dark") burst("dark", a.tx, GROUND - 24);
+      actors.push(a);
+      return a;
+    }
+    cast.forEach((c, i) => typeof c === "string" ? add({ id: c, x: PARTY.includes(c) ? LEFT[i] ?? null : null }) : add(c));
+    const COLORS2 = { smoke: "#d8d8e0", ice: "#bff0ff", dark: "#3a1040", sparkle: "#fff6a0", heart: "#ff8ab8", flash: "#ffffff", burst: "#ffd75e" };
+    function burst(kind, x, y) {
+      const n = kind === "sparkle" ? 14 : 18;
+      for (let i = 0; i < n; i++) {
+        const a = i / n * Math.PI * 2 + Math.random() * 0.3, v = 30 + Math.random() * 60;
+        fx.push({ kind: "p", color: COLORS2[kind] || "#ffffff", x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: 0.9, age: 0, size: kind === "smoke" ? 6 : 3 });
+      }
+    }
+    function mark(kind, a) {
+      fx.push({ kind: "mark", mark: kind, actor: a, age: 0, life: 1.3 });
+    }
+    function effect(kind, a, x, y) {
+      const px = a ? a.x : x ?? 200, py = a ? GROUND - ART[a.art].h * a.scale * artFit(ART[a.art]) : y ?? 100;
+      if (["exclaim", "question", "sweat", "anger", "heart", "note", "dots", "zzz"].includes(kind)) {
+        if (a) mark(kind, a);
+        return;
+      }
+      if (kind === "flash") {
+        fx.push({ kind: "flash", age: 0, life: 0.5 });
+        sfx("big");
+        return;
+      }
+      if (kind === "quake") {
+        shakePow = 5;
+        shakeT = 1.2;
+        sfx("big");
+        return;
+      }
+      if (kind === "ring") {
+        fx.push({ kind: "ring", x: px, y: a ? (py + GROUND) / 2 : py, age: 0, life: 0.8, color: "#bff0ff" });
+        return;
+      }
+      burst(kind, px, a ? (py + GROUND) / 2 : py);
+      if (kind === "sparkle") sfx("heal");
+      if (kind === "smoke") sfx("cancel");
+    }
+    function run(step2) {
+      const a = step2.id ? find(step2.id) : null;
+      let dur = 0;
+      switch (step2.do) {
+        case "enter": {
+          if (a && !a.leaving) break;
+          const n = add(step2);
+          dur = step2.from === "right" || step2.from === "left" ? Math.abs(n.x - n.tx) / n.speed : step2.from === "top" ? 0.6 : step2.from ? 0.7 : 0;
+          if (step2.from === "right" || step2.from === "left") n.walking = true;
+          break;
+        }
+        case "exit":
+          if (!a) break;
+          a.leaving = step2.to || "right";
+          if (a.leaving === "right") {
+            a.tx = 460;
+            a.flip = false;
+            a.walking = true;
+            dur = (460 - a.x) / a.speed;
+          } else if (a.leaving === "left") {
+            a.tx = -60;
+            a.flip = true;
+            a.walking = true;
+            dur = (a.x + 60) / a.speed;
+          } else {
+            dur = 0.6;
+            if (a.leaving === "smoke") effect("smoke", a);
+          }
+          break;
+        case "move":
+          if (!a) break;
+          a.tx = step2.x;
+          a.speed = step2.time ? Math.max(20, Math.abs(step2.x - a.x) / step2.time) : 160;
+          a.flip = step2.x < a.x;
+          if (step2.face === "right") a.flip = false;
+          a.walking = true;
+          dur = Math.abs(step2.x - a.x) / a.speed;
+          break;
+        case "jump":
+          if (!a) break;
+          a.hop = t;
+          a.hops = (step2.times || 1) - 1;
+          dur = 0.35 * (step2.times || 1);
+          sfx("cursor");
+          break;
+        case "turn":
+          if (a) a.flip = !a.flip;
+          break;
+        case "pose":
+          if (a) a.pose = step2.pose || "";
+          break;
+        case "shake":
+          shakePow = step2.power ?? 4;
+          shakeT = step2.time ?? 0.8;
+          dur = shakeT;
+          sfx("big");
+          break;
+        case "fx":
+          effect(step2.kind, a, step2.x, step2.y);
+          dur = step2.kind === "flash" ? 0.3 : 0.5;
+          break;
+        case "weather":
+          sky = step2.kind || "";
+          break;
+        case "place":
+          pendingPlace = step2.place;
+          fadeTo = 1;
+          dur = 1;
+          break;
+        case "caption":
+          caption = { text: step2.text, sub: step2.sub || "", at: t };
+          dur = 1.8;
+          sfx("watch");
+          break;
+        case "fade":
+          fadeTo = step2.to === "black" ? 1 : 0;
+          fadeSpeed = 1 / (step2.time ?? 0.5);
+          dur = step2.time ?? 0.5;
+          break;
+        case "wait":
+          dur = step2.time ?? 0.5;
+          break;
+      }
+      if (step2.wait === false) dur = 0;
+      busyUntil = t + dur;
+    }
+    function onLine(line2) {
+      if (!line2.who || !line2.art || !ART[line2.art]) {
+        speaking = null;
+        return;
+      }
+      const id = line2.art;
+      let a = find(id);
+      if (!a || a.leaving) {
+        a = add({ id, art: id, from: PARTY.includes(id) ? "left" : "right" });
+        a.walking = true;
+      }
+      speaking = a;
+      a.hop = t;
+      a.hops = 0;
+      const e = emoteOf(line2.text);
+      if (e) mark(e, a);
+    }
+    function finishNow() {
+      busyUntil = t;
+      for (const a of actors) {
+        a.x = a.tx;
+        a.walking = false;
+        a.dy = 0;
+        if (a.fadeIn) {
+          a.alpha = 1;
+          a.fadeIn = false;
+        }
+      }
+      if (pendingPlace) {
+        curPlace = pendingPlace;
+        pendingPlace = null;
+        fadeTo = 0;
+        fadeA = 0;
+      }
+      if (fadeTo === 1) fadeA = 1;
+      else fadeA = 0;
+      cleanup();
+    }
+    function cleanup() {
+      for (let i = actors.length - 1; i >= 0; i--) {
+        const a = actors[i];
+        if (a.leaving && (a.alpha <= 0.02 || a.x < -50 || a.x > 450 || a.dy < -230)) actors.splice(i, 1);
+      }
+    }
+    function update(dt) {
+      t += dt;
+      for (const a of actors) {
+        if (a.walking) {
+          const d = a.tx - a.x, st = a.speed * dt;
+          if (Math.abs(d) <= st) {
+            a.x = a.tx;
+            a.walking = false;
+            if (!a.leaving && !PARTY.includes(a.id)) a.flip = a.x > 200;
+            if (!a.leaving && PARTY.includes(a.id)) a.flip = false;
+          } else a.x += Math.sign(d) * st;
+        }
+        if (a.dy < 0 && !a.leaving) a.dy = Math.min(0, a.dy + 520 * dt);
+        if (a.fadeIn) {
+          a.alpha = Math.min(1, a.alpha + dt * 1.6);
+          if (a.alpha >= 1) a.fadeIn = false;
+        }
+        if (a.leaving === "fade" || a.leaving === "smoke") a.alpha = Math.max(0, a.alpha - dt * 1.8);
+        if (a.leaving === "up") a.dy -= 420 * dt;
+      }
+      cleanup();
+      shakeT = Math.max(0, shakeT - dt);
+      if (fadeA < fadeTo) fadeA = Math.min(fadeTo, fadeA + dt * fadeSpeed);
+      if (fadeA > fadeTo) fadeA = Math.max(fadeTo, fadeA - dt * fadeSpeed);
+      if (pendingPlace && fadeA >= 1) {
+        curPlace = pendingPlace;
+        pendingPlace = null;
+        fadeTo = 0;
+        fadeSpeed = 2;
+      }
+      for (let i = fx.length - 1; i >= 0; i--) {
+        const f = fx[i];
+        f.age += dt;
+        if (f.kind === "p") {
+          f.x += f.vx * dt;
+          f.y += f.vy * dt;
+          f.vy += 40 * dt;
+          f.vx *= 0.97;
+        }
+        if (f.age >= f.life) fx.splice(i, 1);
+      }
+    }
+    function drawWeather(ctx) {
+      if (sky === "cold") {
+        ctx.fillStyle = "rgba(200, 236, 255, 0.35)";
+        ctx.fillRect(0, GROUND - 6, 400, 240 - GROUND + 6);
+        for (let i = 0; i < 9; i++) {
+          const x = (i * 57 + t * (14 + i % 3 * 6)) % 480 - 40, y = GROUND - 10 + i % 4 * 12 + Math.sin(t + i) * 4;
+          ctx.fillStyle = `rgba(230, 248, 255, ${0.28 + 0.1 * Math.sin(t * 2 + i)})`;
+          ctx.beginPath();
+          ctx.ellipse(x, y, 54, 12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        for (let i = 0; i < 16; i++) {
+          const x = i * 29 % 400, y = GROUND + 6 + i * 13 % 70;
+          ctx.fillRect(x, y, 6, 1);
+          ctx.fillRect(x + 2, y - 2, 1, 5);
+        }
+      } else if (sky === "snow") {
+        ctx.fillStyle = "#ffffff";
+        for (let i = 0; i < 40; i++) ctx.fillRect((i * 47 + Math.sin(t + i) * 10 + t * 8) % 400, (i * 31 + t * 30) % 240, 2, 2);
+      } else if (sky === "dark") {
+        ctx.fillStyle = "rgba(30, 0, 40, 0.35)";
+        ctx.fillRect(0, 0, 400, 240);
+        for (let i = 0; i < 8; i++) {
+          ctx.fillStyle = `rgba(20, 0, 30, ${0.25 + 0.1 * Math.sin(t * 2 + i)})`;
+          ctx.beginPath();
+          ctx.ellipse((i * 63 + t * 10) % 460 - 30, 40 + i % 3 * 30, 60, 18, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (sky === "night") {
+        ctx.fillStyle = "rgba(10, 16, 50, 0.45)";
+        ctx.fillRect(0, 0, 400, 240);
+      }
+    }
+    function drawMark(ctx, f) {
+      const a = f.actor;
+      if (!actors.includes(a)) return;
+      const h = ART[a.art].h * a.scale * artFit(ART[a.art]);
+      const x = a.x + (a.flip ? -h * 0.25 : h * 0.25), y = GROUND + a.dy - h - 8 - Math.min(1, f.age * 6) * 6;
+      const k = f.age < 0.15 ? f.age / 0.15 : 1;
+      ctx.globalAlpha = f.age > f.life - 0.3 ? (f.life - f.age) / 0.3 : 1;
+      const M = { exclaim: ["！", "#ffe85a"], question: ["？", "#8ad0ff"], anger: ["💢", "#ff5a5a"], heart: ["♥", "#ff8ab8"], note: ["♪", "#ffd75e"], dots: ["…", "#ffffff"], sweat: ["💦", "#8ad0ff"], zzz: ["Z", "#ffffff"] }[f.mark];
+      if (M) text(ctx, M[0], x, y, { size: 16 * k, align: "center", bold: true, color: M[1] });
+      ctx.globalAlpha = 1;
+    }
+    function drawActor(ctx, a) {
+      const art = ART[a.art];
+      if (!art) return;
+      let y = GROUND + a.dy, x = a.x, sx = 1, sy = 1;
+      const since = t - a.hop;
+      if (since >= 0 && since < 0.35 * (a.hops + 1)) y -= Math.sin(Math.PI * (since % 0.35 / 0.35)) * 12;
+      if (a.walking) y -= Math.abs(Math.sin(t * 12)) * 3;
+      if (a.pose === "shiver") x += Math.sin(t * 50) * 1.5;
+      if (a.pose === "float") y -= 8 + Math.sin(t * 2.5) * 5;
+      if (a.pose === "bow") {
+        sy = 0.86;
+        sx = 1.08;
+      }
+      if (a.pose === "run") y -= Math.abs(Math.sin(t * 18)) * 5;
+      let flip = a.flip;
+      if (a.pose === "spin") flip = Math.floor(t * 8) % 2 === 0;
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.beginPath();
+      ctx.ellipse(a.x, GROUND + 2, art.w * a.scale * artFit(art) * 0.32, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const dim = speaking && speaking !== a ? 0.82 : 1;
+      drawArt(ctx, art, Math.floor(t * 2), x, y, { scale: a.scale, flip, alpha: a.alpha * dim, sx, sy });
+    }
+    function draw(ctx) {
+      ctx.save();
+      if (shakeT > 0) ctx.translate((Math.random() - 0.5) * shakePow * 2, (Math.random() - 0.5) * shakePow * 2);
+      drawBackdrop(ctx, curPlace, t, time);
+      if (sky === "cold") drawWeather(ctx);
+      [...actors].sort((p, q) => p.scale - q.scale).forEach((a) => drawActor(ctx, a));
+      if (sky !== "cold") drawWeather(ctx);
+      for (const f of fx) {
+        if (f.kind === "p") {
+          ctx.globalAlpha = Math.max(0, 1 - f.age / f.life);
+          ctx.fillStyle = f.color;
+          ctx.fillRect(f.x - f.size / 2, f.y - f.size / 2, f.size, f.size);
+          ctx.globalAlpha = 1;
+        } else if (f.kind === "mark") drawMark(ctx, f);
+        else if (f.kind === "ring") {
+          ctx.strokeStyle = f.color;
+          ctx.lineWidth = 3;
+          ctx.globalAlpha = 1 - f.age / f.life;
+          ctx.beginPath();
+          ctx.ellipse(f.x, f.y, 10 + f.age * 120, 4 + f.age * 40, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+      ctx.restore();
+      for (const f of fx) if (f.kind === "flash") {
+        ctx.fillStyle = `rgba(255,255,255,${0.9 * (1 - f.age / f.life)})`;
+        ctx.fillRect(0, 0, 400, 240);
+      }
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, 400, 10);
+      if (caption) {
+        const k = t - caption.at;
+        if (k < 2.4) {
+          ctx.globalAlpha = k < 0.3 ? k / 0.3 : k > 2 ? (2.4 - k) / 0.4 : 1;
+          ctx.fillStyle = "rgba(0,0,0,0.55)";
+          ctx.fillRect(0, 70, 400, 56);
+          text(ctx, caption.text, 200, 102, { size: 20, align: "center", bold: true, color: "#ffe85a" });
+          if (caption.sub) text(ctx, caption.sub, 200, 120, { size: 11, align: "center", color: "#ffffff" });
+          ctx.globalAlpha = 1;
+        } else caption = null;
+      }
+      if (fadeA > 0) {
+        ctx.fillStyle = `rgba(0,0,0,${fadeA})`;
+        ctx.fillRect(0, 0, 400, 240);
+      }
+    }
+    return { run, onLine, update, draw, finishNow, busy: () => t < busyUntil || actors.some((a) => a.walking || a.fadeIn) || Boolean(pendingPlace), place: () => curPlace };
+  }
   function createTalk() {
     let lines = [], index = 0, shown = 0, opts = {}, cursor = 0, active = false;
+    let stage = null, started = -1;
     let top = 0, drag = null;
     const VIEW = { y: 18, h: 206 };
     const layout = () => {
@@ -17561,7 +18476,10 @@ body.nopad #pad { display: none; }
       cursor = Math.max(top, Math.min(top + L.rows - 1, cursor));
     };
     function open(list, options = {}) {
-      lines = list;
+      stage = options.movie ? createStage(options.movie) : null;
+      lines = stage ? list : list.filter((l) => !l.do);
+      if (!lines.length) lines = [{ who: "", text: "" }];
+      started = -1;
       index = 0;
       shown = 0;
       cursor = 0;
@@ -17578,7 +18496,50 @@ body.nopad #pad { display: none; }
       active = false;
       (_a = opts.done) == null ? void 0 : _a.call(opts, choice);
     }
+    function updateMovie(dt, input2) {
+      stage.update(dt);
+      const go = input2.pressed.a || input2.pressed.b || input2.touch.justDown;
+      const last2 = lines.length - 1, tail = lines[last2];
+      if (input2.pressed.start && !(index === last2 && (opts.choices || opts.count))) {
+        stage.finishNow();
+        if ((opts.choices || opts.count) && !tail.do) {
+          index = last2;
+          started = last2;
+          shown = tail.text.length;
+          stage.onLine(tail);
+          stage.finishNow();
+          return true;
+        }
+        sfx("cursor");
+        finish(null);
+        return true;
+      }
+      const cur2 = lines[index];
+      if (started !== index) {
+        started = index;
+        if (cur2.do) stage.run(cur2);
+        else stage.onLine(cur2);
+      }
+      if (cur2.do) {
+        if (go) stage.finishNow();
+        if (!stage.busy()) {
+          if (index === last2) finish(null);
+          else {
+            index++;
+            shown = 0;
+          }
+        }
+        return true;
+      }
+      if (stage.busy()) {
+        if (go) stage.finishNow();
+        return true;
+      }
+      return false;
+    }
     function update(dt, input2) {
+      if (!active) return;
+      if (stage && updateMovie(dt, input2)) return;
       if (!active) return;
       shown = Math.min(lines[index].text.length, shown + dt * 40);
       if (atLast() && full() && opts.count) {
@@ -17687,7 +18648,10 @@ body.nopad #pad { display: none; }
     function drawTop(ctx, t) {
       if (!active) return;
       const line2 = lines[index];
-      if (line2.art && ART[line2.art]) {
+      if (stage) {
+        stage.draw(ctx);
+        if (line2.do || started !== index) return;
+      } else if (line2.art && ART[line2.art]) {
         panel(ctx, 12, 96, 76, 70, { fill: "rgba(255,255,255,0.12)", edge: null });
         drawArt(ctx, ART[line2.art], Math.floor(t * 2) % 2, 50, 160, { scale: 4 });
       }
@@ -17720,6 +18684,15 @@ body.nopad #pad { display: none; }
         text(ctx, `↑↓ 1こ ・ ←→ ${btn("l")}${btn("r")} 10こ ・ ${btn("a")} けってい`, 160, 222, { size: 10.5, align: "center", color: COLORS.sub });
         return;
       }
+      if (stage && !(atLast() && full() && opts.choices)) {
+        ctx.fillStyle = "#0c1020";
+        ctx.fillRect(0, 0, 320, 240);
+        text(ctx, "― ストーリー ―", 160, 70, { size: 12, align: "center", color: COLORS.sub });
+        text(ctx, opts.movie.title || "", 160, 104, { size: 16, align: "center", bold: true, color: COLORS.accent, maxWidth: 300 });
+        text(ctx, `${btn("a")} か タップで つぎへ`, 160, 188, { size: 11, align: "center", color: COLORS.sub });
+        text(ctx, `${btn("start")} で ムービーを とばす`, 160, 210, { size: 10.5, align: "center", color: COLORS.dim });
+        return;
+      }
       if (atLast() && full() && opts.choices) {
         ctx.fillStyle = "rgba(0,0,0,0.55)";
         ctx.fillRect(0, 0, 320, 240);
@@ -17733,7 +18706,7 @@ body.nopad #pad { display: none; }
         text(ctx, `${btn("a")} か タップで つぎへ`, 160, 228, { size: 11, align: "center", color: COLORS.sub });
       }
     }
-    return { open, update, drawTop, drawBottom, isActive: () => active };
+    return { open, update, drawTop, drawBottom, isActive: () => active, isMovie: () => active && Boolean(stage) };
   }
   const VERSION_IDS = Object.keys(VERSIONS);
   const VBTN = VERSION_IDS.map((id, i) => ({ x: 20 + i * 146, y: 30, w: 134, h: 46, label: `${VERSIONS[id]}バージョン`, id }));
@@ -17900,7 +18873,6 @@ body.nopad #pad { display: none; }
   }
   const personArt = (g, p) => p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art;
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
-  const sealsHere = (g) => SEALS.filter((q) => !(g.mysteries && g.mysteries[q.id]));
   const monsHere = (g) => g.story === "netdera" ? MONS.filter((q) => !(g.mysteries && g.mysteries[q.id])) : [];
   const inGate = (q, tx, ty) => ty === q.y && tx >= q.x && tx < q.x + q.w;
   function blockedTile(g, tx, ty) {
@@ -17911,7 +18883,7 @@ body.nopad #pad { display: none; }
     if (BUILDINGS.some((b) => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some((p) => p.x === tx && p.y === ty)) return true;
     if (MYSTERIES.some((m) => m.x === tx && m.y === ty)) return true;
-    if (sealsHere(g).some((m) => m.x === tx && m.y === ty)) return true;
+    if (SEALS.some((m) => m.x === tx && m.y === ty)) return true;
     if (monsHere(g).some((m) => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some((p) => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
   }
@@ -18851,13 +19823,12 @@ body.nopad #pad { display: none; }
         r2(x % 2 * 8, 3, 1, 10, "#8a9098");
         break;
       }
-      case "D":
-      case "E": {
+      case "D": {
         if (wet) {
           drawTile(c, "W", x, y, false);
           break;
         }
-        r2(0, 0, 16, 16, ch === "D" ? "#a89a80" : "#b8a888");
+        r2(0, 0, 16, 16, "#a89a80");
         r2(Math.floor(hash(x, y, 80) * 10), Math.floor(hash(x, y, 81) * 12), 6, 1, "#8a7a60");
         r2(Math.floor(hash(x, y, 82) * 12), Math.floor(hash(x, y, 83) * 10), 1, 5, "#8a7a60");
         if (hash(x, y, 84) < 0.4) {
@@ -18867,17 +19838,32 @@ body.nopad #pad { display: none; }
         }
         break;
       }
+      case "E": {
+        if (wet) {
+          drawTile(c, "W", x, y, false);
+          break;
+        }
+        r2(0, 0, 16, 16, "#b8def0");
+        r2(Math.floor(hash(x, y, 80) * 10), Math.floor(hash(x, y, 81) * 12), 6, 1, "#e8f8ff");
+        r2(Math.floor(hash(x, y, 82) * 12), Math.floor(hash(x, y, 83) * 10), 1, 4, "#8ac0dc");
+        if (hash(x, y, 84) < 0.3) {
+          const sx = Math.floor(hash(x, y, 85) * 12);
+          r2(sx, 10, 4, 2, "#ffffff");
+        }
+        break;
+      }
       case "I": {
         if (wet) {
           drawTile(c, "W", x, y, false);
           break;
         }
-        r2(0, 0, 16, 16, "#9ad8f0");
-        r2(0, 0, 16, 1, "#e0f6ff");
-        r2(0, 8, 16, 1, "#7ac0e0");
-        r2(y % 2 * 8, 0, 1, 8, "#7ac0e0");
-        r2((y + 1) % 2 * 8, 8, 1, 8, "#7ac0e0");
-        r2(2, 2, 3, 2, "#ffffff");
+        r2(0, 0, 16, 16, "#9ad0ec");
+        r2(0, 0, 16, 1, "#d8f2ff");
+        const k = Math.floor(hash(x, y, 86) * 8);
+        r2(4 + k % 4, 0, 3, 16, "#2a5a8a");
+        r2(5 + k % 4, 0, 1, 16, "#0e2a4a");
+        r2(0, 6 + k % 5, 16, 2, "#2a5a8a");
+        r2(2 + k % 6, 7 + k % 5, 4, 1, "#e8fbff");
         break;
       }
       case "J": {
@@ -19252,6 +20238,16 @@ body.nopad #pad { display: none; }
       return inCaveTile(ht.x, ht.y);
     };
     const region = () => regionOf(Math.floor(g.pos.y / TILE));
+    function backdropHere() {
+      const ht = heroTile(g), area = areaAt(ht.x, ht.y);
+      if (inShrine(g)) return "shrine";
+      if (area === "ishinokawa") return darkHere() ? "town" : "machi";
+      if (area === "shoutengai") return darkHere() ? "town" : "street";
+      if (area === "umi") return inCave() ? "cave" : "umi";
+      if (area === "kinniku") return inHyouga() ? "hyouga" : "kinniku";
+      if (area === "park") return "yuen";
+      return area;
+    }
     function camera() {
       const [top, bottom] = region().map((v) => v * TILE);
       cam.x = Math.max(0, Math.min(MAP_W * TILE - 400, Math.round(g.pos.x - 200)));
@@ -19267,6 +20263,13 @@ body.nopad #pad { display: none; }
     }
     camera();
     const say = (lines, opts) => app2.talk.open(lines, opts);
+    const story = (lines, opts = {}) => say(lines, { ...opts, movie: { place: opts.place || backdropHere(), title: opts.title || chapterTitle(), cast: opts.cast || partyCast(), weather: opts.weather || "", time: g.time } });
+    const act2 = (what, o = {}) => ({ do: what, ...o });
+    const chapterTitle = () => {
+      const [n, name] = chapterOf(g.story);
+      return `${n}章「${name}」`;
+    };
+    const partyCast = () => ["koori", ...reached(g, "friends") && g.story !== "yoru" ? ["furukawa"] : [], ...reached(g, "onijoin") && g.story !== "shuuketsu" ? ["onioni"] : []];
     const furu = (text2) => ({ who: "ふるカワ", art: "furukawa", text: text2 });
     const tomo = (text2) => ({ who: "ともいし", art: "tomoishi", text: text2 });
     const nar = (text2) => ({ who: "", text: text2 });
@@ -19302,7 +20305,7 @@ body.nopad #pad { display: none; }
       bartas: "ふふ、負けたわ。いいわ、あなたの なかまに なって あげる。"
     };
     function meetFurukawa() {
-      say([
+      story([
         furu("あっ、こおりくん！ ちょうど よかった！"),
         furu("この 町には、ふしぎな キャラが いっぱい かくれてるの。この「さがすレンズ」で のぞくと 見つかるんだよ。"),
         furu("それと これ！「おなかまウォッチ」。おなかまメダルを セットすると、なかまを 呼び出せるの。"),
@@ -19360,7 +20363,7 @@ body.nopad #pad { display: none; }
           clear8: ["おにおにくん、もどってきたっちゃろ？ よかったやん！ ……ルキハって 人は、まだ どこかに おるとね？"]
         }[g.story];
         if (startChapter9(g)) {
-          say([
+          story([
             by("onioni", "おい、こおり。おれも 行くぞ。ルキハには たっぷり 借りを 返して もらわんとな！ ……おまえの 借金は べつだぞ。"),
             tomo("あら、おにおにくん。ごはん 食べていきなさい。……こおり、おにおにくんに お金 返したと？ 今すぐ 返しなさい！"),
             nar("おにおにが なかまに なった！"),
@@ -19370,7 +20373,7 @@ body.nopad #pad { display: none; }
           return;
         }
         if (startChapter13(g)) {
-          say([
+          story([
             nar("朝。黒い 空の むこうに、ルキハの 城が うかんでいる。"),
             tomo("……行って らっしゃい、こおり。"),
             furu("山の ダムの ヒョウガリュウが、城まで 乗せて いって くれるって！"),
@@ -19380,7 +20383,7 @@ body.nopad #pad { display: none; }
           return;
         }
         if (startChapter12(g)) {
-          say([
+          story([
             nar("空が 黒く そまり、世界じゅうに 紋つきの 軍勢が あらわれた。"),
             furu("ルキハが 本気で 世界を 喰おうと してる……！"),
             tomo("こおり、神社に みんなが あつまっとるらしいよ。行って きなさい。"),
@@ -19389,7 +20392,7 @@ body.nopad #pad { display: none; }
           return;
         }
         if (startChapter11(g)) {
-          say([
+          story([
             furu("こおりくん！ ルナヤさんから 手紙が きたよ！"),
             furu("「ルキハの 城へ 行く 道は、ASOの壺の底に ある。……壺の 底よ、壺の 底。わすれないでね？」だって。"),
             by("onioni", "ASOの壺……大魔王が ねむっとる 所か。おもしろい、行ってやろうじゃないか。"),
@@ -19400,7 +20403,7 @@ body.nopad #pad { display: none; }
         }
         if (startChapter14(g)) {
           const menkyo = g.version === "menkyo";
-          say([
+          story([
             nar(menkyo ? "ルキハとの 戦いから しばらく。こおりくんは 車の 免許を とるため、自動車学校に かよっていた。" : "ルキハとの 戦いから しばらく。こおりくんは 内定を とるため、毎日 がんばっていた。"),
             tomo("こおり、ふるカワちゃんが 来とるよ。なんか うれしそうな 顔して。"),
             furu(`こおりくん、見て見て！ 新しく できた アミューズメント${menkyo ? "施設" : "パーク"}「${parkName()}」の 招待券！ 3 まい あるの！`),
@@ -19411,7 +20414,7 @@ body.nopad #pad { display: none; }
           return;
         }
         if (startChapter6(g)) {
-          say([
+          story([
             tomo("こおり！ 町の 子たちの メダルが ぬすまれたって 大さわぎよ。あんた なにしよっと！ はよ 行きなさい！"),
             furu("鬼鬼団の しわざだって うわさだよ。忍びの屋敷の ズミタニさんが 追ってるみたい！"),
             nar("石の川駅から、電車で 忍びの屋敷へ 行けるように なった！")
@@ -19419,7 +20422,7 @@ body.nopad #pad { display: none; }
           return;
         }
         if (startChapter5(g)) {
-          say([
+          story([
             tomo("こおり、あんた あてに 手紙が きとるよ。"),
             nar("ネット寺の ダイシから 手紙が とどいた。"),
             nar("「寺の 者たちが 黒い 紋に のろわれた。たすけて ほしい。」"),
@@ -19429,7 +20432,7 @@ body.nopad #pad { display: none; }
           return;
         }
         if (startChapter4(g)) {
-          say([
+          story([
             tomo("こおり、ダムの 水 よう もどしたね！ ……で、王冠を ぬすんだ 人は まだ つかまっとらんと？"),
             furu("うん……。王冠の 箱の まわりに、黒い すすみたいな ものが のこってたの。"),
             furu("海辺の 町でも、なかまが 急に あばれだす 事件が あるんだって。もしかしたら 関係 あるかも！"),
@@ -19440,28 +20443,29 @@ body.nopad #pad { display: none; }
         }
         say(lines.map((text2) => tomo(text2)));
       } else if (p.id === "rival4") {
-        const L = rivalLines();
-        say(
-          [...L.block.map(([id, text2]) => by(id, text2)), nar(`チーム「${rivalTeam(g.version).name}」が 勝負を いどんできた！`)],
-          { done: () => app2.startBattle({ enemies: rivalEnemies(g), kind: "rival", place: "cave" }) }
-        );
+        const L = rivalLines(), team = rivalTeam(g.version);
+        story([
+          ...team.members.map((id, k) => act2("enter", { id, from: "right", x: [250, 300, 350][k], wait: k === team.members.length - 1 })),
+          ...L.block.flatMap(([id, text2]) => [by(id, text2), act2("jump", { id })]),
+          act2("fx", { kind: "exclaim", id: "koori" }),
+          nar(`チーム「${team.name}」が 勝負を いどんできた！`)
+        ], { place: "cave", done: () => app2.startBattle({ enemies: rivalEnemies(g), kind: "rival", place: "cave" }) });
       } else if (p.id === "urashima4") {
-        say([
+        story([
           nar("どうくつの 主の 体に、ドクドクと 動く 黒い 紋が うかんでいる……。"),
           by("urashima", "わしは……えーと……なんじゃったかの……。体が かってに……うごくんじゃ……！ ……つり？"),
           furu("あの 紋、王冠の 箱に のこってた 黒い すすと 同じだ！"),
-          furu("かかえてる 玉手箱を ねらって こわせば、玉手箱の わざを 止められるよ！ でも けむりが 出るかも……！"),
-          furu("こうらに こもったら、すきまから 出てる 頭を ねらって！ ひっくり返せるかも！")
+          furu("来るよ、こおりくん！ がんばって！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("urashima4"), kind: "boss", place: "cave" }) });
       } else if (p.id === "daishiNpc") {
         say([by("daishi", `紋つきの 者たちを、どうか 救って くだされ。……紋を はらえば、きっと 正気に もどりますぞ。(${monsSaved(g)}/${MONS.length})`)]);
       } else if (p.id === "zumitani6") {
-        say([
+        story([
           by("zumitani", "やっほー、77代目の ズミタニだよ！ メダルどろぼうを 追ってるんだ。……で、きみ、役に 立つの？ ためして あげるね♪"),
-          furu("分身して くるよ！ 本物を 見つけて ロックオンして！ まちがえると しかえし されちゃう！")
+          furu("は、はやい……！ こおりくん、よく 見て！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("zumitani6"), kind: "boss", place: "yashiki" }) });
       } else if (p.id === "onioni6" || p.id === "rukiha6") {
-        say([
+        story([
           nar("奥の 間に、ひとりの 男が 座っていた。"),
           nar("人と おなじ 顔。けれど 片目は 赤黒く にごり、首すじには うろこの ような ものが のぞいている。"),
           { who: "ルキハ", art: "rukiha", text: "はじめまして だな、こおり族の 子。王冠の 味は……なかなか だったぞ。" },
@@ -19470,52 +20474,51 @@ body.nopad #pad { display: none; }
           by("onioni", "…………。ルキハさまの じゃまは させん。")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni6"), kind: "boss", place: "yashiki" }) });
       } else if (p.id === "tomooka6") {
-        say([
+        story([
           { who: "トモオカ", art: "tomooka", text: "メダルは わたさんぞ！ 鬼鬼団 幹部、トモオカさまの 右腕を 見せてやる！" },
-          furu("たたかれるほど 右腕が 大きく なるみたい！ 右腕を ねらって しぼませて！ 大きく なりきったら 防げない 一撃が くるよ！")
+          furu("すごい 力……！ 気を ぬかないで、こおりくん！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("tomooka6"), kind: "boss", place: "yashiki" }) });
       } else if (p.id === "runaya7") {
-        say([
+        story([
           by("runaya", "ここが 月の 鏡よ。……鏡を のぞいて ごらんなさい。"),
           nar("鏡の 中に、むかしの 景色が うかんだ。"),
           nar("ひとりの 男が、大きな 竜を、鳥を、けものを……ひとつずつ 喰らっていく。"),
           nar("喰らう たびに、男の 体の どこかが ゆがんで いった。"),
           by("runaya", "あの 男は、人の すがたを 着ているだけ。中身は……喰らった ものの かたまりよ。"),
           by("runaya", "……あの 男に 立ちむかうなら、その 前に あなたたちの 力を ためさせて もらうわ。ためさせて もらうわ。……あら、これも 言ったかしら？"),
-          furu("月が 満ちたら 大技が くるよ！ 空の 月を ねらって 欠けさせて！")
+          furu("来るよ！ こおりくん、がんばって！")
         ], { done: () => {
           g.flags.mirror7 = true;
           app2.startBattle({ enemies: bossEnemies("runaya7"), kind: "boss", place: "moon" });
         } });
       } else if (p.id === "ooni8") {
-        say([
+        story([
           nar("大広間の 奥に、天井に 頭が とどきそうな 大きな 鬼が 立ちふさがった。胸には 黒い 紋。"),
           { who: "大鬼", art: "ooni", text: "ここから 先は 通さん！ ルキハさまの ため……つぶれろ……！" },
-          furu("大きすぎて、どの わざも みんなに とどくよ！ 足を ねらって 当てつづけて！ 転ばせれば チャンス！")
+          furu("で、でっかい……！ みんな、がんばって！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("ooni8"), kind: "boss", place: "shiro" }) });
       } else if (p.id === "soutou8") {
-        say([
+        story([
           { who: "双頭鬼 (右の頭)", art: "soutouki", text: "ケケケ……とりついて やろうか？" },
           { who: "双頭鬼 (左の頭)", art: "soutouki", text: "いや、術で 焼いて やろう。" },
-          furu("右の 頭は とりつき、左の 頭は 術を 使うみたい！ 頭を こわせば その わざは 止まるよ。両方 こわせば チャンス！"),
-          furu("とりつかれたら 後ろに 回して「おたすけ」だよ！")
+          furu("頭が ふたつも……！ 来るよ、こおりくん！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("soutou8"), kind: "boss", place: "shiro" }) });
       } else if (p.id === "kinme8") {
-        say([
+        story([
           by("kinmetsuki", "金色の 鬼に ひれ伏せ！ ルキハさまの ために……！ この 黄金の 体、きずひとつ つけられまい！"),
-          furu("金ピカで 目が くらんじゃう……！ めくらましの とりつきに 気を つけて！ この 鬼に すきは ない、まっこう 勝負だよ！")
+          furu("金ピカで まぶしい……！ こおりくん、負けないで！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("kinme8"), kind: "boss", place: "shiro" }) });
       } else if (p.id === "onioni8") {
-        say([
+        story([
           by("onioni", "……来たか、こおり。"),
           by("onioni", "ルキハさまの じゃまは させん。……借金ごと ここで 消えて もらうぞ！"),
           furu("おにおに、目を さまして！"),
           nar("おにおにの 胸の 黒い 紋が、どくん、と 脈うった。"),
-          furu("大技を ためてる あいだに いっぱい 攻撃を 当てて！ 紋が 暴発して 止まるはず！")
+          furu("こおりくん、おにおにを 止めて あげて！ がんばって！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni8"), kind: "boss", place: "shiro" }) });
       } else if (p.id === "onioni12") {
         const L = rivalLines();
-        say([
+        story([
           nar("石の川神社に、これまで 出会った みんなが あつまっていた。"),
           by(L.meet[0], "ライバルは ライバルでも、世界が なくなったら 勝負も できないからな。"),
           by("onioni", "氷隊と 鬼鬼団が いっしょに 戦うとはな。……足を ひっぱるなよ、こおり。"),
@@ -19523,7 +20526,7 @@ body.nopad #pad { display: none; }
           by("onioni", "……その 前に だ。こおり、おれと 勝負しろ。"),
           by("onioni", "ルキハに あやつられて いた おれじゃ ない、ほんとうの おれの 力を 見せてやる。……本気で 来い！"),
           nar("おにおにの 体が 赤黒く 燃えあがった……！ 鬼神の すがただ！"),
-          furu("大技を ためてる あいだに 攻撃を あてれば、力が 暴発するはず！ 2 回目からは ガードしてくるよ！")
+          furu("来るよ！ ぜったい 負けないで！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("onioni12"), kind: "boss", place: "shrine" }) });
       } else if (p.only === "gather12") {
         const lines = {
@@ -19535,16 +20538,15 @@ body.nopad #pad { display: none; }
         }[p.id];
         say([by(lines[0], lines[1])]);
       } else if (p.id === "bakuen11") {
-        say([
+        story([
           nar("火山の 底で、マグマの 竜が ねむっていた。胸には 黒い 紋が どくどくと 脈うっている。"),
           { who: "バクエンリュウ", art: "bakuenryu", text: "グオオオ……ルキハ……さま……。ここは……通さぬ……！" },
           furu("体が マグマで できてる……！ これじゃ 攻撃が とどかないよ！"),
           { who: "？？？", art: "maou", text: "……こおり族の 子よ。その 竜の 体は マグマ、ふつうの 攻撃は とどかぬ。我が 道具を 投げてやる。うまく 使え！" },
-          furu("投げられた 道具を ねらって 攻撃すると 使えるよ！ 剣なら 力が 上がって、実なら 回復、水爆弾なら 体が かたまるはず！"),
-          furu("マグマの 波で 道具が とけちゃうから、いそいで！")
+          furu("……でも、なにか 手が あるはず！ こおりくん、がんばって！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("bakuen11"), kind: "boss", place: "tsubo" }) });
       } else if (p.id === "hyouga13") {
-        say([
+        story([
           { who: "ヒョウガリュウ", art: "hyougaryu", text: "こおり族の 子よ。わしの 背に 乗れ。ルキハの 城まで ひとっとびだ。" }
         ], {
           choices: ["喰らいの 城へ 行く", "やめる"],
@@ -19567,7 +20569,7 @@ body.nopad #pad { display: none; }
         });
       } else if (p.only === "floor13") {
         const f = FLOOR13.find((x) => x.id === p.boss), tk = floor13Team(f, g.version), team = TEAMS[tk];
-        say([
+        story([
           { who: p.name, art: p.art, text: FLOOR13_LINES[f.id] },
           nar(`${p.name}の 体に、黒い 紋が どくどくと 脈うっている……！ 前より ずっと 強い！`),
           by(team.leader, HELPER_LINES[tk]),
@@ -19581,16 +20583,16 @@ body.nopad #pad { display: none; }
           nar("ライバル探検隊 ぜんぶの チームが 軍勢を ひきうけて くれた！")
         ];
         g.flags.top13 = true;
-        say([
+        story([
           ...army,
           rk("来たか、こおり族の 子。王冠の 味が、まだ 舌に のこっているぞ。"),
           rk("おまえも、おまえの なかまも、みんな オレの 中で ひとつに なれば いい。"),
           { who: "こおりくん", art: "koori", text: "（そんな こと させない！）" },
-          furu("ルキハは 体を 変形させて 攻撃してくるよ！ 気を つけて！")
+          furu("こおりくん……ぜったい 勝とうね！ 来るよ！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("rukiha13"), kind: "boss", place: "kurai" }) });
       } else if (p.id === "aso11") {
         if (canFightAso(g)) {
-          say([
+          story([
             { who: "大魔王ASO", art: "maou", text: "……ルキハを たおし、残党まで かたづけたか。こおり族の 子よ、きさまの 力、この 我が ためして やろう。" },
             { who: "大魔王ASO", art: "maou", text: "我に 勝てたなら……きさまの なかまに なって やっても よい。" },
             nar("(推奨 Lv90 の 強敵)")
@@ -19599,7 +20601,7 @@ body.nopad #pad { display: none; }
             done: (i) => {
               if (i !== 0) return;
               say(
-                [furu("拘束のリングに つかまったら、浮いてる リングを ねらって こわして！ 輪が 回せなく なるよ！")],
+                [furu("大魔王ASO……！ 来るよ、こおりくん！ がんばって！")],
                 { done: () => app2.startBattle({ enemies: bossEnemies("aso15"), kind: "boss", place: "tsubo" }) }
               );
             }
@@ -19610,7 +20612,7 @@ body.nopad #pad { display: none; }
           say([{ who: "大魔王ASO", art: "maou", text: g.flags.aso15 ? "……我は きさまの なかまだ。ウォッチで 呼ぶが よい。" : "……きさまに たくしたぞ、こおり族の 子よ。あの 男の 顔を ねらえ。" }]);
           return;
         }
-        say([
+        story([
           nar("ASO の 間に、大きな 影が しずかに すわっていた。"),
           { who: "大魔王ASO", art: "maou", text: "この 我が……このASOが……人の すがたを した 男ごときに、力を 半分 喰われるとは……！" },
           { who: "大魔王ASO", art: "maou", text: "聞くがよい、こおり族の 子よ。あの 男は 喰った ものを 自身の身体に反映させることができる。だが 顔だけは……あの 男 自身の ものだ。" },
@@ -19620,37 +20622,37 @@ body.nopad #pad { display: none; }
           nar("―― １２章は つぎの アップデートで。")
         ], { done: () => app2.save() });
       } else if (p.id === "tashikeda10") {
-        say([
+        story([
           tomo("こおり！ 来たら いかん！"),
           { who: "タシケダ", art: "tashikeda", text: "こおり族の 母か。ルキハさまへの いい みやげに なる。" },
           { who: "こおりくん", art: "koori", text: "（おかあさんに さわるな！）" },
           { who: "タシケダ", art: "tashikeda", text: "ワタシは ルキハさまの 軍勢の 幹部、タシケダ。……きみの なかまの レベル、ぜんぶ いただくよ。" },
-          furu("レベルを 吸われたら、出てきた 紋つきを たおせば もどるよ！ 左右に 2 体 そろうと 大技が くる！")
+          furu("おかあさんを まもろう！ 来るよ、こおりくん！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("tashikeda10"), kind: "boss", place: "town" }) });
       } else if (p.id === "harukirin9") {
-        say([
+        story([
           nar("とけかけた 氷河の 上に、桜の 花びらを まとった 麒麟が 立っていた。"),
           by("harukirin", "氷は とけ、春が 来る。それが さだめ。こおりの子よ、そなたも 溶けて 賢者と なりなさい。"),
           { who: "こおりくん", art: "koori", text: "（こおりは とけないよ！）" },
-          furu("HP が 半分に なると 春の 力を ためて、全回復しちゃうみたい！ 角を ねらって こわして！")
+          furu("来るよ！ こおりくん、がんばって！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("harukirin9"), kind: "boss", place: "hyouga" }) });
       } else if (p.id === "nozoema9") {
-        say([
+        story([
           by("nozoema", "よくぞ 来た。……だが その 前に 見よ、この 鍛えぬかれた 筋肉を！ 力が ほしくば、この 山を のぼりきって みせよ！"),
           by("nozoema", "名刀江波と 筋肉は、心が くもった 者には こたえぬ。毎朝 鏡に むかい、筋肉と 語りあうのだ。"),
           by("nozoema", "……さあ、修行の しあげだ。この 刀を 越えてみせよ！"),
-          furu("ノゾエマさんは「筋肉の おたすけ」で どんどん 強く なるよ！ 長引くと あぶない、いっきに たたみかけて！")
+          furu("すごい 筋肉……！ こおりくん、がんばって！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("nozoema9"), kind: "boss", place: "kinniku" }) });
       } else if (p.id === "oni14") {
         say([by("onioni", g.story === "yoru" ? cluesFound(g) < PARK_CLUES.length ? `ふるカワの 手がかりは アトラクションの 入り口に あるはずだ！ (${cluesFound(g)}/${PARK_CLUES.length})` : "広場の まんなかだ、こおり！" : "おれは ここで まっとる。……べつに ジェットコースターが こわいわけじゃ ないぞ。")]);
       } else if (p.id === "boss14") {
         const menkyo = g.version === "menkyo";
         const boss = menkyo ? { who: "リハマ", art: "rihama" } : { who: "サアラハ", art: "saaraha" };
-        say([
+        story([
           nar("広場の まんなかに、黒い 紋を つけた 人かげが 立っていた。"),
           { ...boss, text: menkyo ? "ルキハさまの かたき……ここで ノーブレーキで ひいて やるよ！" : "よく ここまで 来たね。ルキハさまに かわって、おまえたちの 未来を とりけして あげる！" },
           { who: "ふるカワ", art: "furukawa", text: "こおりくん！ たすけて！" },
-          by("onioni", menkyo ? "赤信号の ときは 体が かたい！ 信号機を ねらえ、こおり！" : "おりを ねらえ、こおり！ ふるカワを にがせば あいつも あわてるはずだ！")
+          by("onioni", "ふるカワを 取りかえすぞ、こおり！ 来るぞ！")
         ], { done: () => app2.startBattle({ enemies: boss14Enemies(g), kind: "boss", place: "yuen" }) });
       } else if (p.id === "kairou") {
         const k = kairouOf(g), next = kairouEnemies(g)[0];
@@ -19667,31 +20669,34 @@ body.nopad #pad { display: none; }
           { done: () => app2.startBattle({ enemies: teamEnemies(p.team), kind: "team", place: inMoon() ? "moon" : inUmi() ? "umi" : "park", team: p.team }) }
         );
       } else if (p.id === "daishi5") {
-        say([
+        story([
           nar("ダイシの 体に、黒い 紋が どくどくと 脈うっている……。"),
           by("daishi", "……ぐ……拙僧は……鬼に……なっては……ならぬ……！"),
-          furu("ダイシさんまで 紋に のまれちゃった！ 攻撃しつづけると 鬼の 顔に なって 強く なるよ。そしたら 顔の 鬼の面を ねらって！"),
-          furu("お経が 聞こえたら、うしろの 鐘を ねらって 鳴らして！ びっくりして すきが できるはず！")
+          furu("ダイシさんまで 紋に のまれちゃった……！ こおりくん、たすけて あげて！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("daishi5"), kind: "boss", place: "tera" }) });
       } else if (p.id === "furukawaShrine") {
         meetFurukawa();
       } else if (p.id === "kage") {
-        say([
+        story([
           { who: "", text: "ろうかの おくに、まっくろな 影が 立っている……。" },
           { who: "ろうかの カゲ", art: "lunashadow", text: "…………。" },
-          furu("これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ こおりくん、気を つけて！ なかまに とりついて くるよ！")
+          furu("これが 8 つ目の ふしぎ……「夜の ろうかを 走る 影」！ 来るよ、こおりくん！")
         ], { done: () => app2.startBattle({ enemies: bossEnemies("kage"), kind: "boss", place: "school" }) });
       } else if (p.id === "damNushi") {
-        say([
-          { who: "", text: "氷の 城の 前に、王冠を かぶった 大きな 龍が いる……！" },
-          { who: "ダムの主", art: "hyougaryu", text: "グルルル……氷河の 底で 眠っていた わしを 起こしたのは だれだ……。" },
-          { who: "ダムの主", art: "hyougaryu", text: "この 王冠が ある かぎり、山の 水は すべて わしの 氷よ！" },
-          furu("ダムの主……ヒョウガリュウだ！ 王冠の 力で あばれてるんだ！"),
-          furu("「氷の偶像」を 2 つ 作られたら、大技の ために 入るよ。ためて いる あいだに 偶像を こわせば 止められる！")
-        ], { done: () => app2.startBattle({ enemies: bossEnemies("himuro"), kind: "boss", place: "dam" }) });
+        story([
+          nar("こおりついた ダムの まんなか。封印の 割れ目から、白い 冷気が ふきだしている……。"),
+          act2("shake", { power: 5, time: 1 }),
+          act2("enter", { id: "hyougaryu", art: "hyougaryu", from: "ice", x: 290, scale: 5.5 }),
+          act2("pose", { id: "hyougaryu", pose: "float" }),
+          act2("fx", { kind: "ring", id: "hyougaryu" }),
+          { who: "ダムの主", art: "hyougaryu", text: "グルルル……こおり族の 子か。封印など もう いらぬ。この 王冠で、山も 町も ぜんぶ こおらせて やる……！" },
+          act2("fx", { kind: "exclaim", id: "furukawa" }),
+          furu("ヒョウガリュウ……！ 王冠の 力に のまれちゃってる！ 王冠を とりもどして、封印を 作りなおそう！"),
+          furu("来るよ！ こおりくん、がんばって！")
+        ], { place: "damBack", weather: "cold", done: () => app2.startBattle({ enemies: bossEnemies("himuro"), kind: "boss", place: "dam" }) });
       } else if (p.id === "nushi") {
         if (g.story === "bridge") {
-          say([
+          story([
             { who: "ヌシ", art: "hashishita", text: "ひとつ、ふたつ、みっつ……だれだ！ おれの 数を じゃまするのは！" },
             furu("こおりくん、ウォッチで なかまを 呼び出して！")
           ], { done: () => app2.startBattle({ enemies: bossEnemies(), kind: "boss", place: "bridge" }) });
@@ -19710,7 +20715,7 @@ body.nopad #pad { display: none; }
           done: (i) => {
             if (i === 0 && nightBefore(g)) {
               g.time = 3;
-              say([
+              story([
                 tomo("こおり、おべんとう つくっといたよ。"),
                 tomo("……ちゃんと 帰って きなさい！ 借金も 返さんまま いなくなるのは ゆるさんけんね！"),
                 nar("こおりくんは しずかに ねむった。"),
@@ -19887,7 +20892,7 @@ body.nopad #pad { display: none; }
       warp(SCHOOL_IN);
       if (g.story !== "clear") return;
       g.story = "school";
-      say([
+      story([
         { who: "", text: "入り口の カギが あいていた……。" },
         furu("夜の 学校って、なんだか ドキドキするね。この 学校には「七不思議」が あるって うわさなんだ。"),
         furu("理科室の 動く ガイコツ、音楽室で 夜中に 鳴る 音、図書室の わすれられた 本、おどり場の 大鏡、体育倉庫の かけ声、開かずの ロッカー、プールの 手……。"),
@@ -19901,28 +20906,41 @@ body.nopad #pad { display: none; }
       warp(YAMA_IN);
       if (g.story !== "clear2") return;
       g.story = "yama";
-      say([
-        { who: "", text: "山道を のぼって、山の 上に 来た。" },
-        furu("見て、こおりくん！ 沢が からっぽだよ……。ダムの 水が ぜんぶ 消えちゃったんだ。"),
+      story([
+        nar("山道を のぼって、山の 上に 来た。……夏なのに、はく 息が 白い。"),
+        act2("pose", { id: "furukawa", pose: "shiver" }),
+        furu("さ、さむい……！ 見て、こおりくん！ 沢が からっぽだよ。"),
+        act2("move", { id: "koori", x: 180 }),
+        act2("fx", { kind: "question", id: "koori" }),
+        furu("上の ダムの 湖が、ぜんぶ こおりついちゃってるんだ。だから 水が 流れて こないんだよ！"),
+        act2("pose", { id: "furukawa", pose: "" }),
+        act2("move", { id: "koori", x: 118 }),
         furu("このままじゃ 石の川の 水も なくなっちゃう。山の 上の「奥の院」には、むかしの 言いつたえが あるんだって。行ってみよう！"),
-        { who: "", text: "山の 南の はしの 入り口から 町に もどれる。" }
-      ], { done: () => app2.save() });
+        nar("山の 南の はしの 入り口から 町に もどれる。")
+      ], { place: "yama", weather: "cold", done: () => app2.save() });
     }
     function readOkunoin() {
       if (readLegend(g)) {
         sfx("watch");
-        say([
-          { who: "", text: "奥の院の 中に、古い 石碑が ある……。" },
-          { who: "", text: "「むかし、この 山の 水は こおり族が まもっていた。」" },
-          { who: "", text: "「こおり族の 王冠を かぶる者は、山の 水を すべて こおらせ、思いのままに できる。ゆえに 王冠は ここに ねむらせる。」" },
-          { who: "", text: "石碑の となりの 箱は……からっぽだ！" },
-          furu("王冠が ない……！ こおり族って、こおりくんの ご先祖さまだよね？ だれかが 王冠を ぬすんで、ダムの 水を こおらせたんだ！"),
-          furu("山の あちこちに、夏なのに とけない 氷の 柱が 立ってたよね。あれが 水を とじこめる「封印」かも。ぜんぶ とかそう！"),
-          { who: "", text: "氷の 封印は 3 つ。森の 原っぱ・雪渓・岩場に ある。" }
-        ], { done: () => app2.save() });
+        story([
+          nar("奥の院の 中に、古い 石碑が ある……。"),
+          act2("move", { id: "koori", x: 200 }),
+          nar("「むかし、氷の 龍 ヒョウガリュウが 目ざめ、山を ぜんぶ こおらせた。」"),
+          act2("fx", { kind: "ice", x: 300, y: 100 }),
+          nar("「こおり族は 王冠の 力で 龍を ダムの 底に ねむらせ、3 本の 氷の 柱で 封印を ささえた。」"),
+          nar("「王冠は 封印の かなめ。ゆえに ここに ねむらせる。」"),
+          act2("wait", { time: 0.4 }),
+          nar("石碑の となりの 箱は……からっぽだ！ 黒い すすが のこっている。"),
+          act2("jump", { id: "furukawa" }),
+          furu("王冠が ない……！ かなめが なくなったから、封印が とけかけてるんだ！"),
+          furu("ダムが こおりついたのも、封印の すきまから 冷気が もれだしてる せいだよ。このままじゃ ヒョウガリュウが 目を さましちゃう！"),
+          act2("jump", { id: "koori", times: 2 }),
+          furu("山の あちこちの 氷の 柱が とけかけてたよね。あれを 作りなおして、封印を もとに もどそう！"),
+          nar("封印の 柱は 3 つ。森の 原っぱ・雪渓・岩場に ある。")
+        ], { place: "yama", weather: "cold", done: () => app2.save() });
         return;
       }
-      say([{ who: "", text: reached(g, "clear3") ? "石碑の となりの 箱に、こおりの 王冠が もどっている。" : "古い 石碑。むかしの こおり族の 言いつたえが 書いてある。" }]);
+      say([{ who: "", text: reached(g, "clear3") ? "石碑の となりの 箱に、こおりの 王冠が もどっている。封印は しっかり とじている。" : "古い 石碑。むかしの こおり族の 言いつたえが 書いてある。" }]);
     }
     function examineSeal(m) {
       if (g.mysteries[m.id]) {
@@ -19930,12 +20948,12 @@ body.nopad #pad { display: none; }
         return;
       }
       if (!g.flags.oku) {
-        say([{ who: "", text: "夏なのに とけない 氷の 柱だ。さわると すごく つめたい……。" }, furu("奥の院に 行けば、なにか わかるかも。")]);
+        say([{ who: "", text: "氷の 柱が とけかけて、ぽたぽた しずくが 落ちている。まわりは すごく つめたい……。" }, furu("奥の院に 行けば、なにか わかるかも。")]);
         return;
       }
       const n = NAKAMA[m.nakama];
       g.zukan.seen[m.nakama] = true;
-      say([...m.lines.map((text2) => ({ who: "", text: text2 })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: "", text: `封印を まもる ${n.name}が おそいかかってきた！` }], {
+      say([...m.lines.map((text2) => ({ who: "", text: text2 })), { who: n.name, art: n.art, text: `「${n.line}」` }, { who: "", text: `冷気で 気が 立った ${n.name}が おそいかかってきた！` }], {
         done: () => app2.startBattle({ enemies: [{ id: m.nakama, lv: m.lv }], kind: "wild", place: "yama", mystery: m.id })
       });
     }
@@ -19993,20 +21011,31 @@ body.nopad #pad { display: none; }
           }
           warp(UMI_IN);
           if (!arriveUmi(g)) return;
-          const L = rivalLines();
-          say([
-            nar("電車に ゆられて、海辺の 町に 着いた。"),
+          const L = rivalLines(), team = rivalTeam(g.version);
+          story([
+            act2("caption", { text: "海辺駅", sub: "電車に ゆられて、海辺の 町に 着いた" }),
+            act2("enter", { id: "koori", from: "left", x: 118 }),
+            act2("enter", { id: "furukawa", from: "left", x: 70 }),
+            act2("jump", { id: "furukawa" }),
+            furu("海の においが する～！ こおりくん、とけないように 気を つけてね！"),
+            ...team.members.map((id, k) => act2("enter", { id, from: "right", x: [250, 300, 350][k], wait: k === team.members.length - 1 })),
+            act2("fx", { kind: "exclaim", id: "koori" }),
             by(L.meet[0], L.meet[1]),
+            act2("jump", { id: team.members[0] }),
+            act2("jump", { id: team.members[2] }),
             furu("ライバル探検隊だ……！ どっちが 先に 奥まで 行けるか 勝負だね！"),
-            nar(`チーム「${rivalTeam(g.version).name}」は 東の 浦の島の海岸どうくつへ 走っていった！`)
-          ], { done: () => app2.save() });
+            act2("pose", { id: L.meet[0], pose: "run" }),
+            ...team.members.map((id, k) => act2("exit", { id, to: "right", wait: k === team.members.length - 1 })),
+            act2("fx", { kind: "smoke", x: 380, y: 140 }),
+            nar(`チーム「${team.name}」は 東の 浦の島の海岸どうくつへ 走っていった！`)
+          ], { place: "station:海辺駅", cast: [], done: () => app2.save() });
         }
       });
     }
     function goTera() {
       warp(TERA_IN);
       if (!arriveTera(g)) return;
-      say([
+      story([
         nar("電車に ゆられて、ネット寺に 着いた。"),
         by("daishi", "よくぞ 参られた。寺の 者たちの 紋が、夜ごとに ふえて おるのです……。"),
         by("daishi", "寺の 古い 書には こう あります。「黒き 紋は 喰らう 者の しるし。紋を つけられし ものは、いずれ 喰われる」と。"),
@@ -20037,7 +21066,7 @@ body.nopad #pad { display: none; }
     function goKurai() {
       warp(KURAI_IN);
       if (!arriveKurai(g)) return;
-      say([
+      story([
         nar("ヒョウガリュウの 背に 乗って 空を かけぬけ、喰らいの 城の 前に おりた。"),
         nar("城の まわりを、紋つきの 軍勢が うめつくしている。"),
         by("daishi", "……こおりどの。ここは 拙僧らが 引き受けましょう。"),
@@ -20052,7 +21081,7 @@ body.nopad #pad { display: none; }
     function goTsubo() {
       warp(TSUBO_IN);
       if (!arriveTsubo(g)) return;
-      say([
+      story([
         nar("電車に ゆられて、ASOの壺の 口に 着いた。"),
         furu("ここ……すごく 熱い……！"),
         by("onioni", "ASOの壺の底か……。おれも 来るのは はじめてだ。"),
@@ -20062,7 +21091,7 @@ body.nopad #pad { display: none; }
     function goKinniku() {
       warp(KINNIKU_IN);
       if (!arriveKinniku(g)) return;
-      say([
+      story([
         nar("電車に ゆられて、筋肉の山の 登山口に 着いた。"),
         by("onioni", "ここが 筋肉の山か……。上の ほうは 雪が のこっとるな。"),
         furu("とちゅうに「雪どけの 氷河」が あるんだって。ノゾエマさんの 道場は 山頂だよ！")
@@ -20074,7 +21103,7 @@ body.nopad #pad { display: none; }
     function goPark() {
       warp(PARK_IN);
       if (!arrivePark(g)) return;
-      say([
+      story([
         nar(`電車に ゆられて、${parkName()}に 着いた！`),
         furu(`わあ、${parkName()}！ アトラクションが いっぱい！ ぜんぶ 乗ろうね！`),
         by("onioni", "おれは 広場で まっとる。……べつに こわいわけじゃ ないぞ。"),
@@ -20105,7 +21134,7 @@ body.nopad #pad { display: none; }
     function parkEvening() {
       const menkyo = g.version === "menkyo";
       parkNight(g);
-      say([
+      story([
         nar("夕方。そろそろ 帰ろうと した、そのとき——"),
         { who: "こおりくん", art: "koori", text: "（あれ？ ふるカワが いない……？）" },
         by("onioni", "さっきまで そこに おったのに……！"),
@@ -20119,18 +21148,34 @@ body.nopad #pad { display: none; }
       warp(SHIRO_IN);
       if (!arriveShiro(g)) return;
       const L = rivalLines(), team = rivalTeam(g.version);
-      say([
-        nar("電車に ゆられて、金色のSE城に 着いた。城門の 前には、鬼鬼団の 鬼たちが ずらりと ならんでいる……！"),
+      story([
+        act2("caption", { text: "金色のSE城", sub: "城門の 前" }),
+        nar("城門の 前には、鬼鬼団の 鬼たちが ずらりと ならんでいる……！"),
+        act2("enter", { id: "oni_a", art: "onioni", from: "dark", x: 260 }),
+        act2("enter", { id: "oni_b", art: "onioni", from: "dark", x: 320 }),
+        act2("pose", { id: "furukawa", pose: "shiver" }),
+        furu("こ、こんなに いっぱい……！"),
+        act2("fx", { kind: "exclaim", id: "koori" }),
         nar(`そこへ、チーム「${team.name}」が かけつけた！`),
+        ...team.members.map((id, k) => act2("enter", { id, from: "left", x: [170, 210, 30][k], wait: k === team.members.length - 1 })),
+        act2("pose", { id: "furukawa", pose: "" }),
         by(L.meet[0], "ここは おれたちが ひきうける！ 行け、こおりくん！"),
+        ...team.members.map((id, k) => act2("move", { id, x: [300, 340, 260][k], time: 0.4, wait: k === team.members.length - 1 })),
+        act2("shake", { power: 6, time: 0.8 }),
+        act2("fx", { kind: "burst", x: 300, y: 120 }),
+        act2("exit", { id: "oni_a", to: "smoke", wait: false }),
+        act2("exit", { id: "oni_b", to: "smoke" }),
+        act2("fx", { kind: "flash" }),
+        nar("ライバル探検隊が 鬼たちを けちらして、城門を こじあけた！"),
+        act2("jump", { id: "furukawa" }),
         furu("ありがとう！ こおりくん、行こう！"),
-        nar("ライバル探検隊が 城門を こじあけた！ 城の 中では 鬼鬼団の 幹部が 待ちかまえている。")
-      ], { done: () => app2.save() });
+        nar("城の 中では 鬼鬼団の 幹部が 待ちかまえている。")
+      ], { place: "shiro", done: () => app2.save() });
     }
     function goMoon() {
       warp(MOON_IN);
       if (!arriveMoon(g)) return;
-      say([
+      story([
         nar("電車に ゆられて、月の迷宮に 着いた。"),
         by("runaya", "ルキハを 追って いるのね。月の 鏡なら、あの 男の むかしを 見せて くれるわ。……月の 鏡なら……あら、これ もう 言ったかしら？"),
         nar("ルナヤは 迷宮の 奥へ 消えた。月の 鏡は 迷宮の いちばん 奥に ある らしい。")
@@ -20139,7 +21184,7 @@ body.nopad #pad { display: none; }
     function goYashiki() {
       warp(YASHIKI_IN);
       if (!arriveYashiki(g)) return;
-      say([
+      story([
         nar("電車に ゆられて、忍びの屋敷に 着いた。"),
         nar("板べいの 門の 中で、だれかが 待っている……。")
       ], { done: () => app2.save() });
@@ -20189,7 +21234,7 @@ body.nopad #pad { display: none; }
         fighting = null;
       }
       if (result2.boss && result2.outcome === "win" && result2.bossId === "kage") {
-        say([
+        story([
           { who: "ルナシャドウ", art: "lunashadow", text: "…………（ぺこり）。" },
           furu("影が おとなしく なった……！ あれ？ 窓の 外に だれか いる！"),
           { who: "おにおに", art: "onioni", text: "ちぇっ、七不思議で 町の こどもを こわがらせる 作戦は しっぱいか。おぼえてろよ、こおりくん！" },
@@ -20200,17 +21245,31 @@ body.nopad #pad { display: none; }
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "himuro") {
         warp(YAMA_AFTER_BOSS);
-        say([
+        story([
+          act2("enter", { id: "hyougaryu", art: "hyougaryu", x: 290, scale: 5.5 }),
           { who: "ヒョウガリュウ", art: "hyougaryu", text: "グ……王冠の 力に のまれて おったか……。" },
-          { who: "", text: "王冠が コロンと 落ちた。氷の 城が とけはじめる……！" },
-          { who: "", text: "ゴゴゴゴ……！ ダムに 水が もどってきた！" },
-          { who: "おにおに", art: "onioni", text: "ちぇっ、王冠で ヒョウガリュウを あやつって、水を 止めて 町を こまらせる 作戦も しっぱいか。" },
-          { who: "おにおに", art: "onioni", text: "つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！" },
-          furu("おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠は 奥の院に もどしておこうね。"),
-          { who: "ヒョウガリュウ", art: "hyougaryu", text: "こおり族の 子よ……王冠を まもれなかった わびだ。わしも 力を かそう。" },
-          { who: "", text: "３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。" },
+          act2("fx", { kind: "sparkle", id: "hyougaryu" }),
+          nar("王冠が コロンと 落ちた。"),
+          act2("move", { id: "koori", x: 220 }),
+          act2("jump", { id: "koori" }),
+          nar("こおりくんが 王冠を ひろうと、割れ目から ふきだしていた 冷気が すうっと おさまっていく……。"),
+          act2("weather", { kind: "" }),
+          act2("move", { id: "koori", x: 118 }),
+          act2("shake", { power: 4, time: 1.4 }),
+          nar("ゴゴゴゴ……！ 湖の 氷が とけて、ダムに 水が もどってきた！"),
+          act2("enter", { id: "onioni", art: "onioni", from: "right", x: 200 }),
+          by("onioni", "ちぇっ、王冠で ヒョウガリュウを あやつって、水を 止めて 町を こまらせる 作戦も しっぱいか。"),
+          by("onioni", "つぎは 商店街の ゲームセンターだ。おぼえてろよ、こおりくん！"),
+          act2("exit", { id: "onioni", to: "right" }),
+          furu("おにおに……！ 王冠を ぬすんだのも 鬼鬼団だったんだ。王冠を 奥の院に もどして、封印を ちゃんと とじようね。"),
+          { who: "ヒョウガリュウ", art: "hyougaryu", text: "こおり族の 子よ……かたじけない。わしは また ダムの 底で ねむろう。こまった ときは 呼ぶが よい。わしの 力も かそう。" },
+          act2("fx", { kind: "ring", id: "hyougaryu" }),
+          act2("exit", { id: "hyougaryu", to: "fade" }),
+          nar("王冠を 奥の院に もどすと、封印の 柱が 青く 光り、封印が しっかりと とじた。"),
+          act2("fx", { kind: "sparkle", x: 200, y: 90 }),
+          nar("３章 クリア！ 山の 沢と 石の川に 水が もどった。封印を まもっていた キャラが 山を 歩きまわるように なった。"),
           furu("こおりくん、いちど 家に 帰ろうか。ともいしさんが 心配してるかも。")
-        ], { done: () => app2.save() });
+        ], { place: "damBack", weather: "cold", done: () => app2.save() });
       } else if (result2.mon && result2.outcome === "win") {
         const m = MONS.find((x) => x.id === result2.mon), n = monsSaved(g);
         const lines = [nar(`${NAKAMA[m.nakama].name}の 黒い 紋が 消えた！ (${n}/${MONS.length})`)];
@@ -20223,9 +21282,9 @@ body.nopad #pad { display: none; }
             nar("そのとき、本堂の 前の ダイシの 体に、黒い 紋が うかびあがった！")
           );
         }
-        say(lines, { done: () => app2.save() });
+        (allMonsSaved(g) ? story : say)(lines, { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "runaya7") {
-        say([
+        story([
           by("runaya", "……ふふ、合格よ。合格。……あら、これは まだ 言って なかったわね。"),
           furu("王冠も メダルも、ルキハが 力を 喰らう ために あつめてたんだ……！"),
           by("runaya", "鬼鬼団の 金色のSE城に、ぬすんだ 力が あつめられて いるはず。おにおにも そこに いるわ。……SE城よ、SE城。わすれないでね？ SE城よ？"),
@@ -20234,7 +21293,7 @@ body.nopad #pad { display: none; }
           nar("石の川駅から、電車で 金色のSE城へ 行けるように なった！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === BOSS14[g.version]) {
-        say([
+        story([
           nar("残党は 黒い 霧に なって 消えた。"),
           furu("こおりくん……ありがとう！ こわかった……！"),
           by("onioni", "……まったく、遊園地くらい ゆっくり 遊ばせろ。"),
@@ -20244,7 +21303,7 @@ body.nopad #pad { display: none; }
           nar("石の川駅の 前に「無限回廊」の 番人が あらわれた。ライバル探検隊も 勝負を まっている！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "onioni12") {
-        say([
+        story([
           by("onioni", "……ぐ……。まいった。おまえ、ほんとうに 強く なったな、こおり。"),
           by("onioni", "だが おれも 負けっぱなしじゃ おらん。……見とけ、これが 鬼の 王の 力だ！"),
           nar("おにおにの 必殺技が「鬼の王の金棒」に 進化した！"),
@@ -20252,7 +21311,7 @@ body.nopad #pad { display: none; }
         ], { done: () => app2.save() });
       } else if (result2.floor13 && result2.outcome === "win") {
         const f = FLOOR13.find((x) => x.floor === result2.floor13), team = TEAMS[floor13Team(f, g.version)];
-        say([
+        story([
           nar(`${BOSSES[f.id].name}の 紋が くだけ、黒い 霧に なって 消えた。`),
           by(team.leader, f.floor < 7 ? "この 先の 階は 幹部は いない。宝箱も あるらしいぞ。気を つけて のぼれ！" : "あとは 最上階だけだ！ 行け、こおり！"),
           nar(`${f.floor} 階を 突破した！`)
@@ -20268,7 +21327,7 @@ body.nopad #pad { display: none; }
           done: () => {
             warp({ x: 6, y: 24, dir: "up" });
             g.time = 0;
-            say([
+            story([
               tomo(`おかえり、こおり。……さ、つぎは ${g.version === "menkyo" ? "免許" : "内定"} とりなさい！`),
               nar("―― こおりくんの 大冒険 ～大集合だヨ！おともだち！～ ――"),
               nar("ストーリー: こおりくんの 作者　／　キャラ: こおりくんシリーズの みんな　／　プログラム・音楽: Claude"),
@@ -20279,13 +21338,13 @@ body.nopad #pad { display: none; }
           }
         });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "aso15") {
-        say([
+        story([
           { who: "大魔王ASO", art: "maou", text: "……見事だ。この 我を 二度も 地に つけるとはな。" },
           { who: "大魔王ASO", art: "maou", text: "よかろう。約束どおり、きさまの 力と なろう。" },
           nar("大魔王ASOが なかまに なった！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "bakuen11") {
-        say([
+        story([
           nar("バクエンリュウの 紋が、ぱきんと くだけた。"),
           { who: "バクエンリュウ", art: "bakuenryu", text: "グ……オオ……。からだが……かるい……。……おまえたちに ついて いこう。" },
           nar("バクエンリュウが なかまに なった！"),
@@ -20297,7 +21356,7 @@ body.nopad #pad { display: none; }
         if (result2.dark === DARK10_GOAL) lines.push(nar("家の ほうから、いやな 気配が する……！"), furu("ともいしさんが あぶない！ 家へ 行こう！"));
         say(lines, { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "tashikeda10") {
-        say([
+        story([
           { who: "タシケダ", art: "tashikeda", text: "エラー……エラー……。ルキハさまに 報告……しなきゃ……。" },
           nar("タシケダは 黒い 霧に なって 消えた。"),
           nar("霧が はれ、町に 朝が もどった。"),
@@ -20309,14 +21368,14 @@ body.nopad #pad { display: none; }
           nar("―― １１章は つぎの アップデートで。")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "harukirin9") {
-        say([
+        story([
           by("harukirin", "……春を はねかえす 氷か。見事だ。"),
           by("harukirin", "そなたの 道を 春風で ひらこう。……わたしも ともに 行こう。"),
           nar("ハル麒麟が なかまに なった！ 北の 細道が 通れるように なった。"),
           furu("この 先が 山頂の 道場だよ！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "nozoema9") {
-        say([
+        story([
           by("nozoema", "……見事な 筋肉だ。"),
           by("nozoema", "こおりくん、そなたの 剣には まだ 眠っている 力が ある。……わが 名刀江波の 型、受けとるがよい！"),
           nar("こおりくんの 必殺技が「絶対殺すソード・レクイエム」に 進化した！"),
@@ -20333,24 +21392,24 @@ body.nopad #pad { display: none; }
         say(lines, { done: () => app2.save() });
       } else if (result2.team && result2.outcome === "win") {
         const T = TEAMS[result2.team];
-        say([
+        story([
           by(T.leader, TEAM_WIN[result2.team]),
           nar(`${T.members.map((id) => NAKAMA[id].name).join("・")}が なかまに なった！`)
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "ooni8") {
-        say([
+        story([
           { who: "大鬼", art: "ooni", text: "ぐ……おお……。" },
           nar("大鬼の 紋が、ぱきんと くだけた。大鬼は その場に すわりこんで、ねむって しまった。"),
           furu("紋が とけた！ 次の 部屋へ 行こう！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "soutou8") {
-        say([
+        story([
           { who: "双頭鬼 (右の頭)", art: "soutouki", text: "……あれ？ おれたち、なんで けんか してたんだっけ？" },
           { who: "双頭鬼 (左の頭)", art: "soutouki", text: "さあ……。頭が 2 つ あっても、思い出せん……。" },
           nar("双頭鬼の 紋が くだけた！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "kinme8") {
-        say([
+        story([
           by("kinmetsuki", "……ぐぬぬ、金ピカが……はがれる……。"),
           nar("金滅鬼の 紋が、ぱきんと くだけた。"),
           by("kinmetsuki", "……その 心、本物か。この 金滅鬼、きさまらに ついて いこう。"),
@@ -20358,7 +21417,7 @@ body.nopad #pad { display: none; }
           furu("この 先が 玉座の 間……おにおにが いるはずだよ！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "onioni8") {
-        say([
+        story([
           nar("おにおにの 紋が くだけ、目に 光が もどった。"),
           by("onioni", "……う、ここは……おれの SE城か？ なんで こおりが ここに……。"),
           by("onioni", "そうだ……ルキハって 男に 会って、目を 見た とたん……そこから なにも おぼえとらん……。"),
@@ -20371,12 +21430,12 @@ body.nopad #pad { display: none; }
           nar("いったん 石の川タウンの 家に 帰ろう。")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "zumitani6") {
-        say([
+        story([
           by("zumitani", "へえ、思ったより やるじゃん♪ 鬼鬼団は この 屋敷の 奥に メダルを はこんでるよ。ただの どろぼうに しては、手ぎわが よすぎるんだよね～。"),
           nar("ズミタニが 道を あけた。屋敷の 奥へ 行けるように なった！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "onioni6") {
-        say([
+        story([
           by("onioni", "……ぐっ……。"),
           nar("黒い 霧が おにおにを つつみ、ルキハと いっしょに 消えた……。"),
           furu("おにおに、ぜんぜん いつもと ちがった……。"),
@@ -20384,7 +21443,7 @@ body.nopad #pad { display: none; }
           nar("東の 蔵から、ガタガタと 音が する。だれかが メダルを はこび出そうと している！")
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "tomooka6") {
-        say([
+        story([
           { who: "トモオカ", art: "tomooka", text: "ぐぬぬ……この 右腕が……しぼむとは……！ おぼえとけよ！" },
           nar("トモオカは メダルの 袋を 落として にげていった！"),
           nar("町の 子たちの メダルを 少し とりもどした！"),
@@ -20393,7 +21452,7 @@ body.nopad #pad { display: none; }
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "daishi5") {
         warp(TERA_AFTER_BOSS);
-        say([
+        story([
           nar("ダイシの 黒い 紋が、けむりの ように 消えた。"),
           by("daishi", "……かたじけない。拙僧も 紋に のまれ、鬼の 顔に なって おりました。"),
           by("daishi", "紋を つけた 者の 名は……「ルキハ」。人の すがたを した、なにか ですぞ。"),
@@ -20402,10 +21461,20 @@ body.nopad #pad { display: none; }
           furu("こおりくん、いちど 家に 帰ろう。ともいしさんが 心配してるよ。")
         ], { done: () => app2.save() });
       } else if (result2.rival && result2.outcome === "win") {
-        say([...rivalLines().lose.map(([id, text2]) => by(id, text2)), nar("ライバル探検隊は 道を ゆずった。"), furu("奥から だれかの 声が する……！ 行ってみよう！")], { done: () => app2.save() });
+        const team = rivalTeam(g.version);
+        story([
+          ...team.members.map((id) => act2("enter", { id, x: { [team.members[0]]: 250, [team.members[1]]: 300, [team.members[2]]: 350 }[id], wait: false })),
+          act2("pose", { id: team.leader, pose: "bow" }),
+          ...rivalLines().lose.map(([id, text2]) => by(id, text2)),
+          act2("pose", { id: team.leader, pose: "" }),
+          ...team.members.map((id, k) => act2("move", { id, x: [380, 400, 420][k], time: 0.6, wait: k === team.members.length - 1 })),
+          nar("ライバル探検隊は 道を ゆずった。"),
+          act2("fx", { kind: "question", id: "furukawa" }),
+          furu("奥から だれかの 声が する……！ 行ってみよう！")
+        ], { place: "cave", done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win" && result2.bossId === "urashima4") {
         warp(UMI_AFTER_BOSS);
-        say([
+        story([
           nar("浦の島重蔵の 黒い 紋が、けむりの ように 消えた。"),
           by("urashima", "……はて。わしは なにを しておったんじゃ……。ほっほっほ。強い 若者じゃのう。ひさしぶりに 脳汁が でたわい。"),
           by("urashima", "お礼に 力を かそう。……なんの お礼じゃったかの。"),
@@ -20418,18 +21487,38 @@ body.nopad #pad { display: none; }
         ], { done: () => app2.save() });
       } else if (result2.mystery && result2.outcome === "win" && SEALS.some((x) => x.id === result2.mystery)) {
         const m = SEALS.find((x) => x.id === result2.mystery), n = sealsSolved(g);
-        say([
-          { who: "", text: `氷の 封印「${m.label}」が とけた！ (${n}/${SEALS.length})` },
-          ...allSealsSolved(g) ? [furu("これで 封印は ぜんぶ とけた！ ……ダムの ほうから ゴゴゴって 音が する！"), { who: "", text: "ダムの 湖の 底の 氷の 城へ 行ってみよう。" }] : []
-        ], { done: () => app2.save() });
+        if (!allSealsSolved(g)) {
+          say([{ who: "", text: `しずまった ${NAKAMA[m.nakama].name}と いっしょに、とけかけた「${m.label}」を 作りなおした！ (${n}/${SEALS.length})` }, furu("柱が 青く 光ってる！ この ちょうしで ほかの 柱も 作りなおそう！")], { done: () => app2.save() });
+          return;
+        }
+        story([
+          act2("fx", { kind: "sparkle", x: 200, y: 100 }),
+          nar(`「${m.label}」を 作りなおした！ これで 封印の 柱は ${n} 本 ぜんぶ もとどおりだ。`),
+          act2("jump", { id: "furukawa" }),
+          furu("やったね！ あとは 王冠さえ とりもどせば……"),
+          act2("shake", { power: 6, time: 1.4 }),
+          act2("fx", { kind: "exclaim", id: "koori" }),
+          nar("ダムの ほうから、ゴゴゴゴ……と 地ひびきが した。"),
+          act2("weather", { kind: "cold" }),
+          act2("enter", { id: "hyougaryu", art: "hyougaryu", from: "top", x: 300, scale: 5 }),
+          act2("pose", { id: "hyougaryu", pose: "float" }),
+          act2("fx", { kind: "ring", id: "hyougaryu" }),
+          { who: "？？？", art: "hyougaryu", text: "グルルル……封印など させぬ……この 王冠が ある かぎり……！" },
+          act2("pose", { id: "furukawa", pose: "shiver" }),
+          furu("りゅ、龍……！ あれが ヒョウガリュウ！？ 頭に 王冠を かぶってる！"),
+          act2("exit", { id: "hyougaryu", to: "up" }),
+          act2("pose", { id: "furukawa", pose: "" }),
+          nar("ヒョウガリュウは 冷気を まきちらしながら、ダムの 封印の 割れ目へ もぐっていった。"),
+          furu("だれかが 王冠で ヒョウガリュウを 起こして、あやつってるんだ……！ ダムへ 行こう！")
+        ], { place: "yama", done: () => app2.save() });
       } else if (result2.mystery && result2.outcome === "win") {
         const m = MYSTERIES.find((x) => x.id === result2.mystery), n = mysteriesSolved(g);
-        say([
+        story([
           { who: "", text: `七不思議「${m.label}」の 正体は ${NAKAMA[m.nakama].name}だった！ (${n}/${MYSTERIES.length})` },
           ...allMysteriesSolved(g) ? [furu("これで 七つ ぜんぶ たしかめた！ ……あれ？ ろうかの おくに、黒い 影が 走っていった！"), { who: "", text: "ろうかの 西の はしに 行ってみよう。" }] : []
         ], { done: () => app2.save() });
       } else if (result2.boss && result2.outcome === "win") {
-        say([
+        story([
           { who: "ハシシタボウズ", art: "hashishita", text: "数えまちがえて イライラ してたんだ……ごめんよ。これからは 橋の下で しずかに 数えるよ。" },
           furu("やったね、こおりくん！ これで 東側にも 行けるね。お寺の ほうにも なかまが いるかも！"),
           { who: "", text: "１章 クリア！" },
@@ -20437,7 +21526,7 @@ body.nopad #pad { display: none; }
           { who: "", text: "商店街に 行けるように なった！ ―― ２章は つぎの アップデートで。" }
         ], { done: () => app2.save() });
       } else if (result2.storyChanged === "bridge") {
-        say([furu("なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！")], { done: () => app2.save() });
+        story([furu("なかまが ふえたね！ そういえば 石の川橋に 足音を 数える 大きな 坊主が いて、だれも 渡れないんだって。行ってみよう！")], { done: () => app2.save() });
       } else if (result2.outcome === "lose") {
         say([{ who: "", text: `こおりくんは 家に 逃げかえった……。(${-result2.money}円 落とした)` }]);
       }
@@ -20492,9 +21581,16 @@ body.nopad #pad { display: none; }
         lens.charge = Math.max(0, lens.charge - dt * 2);
       }
     }
+    let helpCount = helpTopics(g).length, helpNote = null;
     function update(dt, input2) {
       t += dt;
       g.playTime += dt;
+      const hc = helpTopics(g);
+      if (hc.length > helpCount && !app2.talk.isActive()) {
+        helpNote = { title: hc[hc.length - 1].title, n: hc.length - helpCount, until: t + 3.5 };
+        helpCount = hc.length;
+        sfx("watch");
+      }
       camera();
       wild.update(dt, g.pos);
       if (app2.talk.isActive()) return;
@@ -20503,7 +21599,7 @@ body.nopad #pad { display: none; }
         return;
       }
       if (g.story === "clear9" && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
-        say([
+        story([
           nar("町じゅうに 黒い 霧が たちこめている……。"),
           furu("みんなの 体に 紋が……！ はやく 助けなきゃ！"),
           by("onioni", "ルキハの 軍勢の しわざか……！ 町の やつらも 商店街の やつらも、ぜんぶ 紋つきに なっとるぞ。"),
@@ -20559,7 +21655,8 @@ body.nopad #pad { display: none; }
         warp(SCHOOL_OUT);
         return;
       }
-      if (tileAt(ht.x, ht.y) === "U") {
+      const area = areaAt(ht.x, ht.y);
+      if (tileAt(ht.x, ht.y) === "U" && (area === "yama" || area === "ishinokawa")) {
         if (inYama()) warp(YAMA_OUT);
         else enterYama();
         return;
@@ -20793,6 +21890,7 @@ body.nopad #pad { display: none; }
       for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
       drawGates(ctx);
       drawSeals(ctx);
+      drawColdLeak(ctx);
       drawMons(ctx);
       drawPeople(ctx);
       if (TINT[g.time]) {
@@ -20827,24 +21925,64 @@ body.nopad #pad { display: none; }
         ctx.stroke();
       }
       if (lens) drawLens(ctx);
+      if (helpNote && helpNote.until > t && !app2.talk.isActive()) {
+        panel(ctx, 60, 14, 280, 24, { fill: "rgba(16,22,42,0.92)", edge: "#ff9ad8" });
+        text(ctx, `ヘルプに「${helpNote.title}」${helpNote.n > 1 ? `など ${helpNote.n} こ` : ""}が ふえた！ (メニュー)`, 200, 31, { size: 11, align: "center", bold: true, color: "#ff9ad8", maxWidth: 270 });
+      }
       app2.talk.drawTop(ctx, t);
     }
     function drawSeals(ctx) {
-      for (const m of sealsHere(g)) {
+      for (const m of SEALS) {
         const x = m.x * TILE - cam.x, y = m.y * TILE - cam.y;
         if (x < -30 || x > 430 || y < -40 || y > 270) continue;
+        const fixed = Boolean(g.mysteries[m.id]);
         ctx.fillStyle = "rgba(0,0,0,0.2)";
         ctx.fillRect(x + 1, y + 13, 14, 3);
-        ctx.fillStyle = "#7ac8e8";
-        ctx.fillRect(x + 3, y - 10, 10, 25);
+        if (fixed) {
+          ctx.fillStyle = `rgba(140, 220, 255, ${0.25 + 0.15 * Math.sin(t * 3 + m.x)})`;
+          ctx.beginPath();
+          ctx.ellipse(x + 8, y + 2, 12, 18, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#7ac8e8";
+          ctx.fillRect(x + 3, y - 10, 10, 25);
+          ctx.fillStyle = "#bfeaff";
+          ctx.fillRect(x + 4, y - 13, 8, 4);
+          ctx.fillRect(x + 5, y - 8, 3, 18);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(x + 5, y - 9, 1, 6);
+          ctx.fillStyle = "#5aa8d0";
+          ctx.fillRect(x + 11, y - 8, 1, 20);
+          continue;
+        }
+        ctx.fillStyle = "rgba(90, 160, 210, 0.45)";
+        ctx.beginPath();
+        ctx.ellipse(x + 8, y + 14, 10, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#8ac8e0";
+        ctx.fillRect(x + 3, y - 4, 10, 19);
+        ctx.fillStyle = "#c8eeff";
+        ctx.fillRect(x + 4, y - 6, 7, 3);
+        ctx.fillRect(x + 5, y - 2, 2, 12);
+        ctx.fillStyle = "#4a88b0";
+        ctx.fillRect(x + 8, y - 3, 1, 5);
+        ctx.fillRect(x + 9, y + 2, 1, 4);
+        ctx.fillRect(x + 7, y + 6, 1, 4);
+        const d = (t * 1.4 + m.x * 0.37) % 1;
         ctx.fillStyle = "#bfeaff";
-        ctx.fillRect(x + 4, y - 13, 8, 4);
-        ctx.fillRect(x + 5, y - 8, 3, 18);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x + 5, y - 9, 1, 6);
-        ctx.fillStyle = "#5aa8d0";
-        ctx.fillRect(x + 11, y - 8, 1, 20);
-        if (g.flags.oku) text(ctx, "？", x + 8, y - 20 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: "center", bold: true, color: "#8ae0ff" });
+        ctx.fillRect(x + 12, y + 4 + d * 9, 1, 2);
+        if (g.flags.oku) text(ctx, "？", x + 8, y - 14 + Math.sin(t * 4 + m.x) * 2, { size: 13, align: "center", bold: true, color: "#8ae0ff" });
+      }
+    }
+    function drawColdLeak(ctx) {
+      if (!inYama() || reached(g, "clear3")) return;
+      for (let i = 0; i < 14; i++) {
+        const bx = (30 + i % 7 * 2.2) * TILE + Math.sin(t * 0.7 + i) * 30, by2 = (YAMA_Y0 + 2 + i % 5 * 2) * TILE - (t * 10 + i * 13) % 60;
+        const x = bx - cam.x, y = by2 - cam.y;
+        if (x < -60 || x > 460 || y < -40 || y > 280) continue;
+        ctx.fillStyle = `rgba(235, 250, 255, ${0.18 + 0.08 * Math.sin(t * 2 + i)})`;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 34, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
     function drawMons(ctx) {
@@ -20966,6 +22104,7 @@ body.nopad #pad { display: none; }
       if (goal && gy > 30 && gy < 136) text(ctx, "!", 8 + goal.x * 3, gy, { size: 12, bold: true, align: "center", color: COLORS.accent });
       button(ctx, BTN.lens, { disabled: !hasWatch(g) });
       button(ctx, BTN.menu);
+      if (helpUnseen(g).length) text(ctx, "NEW", BTN.menu.x + BTN.menu.w - 4, BTN.menu.y + 2, { size: 9, align: "right", bold: true, color: "#ff9ad8" });
       text(ctx, hasWatch(g) ? `なかま ${g.medals.length} / 図鑑 ${friendCount(g)}` : "ウォッチを まだ もっていない", 238, 132, { size: 11, align: "center", color: COLORS.sub });
       panel(ctx, 6, 146, 308, 52);
       text(ctx, "もくてき", 14, 162, { size: 10, color: COLORS.accent, bold: true });
@@ -22445,8 +23584,6 @@ body.nopad #pad { display: none; }
   const BUFF_NAMES = { atk: "こうげき↑", def: "まもり↑", spd: "すばやさ↑", mag: "ようじゅつ↑" };
   const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
   const ALLY_SCALE = 4;
-  const HORIZON = 70;
-  const RIVER = ["kawara", "kawaraN", "kawaraS", "hashiue", "hashishita", "kawakami", "bridge"];
   function createBattleView(app2, battle, place) {
     const g = app2.g;
     let t = 0, endT = 0;
@@ -23393,286 +24530,6 @@ body.nopad #pad { display: none; }
       }
       if (!tc.down) drag = null;
     }
-    function drawSchoolBackground(ctx) {
-      ctx.fillStyle = "#2a2438";
-      ctx.fillRect(0, 0, 400, HORIZON);
-      for (let i = 0; i < 4; i++) {
-        const x = 30 + i * 96;
-        ctx.fillStyle = "#141a3a";
-        ctx.fillRect(x, 14, 56, 40);
-        ctx.fillStyle = "#6a5a7a";
-        ctx.fillRect(x + 27, 14, 2, 40);
-        ctx.fillRect(x, 33, 56, 2);
-      }
-      ctx.fillStyle = "#fff6c8";
-      ctx.beginPath();
-      ctx.arc(76, 26, 6, 0, Math.PI * 2);
-      ctx.fill();
-      const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
-      gg.addColorStop(0, "#6a4a2a");
-      gg.addColorStop(1, "#b08a5a");
-      ctx.fillStyle = gg;
-      ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
-      ctx.fillRect(0, HORIZON, 400, 4);
-      ctx.strokeStyle = "rgba(60, 30, 10, 0.35)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let i = -6; i <= 6; i++) {
-        ctx.moveTo(200 + i * 14, HORIZON);
-        ctx.lineTo(200 + i * 90, 240);
-      }
-      ctx.stroke();
-    }
-    function drawCaveBackground(ctx) {
-      const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
-      grad.addColorStop(0, "#141820");
-      grad.addColorStop(1, "#2a3440");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 400, HORIZON);
-      ctx.fillStyle = "#3a4654";
-      for (let i = 0; i < 9; i++) ctx.fillRect(i * 46 - 8, HORIZON - 18 - i % 3 * 9, 40, 30);
-      ctx.fillStyle = "#222a34";
-      for (let i = 0; i < 12; i++) {
-        const x = i * 35 + 6;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x + 8, 0);
-        ctx.lineTo(x + 4, 10 + i % 4 * 6);
-        ctx.fill();
-      }
-      const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
-      gg.addColorStop(0, "#3a4048");
-      gg.addColorStop(1, "#6a7078");
-      ctx.fillStyle = gg;
-      ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
-      ctx.fillStyle = "rgba(60, 140, 200, 0.55)";
-      ctx.beginPath();
-      ctx.ellipse(70, 200, 50, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(340, 170, 40, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
-      for (let i = 0; i < 4; i++) ctx.fillRect(40 + i * 20 + Math.sin(t * 2 + i) * 4, 198, 6, 1);
-    }
-    function drawBackground(ctx) {
-      if (place === "school") {
-        drawSchoolBackground(ctx);
-        return;
-      }
-      if (place === "cave") {
-        drawCaveBackground(ctx);
-        return;
-      }
-      const river = RIVER.includes(place);
-      const sky = g.time === 3 ? ["#141a3a", "#2a2a5a"] : g.time === 2 ? ["#f08a4a", "#f8c070"] : ["#7ac8f8", "#c8ecff"];
-      const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
-      grad.addColorStop(0, sky[0]);
-      grad.addColorStop(1, sky[1]);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 400, HORIZON);
-      const yama = place === "yama" || place === "dam";
-      if (yama) {
-        for (const [x, w, h] of [[-20, 160, 62], [90, 200, 80], [250, 190, 66], [340, 140, 50]]) {
-          const top = HORIZON - h;
-          ctx.fillStyle = "rgba(50, 80, 110, 0.55)";
-          ctx.beginPath();
-          ctx.moveTo(x, HORIZON);
-          ctx.lineTo(x + w / 2, top);
-          ctx.lineTo(x + w, HORIZON);
-          ctx.fill();
-          ctx.fillStyle = "rgba(240, 248, 255, 0.85)";
-          ctx.beginPath();
-          ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18);
-          ctx.lineTo(x + w / 2, top);
-          ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18);
-          ctx.fill();
-        }
-      } else if (place === "shrine") {
-        ctx.fillStyle = "#2a0a12";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        for (let i = 0; i < 6; i++) {
-          ctx.fillStyle = `rgba(80, 10, 30, ${0.3 + 0.1 * Math.sin(t + i)})`;
-          ctx.beginPath();
-          ctx.ellipse((i * 79 + t * 8) % 480 - 40, 20 + i % 3 * 18, 60, 12, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = "#c03a2a";
-        ctx.fillRect(140, 30, 120, 10);
-        ctx.fillRect(150, 46, 100, 6);
-        ctx.fillRect(160, 40, 8, HORIZON - 40);
-        ctx.fillRect(232, 40, 8, HORIZON - 40);
-      } else if (place === "kurai") {
-        ctx.fillStyle = "#1a0a24";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        for (let i = 0; i < 7; i++) {
-          ctx.fillStyle = `rgba(90, 30, 120, ${0.3 + 0.1 * Math.sin(t * 1.5 + i)})`;
-          ctx.beginPath();
-          ctx.ellipse((i * 71 + t * 22) % 480 - 40, 16 + i % 3 * 16, 64, 12, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        if (Math.floor(t * 3) % 11 === 0) {
-          ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
-          ctx.fillRect(0, 0, 400, HORIZON);
-        }
-        [[20, "#3a2a4a"], [96, "#4a2a3a"], [290, "#2a3a4a"], [366, "#3a2a4a"]].forEach(([x, c]) => {
-          ctx.fillStyle = c;
-          ctx.fillRect(x, 20, 18, HORIZON - 20);
-          ctx.fillStyle = "#5a3a6a";
-          ctx.fillRect(x, 44, 18, 4);
-          ctx.fillRect(x, 70, 18, 4);
-        });
-      } else if (place === "tsubo") {
-        ctx.fillStyle = "#1a0c0a";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        ctx.fillStyle = "#2a1410";
-        [[0, 50], [70, 30], [150, 56], [250, 26], [330, 44]].forEach(([x, y]) => {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x + 40, y);
-          ctx.lineTo(x + 80, 0);
-          ctx.fill();
-        });
-        const lg = ctx.createLinearGradient(0, HORIZON - 30, 0, HORIZON);
-        lg.addColorStop(0, "rgba(255, 90, 20, 0)");
-        lg.addColorStop(1, `rgba(255, 90, 20, ${0.45 + 0.1 * Math.sin(t * 2)})`);
-        ctx.fillStyle = lg;
-        ctx.fillRect(0, HORIZON - 30, 400, 30);
-      } else if (place === "town") {
-        ctx.fillStyle = "#2a1a3a";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        ctx.fillStyle = "#1a1028";
-        [[10, 40, 60], [90, 30, 50], [170, 46, 70], [260, 34, 56], [330, 44, 64]].forEach(([x, y, w]) => {
-          ctx.fillRect(x, y, w, HORIZON - y);
-          ctx.beginPath();
-          ctx.moveTo(x - 4, y);
-          ctx.lineTo(x + w / 2, y - 16);
-          ctx.lineTo(x + w + 4, y);
-          ctx.fill();
-        });
-        for (let i = 0; i < 8; i++) {
-          ctx.fillStyle = `rgba(140, 60, 180, ${0.15 + 0.08 * Math.sin(t + i)})`;
-          ctx.beginPath();
-          ctx.ellipse((i * 67 + t * 12) % 460 - 30, 30 + i % 3 * 22, 50, 14, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (place === "kinniku" || place === "hyouga") {
-        ctx.fillStyle = place === "hyouga" ? "#9ad0f0" : "#7ab8e8";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        ctx.fillStyle = "#7a6a5a";
-        ctx.beginPath();
-        ctx.moveTo(-20, HORIZON);
-        ctx.lineTo(80, 30);
-        ctx.lineTo(180, HORIZON);
-        ctx.lineTo(240, 50);
-        ctx.lineTo(330, 20);
-        ctx.lineTo(430, HORIZON);
-        ctx.fill();
-        ctx.fillStyle = "#f4f8ff";
-        [[80, 30], [240, 50], [330, 20]].forEach(([x, y]) => {
-          ctx.beginPath();
-          ctx.moveTo(x - 22, y + 22);
-          ctx.lineTo(x, y);
-          ctx.lineTo(x + 22, y + 22);
-          ctx.fill();
-        });
-        if (place === "hyouga") {
-          ctx.fillStyle = "#ffb0c8";
-          for (let i = 0; i < 14; i++) ctx.fillRect((i * 61 + t * 20) % 400, (i * 29 + t * 14) % HORIZON, 3, 2);
-        }
-      } else if (place === "yuen") {
-        ctx.fillStyle = "#141032";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        ctx.strokeStyle = "#4a3a8a";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(320, 70, 54, 0, Math.PI * 2);
-        ctx.stroke();
-        for (let i = 0; i < 8; i++) {
-          const a = i * Math.PI / 4 + t * 0.2;
-          ctx.beginPath();
-          ctx.moveTo(320, 70);
-          ctx.lineTo(320 + Math.cos(a) * 54, 70 + Math.sin(a) * 54);
-          ctx.stroke();
-        }
-        for (let i = 0; i < 20; i++) {
-          ctx.fillStyle = ["#ff6a8a", "#ffe85a", "#6ae0ff"][i % 3];
-          ctx.fillRect(i * 21 + 4, 24 + Math.sin(i) * 6, 3, 3);
-        }
-      } else if (place === "shiro") {
-        ctx.fillStyle = "#a07818";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        ctx.fillStyle = "#e0b840";
-        ctx.fillRect(0, HORIZON - 40, 400, 40);
-        ctx.fillStyle = "#fff0a0";
-        ctx.fillRect(0, HORIZON - 40, 400, 2);
-        ctx.fillStyle = "#a02020";
-        for (let i = 0; i < 6; i++) ctx.fillRect(20 + i * 72, 0, 12, HORIZON);
-        ctx.fillStyle = "#ff6a3a";
-        for (let i = 0; i < 5; i++) {
-          ctx.beginPath();
-          ctx.ellipse(62 + i * 72, 26, 9, 12, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      } else if (place === "moon") {
-        ctx.fillStyle = "#0c0a24";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        ctx.fillStyle = "#ffffff";
-        for (let i = 0; i < 24; i++) ctx.fillRect(i * 97 % 400, i * 37 % (HORIZON - 10), 1, 1);
-        ctx.fillStyle = "#2a2050";
-        for (let i = 0; i < 7; i++) ctx.fillRect(i * 64 - 10, HORIZON - 24 - i % 2 * 10, 44, 34);
-      } else if (place === "yashiki") {
-        ctx.fillStyle = "#4a3624";
-        ctx.fillRect(0, 0, 400, HORIZON);
-        for (let i = 0; i < 6; i++) {
-          ctx.fillStyle = "#e8e0c8";
-          ctx.fillRect(14 + i * 66, 12, 52, HORIZON - 18);
-          ctx.fillStyle = "#6a5038";
-          for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66 + k * 17, 12, 2, HORIZON - 18);
-          for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66, 12 + k * 17, 52, 2);
-        }
-      } else if (place === "tera") {
-        ctx.fillStyle = "rgba(40, 30, 50, 0.45)";
-        for (let i = 0; i < 5; i++) ctx.fillRect(300 + i * 2, HORIZON - 14 - i * 12, 40 - i * 4, 4);
-        ctx.fillRect(318, HORIZON - 70, 4, 70);
-        ctx.fillStyle = "rgba(40, 90, 50, 0.4)";
-        for (let i = 0; i < 9; i++) ctx.fillRect(10 + i * 26, HORIZON - 50 - i % 3 * 8, 4, 60);
-      } else if (place === "umi") {
-        ctx.fillStyle = "#2a7ac0";
-        ctx.fillRect(0, HORIZON - 22, 400, 22);
-        ctx.fillStyle = "rgba(255,255,255,0.45)";
-        for (let i = 0; i < 7; i++) ctx.fillRect((i * 67 + t * 12) % 420 - 10, HORIZON - 18 + i % 3 * 6, 10, 1);
-      } else {
-        ctx.fillStyle = "rgba(40, 60, 90, 0.25)";
-        [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
-      }
-      const ground = river ? ["#2a6aa8", "#4aa0e0"] : place === "park" ? ["#c8b880", "#f0e0a8"] : place === "dam" ? ["#7aa8c0", "#c8e6f2"] : place === "umi" ? ["#d0b878", "#f0e0a8"] : place === "tera" ? ["#9a9a92", "#c8c8c0"] : place === "yashiki" ? ["#a8a060", "#d8d090"] : place === "moon" ? ["#3a3070", "#6a60a8"] : place === "shiro" ? ["#8a1828", "#c03040"] : place === "yuen" ? ["#5a5a6a", "#8a8a9a"] : place === "kinniku" ? ["#8a7a5a", "#b8a888"] : place === "town" ? ["#3a3048", "#5a4a6a"] : place === "tsubo" ? ["#4a1a10", "#7a3a20"] : place === "kurai" ? ["#2a1a34", "#4a3058"] : place === "shrine" ? ["#8a8070", "#b0a890"] : place === "hyouga" ? ["#c8e6f2", "#f0faff"] : ["#4a9a3a", "#7ad05a"];
-      const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
-      gg.addColorStop(0, ground[0]);
-      gg.addColorStop(1, ground[1]);
-      ctx.fillStyle = gg;
-      ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
-      ctx.fillStyle = river ? "#c8c0b0" : "rgba(0,0,0,0.12)";
-      ctx.fillRect(0, HORIZON, 400, 4);
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let i = -6; i <= 6; i++) {
-        ctx.moveTo(200 + i * 12, HORIZON);
-        ctx.lineTo(200 + i * 80, 240);
-      }
-      for (let k = 1; k <= 5; k++) {
-        const y = HORIZON + (240 - HORIZON) * Math.pow(k / 5, 1.8);
-        ctx.moveTo(0, y);
-        ctx.lineTo(400, y);
-      }
-      ctx.stroke();
-      if (river) {
-        ctx.fillStyle = "rgba(255,255,255,0.3)";
-        for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, HORIZON + 20 + i * 17 % 140, 18, 2);
-      }
-    }
     function drawUnit(ctx, u, p, { scale = 3, flip = false, back = false } = {}) {
       if (!u || u.idol && u.ko) return;
       const lit = (flash[u.uid] || 0) > t;
@@ -24058,7 +24915,7 @@ body.nopad #pad { display: none; }
     }
     function drawTop(ctx) {
       var _a, _b;
-      drawBackground(ctx);
+      drawBackdrop(ctx, place, t, g.time);
       battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
       battle.enemies.forEach((e, i) => {
         if (e.parts && !e.ko) drawParts(ctx, e, i);
@@ -24498,9 +25355,9 @@ body.nopad #pad { display: none; }
     }
     return { name: "result", update, drawTop, drawBottom, debug: { page: () => pages[page], decide } };
   }
-  const TABS = ["へんせい", "なかま", "図鑑", "もちもの", "いらい", "セーブ"];
-  const TAB_BTN = TABS.map((label, i) => ({ x: 4 + i * 52, y: 4, w: 49, h: 26, label }));
-  const T_QUEST = 4, T_SAVE = 5;
+  const TABS = ["へんせい", "なかま", "図鑑", "もちもの", "いらい", "ヘルプ", "セーブ"];
+  const TAB_BTN = TABS.map((label, i) => ({ x: 2 + i * 45, y: 4, w: 43, h: 26, label }));
+  const T_QUEST = 4, T_HELP = 5, T_SAVE = 6;
   const NT = TABS.length;
   const SLOT_BTN = Array.from({ length: 6 }, (_, i) => ({ x: 8 + i % 3 * 102, y: 38 + Math.floor(i / 3) * 44, w: 98, h: 40 }));
   const LIST_TOP$1 = 132, ROW_H$1 = 20, ROWS$1 = 5;
@@ -24514,6 +25371,7 @@ body.nopad #pad { display: none; }
     let nIndex = 0;
     let iIndex = 0;
     let qIndex = 0;
+    let hIndex = 0;
     let saved = 0;
     const box = () => g.medals;
     const scroll = (index, rows, len) => Math.max(0, Math.min(len - rows, index - Math.floor(rows / 2)));
@@ -24576,7 +25434,11 @@ body.nopad #pad { display: none; }
       else if (tab === 2) zIndex = moveList(input2, zIndex, NAKAMA_IDS.length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
       else if (tab === 3) iIndex = moveList(input2, iIndex, Object.keys(ITEMS).length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(iIndex, ITEM_ROWS, Object.keys(ITEMS).length), ITEM_ROWS);
       else if (tab === T_QUEST) qIndex = moveList(input2, qIndex, questList(g).length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
-      else if (tab === T_SAVE) {
+      else if (tab === T_HELP) {
+        const list = helpTopics(g);
+        hIndex = moveList(input2, hIndex, list.length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(hIndex, ZUKAN_ROWS, list.length), ZUKAN_ROWS);
+        if (list[hIndex]) seeHelp(g, list[hIndex].id);
+      } else if (tab === T_SAVE) {
         if (input2.pressed.up || input2.pressed.down) {
           sIndex = 1 - sIndex;
           sfx("cursor");
@@ -24700,9 +25562,9 @@ body.nopad #pad { display: none; }
     function drawNakama(ctx, id, medal, { known = true } = {}) {
       const n = unitOf(id);
       panel(ctx, 10, 10, 150, 220, { fill: "rgba(255,255,255,0.06)" });
-      const big = ART[n.art].h > 24 ? 3.4 : 6;
-      if (known) drawArt(ctx, ART[n.art], Math.floor(t * 2), 85, 130, { scale: big });
-      else drawArt(ctx, ART[n.art], 0, 85, 130, { scale: big, tint: "#0a0f20" });
+      const big2 = ART[n.art].h > 24 ? 3.4 : 6;
+      if (known) drawArt(ctx, ART[n.art], Math.floor(t * 2), 85, 130, { scale: big2 });
+      else drawArt(ctx, ART[n.art], 0, 85, 130, { scale: big2, tint: "#0a0f20" });
       text(ctx, n.hero ? "しゅじんこう" : `No.${String(n.no).padStart(3, "0")}`, 20, 30, { size: 11, color: COLORS.sub });
       text(ctx, known ? n.name : "？？？", 170, 30, { size: 17, bold: true });
       if (!known) {
@@ -24754,6 +25616,8 @@ body.nopad #pad { display: none; }
         text(ctx, `もっている数: ${g.items[id] || 0}`, 200, 200, { size: 13, align: "center", color: COLORS.accent });
       } else if (tab === T_QUEST) {
         drawQuestTop(ctx);
+      } else if (tab === T_HELP) {
+        drawHelpTop(ctx);
       } else {
         drawArt(ctx, ART.koori, Math.floor(t * 2), 200, 120, { scale: 5 });
         text(ctx, `${app2.versionName}`, 200, 40, { size: 16, align: "center", bold: true, color: COLORS.accent });
@@ -24770,6 +25634,7 @@ body.nopad #pad { display: none; }
       else if (tab === 2) drawZukan(ctx);
       else if (tab === 3) drawItems(ctx);
       else if (tab === T_QUEST) drawQuests(ctx);
+      else if (tab === T_HELP) drawHelpList(ctx);
       else {
         button(ctx, SAVE_BTN, { active: sIndex === 0 });
         button(ctx, { ...BGM_BTN, label: `BGM: ${bgmOn() ? "オン" : "オフ"}` }, { active: sIndex === 1 });
@@ -24880,6 +25745,35 @@ body.nopad #pad { display: none; }
       const r2 = q.reward, reward = [r2.money ? `${r2.money}円` : "", r2.item ? `${ITEMS[r2.item].name} ${r2.n}こ` : ""].filter(Boolean).join("・");
       text(ctx, done ? "おわった 依頼" : questReady(g, q) ? `できた！ ${n.name}に 話しかけよう` : `すすみ: ${p.now} / ${p.need}`, 120, 178, { size: 13, bold: true, color: done ? COLORS.dim : questReady(g, q) ? "#ff9ad8" : COLORS.ink });
       text(ctx, `お礼: ${reward}`, 120, 200, { size: 12, color: COLORS.accent });
+    }
+    const KEYS2 = ["a", "b", "x", "y", "l", "r", "start", "fast", "help"];
+    const helpText = (line2) => line2.replace(/\{(\w+)\}/g, (m, k) => KEYS2.includes(k) ? btn(k) : m);
+    function drawHelpTop(ctx) {
+      const h = helpTopics(g)[hIndex];
+      if (!h) return;
+      text(ctx, h.title, 200, 34, { size: 18, align: "center", bold: true, color: COLORS.accent });
+      let y = 66;
+      for (const line2 of h.text) {
+        const rows = wrap(ctx, helpText(line2), 356, 12.5);
+        rows.forEach((r2) => {
+          text(ctx, r2, 22, y, { size: 12.5 });
+          y += 18;
+        });
+        y += 6;
+      }
+    }
+    function drawHelpList(ctx) {
+      const list = helpTopics(g), top = scroll(hIndex, ZUKAN_ROWS, list.length);
+      list.slice(top, top + ZUKAN_ROWS).forEach((h, k) => {
+        const y = 36 + k * ROW_H$1;
+        if (top + k === hIndex) {
+          roundRect(ctx, 8, y, 304, ROW_H$1 - 2, 4);
+          ctx.fillStyle = "#2d5aa8";
+          ctx.fill();
+        }
+        text(ctx, h.title, 16, y + 14, { size: 12 });
+        if (!(g.flags.helpSeen && g.flags.helpSeen[h.id])) text(ctx, "NEW", 304, y + 14, { size: 10, align: "right", bold: true, color: "#ff9ad8" });
+      });
     }
     function drawItems(ctx) {
       const ids = Object.keys(ITEMS), top = scroll(iIndex, ITEM_ROWS, ids.length);

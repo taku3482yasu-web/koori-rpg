@@ -29,3 +29,23 @@ export const STORY = ['intro', 'friends', 'bridge', 'clear', 'school', 'clear2',
 // 本編 (ルキハを たおす 13 章) の さいご。14・15 章は ここから
 export const MAIN_END = 'clear13';
 export const reached = (g, s) => STORY.indexOf(g.story) >= STORY.indexOf(s);
+
+// 章の 名前 (ムービーの 題・ヘルプで 使う。2026-11-02)
+export const CHAPTERS = [
+    [1, 'intro', 'はじまりの 夏休み'], [2, 'clear', '学校の七不思議'], [3, 'clear2', 'ダムの水が消える'], [4, 'clear3', '海辺の どうくつと ライバル探検隊'],
+    [5, 'clear4', 'ネット寺の のろい'], [6, 'clear5', '忍びの屋敷と 消えた メダル'], [7, 'clear6', '月の迷宮と 喰らう 者の 伝説'], [8, 'clear7', '金色のSE城の 決戦'],
+    [9, 'clear8', '筋肉の山と 新しい なかま'], [10, 'clear9', '石の川タウン しゅうげき'], [11, 'clear10', 'ASOの壺の底'], [12, 'clear11', '集結'],
+    [13, 'clear12', '喰らいの 城'], [14, 'clear13', 'ご招待！'], [15, 'clear14', '新たなる１日']
+];
+// いまの 章 [番号, 名前]。clear3 は「3 章 クリア」 = ムービーは 3 章の さいご なので、clearN ちょうどは N 章に する
+export function chapterOf(story) {
+    const i = STORY.indexOf(story);
+    if (/^clear\d*$/.test(story)) {
+        const n = story === 'clear' ? 1 : Number(story.slice(5));
+        const c = CHAPTERS.find(x => x[0] === n);
+        if (c) return [c[0], c[2]];
+    }
+    let cur = CHAPTERS[0];
+    for (const c of CHAPTERS) if (STORY.indexOf(c[1]) <= i) cur = c;
+    return [cur[0], cur[2]];
+}

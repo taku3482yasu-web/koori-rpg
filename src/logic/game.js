@@ -8,7 +8,7 @@
 //   clear    1 章 クリア。ここから 2 章「学校の七不思議」: 夕方・夜に 小学校へ 行く
 //   school   夜の 学校に 入った。七不思議を 7 つ たしかめる → 8 つ目の ふしぎ (ボス) を たおす
 //   clear2   2 章 クリア。ここから 3 章「ダムの水が消える」: 町の 北の 山道から 山へ
-//   yama     山に 入った。奥の院で 言いつたえを 読む (flags.oku) → 氷の 封印を 3 つ とく → ダムの ヌシ (ボス) を たおす
+//   yama     山に 入った。奥の院で 言いつたえを 読む (flags.oku) → とけかけた 封印の 柱を 3 つ 作りなおす → ダムの ヌシ (ボス) を たおす
 //   clear3   3 章 クリア。ここから 4 章「海辺の どうくつと ライバル探検隊」: 家の 前の ともいしと 話す
 //   umi      商店街の 石の川駅から 電車で 海辺の 町へ 行ける
 //   umibe    海辺の 町に 着いた。ライバル探検隊が どうくつの 通路を ふさぐ → 勝つ (flags.rival4) → 奥の 浦の島重蔵 (ボス)
@@ -50,6 +50,7 @@ import { ITEMS } from '../data/items.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached, MAIN_END } from './story.js';
 import { MYSTERIES, SEALS, MONS, PARK_CLUES } from '../data/map.js';
+import { HELP } from '../data/help.js';
 
 export const SAVE_VERSION = 1;
 export const VERSIONS = { naitei: '内定', menkyo: '免許' };
@@ -81,7 +82,7 @@ export function newGame(version, seed = 1) {
         playTime: 0,
         spotCooldown: {},
         gifts: {},          // 話せる キャラから 道具を もらった 日 (1 日 1 回)
-        mysteries: {},      // たしかめた 七不思議 (2 章)・といた 氷の 封印 (3 章)
+        mysteries: {},      // たしかめた 七不思議 (2 章)・作りなおした 封印の 柱 (3 章)
         flags: {},          // ストーリーの できごと (oku: 奥の院で 言いつたえを 読んだ。3 章)
         quests: {}          // 町の 依頼 (logic/quests.js)
     };
@@ -379,7 +380,7 @@ export function objective(g) {
         case 'yama': {
             if (!g.flags.oku) return '山の 奥の院を 調べてみよう (山道を 北へ 行って 西)';
             const n = sealsSolved(g);
-            return n < SEALS.length ? `山の どこかに ある 氷の 封印を とこう (${n}/${SEALS.length})` : 'ダムの 湖の 底の 氷の 城へ 行こう';
+            return n < SEALS.length ? `とけかけた 封印の 柱を 作りなおそう (${n}/${SEALS.length})` : 'ダムの 封印の 割れ目へ 行こう';
         }
         // 4 章「海辺の どうくつと ライバル探検隊」
         case 'clear3': return 'こおりくんの 家の 前の ともいしと 話そう';
@@ -622,7 +623,7 @@ export const allMonsSaved = g => monsSaved(g) >= MONS.length;
 
 export const spotById = id => SPOTS.find(s => s.id === id);
 
-// 氷の 封印を いくつ といたか (3 章)
+// 封印の 柱を いくつ 作りなおしたか (3 章)
 export const sealsSolved = g => SEALS.filter(s => g.mysteries && g.mysteries[s.id]).length;
 export const allSealsSolved = g => sealsSolved(g) >= SEALS.length;
 
@@ -649,4 +650,12 @@ export function takeGift(g, friend) {
     g.gifts[friend.id] = g.day;
     g.items[friend.gift.item] = (g.items[friend.gift.item] || 0) + friend.gift.n;
     return friend.gift;
+}
+
+// ヘルプ (2026-11-02): いま 見られる 話題 (ストーリーが すすむと ふえる)・まだ 見て いない 話題
+export const helpTopics = g => HELP.filter(h => reached(g, h.after));
+export const helpUnseen = g => helpTopics(g).filter(h => !(g.flags.helpSeen && g.flags.helpSeen[h.id]));
+export function seeHelp(g, id) {
+    g.flags.helpSeen = g.flags.helpSeen || {};
+    g.flags.helpSeen[id] = true;
 }

@@ -766,3 +766,18 @@ test('13 章: ヒョウガリュウに 乗って 喰らいの 城 → 3〜7 階�
     assert.ok(!here('rukiha13') && !here('hyouga13'));
     assert.ok(startChapter14(g), '13 章の あとで 14 章');
 });
+
+test('ヘルプ (2026-11-02): ストーリーが すすむと 話題が ふえる。見ると NEW が 消える', async () => {
+    const { helpTopics, helpUnseen, seeHelp, newGame } = await import('../src/logic/game.js');
+    const { HELP } = await import('../src/data/help.js');
+    const { STORY } = await import('../src/logic/story.js');
+    for (const h of HELP) assert.ok(STORY.includes(h.after) && h.text.length, h.id);
+    const g = newGame('naitei', 1);
+    const first = helpTopics(g).length;
+    assert.ok(first >= 1);
+    g.story = 'clear5';
+    assert.ok(helpTopics(g).length > first, 'すすむと ふえる');
+    const n = helpUnseen(g).length;
+    seeHelp(g, helpTopics(g)[0].id);
+    assert.equal(helpUnseen(g).length, n - 1);
+});

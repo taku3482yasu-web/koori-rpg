@@ -118,20 +118,33 @@ function drawTile(c, ch, x, y, wet = false) {
             r((x % 2) * 8, 3, 1, 10, '#8a9098');
             break;
         }
-        case 'D': case 'E': {
-            // かれた 沢・水が 消えた 湖の 底 (ひびわれ と 石)。3 章 クリアで 水 (wet)
+        case 'D': {
+            // かれた 沢 (ひびわれ と 石)。3 章 クリアで 水 (wet)
             if (wet) { drawTile(c, 'W', x, y, false); break; }
-            r(0, 0, 16, 16, ch === 'D' ? '#a89a80' : '#b8a888');
+            r(0, 0, 16, 16, '#a89a80');
             r(Math.floor(hash(x, y, 80) * 10), Math.floor(hash(x, y, 81) * 12), 6, 1, '#8a7a60');
             r(Math.floor(hash(x, y, 82) * 12), Math.floor(hash(x, y, 83) * 10), 1, 5, '#8a7a60');
             if (hash(x, y, 84) < 0.4) { const sx = Math.floor(hash(x, y, 85) * 12); r(sx, 9, 4, 3, '#9a948a'); r(sx + 1, 9, 2, 1, '#d0cac0'); }
             break;
         }
-        case 'I': { // 氷の 城 (氷の ブロック)
+        case 'E': {
+            // こおりついた ダムの 湖 (2026-11-02: 封印から もれた 冷気で こおった)。3 章 クリアで 水 (wet)
             if (wet) { drawTile(c, 'W', x, y, false); break; }
-            r(0, 0, 16, 16, '#9ad8f0');
-            r(0, 0, 16, 1, '#e0f6ff'); r(0, 8, 16, 1, '#7ac0e0'); r((y % 2) * 8, 0, 1, 8, '#7ac0e0'); r(((y + 1) % 2) * 8, 8, 1, 8, '#7ac0e0');
-            r(2, 2, 3, 2, '#ffffff');
+            r(0, 0, 16, 16, '#b8def0');
+            r(Math.floor(hash(x, y, 80) * 10), Math.floor(hash(x, y, 81) * 12), 6, 1, '#e8f8ff');
+            r(Math.floor(hash(x, y, 82) * 12), Math.floor(hash(x, y, 83) * 10), 1, 4, '#8ac0dc');
+            if (hash(x, y, 84) < 0.3) { const sx = Math.floor(hash(x, y, 85) * 12); r(sx, 10, 4, 2, '#ffffff'); }
+            break;
+        }
+        case 'I': { // 封印の 割れ目 (ヒョウガリュウが ねむる。青白い 光と ひび)。3 章 クリアで 水
+            if (wet) { drawTile(c, 'W', x, y, false); break; }
+            r(0, 0, 16, 16, '#9ad0ec');
+            r(0, 0, 16, 1, '#d8f2ff');
+            const k = Math.floor(hash(x, y, 86) * 8);
+            r(4 + (k % 4), 0, 3, 16, '#2a5a8a');
+            r(5 + (k % 4), 0, 1, 16, '#0e2a4a');
+            r(0, 6 + (k % 5), 16, 2, '#2a5a8a');
+            r(2 + (k % 6), 7 + (k % 5), 4, 1, '#e8fbff');
             break;
         }
         // ----- 海辺の 町と 海岸どうくつ (4 章) -----
@@ -261,7 +274,7 @@ function drawProp(c, p) {
     c.fillRect(px + 6, py - 6, 4, 22);
 }
 
-// wet: 3 章 クリアの あと (かれた 沢・湖の 底・氷の 城が 水に もどる)
+// wet: 3 章 クリアの あと (かれた 沢・こおった 湖・封印の 割れ目が 水に もどる)
 export function buildFieldCanvas(wet = false) {
     const cv = document.createElement('canvas');
     cv.width = MAP_W * TILE;

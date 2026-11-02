@@ -7,14 +7,18 @@
 //   一番下が 見えなかった)。カーソル・マウスホイール・▲▼ の タップ・なぞる で 動く
 // 個数を えらぶ: { count: { max, label: n => '…' }, done: n => {} } (やめると null。2026-10-28 ユーザー指定)
 //   上下で 1 こ、左右・L R で 10 こ。下画面の −10 −1 ＋1 ＋10 も タップ できる
+// ムービー: { movie: { place, title, cast, weather } } (2026-11-02)。上画面 ぜんぶが 舞台 (movie.js) に なり、
+//   キャラが 動く。行の あいだに { do: '…' } の 動きを はさめる。START で とばせる
 // =====================================================================
 import { ART } from '../art/index.js';
 import { COLORS, drawArt, panel, text, textWidth, wrap, fitSize, button, hit } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
+import { createStage } from './movie.js';
 
 export function createTalk() {
     let lines = [], index = 0, shown = 0, opts = {}, cursor = 0, active = false;
+    let stage = null, started = -1, movieT = 0;    // ムービーの 舞台・動きを 始めた 行
     let top = 0, drag = null;      // 選択肢の スクロール (いちばん 上に 出ている 番号)
     // 4 つまでは 大きな ボタン、それより 多いと 小さめの 行で 1 画面に 6 つ
     const VIEW = { y: 18, h: 206 };
@@ -51,7 +55,11 @@ export function createTalk() {
     };
 
     function open(list, options = {}) {
-        lines = list;
+        stage = options.movie ? createStage(options.movie) : null;
+        lines = stage ? list : list.filter(l => !l.do);
+        if (!lines.length) lines = [{ who: '', text: '' }];
+        started = -1;
+        movieT = 0;
         index = 0;
         shown = 0;
         cursor = 0;
@@ -69,7 +77,37 @@ export function createTalk() {
         opts.done?.(choice);
     }
 
+    // ムービー: 動きの 行を すすめる。セリフの 行は 話す キャラが 出てくるのを 待ってから 字を 出す。true なら この コマは ここまで
+    function updateMovie(dt, input) {
+        stage.update(dt);
+        movieT += dt;
+        const go = input.pressed.a || input.pressed.b || input.touch.justDown;
+        const last = lines.length - 1, tail = lines[last];
+        if (input.pressed.start && !(index === last && (opts.choices || opts.count))) {
+            // とばす: 選択肢が あれば その 行まで、なければ おわり
+            stage.finishNow();
+            if ((opts.choices || opts.count) && !tail.do) { index = last; started = last; shown = tail.text.length; stage.onLine(tail); stage.finishNow(); return true; }
+            sfx('cursor');
+            finish(null);
+            return true;
+        }
+        const cur = lines[index];
+        if (started !== index) { started = index; if (cur.do) stage.run(cur); else stage.onLine(cur); }
+        if (cur.do) {
+            if (go) stage.finishNow();
+            if (!stage.busy()) {
+                if (index === last) finish(null);
+                else { index++; shown = 0; }
+            }
+            return true;
+        }
+        if (stage.busy()) { if (go) stage.finishNow(); return true; }
+        return false;
+    }
+
     function update(dt, input) {
+        if (!active) return;
+        if (stage && updateMovie(dt, input)) return;
         if (!active) return;
         shown = Math.min(lines[index].text.length, shown + dt * 40);
         if (atLast() && full() && opts.count) {
@@ -126,7 +164,10 @@ export function createTalk() {
     function drawTop(ctx, t) {
         if (!active) return;
         const line = lines[index];
-        if (line.art && ART[line.art]) {
+        if (stage) {
+            stage.draw(ctx);
+            if (line.do || started !== index) return;
+        } else if (line.art && ART[line.art]) {
             panel(ctx, 12, 96, 76, 70, { fill: 'rgba(255,255,255,0.12)', edge: null });
             drawArt(ctx, ART[line.art], Math.floor(t * 2) % 2, 50, 160, { scale: 4 });
         }
@@ -162,6 +203,16 @@ export function createTalk() {
             text(ctx, `↑↓ 1こ ・ ←→ ${btn('l')}${btn('r')} 10こ ・ ${btn('a')} けってい`, 160, 222, { size: 10.5, align: 'center', color: COLORS.sub });
             return;
         }
+        if (stage && !(atLast() && full() && opts.choices)) {
+            // ムービーの あいだの 下画面: 題名と 操作
+            ctx.fillStyle = '#0c1020';
+            ctx.fillRect(0, 0, 320, 240);
+            text(ctx, '― ストーリー ―', 160, 70, { size: 12, align: 'center', color: COLORS.sub });
+            text(ctx, opts.movie.title || '', 160, 104, { size: 16, align: 'center', bold: true, color: COLORS.accent, maxWidth: 300 });
+            text(ctx, `${btn('a')} か タップで つぎへ`, 160, 188, { size: 11, align: 'center', color: COLORS.sub });
+            text(ctx, `${btn('start')} で ムービーを とばす`, 160, 210, { size: 10.5, align: 'center', color: COLORS.dim });
+            return;
+        }
         if (atLast() && full() && opts.choices) {
             ctx.fillStyle = 'rgba(0,0,0,0.55)';
             ctx.fillRect(0, 0, 320, 240);
@@ -177,5 +228,5 @@ export function createTalk() {
         }
     }
 
-    return { open, update, drawTop, drawBottom, isActive: () => active };
+    return { open, update, drawTop, drawBottom, isActive: () => active, isMovie: () => active && Boolean(stage) };
 }

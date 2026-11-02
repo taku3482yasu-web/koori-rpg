@@ -63,7 +63,7 @@ export const personArt = (g, p) => (p.artBy ? p.artBy[g.version] || Object.value
 
 // 工事中の さく (1 章 クリアまで 商店街へ 行けない・2 章 クリアまで 山へ 行けない)
 export const gatesHere = g => GATES.filter(q => (q.only === 'beforeClear2' ? !reached(g, 'clear2') : !reached(g, 'clear')));
-// まだ とけて いない 氷の 封印 (3 章)
+// まだ 作りなおして いない 封印の 柱 (3 章)
 export const sealsHere = g => SEALS.filter(q => !(g.mysteries && g.mysteries[q.id]));
 // まだ 助けて いない 黒い 紋の なかま (5 章)。助けるまで その マスに 立っている
 export const monsHere = g => (g.story === 'netdera' ? MONS.filter(q => !(g.mysteries && g.mysteries[q.id])) : []);
@@ -78,7 +78,7 @@ export function blockedTile(g, tx, ty) {
     if (BUILDINGS.some(b => tx >= b.x && tx < b.x + b.w && ty >= b.y && ty < b.y + b.h)) return true;
     if (PROPS.some(p => p.x === tx && p.y === ty)) return true;
     if (MYSTERIES.some(m => m.x === tx && m.y === ty)) return true;
-    if (sealsHere(g).some(m => m.x === tx && m.y === ty)) return true;
+    if (SEALS.some(m => m.x === tx && m.y === ty)) return true;   // 封印の 柱は 作りなおした あとも 立っている
     if (monsHere(g).some(m => m.x === tx && m.y === ty)) return true;
     return peopleHere(g).some(p => p.x === tx && ty >= p.y && ty < p.y + (p.h || 1));
 }

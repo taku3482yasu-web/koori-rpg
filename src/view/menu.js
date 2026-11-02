@@ -1,7 +1,8 @@
 // =====================================================================
 // メニュー (設計書 7 章): 上画面に えらんだ ものの 絵と 説明、下画面に 一覧
 // ---------------------------------------------------------------------
-// タブ: へんせい (ウォッチに メダルを セット) / なかま (すべての なかまを 見る) / 図鑑 / もちもの / いらい / セーブ (BGM の オン・オフも)
+// タブ: へんせい (ウォッチに メダルを セット) / なかま (すべての なかまを 見る) / 図鑑 / もちもの / いらい / ヘルプ / セーブ (BGM の オン・オフも)
+//   ヘルプ (2026-11-02): ゲームの ヒント。ストーリーが すすむと 話題が ふえる (data/help.js)。まだ 見て いない ものに NEW
 //   (2026-10-28 ユーザー指定: 編成と なかまの 確認を 分ける。いらいは 町の 依頼 (2026-10-28))
 // タブの 切りかえ: L・R (Q・E)・Tab キー・タブの タップ。十字キー 左右でも (へんせいは 場所の えらびに 使うので のぞく)
 // へんせい: 6 つの 場所から 1 つ えらび (A)、メダル帳から 入れる メダルを えらぶ (A)。Y で はずす
@@ -15,14 +16,14 @@ import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRec
 import { sfx } from '../core/sound.js';
 import { bgmOn, setBgmOn } from '../core/bgm.js';
 import { btn, isKeyboard } from '../core/keys.js';
-import { medalByUid, friendCount, bondLevel, specialUpgraded } from '../logic/game.js';
+import { medalByUid, friendCount, bondLevel, specialUpgraded, helpTopics, seeHelp } from '../logic/game.js';
 import { statsAt, expFor } from '../logic/units.js';
 import { questList, questState, questProgress, questReady } from '../logic/quests.js';
 import { FRIENDS } from '../data/map.js';
 
-const TABS = ['へんせい', 'なかま', '図鑑', 'もちもの', 'いらい', 'セーブ'];
-const TAB_BTN = TABS.map((label, i) => ({ x: 4 + i * 52, y: 4, w: 49, h: 26, label }));
-const T_QUEST = 4, T_SAVE = 5;
+const TABS = ['へんせい', 'なかま', '図鑑', 'もちもの', 'いらい', 'ヘルプ', 'セーブ'];
+const TAB_BTN = TABS.map((label, i) => ({ x: 2 + i * 45, y: 4, w: 43, h: 26, label }));
+const T_QUEST = 4, T_HELP = 5, T_SAVE = 6;
 const NT = TABS.length;
 const SLOT_BTN = Array.from({ length: 6 }, (_, i) => ({ x: 8 + (i % 3) * 102, y: 38 + Math.floor(i / 3) * 44, w: 98, h: 40 }));
 const LIST_TOP = 132, ROW_H = 20, ROWS = 5;
@@ -37,6 +38,7 @@ export function createMenu(app) {
     let nIndex = 0;                                 // なかま
     let iIndex = 0;                                 // もちもの
     let qIndex = 0;                                 // いらい
+    let hIndex = 0;                                 // ヘルプ
     let saved = 0;
 
     const box = () => g.medals;
@@ -71,7 +73,11 @@ export function createMenu(app) {
         else if (tab === 2) zIndex = moveList(input, zIndex, NAKAMA_IDS.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
         else if (tab === 3) iIndex = moveList(input, iIndex, Object.keys(ITEMS).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(iIndex, ITEM_ROWS, Object.keys(ITEMS).length), ITEM_ROWS);
         else if (tab === T_QUEST) qIndex = moveList(input, qIndex, questList(g).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
-        else if (tab === T_SAVE) {
+        else if (tab === T_HELP) {
+            const list = helpTopics(g);
+            hIndex = moveList(input, hIndex, list.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(hIndex, ZUKAN_ROWS, list.length), ZUKAN_ROWS);
+            if (list[hIndex]) seeHelp(g, list[hIndex].id);
+        } else if (tab === T_SAVE) {
             if (input.pressed.up || input.pressed.down) { sIndex = 1 - sIndex; sfx('cursor'); }
             const pick = tc.justDown ? (hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : -1) : input.pressed.a ? sIndex : -1;
             if (pick === 0) { sIndex = 0; app.save(); saved = t; sfx('ok'); }
@@ -188,6 +194,8 @@ export function createMenu(app) {
             text(ctx, `もっている数: ${g.items[id] || 0}`, 200, 200, { size: 13, align: 'center', color: COLORS.accent });
         } else if (tab === T_QUEST) {
             drawQuestTop(ctx);
+        } else if (tab === T_HELP) {
+            drawHelpTop(ctx);
         } else {
             drawArt(ctx, ART.koori, Math.floor(t * 2), 200, 120, { scale: 5 });
             text(ctx, `${app.versionName}`, 200, 40, { size: 16, align: 'center', bold: true, color: COLORS.accent });
@@ -205,6 +213,7 @@ export function createMenu(app) {
         else if (tab === 2) drawZukan(ctx);
         else if (tab === 3) drawItems(ctx);
         else if (tab === T_QUEST) drawQuests(ctx);
+        else if (tab === T_HELP) drawHelpList(ctx);
         else {
             button(ctx, SAVE_BTN, { active: sIndex === 0 });
             button(ctx, { ...BGM_BTN, label: `BGM: ${bgmOn() ? 'オン' : 'オフ'}` }, { active: sIndex === 1 });
@@ -299,6 +308,30 @@ export function createMenu(app) {
         const r = q.reward, reward = [r.money ? `${r.money}円` : '', r.item ? `${ITEMS[r.item].name} ${r.n}こ` : ''].filter(Boolean).join('・');
         text(ctx, done ? 'おわった 依頼' : questReady(g, q) ? `できた！ ${n.name}に 話しかけよう` : `すすみ: ${p.now} / ${p.need}`, 120, 178, { size: 13, bold: true, color: done ? COLORS.dim : questReady(g, q) ? '#ff9ad8' : COLORS.ink });
         text(ctx, `お礼: ${reward}`, 120, 200, { size: 12, color: COLORS.accent });
+    }
+
+    // ヘルプ: 上画面に 話題の 中身、下画面に 話題の 一覧
+    const KEYS = ['a', 'b', 'x', 'y', 'l', 'r', 'start', 'fast', 'help'];
+    const helpText = line => line.replace(/\{(\w+)\}/g, (m, k) => (KEYS.includes(k) ? btn(k) : m));
+    function drawHelpTop(ctx) {
+        const h = helpTopics(g)[hIndex];
+        if (!h) return;
+        text(ctx, h.title, 200, 34, { size: 18, align: 'center', bold: true, color: COLORS.accent });
+        let y = 66;
+        for (const line of h.text) {
+            const rows = wrap(ctx, helpText(line), 356, 12.5);
+            rows.forEach(r => { text(ctx, r, 22, y, { size: 12.5 }); y += 18; });
+            y += 6;
+        }
+    }
+    function drawHelpList(ctx) {
+        const list = helpTopics(g), top = scroll(hIndex, ZUKAN_ROWS, list.length);
+        list.slice(top, top + ZUKAN_ROWS).forEach((h, k) => {
+            const y = 36 + k * ROW_H;
+            if (top + k === hIndex) { roundRect(ctx, 8, y, 304, ROW_H - 2, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
+            text(ctx, h.title, 16, y + 14, { size: 12 });
+            if (!(g.flags.helpSeen && g.flags.helpSeen[h.id])) text(ctx, 'NEW', 304, y + 14, { size: 10, align: 'right', bold: true, color: '#ff9ad8' });
+        });
     }
 
     function drawItems(ctx) {

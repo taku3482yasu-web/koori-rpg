@@ -14,6 +14,7 @@ import { BACK_ART } from '../art/back-art.js';
 import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMMANDS, COMMAND_NAMES } from './special-fx.js';
 import { skillMotion, skillPose, drawSkillFx, SKILL_KIND } from './skill-fx.js';
 import { ITEMS } from '../data/items.js';
+import { drawBackdrop, HORIZON } from './backdrop.js';
 import { ELEMENT_COLORS } from '../data/nakama.js';
 import { COLORS, drawArt, artFit, panel, text, bar, button, hit, roundRect, drawFriendMark } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
@@ -42,8 +43,6 @@ const BUFF_NAMES = { atk: 'こうげき↑', def: 'まもり↑', spd: 'すば�
 // 味方は 手前 (下) に 大きく、うしろ姿で。敵は 奥 (上) に (2026-10-26 ユーザー指定)
 const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
 const ALLY_SCALE = 4;
-const HORIZON = 70;
-const RIVER = ['kawara', 'kawaraN', 'kawaraS', 'hashiue', 'hashishita', 'kawakami', 'bridge'];
 
 export function createBattleView(app, battle, place) {
     const g = app.g;
@@ -891,186 +890,6 @@ export function createBattleView(app, battle, place) {
     }
 
     // ----- 描く: 上画面 -----
-    // 夜の 学校 (2 章): くらい かべと 窓、木の ゆか
-    function drawSchoolBackground(ctx) {
-        ctx.fillStyle = '#2a2438';
-        ctx.fillRect(0, 0, 400, HORIZON);
-        for (let i = 0; i < 4; i++) {
-            const x = 30 + i * 96;
-            ctx.fillStyle = '#141a3a';
-            ctx.fillRect(x, 14, 56, 40);
-            ctx.fillStyle = '#6a5a7a';
-            ctx.fillRect(x + 27, 14, 2, 40);
-            ctx.fillRect(x, 33, 56, 2);
-        }
-        ctx.fillStyle = '#fff6c8';
-        ctx.beginPath();
-        ctx.arc(76, 26, 6, 0, Math.PI * 2);
-        ctx.fill();
-        const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
-        gg.addColorStop(0, '#6a4a2a');
-        gg.addColorStop(1, '#b08a5a');
-        ctx.fillStyle = gg;
-        ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.fillRect(0, HORIZON, 400, 4);
-        ctx.strokeStyle = 'rgba(60, 30, 10, 0.35)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = -6; i <= 6; i++) { ctx.moveTo(200 + i * 14, HORIZON); ctx.lineTo(200 + i * 90, 240); }
-        ctx.stroke();
-    }
-
-    // 浦の島の海岸どうくつの 中 (4 章): くらい 岩の かべと しおだまり
-    function drawCaveBackground(ctx) {
-        const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
-        grad.addColorStop(0, '#141820');
-        grad.addColorStop(1, '#2a3440');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 400, HORIZON);
-        // 岩の でこぼこと つらら石
-        ctx.fillStyle = '#3a4654';
-        for (let i = 0; i < 9; i++) ctx.fillRect(i * 46 - 8, HORIZON - 18 - (i % 3) * 9, 40, 30);
-        ctx.fillStyle = '#222a34';
-        for (let i = 0; i < 12; i++) { const x = i * 35 + 6; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 8, 0); ctx.lineTo(x + 4, 10 + (i % 4) * 6); ctx.fill(); }
-        const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
-        gg.addColorStop(0, '#3a4048');
-        gg.addColorStop(1, '#6a7078');
-        ctx.fillStyle = gg;
-        ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
-        // しおだまり (きらきら)
-        ctx.fillStyle = 'rgba(60, 140, 200, 0.55)';
-        ctx.beginPath(); ctx.ellipse(70, 200, 50, 10, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(340, 170, 40, 8, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        for (let i = 0; i < 4; i++) ctx.fillRect(40 + i * 20 + Math.sin(t * 2 + i) * 4, 198, 6, 1);
-    }
-
-    function drawBackground(ctx) {
-        if (place === 'school') { drawSchoolBackground(ctx); return; }
-        if (place === 'cave') { drawCaveBackground(ctx); return; }
-        const river = RIVER.includes(place);
-        const sky = g.time === 3 ? ['#141a3a', '#2a2a5a'] : g.time === 2 ? ['#f08a4a', '#f8c070'] : ['#7ac8f8', '#c8ecff'];
-        const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
-        grad.addColorStop(0, sky[0]);
-        grad.addColorStop(1, sky[1]);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 400, HORIZON);
-        const yama = place === 'yama' || place === 'dam';
-        if (yama) {
-            // 遠くの 山 (てっぺんに 雪)。3 章
-            for (const [x, w, h] of [[-20, 160, 62], [90, 200, 80], [250, 190, 66], [340, 140, 50]]) {
-                const top = HORIZON - h;
-                ctx.fillStyle = 'rgba(50, 80, 110, 0.55)';
-                ctx.beginPath(); ctx.moveTo(x, HORIZON); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w, HORIZON); ctx.fill();
-                ctx.fillStyle = 'rgba(240, 248, 255, 0.85)';
-                ctx.beginPath(); ctx.moveTo(x + w / 2 - w * 0.09, top + h * 0.18); ctx.lineTo(x + w / 2, top); ctx.lineTo(x + w / 2 + w * 0.09, top + h * 0.18); ctx.fill();
-            }
-        } else if (place === 'shrine') {
-            // 12 章 神社 (黒い 空): 赤黒い 空と 鳥居
-            ctx.fillStyle = '#2a0a12'; ctx.fillRect(0, 0, 400, HORIZON);
-            for (let i = 0; i < 6; i++) { ctx.fillStyle = `rgba(80, 10, 30, ${0.3 + 0.1 * Math.sin(t + i)})`; ctx.beginPath(); ctx.ellipse((i * 79 + t * 8) % 480 - 40, 20 + (i % 3) * 18, 60, 12, 0, 0, Math.PI * 2); ctx.fill(); }
-            ctx.fillStyle = '#c03a2a'; ctx.fillRect(140, 30, 120, 10); ctx.fillRect(150, 46, 100, 6); ctx.fillRect(160, 40, 8, HORIZON - 40); ctx.fillRect(232, 40, 8, HORIZON - 40);
-        } else if (place === 'kurai') {
-            // 13 章 喰らいの 城の 最上階: 嵐の 空と つぎはぎの 柱
-            ctx.fillStyle = '#1a0a24'; ctx.fillRect(0, 0, 400, HORIZON);
-            for (let i = 0; i < 7; i++) { ctx.fillStyle = `rgba(90, 30, 120, ${0.3 + 0.1 * Math.sin(t * 1.5 + i)})`; ctx.beginPath(); ctx.ellipse((i * 71 + t * 22) % 480 - 40, 16 + (i % 3) * 16, 64, 12, 0, 0, Math.PI * 2); ctx.fill(); }
-            if (Math.floor(t * 3) % 11 === 0) { ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'; ctx.fillRect(0, 0, 400, HORIZON); }
-            [[20, '#3a2a4a'], [96, '#4a2a3a'], [290, '#2a3a4a'], [366, '#3a2a4a']].forEach(([x, c]) => { ctx.fillStyle = c; ctx.fillRect(x, 20, 18, HORIZON - 20); ctx.fillStyle = '#5a3a6a'; ctx.fillRect(x, 44, 18, 4); ctx.fillRect(x, 70, 18, 4); });
-        } else if (place === 'tsubo') {
-            // 11 章 ASOの壺の底: くらい どうくつと 下から 光る 溶岩
-            ctx.fillStyle = '#1a0c0a'; ctx.fillRect(0, 0, 400, HORIZON);
-            ctx.fillStyle = '#2a1410';
-            [[0, 50], [70, 30], [150, 56], [250, 26], [330, 44]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 40, y); ctx.lineTo(x + 80, 0); ctx.fill(); });
-            const lg = ctx.createLinearGradient(0, HORIZON - 30, 0, HORIZON);
-            lg.addColorStop(0, 'rgba(255, 90, 20, 0)'); lg.addColorStop(1, `rgba(255, 90, 20, ${0.45 + 0.1 * Math.sin(t * 2)})`);
-            ctx.fillStyle = lg; ctx.fillRect(0, HORIZON - 30, 400, 30);
-        } else if (place === 'town') {
-            // 10 章 黒い 霧の 石の川タウン: むらさきの 空と 家の かげ
-            ctx.fillStyle = '#2a1a3a'; ctx.fillRect(0, 0, 400, HORIZON);
-            ctx.fillStyle = '#1a1028';
-            [[10, 40, 60], [90, 30, 50], [170, 46, 70], [260, 34, 56], [330, 44, 64]].forEach(([x, y, w]) => { ctx.fillRect(x, y, w, HORIZON - y); ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x + w / 2, y - 16); ctx.lineTo(x + w + 4, y); ctx.fill(); });
-            for (let i = 0; i < 8; i++) { ctx.fillStyle = `rgba(140, 60, 180, ${0.15 + 0.08 * Math.sin(t + i)})`; ctx.beginPath(); ctx.ellipse((i * 67 + t * 12) % 460 - 30, 30 + (i % 3) * 22, 50, 14, 0, 0, Math.PI * 2); ctx.fill(); }
-        } else if (place === 'kinniku' || place === 'hyouga') {
-            // 9 章 筋肉の山 / 雪どけの 氷河: 青空と 雪の のこる 山
-            ctx.fillStyle = place === 'hyouga' ? '#9ad0f0' : '#7ab8e8'; ctx.fillRect(0, 0, 400, HORIZON);
-            ctx.fillStyle = '#7a6a5a';
-            ctx.beginPath(); ctx.moveTo(-20, HORIZON); ctx.lineTo(80, 30); ctx.lineTo(180, HORIZON); ctx.lineTo(240, 50); ctx.lineTo(330, 20); ctx.lineTo(430, HORIZON); ctx.fill();
-            ctx.fillStyle = '#f4f8ff';
-            [[80, 30], [240, 50], [330, 20]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x - 22, y + 22); ctx.lineTo(x, y); ctx.lineTo(x + 22, y + 22); ctx.fill(); });
-            if (place === 'hyouga') { ctx.fillStyle = '#ffb0c8'; for (let i = 0; i < 14; i++) ctx.fillRect((i * 61 + t * 20) % 400, (i * 29 + t * 14) % HORIZON, 3, 2); }
-        } else if (place === 'yuen') {
-            // 14 章の 遊園地 (夜): かんらん車の かげと 光る 電球
-            ctx.fillStyle = '#141032'; ctx.fillRect(0, 0, 400, HORIZON);
-            ctx.strokeStyle = '#4a3a8a'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(320, 70, 54, 0, Math.PI * 2); ctx.stroke();
-            for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + t * 0.2; ctx.beginPath(); ctx.moveTo(320, 70); ctx.lineTo(320 + Math.cos(a) * 54, 70 + Math.sin(a) * 54); ctx.stroke(); }
-            for (let i = 0; i < 20; i++) { ctx.fillStyle = ['#ff6a8a', '#ffe85a', '#6ae0ff'][i % 3]; ctx.fillRect(i * 21 + 4, 24 + Math.sin(i) * 6, 3, 3); }
-        } else if (place === 'shiro') {
-            // 金色のSE城 (8 章): 金の かべと 赤い 柱、ちょうちん
-            ctx.fillStyle = '#a07818'; ctx.fillRect(0, 0, 400, HORIZON);
-            ctx.fillStyle = '#e0b840'; ctx.fillRect(0, HORIZON - 40, 400, 40);
-            ctx.fillStyle = '#fff0a0'; ctx.fillRect(0, HORIZON - 40, 400, 2);
-            ctx.fillStyle = '#a02020';
-            for (let i = 0; i < 6; i++) ctx.fillRect(20 + i * 72, 0, 12, HORIZON);
-            ctx.fillStyle = '#ff6a3a';
-            for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(62 + i * 72, 26, 9, 12, 0, 0, Math.PI * 2); ctx.fill(); }
-        } else if (place === 'moon') {
-            // 月の迷宮 (7 章): 夜空と 星、むらさきの 石の かべ
-            ctx.fillStyle = '#0c0a24'; ctx.fillRect(0, 0, 400, HORIZON);
-            ctx.fillStyle = '#ffffff';
-            for (let i = 0; i < 24; i++) ctx.fillRect((i * 97) % 400, (i * 37) % (HORIZON - 10), 1, 1);
-            ctx.fillStyle = '#2a2050';
-            for (let i = 0; i < 7; i++) ctx.fillRect(i * 64 - 10, HORIZON - 24 - (i % 2) * 10, 44, 34);
-        } else if (place === 'yashiki') {
-            // 屋敷の 中 (6 章): 板べいと しょうじ
-            ctx.fillStyle = '#4a3624'; ctx.fillRect(0, 0, 400, HORIZON);
-            for (let i = 0; i < 6; i++) {
-                ctx.fillStyle = '#e8e0c8'; ctx.fillRect(14 + i * 66, 12, 52, HORIZON - 18);
-                ctx.fillStyle = '#6a5038';
-                for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66 + k * 17, 12, 2, HORIZON - 18);
-                for (let k = 1; k < 3; k++) ctx.fillRect(14 + i * 66, 12 + k * 17, 52, 2);
-            }
-        } else if (place === 'tera') {
-            // 遠くの 五重塔と 竹 (5 章 ネット寺)
-            ctx.fillStyle = 'rgba(40, 30, 50, 0.45)';
-            for (let i = 0; i < 5; i++) ctx.fillRect(300 + i * 2, HORIZON - 14 - i * 12, 40 - i * 4, 4);
-            ctx.fillRect(318, HORIZON - 70, 4, 70);
-            ctx.fillStyle = 'rgba(40, 90, 50, 0.4)';
-            for (let i = 0; i < 9; i++) ctx.fillRect(10 + i * 26, HORIZON - 50 - (i % 3) * 8, 4, 60);
-        } else if (place === 'umi') {
-            // 水平線の 海と きらきら (4 章)
-            ctx.fillStyle = '#2a7ac0';
-            ctx.fillRect(0, HORIZON - 22, 400, 22);
-            ctx.fillStyle = 'rgba(255,255,255,0.45)';
-            for (let i = 0; i < 7; i++) ctx.fillRect((i * 67 + t * 12) % 420 - 10, HORIZON - 18 + (i % 3) * 6, 10, 1);
-        } else {
-            // 遠くの 町
-            ctx.fillStyle = 'rgba(40, 60, 90, 0.25)';
-            [[20, 34, 40], [70, 46, 30], [300, 28, 50], [360, 44, 30]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, HORIZON - y));
-        }
-        // 地面 (手前ほど 明るく)。ダムは こおった 湖の 底・海辺は 砂浜
-        const ground = river ? ['#2a6aa8', '#4aa0e0'] : place === 'park' ? ['#c8b880', '#f0e0a8'] : place === 'dam' ? ['#7aa8c0', '#c8e6f2'] : place === 'umi' ? ['#d0b878', '#f0e0a8'] : place === 'tera' ? ['#9a9a92', '#c8c8c0'] : place === 'yashiki' ? ['#a8a060', '#d8d090'] : place === 'moon' ? ['#3a3070', '#6a60a8'] : place === 'shiro' ? ['#8a1828', '#c03040'] : place === 'yuen' ? ['#5a5a6a', '#8a8a9a'] : place === 'kinniku' ? ['#8a7a5a', '#b8a888'] : place === 'town' ? ['#3a3048', '#5a4a6a'] : place === 'tsubo' ? ['#4a1a10', '#7a3a20'] : place === 'kurai' ? ['#2a1a34', '#4a3058'] : place === 'shrine' ? ['#8a8070', '#b0a890'] : place === 'hyouga' ? ['#c8e6f2', '#f0faff'] : ['#4a9a3a', '#7ad05a'];
-        const gg = ctx.createLinearGradient(0, HORIZON, 0, 240);
-        gg.addColorStop(0, ground[0]);
-        gg.addColorStop(1, ground[1]);
-        ctx.fillStyle = gg;
-        ctx.fillRect(0, HORIZON, 400, 240 - HORIZON);
-        ctx.fillStyle = river ? '#c8c0b0' : 'rgba(0,0,0,0.12)';
-        ctx.fillRect(0, HORIZON, 400, 4);
-        // 奥行きの 線 (まんなかの 奥に 集まる)
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = -6; i <= 6; i++) { ctx.moveTo(200 + i * 12, HORIZON); ctx.lineTo(200 + i * 80, 240); }
-        for (let k = 1; k <= 5; k++) { const y = HORIZON + (240 - HORIZON) * Math.pow(k / 5, 1.8); ctx.moveTo(0, y); ctx.lineTo(400, y); }
-        ctx.stroke();
-        if (river) {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            for (let i = 0; i < 8; i++) ctx.fillRect((i * 61 + t * 20) % 420 - 20, HORIZON + 20 + (i * 17) % 140, 18, 2);
-        }
-    }
-
     // back: うしろ姿 (味方)
     function drawUnit(ctx, u, p, { scale = 3, flip = false, back = false } = {}) {
         if (!u || (u.idol && u.ko)) return;   // こわれた 偶像は きえる
@@ -1396,7 +1215,7 @@ export function createBattleView(app, battle, place) {
     }
 
     function drawTop(ctx) {
-        drawBackground(ctx);
+        drawBackdrop(ctx, place, t, g.time);
         battle.enemies.forEach((e, i) => drawUnit(ctx, e, enemyPos(i), { scale: enemyPos(i).scale }));
         battle.enemies.forEach((e, i) => { if (e.parts && !e.ko) drawParts(ctx, e, i); if (e.gims && !e.ko) drawGims(ctx, e, i); });
         // けむり (4 章): 敵の まわりを 白い もやが ただよう

@@ -272,6 +272,9 @@ try {
     await key('Tab');
     check(await sceneIs('menu'), 'メニューの 中で Tab キー → メニューは 閉じない');
     await shot('menu-all');
+    await clickBottom(247, 17);   // ヘルプの タブ (2026-11-02)
+    await shot('menu-help');
+    check(await sceneIs('menu') && await evaluate('window.__app.g.flags.helpSeen && Object.keys(window.__app.g.flags.helpSeen).length > 0'), 'メニューの ヘルプで ヒントが 見られる');
     await key('KeyI');
     check(await sceneIs('field'), 'メニューを 閉じる');
 
@@ -444,6 +447,11 @@ try {
     check(await evaluate('window.__app.g.story === "umi"'), '3 章 クリアの あと ともいしと 話すと 4 章が 始まる');
     await at(5, 41, 'up');
     await key('KeyJ');
+    await sleep(300);
+    for (let i = 0; i < 4 && !(await evaluate('window.__app.talk.isMovie()')); i++) { await key('Enter'); await sleep(300); }
+    check(await evaluate('window.__app.talk.isMovie()'), '海辺駅に 着くと 駅の ホームの ムービー (ライバル探検隊)');
+    await sleep(2500);
+    await shot('umi-movie');
     await skipTalk();
     await sleep(200);
     await shot('umi-arrive');
@@ -503,6 +511,7 @@ try {
     await skipTalk();
     await sleep(200);
     await shot('tera-arrive');
+    check(await evaluate('!window.__app.talk.isActive()'), 'ストーリーの ムービーが おわると 町に もどる');
     check(await evaluate('window.__app.g.story === "netdera" && window.__app.g.pos.y > 156 * 16'), '石の川駅で 行き先を えらんで 電車で ネット寺へ');
     for (const [id, x, y] of [['monShouro', 12, 168], ['monShoko', 35, 168], ['monSandou', 23, 177]]) {
         await at(x, y, 'up');
@@ -767,6 +776,10 @@ try {
     await sleep(200);
     await shot('kinniku-arrive');
     check(await evaluate(`window.__app.g.story === "kinniku" && window.__app.g.pos.y > ${K9} * 16 && window.__bgm() === "kinniku"`), '電車で 筋肉の山へ (山の BGM)');
+    // 登山道の 階段 (U) を のぼっても 神社へ 飛ばされない (2026-11-02 ユーザー指定)
+    await at(23.5, K9 + 26, 'up');
+    await key('KeyW', 900);
+    check(await evaluate(`window.__app.g.pos.y > ${K9} * 16 && window.__app.g.pos.y < ${K9 + 25} * 16`), '筋肉の山の 階段を のぼれる (神社へ 飛ばされない)');
     await at(13, K9 + 11, 'up');
     await key('KeyJ');
     await skipTalk();
