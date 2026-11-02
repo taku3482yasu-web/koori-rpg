@@ -1173,11 +1173,14 @@ export function startSpecial(b, pos) {
 }
 
 // mult: ミニゲームの 結果 (大成功 1.5・成功 1.0・失敗 0.5)
+// 大成功は さらに 威力アップ (2026-11-03 ユーザー指定: SPECIAL_GREAT 倍。1.5 × 1.2 = 1.8 倍)
+export const SPECIAL_GREAT = 1.2;
 export function resolveSpecial(b, unit, mult) {
     b.paused = false;
     if (!unit || unit.ko) return;
     unit.gauge = 0;
-    emit(b, 'special', { actor: unit.uid, name: unit.special.name, side: 'ally', mult });
+    if (mult >= 1.5) mult *= SPECIAL_GREAT;
+    emit(b, 'special', { actor: unit.uid, name: unit.special.name, side: 'ally', mult, great: mult >= 1.5 });
     // 絆レベル (同じ キャラを 何体も なかまに した): 1 つにつき 必殺技の 威力 +10% (最大 +50%。2026-10-29)
     applyEffects(b, unit, unit.special.effects, mult * (1 + 0.1 * Math.min(5, unit.bond || 0)));
     checkOutcome(b);
@@ -1212,11 +1215,14 @@ export function startRescue(b, uid) {
     return unitByUid(b, uid);
 }
 // ok: ミニゲームが 成功 (しっぱいなら 治らない。2026-11-02 ユーザー指定で、しっぱいしても すぐ もう いちど できる)
-export function resolveRescue(b, unit, ok) {
+// great: 大成功 (2026-11-03 ユーザー指定): とりつきが ぬけて、HP も 少し 回復 (最大 HP の RESCUE_GREAT_HEAL)
+export const RESCUE_GREAT_HEAL = 0.15;
+export function resolveRescue(b, unit, ok, great = false) {
     b.paused = false;
     if (!unit) return;
     if (ok) unit.status = {};
-    emit(b, 'rescue', { target: unit.uid, ok });
+    emit(b, 'rescue', { target: unit.uid, ok, great: ok && great });
+    if (ok && great) heal(b, unit, unit, unit.max * RESCUE_GREAT_HEAL);
 }
 
 // 道具を なかまに 使う。uid で 輪の だれにでも (後ろも) 使える (2026-10-28 ユーザー指定: 使う キャラを えらぶ)

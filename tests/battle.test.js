@@ -1188,3 +1188,25 @@ test('覇理魔様 (2026-11-02): 赤い 目は 術が きかず 術を 多用・
     assert.ok(!b.barrier && b.chance && b.events.some(e => e.type === 'chance' && e.why === 'barrier'), 'バリアを ぜんぶ こわすと チャンスタイム');
     assert.ok(!Object.values(boss.gims).some(p => p.barrier), 'バリアは 消える');
 });
+
+test('大成功 (2026-11-03): 必殺技は 威力が さらに 上がり、おたすけは HP も 少し 回復', async () => {
+    const { RESCUE_GREAT_HEAL } = await import('../src/logic/battle.js');
+    const dmgOf = mult => {
+        const b = createBattle({ allies: strongParty(), enemies: [{ id: 'nushi', lv: 30 }], rng: createRng(5), kind: 'boss' });
+        const boss = b.enemies[0]; boss.hp = boss.max = 999999;
+        const u = b.front()[0]; u.gauge = GAUGE_MAX;
+        resolveSpecial(b, startSpecial(b, 0), mult);
+        return { dmg: 999999 - boss.hp, ev: b.events.find(e => e.type === 'special') };
+    };
+    const ok = dmgOf(1), great = dmgOf(1.5);
+    assert.ok(great.dmg > ok.dmg * 1.6, `大成功は 1.8 倍くらい (${great.dmg} / ${ok.dmg})`);
+    assert.ok(great.ev.great && !ok.ev.great);
+    const b = createBattle({ allies: strongParty(), enemies: [{ id: 'wasurekurage', lv: 3 }], rng: createRng(2) });
+    const u = b.wheel[3];
+    u.status.possess = 20; u.hp = 10;
+    resolveRescue(b, startRescue(b, u.uid), true, true);
+    assert.ok(!u.status.possess && u.hp >= 10 + Math.round(u.max * RESCUE_GREAT_HEAL) - 1, '大成功の おたすけは 回復');
+    u.status.possess = 20; const hp = u.hp;
+    resolveRescue(b, startRescue(b, u.uid), true, false);
+    assert.equal(u.hp, hp, 'ふつうの 成功は 回復しない');
+});

@@ -250,7 +250,7 @@ export function createBattleView(app, battle, place) {
                 const p = posOf(e.target);
                 at(actor ? (kind === 'skill' ? skillHit : HIT_DELAY[kind]) : 0, () => { if (p) pops.push({ x: p.x, y: p.y - 56, text: toritsukiName(e.status), color: '#ff9ad8', until: t + 1 }); });
             } else if (e.type === 'special') {
-                banner = { text: `${nameOf(e.actor)}の「${e.name}」！`, color: e.side === 'ally' ? COLORS.accent : '#ff6a6a', until: t + 1.4 };
+                banner = { text: `${nameOf(e.actor)}の「${e.name}」！${e.great ? ' 大成功で 威力アップ！' : ''}`, color: e.side === 'ally' ? COLORS.accent : '#ff6a6a', until: t + 1.4 };
                 sfx('special');
                 const c = centerOf(e.actor), p = posOf(e.actor);
                 if (c && p && kind !== 'perf') at(0.62, () => effects.push({ kind: 'wave', x: p.x, y: p.y, start: t, dur: 0.45, color: tone(e.actor, ELEMENT_COLORS[unitOf(e.actor)?.element] || '#ffffff') }));
@@ -442,7 +442,7 @@ export function createBattleView(app, battle, place) {
                 const p = posOf(e.actor);
                 if (p) pops.push({ x: p.x, y: p.y - 62, text: e.mode === 'lazy' ? 'いたずらの とりつき: なまけている…' : 'いたずらの とりつき: 味方を こうげき！', color: '#c88aff', small: true, until: t + 1.2 });
             } else if (e.type === 'rescue') {
-                banner = { text: e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おたすけ しっぱい… すこし まってから もう いちど', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
+                banner = { text: e.great ? `おたすけ 大成功！ とりつきが ぬけて HP も 回復！` : e.ok ? `おたすけ せいこう！ ${nameOf(e.target)}の とりつきが ぬけた！` : 'おたすけ しっぱい… もう いちど！', color: e.ok ? '#7aff8a' : '#c88aff', until: t + 1.6 };
                 sfx(e.ok ? 'heal' : 'cancel');
             } else if (e.type === 'telegraph') {
                 warn = { name: e.name, until: t + e.warn, idols: Boolean(e.idols), chant: Boolean(e.chant), arm: Boolean(e.arm), burst: Boolean(e.burst), regen: Boolean(e.regen), hack: Boolean(e.hack), barrier: Boolean(e.barrier) };
@@ -618,7 +618,7 @@ export function createBattleView(app, battle, place) {
                 mg.cmd.update(dt, input);
                 if (mg.cmd.done) { mg.mult = mg.cmd.done.mult; mg.phase = 'result'; mg.t = 0; sfx(mg.mult >= 1 ? 'special' : 'cancel'); }
             } else if (mg.t > PHASE_TIME.result) {
-                resolveRescue(battle, mg.unit, mg.mult >= 1);
+                resolveRescue(battle, mg.unit, mg.mult >= 1, mg.mult > 1);
                 mg = null;
             }
             return;
@@ -1369,7 +1369,7 @@ export function createBattleView(app, battle, place) {
         drawArt(ctx, ART[u.art], Math.floor(t * 8), 200, 170 + Math.sin(t * 20) * 2, { scale: 6 });
         text(ctx, mg.rescue ? `おたすけ: ${u.name}の とりつきを はらえ！` : `必殺技「${u.special.name}」`, 200, 30, { size: mg.rescue ? 16 : 18, align: 'center', bold: true, color: mg.rescue ? '#e0b0ff' : COLORS.accent });
         text(ctx, COMMAND_NAMES[mg.command], 200, 52, { size: 13, align: 'center', bold: true });
-        if (mg.phase === 'result') text(ctx, mg.cmd.done.label, 200, 216, { size: 26, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
+        if (mg.phase === 'result') text(ctx, mg.cmd.done.label + (mg.mult > 1 ? (mg.rescue ? ' HP 回復！' : ' 威力アップ！') : ''), 200, 216, { size: 26, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff', maxWidth: 380 });
     }
 
     // キャラごとの 必殺技の 動き (味方の 場所 → いちばん 前の 敵)
@@ -1541,6 +1541,7 @@ export function createBattleView(app, battle, place) {
                 ctx.fillStyle = 'rgba(0,0,0,0.55)';
                 ctx.fillRect(0, 0, 320, 240);
                 text(ctx, mg.cmd.done.label, 160, 130, { size: 30, align: 'center', bold: true, color: mg.mult > 1 ? COLORS.accent : '#ffffff' });
+                if (mg.mult > 1) text(ctx, mg.rescue ? 'とりつきが ぬけて HP も 少し 回復' : '必殺技の 威力が アップ！', 160, 160, { size: 13, align: 'center', bold: true, color: COLORS.accent });
             }
             return;
         }
