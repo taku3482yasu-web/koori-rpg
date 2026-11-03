@@ -143,7 +143,10 @@ export function createBattleView(app, battle, place, opts = {}) {
     }
     // 食らった とき (2026-10-27 ユーザー指定): 攻撃した 相手と 反対へ はじかれ、ぺしゃっと つぶれて もどる
     //   たおれた ときは 大きく はじかれて つぶれたまま
-    function startHurt(uid, fromUid, ko = false) {
+    // やられの 動き (2026-11-03 ユーザー指定: 妖怪ウォッチの バトルの ように のけぞる)。
+    //   当たった しゅんかんに 一瞬 止まり (ヒットストップ)、こうげきと 反対へ のけぞって 押され、ぷるぷる ゆれて はずみながら もどる。
+    //   big (会心・じゃくてん・必殺技・大ダメージ): もっと 大きく のけぞり、とびあがって 頭の まわりに 星が まわる
+    function startHurt(uid, fromUid, ko = false, big = false) {
         const a = posOf(uid), b = fromUid ? posOf(fromUid) : null;
         const u = unitOf(uid);
         let dx = 0, dy = u && u.side === 'ally' ? 1 : -1;
@@ -152,12 +155,14 @@ export function createBattleView(app, battle, place, opts = {}) {
             dx = (a.x - b.x) / d;
             dy = (a.y - b.y) / d;
         }
-        const power = ko ? 16 : 9;
-        motions[uid] = { kind: ko ? 'ko' : 'hurt', start: t, dur: ko ? 0.6 : 0.4, dx: dx * power, dy: dy * power };
+        const power = ko ? 22 : big ? 20 : 13;
+        // のけぞる 向き: 押される 方へ 体を かたむける (横の 向きで きめる。まっすぐ 上下なら 左右 どちらか)
+        const lean = (Math.abs(dx) > 0.2 ? Math.sign(dx) : u && u.side === 'ally' ? -1 : 1) * (big || ko ? 0.36 : 0.24);
+        motions[uid] = { kind: ko ? 'ko' : 'hurt', start: t, dur: ko ? 0.9 : big ? 0.85 : 0.6, dx: dx * power, dy: dy * power, lean, big };
     }
     // ずれ (ox, oy) と のびちぢみ (sx, sy)
     function offsetOf(u) {
-        let ox = 0, oy = 0, sx = 1, sy = 1;
+        let ox = 0, oy = 0, sx = 1, sy = 1, rot = 0;
         const m = motions[u.uid];
         if (m) {
             const k = (t - m.start) / m.dur;
@@ -175,21 +180,35 @@ export function createBattleView(app, battle, place, opts = {}) {
             } else if (m.kind === 'skill') oy -= Math.sin(Math.PI * k) * 10;
             else if (m.kind === 'special') oy -= Math.sin(Math.PI * k) * 26;
             else if (m.kind === 'hurt') {
-                const f = k < 0.2 ? k / 0.2 : 1 - (k - 0.2) / 0.8;
-                ox += m.dx * f;
-                oy += m.dy * f;
-                sy = 1 - 0.22 * f;
-                sx = 1 + 0.14 * f;
+                const sec = k * m.dur;
+                if (sec < 0.07) {
+                    // ヒットストップ: 当たった ところで 一瞬 かたまる (少し つぶれる)
+                    ox += m.dx * 0.15; oy += m.dy * 0.15; sx = 1.1; sy = 0.9;
+                } else {
+                    // のけぞって 押される → ばねの ように ゆれて もどる
+                    const q = (sec - 0.07) / (m.dur - 0.07);
+                    const push = q < 0.22 ? Math.sin(q / 0.22 * Math.PI / 2) : Math.cos((q - 0.22) * Math.PI * 2.4) * Math.exp(-4.5 * (q - 0.22));
+                    ox += m.dx * push;
+                    oy += m.dy * push * 0.6;
+                    rot = m.lean * push;
+                    sx = 1 + 0.16 * Math.max(0, push);
+                    sy = 1 - 0.2 * Math.max(0, push);
+                    if (q < 0.35) ox += Math.sin(t * 90) * 2.2 * (1 - q / 0.35);   // ぷるぷる
+                    if (m.big) oy -= Math.sin(Math.min(1, q / 0.55) * Math.PI) * 12;   // とびあがる
+                }
             } else if (m.kind === 'ko') {
-                const f = Math.min(1, k / 0.3);
+                // たおれる: 大きく のけぞって 吹っとび、ひっくりかえって つぶれる
+                const f = Math.min(1, k / 0.35);
                 ox += m.dx * f;
-                oy += m.dy * f;
-                sy = 1 - 0.45 * f;
-                sx = 1 + 0.2 * f;
+                oy += m.dy * f - Math.sin(Math.min(1, k / 0.45) * Math.PI) * 14;
+                rot = m.lean * 2.6 * f;
+                sy = 1 - 0.45 * Math.max(0, (k - 0.35) / 0.65);
+                sx = 1 + 0.2 * Math.max(0, (k - 0.35) / 0.65);
             }
         }
         if ((shakes[u.uid] || 0) > t) ox += Math.sin(t * 70) * 2.5;
-        return { ox, oy, sx, sy };
+        if (u.gims || u.parts || u.huge) rot = 0;   // 部位の ある ボス・大きな ボスは かたむけない (部位が ずれる)
+        return { ox, oy, sx, sy, rot };
     }
     const at = (delay, fn) => later.push({ at: t + delay, fn });
 
@@ -254,7 +273,10 @@ export function createBattleView(app, battle, place, opts = {}) {
                     if (p) pops.push({ x: p.x + (Math.random() * 16 - 8), y: p.y - 40, text: String(e.amount), color: e.headGuard ? '#8a90a8' : e.eff > 1 ? '#ffd84a' : e.eff < 1 ? '#a0a0b0' : '#ffffff', big: e.crit || e.eff > 1, until: t + 0.9 });
                     if (p && e.weak) pops.push({ x: p.x, y: p.y - 70, text: 'じゃくてん！', color: '#ffe85a', small: true, until: t + 0.9 });
                     flash[e.target] = t + 0.15;
-                    if (!motions[e.target] || motions[e.target].kind !== 'ko') startHurt(e.target, by, unitOf(e.target)?.ko);
+                    const tu = unitOf(e.target);
+                    const big = Boolean(e.crit || e.eff > 1 || kind === 'special' || (tu && e.amount >= tu.max * 0.22));
+                    if (!motions[e.target] || motions[e.target].kind !== 'ko') startHurt(e.target, by, tu?.ko, big);
+                    if (to && big) effects.push({ kind: 'impact', x: to.x, y: to.y, start: t, dur: 0.35, color: '#fff2a0' });
                     if (to) effects.push({ kind: 'spark', x: to.x, y: to.y, start: t, dur: 0.3, color: kind === 'attack' ? tone(by, '#ffffff') : color });
                     sfx(e.amount > 30 ? 'big' : 'hit');
                 });
@@ -783,6 +805,19 @@ export function createBattleView(app, battle, place, opts = {}) {
                 ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath(); ctx.arc(x - 1, y - 1, 1.5, 0, Math.PI * 2); ctx.fill();
+            } else if (fx.kind === 'impact') {
+                // 大きい やられの 衝撃: ギザギザの 星形が ひろがって 消える
+                ctx.globalAlpha = 1 - k;
+                ctx.fillStyle = fx.color;
+                ctx.beginPath();
+                for (let a = 0; a < 16; a++) {
+                    const r = (a % 2 ? 7 : 18) * (0.6 + k * 0.8), ang = a * Math.PI / 8;
+                    const x = fx.x + Math.cos(ang) * r, y = fx.y + Math.sin(ang) * r;
+                    if (a) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.globalAlpha = 1;
             } else if (fx.kind === 'spark') {
                 // 火花: 8 方向に 線が 飛び出す
                 ctx.strokeStyle = fx.color;
@@ -947,7 +982,7 @@ export function createBattleView(app, battle, place, opts = {}) {
         const sleeping = u.status.sleep > 0;
         const bobY = u.ko ? 0 : Math.sin(t * 3 + p.x) * 1.5;
         // 動き (飛びこむ・はねる) の ぶん ずらす。影は 地面に 残す (ジャンプが 分かるように)
-        const { ox, oy, sx, sy } = offsetOf(u);
+        const { ox, oy, sx, sy, rot } = offsetOf(u);
         const ground = { x: p.x + ox, y: Math.max(p.y, p.y + oy) };
         p = { ...p, x: p.x + ox, y: p.y + oy };
         const lift = Math.max(0, ground.y - p.y);
@@ -963,7 +998,20 @@ export function createBattleView(app, battle, place, opts = {}) {
             ctx.fillStyle = `rgba(30, 6, 40, ${0.4 + 0.12 * Math.sin(t * 4 + p.x)})`;
             ctx.beginPath(); ctx.ellipse(p.x, p.y - art.h * fk / 2, art.w * fk / 2 + 8, art.h * fk / 2 + 8, 0, 0, Math.PI * 2); ctx.fill();
         }
+        if (rot) { ctx.save(); ctx.translate(p.x, p.y + bobY); ctx.rotate(rot); ctx.translate(-p.x, -(p.y + bobY)); }
         drawArt(ctx, art, sleeping || u.ko ? 0 : Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: u.ko ? 0.35 : u.idol ? 0.75 : 1, tint: lit ? '#ffffff' : null, sx, sy });
+        if (rot) ctx.restore();
+        // 大きく やられた: 頭の まわりを 星が まわる (ピヨピヨ)
+        const hm = motions[u.uid];
+        if (hm && hm.kind === 'hurt' && hm.big && !u.ko) {
+            const hk = (t - hm.start) / hm.dur, top = p.y - art.h * scale * artFit(art) - 4;
+            ctx.globalAlpha = Math.max(0, 1 - hk);
+            for (let i = 0; i < 3; i++) {
+                const a = t * 9 + i * Math.PI * 2 / 3;
+                text(ctx, '★', p.x + Math.cos(a) * 12, top + Math.sin(a) * 4, { size: 9, align: 'center', color: '#ffe85a', shadow: false });
+            }
+            ctx.globalAlpha = 1;
+        }
         // 13 章の ニオニオーテン: HP 半分から 体全体が 紅く どす黒く なる
         if (u.enraged && !u.ko) {
             drawArt(ctx, art, Math.floor(t * 2), p.x, p.y + bobY, { scale, flip, alpha: 0.42 + 0.1 * Math.sin(t * 6), tint: '#7a0010', sx, sy });
