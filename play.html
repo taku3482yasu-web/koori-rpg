@@ -6781,6 +6781,12 @@ body.nopad #pad { display: none; }
     rukiha13: { hp: 0.36, atk: 0.54, mag: 0.54 }
   };
   for (const [id, t] of Object.entries(BOSS_TUNE)) BOSSES[id].base = Object.fromEntries(Object.entries(BOSSES[id].base).map(([k, v]) => [k, Math.round(v * (t[k] || 1))]));
+  const BOSS_UP = { hp: 1.06, atk: 1.05, mag: 1.05 };
+  const EARLY_BOSSES = /* @__PURE__ */ new Set(["nushi", "kage", "himuro"]);
+  for (const [id, b] of [...Object.entries(BOSSES), ...Object.entries(KAIROU_UNITS)]) {
+    const half = EARLY_BOSSES.has(id);
+    if (b.base) b.base = Object.fromEntries(Object.entries(b.base).map(([k, v]) => [k, Math.round(v * (half ? 1 + ((BOSS_UP[k] || 1) - 1) / 2 : BOSS_UP[k] || 1))]));
+  }
   const ITEMS = {
     onigiri: { name: "おにぎり", heal: 60, price: 60, desc: "なかま 1 体の HP を 60 回復。お米が好きな なかまの 好物" },
     melonpan: { name: "メロンパン", heal: 50, price: 50, desc: "なかま 1 体の HP を 50 回復。パンが好きな なかまの 好物" },

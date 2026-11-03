@@ -2045,3 +2045,11 @@ export const BOSS_TUNE = {
     tomooka13: { hp: 2.0, atk: 3.2, mag: 3.2 }, tashikeda13: { hp: 0.9, atk: 0.93, mag: 0.93 }, rukiha13: { hp: 0.36, atk: 0.54, mag: 0.54 }
 };
 for (const [id, t] of Object.entries(BOSS_TUNE)) BOSSES[id].base = Object.fromEntries(Object.entries(BOSSES[id].base).map(([k, v]) => [k, Math.round(v * (t[k] || 1))]));
+// ボス ぜんぶを 少し 強く (2026-11-03 ユーザー指定: 全体的に ボスを 少し 強く)。章の ボス・無限回廊の ボス・強化ボス みんな
+//   1〜3 章の ボス (はじめたばかりの ころ) は 半分だけ
+export const BOSS_UP = { hp: 1.06, atk: 1.05, mag: 1.05 };
+const EARLY_BOSSES = new Set(['nushi', 'kage', 'himuro']);
+for (const [id, b] of [...Object.entries(BOSSES), ...Object.entries(KAIROU_UNITS)]) {
+    const half = EARLY_BOSSES.has(id);
+    if (b.base) b.base = Object.fromEntries(Object.entries(b.base).map(([k, v]) => [k, Math.round(v * (half ? 1 + ((BOSS_UP[k] || 1) - 1) / 2 : BOSS_UP[k] || 1))]));
+}
