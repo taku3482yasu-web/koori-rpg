@@ -47,7 +47,7 @@
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES, KAIROU_UNITS, FLOOR13, HELPER_LV } from '../data/nakama.js';
 import { SPOTS, START, areaAt } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
-import { EQUIPS, EQUIP_IDS } from '../data/equips.js';
+import { EQUIPS, EQUIP_IDS, equipPrice, equipSellPrice } from '../data/equips.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached, MAIN_END } from './story.js';
 import { MYSTERIES, SEALS, MONS, PARK_CLUES } from '../data/map.js';
@@ -239,6 +239,23 @@ export function openChest(g, chest, rng) {
 }
 // 13 章の 宝箱 (いままでの 名前。CHESTS13 は rare)
 export const openChest13 = (g, chest, rng) => openChest(g, { ...chest, kind: 'rare' }, rng);
+
+// ----- 装備の 売り買い (2026-11-03。お面屋) -----
+//   売って いる もの: ティア 1 は いつでも・ティア 2 は 8 章 クリアから
+export const equipsForSale = g => EQUIP_IDS.filter(id => EQUIPS[id].tier === 1 || (EQUIPS[id].tier === 2 && reached(g, 'clear8')));
+export function buyEquip(g, id) {
+    if (!equipsForSale(g).includes(id) || g.money < equipPrice(id)) return false;
+    g.money -= equipPrice(id);
+    addEquip(g, id);
+    return true;
+}
+// 売れるのは だれも 付けて いない ぶんだけ
+export function sellEquip(g, id) {
+    if (equipFree(g, id) <= 0) return false;
+    g.equips[id]--;
+    g.money += equipSellPrice(id);
+    return true;
+}
 
 // ----- 装備 (2026-11-03 ユーザー指定: なかま 1 体に 1 つ) -----
 export const equipUsed = (g, id) => g.medals.filter(m => m.equip === id).length;

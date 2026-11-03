@@ -23,7 +23,7 @@ import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCH
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES, PARK_Y0, PARK_IN, PARK_PLACES, PARK_NAME, PARK_CLUES,
     KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE,
     OKU_Y0, OKU_INFO, CHESTS, okuAt, okuStart, okuGateOf, KAIROU_IN, KAIROU_BACK, KAIROU_BOSS_AT } from '../data/map.js';
-import { EQUIPS } from '../data/equips.js';
+import { EQUIPS, EQUIP_IDS, equipPrice, equipSellPrice, equipShort } from '../data/equips.js';
 import { ITEMS, SHOPS } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13, KAIROU_UNITS } from '../data/nakama.js';
@@ -35,7 +35,7 @@ import { reached, chapterOf } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, openChest, chestOpened, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen, seeHelp } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, openChest, chestOpened, equipsForSale, buyEquip, sellEquip, equipFree, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen, seeHelp } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -630,8 +630,10 @@ export function createField(app) {
                     }
                 }
             });
-        } else if (b.id === 'dagashi' || b.id === 'yaoya' || b.id === 'omenya' || b.id === 'honya') {
+        } else if (b.id === 'dagashi' || b.id === 'yaoya' || b.id === 'honya') {
             shop(b.id);
+        } else if (b.id === 'omenya') {
+            omenya();
         } else if (b.id === 'hondou' && reached(g, 'clear5')) {
             // 5 章 クリアの あと、本堂の 授与所で お札・お守りが 買える (2026-11-02)
             say([nar('本堂の 中で、ネット配信の お経が しずかに ながれている。よこに 授与所が ある。')], {
@@ -1049,6 +1051,44 @@ export function createField(app) {
         g.zukan.seen[m.nakama] = true;
         say([...m.lines.map(text => nar(text)), { who: n.name, art: n.art, text: '「……ウ……ア……」' }, nar(`黒い 紋に とりつかれた ${n.name}が おそいかかってきた！`)], {
             done: () => app.startBattle({ enemies: [{ id: m.nakama, lv: m.lv, dark: true }], kind: 'wild', place: 'tera', mystery: m.id })
+        });
+    }
+
+    // お面屋: お面・装備を 買う・装備を 売る (2026-11-03)
+    function omenya(greet = SHOPS.omenya.greet) {
+        const OBA = SHOPS.omenya.who;
+        say([{ who: OBA, text: `${greet} 装備の 売り買いも してるよ。` }], {
+            choices: ['お面を 買う', '装備を 買う', '装備を 売る', 'やめる'],
+            done: i => { if (i === 0) shop('omenya'); else if (i === 1) equipShop(); else if (i === 2) equipSell(); }
+        });
+    }
+    function equipShop(greet = 'どれに する？') {
+        const OBA = SHOPS.omenya.who, list = equipsForSale(g);
+        say([{ who: OBA, text: `${greet} (おこづかい ${g.money}円)` }], {
+            choices: [...list.map(id => `${EQUIPS[id].name}  ${equipPrice(id)}円 (${g.equips[id] || 0}こ)`), 'もどる'],
+            done: i => {
+                const id = list[i];
+                if (!id) { omenya('ほかには？'); return; }
+                if (!buyEquip(g, id)) { sfx('cancel'); say([{ who: OBA, text: 'おこづかいが たりないねえ。' }], { done: () => equipShop('ほかには？') }); return; }
+                sfx('ok');
+                app.save();
+                say([{ who: OBA, text: `まいど。「${EQUIPS[id].name}」だよ。${equipShort(id)}。メニューの「なかま」で 付けてね。` }], { done: () => equipShop('ほかには？') });
+            }
+        });
+    }
+    function equipSell() {
+        const OBA = SHOPS.omenya.who, list = EQUIP_IDS.filter(id => equipFree(g, id) > 0);
+        if (!list.length) { say([{ who: OBA, text: '売れる 装備が ないみたいだね。(なかまに 付けている ものは 売れない)' }], { done: () => omenya('ほかには？') }); return; }
+        say([{ who: OBA, text: 'どれを 売る？ (なかまに 付けている ものは 売れない)' }], {
+            choices: [...list.map(id => `${EQUIPS[id].name}  ${equipSellPrice(id)}円 (${equipFree(g, id)}こ)`), 'もどる'],
+            done: i => {
+                const id = list[i];
+                if (!id) { omenya('ほかには？'); return; }
+                sellEquip(g, id);
+                sfx('ok');
+                app.save();
+                say([{ who: OBA, text: `「${EQUIPS[id].name}」を ${equipSellPrice(id)}円で 買いとったよ。` }], { done: () => equipSell() });
+            }
         });
     }
 

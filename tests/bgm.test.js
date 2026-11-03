@@ -69,3 +69,10 @@ test('覇理魔様 (2026-11-03): 専用の 曲。無限回廊の さいごの �
     assert.equal(KAIROU_UNITS.harima.bgm, 'harima');
     assert.equal(bgmFor({ scene: 'battle', battle: { kind: 'kairou', bossId: KAIROU_UNITS.harima.bgm } }), 'harima');
 });
+
+test('奥の エリア・無限回廊の 地図は 専用の 曲 (2026-11-03)', () => {
+    assert.equal(bgmFor({ scene: 'field', area: 'yama', oku: { id: 'yamaOku' } }), 'oku');
+    assert.equal(bgmFor({ scene: 'field', area: 'kurai', oku: { id: 'kairouMap', kairou: true } }), 'kairouMap');
+    assert.equal(bgmFor({ scene: 'field', area: 'yama' }), 'yama');
+    assert.equal(bgmFor({ scene: 'battle', area: 'yama', oku: { id: 'yamaOku' }, battle: { kind: 'wild' } }), 'battle');
+});

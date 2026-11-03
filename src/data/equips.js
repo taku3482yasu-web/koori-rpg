@@ -34,6 +34,10 @@ export const EQUIPS = {
     hoshiCrown: { name: '星の 王冠', tier: 3, bonus: { hp: 0.1, atk: 0.1, def: 0.1, spd: 0.1, mag: 0.1 }, gauge: 0.2, desc: 'ぜんぶの 能力が 10% アップ・ゲージが 2 わり はやい' }
 };
 export const EQUIP_IDS = Object.keys(EQUIPS);
+// ねだん (2026-11-03): お面屋で ティア 1 (いつでも)・ティア 2 (8 章 クリアから) を 売っている。売ると 半分
+export const TIER_PRICE = { 1: 500, 2: 2000, 3: 6000 };
+export const equipPrice = id => TIER_PRICE[EQUIPS[id].tier];
+export const equipSellPrice = id => Math.floor(equipPrice(id) / 2);
 export const EQUIP_STATS = { hp: 'HP', atk: 'こうげき', def: 'まもり', spd: 'すばやさ', mag: 'ようじゅつ' };
 // 装備の ききめを 短く (メニュー用)
 export const equipShort = id => {

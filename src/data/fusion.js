@@ -3,8 +3,8 @@
 // ---------------------------------------------------------------------
 // 商店街の「合体の館」で、キャラ と キャラ・キャラ と 合成アイテム・アイテム と アイテム を 合体できる。
 // 合体でしか 手に 入らない キャラ (nakama.js の fuse: true。ハリー一族) と アイテム (items.js の onlyFusion) が ある。
-//   a・b: 'n:なかまの id' (その キャラの メダル 1 枚) / 'i:アイテムの id' (その アイテム 1 こ)。順番は どちらでも よい
-//   to:   できる もの ('n:…' なかま / 'i:…' アイテム)
+//   a・b: 'n:なかまの id' (その キャラの メダル 1 枚) / 'i:アイテムの id' (その アイテム 1 こ) / 'e:装備の id' (だれも 付けて いない 装備 1 こ)。順番は どちらでも よい
+//   to:   できる もの ('n:…' なかま / 'i:…' アイテム / 'e:…' 装備。2026-11-03)
 // 合体に 使った メダルと アイテムは なくなる。できる キャラの Lv は 使った キャラの Lv の 平均 (キャラ + アイテムは その キャラの Lv)
 // どの 組み合わせも 中身は Claude の 案 (ダンジョンの 進化の 道具を 合成アイテムに した)
 // =====================================================================
@@ -40,8 +40,29 @@ export const RECIPES = [
     { a: 'n:metalharry', b: 'n:kingharry', to: 'n:metalkingharry' },
     { a: 'n:kogame', b: 'n:yukimidango', to: 'n:hyougame' },
     { a: 'n:daichouenkin', b: 'n:rousokubi', to: 'n:hitodamaou' },
-    { a: 'n:onibin', b: 'n:enjoubouzu', to: 'n:daienjou' }
+    { a: 'n:onibin', b: 'n:enjoubouzu', to: 'n:daienjou' },
+
+    // ----- 装備 (2026-11-03 ユーザー指定: 合体の館で 装備を 作る) -----
+    // お面 + 合成アイテム → ティア 2 の 装備
+    { a: 'i:onimen', b: 'i:onitsuno', to: 'e:kanaboKey' },
+    { a: 'i:hyottoko', b: 'i:kesshou', to: 'e:koura' },
+    { a: 'i:tengumen', b: 'i:hoshikakera', to: 'e:tenguGeta' },
+    { a: 'i:kitsunemen', b: 'i:tsukishizuku', to: 'e:moonPendant' },
+    { a: 'i:luckycoin', b: 'i:choco', to: 'e:hissatsuBand' },
+    // ティア 1 の 装備 + 合成アイテム → ティア 2
+    { a: 'e:hachimaki', b: 'i:onitsuno', to: 'e:kanaboKey' },
+    { a: 'e:haramaki', b: 'i:kesshou', to: 'e:koura' },
+    { a: 'e:zouri', b: 'i:hoshikakera', to: 'e:tenguGeta' },
+    { a: 'e:beads', b: 'i:tsukishizuku', to: 'e:moonPendant' },
+    { a: 'e:wristband', b: 'i:ougonmame', to: 'e:muscleBelt' },
+    // ティア 2 + 伝説の巻物 → ティア 3
+    { a: 'e:kanaboKey', b: 'i:makimono', to: 'e:shitennouBand' },
+    { a: 'e:moonPendant', b: 'i:makimono', to: 'e:pagodaCharm' },
+    { a: 'e:tenguGeta', b: 'i:makimono', to: 'e:shinobiZukin' },
+    { a: 'e:koura', b: 'i:makimono', to: 'e:goldArmor' }
 ];
+// 合体に 使える 材料の 名前 ('n:…' / 'i:…' / 'e:…')
+export const FUSION_CODES = new Set(RECIPES.flatMap(r => [r.a, r.b]));
 
 // 合体の館の 主の セリフ (ヒント)。1 回 話す たびに 順番に
 export const FUSION_HINTS = [
@@ -50,7 +71,8 @@ export const FUSION_HINTS = [
     'サイダーと きゅうりで「氷の結晶」、おにぎりと にぼしで「鬼の角」じゃ。',
     '星のかけらと 氷の結晶で「月のしずく」。月の キャラが よろこぶ しずくじゃ。',
     'ナイトと メイジ、ふたりの ハリーが 合わさると 竜に なると 聞く。',
-    'メタルの ハリーと 王の ハリー……合わせたら どう なるかのう。'
+    'メタルの ハリーと 王の ハリー……合わせたら どう なるかのう。',
+    'お面や 装備に 合成アイテムを 合わせると、強い 装備に なるぞ。伝説の巻物なら なおさらじゃ。'
 ];
 
 // a・b ('n:…' / 'i:…') の 合体で できる もの (順番は どちらでも)。なければ null

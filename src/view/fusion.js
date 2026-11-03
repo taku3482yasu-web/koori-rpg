@@ -7,10 +7,11 @@
 import { ART } from '../art/index.js';
 import { unitOf } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
+import { EQUIPS } from '../data/equips.js';
 import { COLORS, drawArt, panel, text, button, hit, roundRect } from '../core/draw.js';
 import { sfx } from '../core/sound.js';
 import { btn } from '../core/keys.js';
-import { medalByUid } from '../logic/game.js';
+import { medalByUid, equipFree } from '../logic/game.js';
 import { fusionParts, canFuse, fuse } from '../logic/fusion.js';
 
 const ROW_H = 20, ROWS = 8, LIST_TOP = 30;
@@ -21,11 +22,13 @@ export function createFusion(app) {
     const g = app.g;
     let t = 0, index = 0, a = null, b = null, result = null, resultT = 0;
     const same = (p, q) => p && q && p.type === q.type && (p.type === 'medal' ? p.uid === q.uid : p.id === q.id);
-    const nameOf = p => (p.type === 'medal' ? unitOf(medalByUid(g, p.uid).id).name : ITEMS[p.id].name);
+    const nameOf = p => (p.type === 'medal' ? unitOf(medalByUid(g, p.uid).id).name : p.type === 'equip' ? EQUIPS[p.id].name : ITEMS[p.id].name);
+    // 一覧: 合体できる ものだけ。1 つ目を えらんだら、それと 合体できる ものだけ (2026-11-03 ユーザー指定)
+    const parts = () => (a && !b ? fusionParts(g, a) : fusionParts(g));
     const scroll = len => Math.max(0, Math.min(len - ROWS, index - Math.floor(ROWS / 2)));
 
     function pick(p) {
-        if (!a) { a = p; sfx('ok'); return; }
+        if (!a) { a = p; index = 0; sfx('ok'); return; }
         if (same(a, p) && p.type === 'medal') { sfx('cancel'); return; }
         b = p;
         sfx(canFuse(g, a, b) ? 'ok' : 'cancel');
@@ -54,7 +57,7 @@ export function createFusion(app) {
             if (t - resultT > 0.6 && (input.pressed.a || input.pressed.b || tc.justDown)) { result = null; sfx('ok'); }
             return;
         }
-        const list = fusionParts(g);
+        const list = parts();
         if (index >= list.length) index = Math.max(0, list.length - 1);
         if (input.pressed.b || input.pressed.x) { back(); return; }
         if (input.pressed.up && list.length) { index = (index + list.length - 1) % list.length; sfx('cursor'); }
@@ -78,6 +81,13 @@ export function createFusion(app) {
     // 材料・できた ものの 絵 (なかまは ドット絵、アイテムは 丸い しるし)
     function drawPart(ctx, code, x, y, scale = 3) {
         const [kind, id] = code.split(':');
+        if (kind === 'e') {
+            ctx.fillStyle = '#3a8a6a';
+            ctx.beginPath(); ctx.arc(x, y - 20, 18, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#a8ffd0'; ctx.lineWidth = 2; ctx.stroke();
+            text(ctx, EQUIPS[id].name[0], x, y - 13, { size: 18, align: 'center', bold: true });
+            return;
+        }
         if (kind === 'n') { drawArt(ctx, ART[unitOf(id).art], Math.floor(t * 2), x, y, { scale: ART[unitOf(id).art].h > 24 ? scale * 0.6 : scale }); return; }
         const it = ITEMS[id];
         ctx.fillStyle = it.material ? '#8a5ac0' : '#c08a3a';
@@ -85,8 +95,8 @@ export function createFusion(app) {
         ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 2; ctx.stroke();
         text(ctx, it.name[0], x, y - 13, { size: 18, align: 'center', bold: true });
     }
-    const codeOfPart = p => (p.type === 'medal' ? `n:${medalByUid(g, p.uid).id}` : `i:${p.id}`);
-    const resultName = code => (code.startsWith('n:') ? unitOf(code.slice(2)).name : ITEMS[code.slice(2)].name);
+    const codeOfPart = p => (p.type === 'medal' ? `n:${medalByUid(g, p.uid).id}` : p.type === 'equip' ? `e:${p.id}` : `i:${p.id}`);
+    const resultName = code => (code.startsWith('n:') ? unitOf(code.slice(2)).name : code.startsWith('e:') ? EQUIPS[code.slice(2)].name : ITEMS[code.slice(2)].name);
 
     function drawTop(ctx) {
         ctx.fillStyle = '#1a1030';
@@ -97,7 +107,7 @@ export function createFusion(app) {
         for (const r of [96, 70]) { ctx.beginPath(); ctx.ellipse(200, 170, r * 1.6, r * 0.45, 0, 0, Math.PI * 2); ctx.stroke(); }
         text(ctx, '合体の館', 200, 26, { size: 18, align: 'center', bold: true, color: '#e0c8ff' });
         if (result) {
-            const code = `${result.kind === 'item' ? 'i' : 'n'}:${result.id}`;
+            const code = `${result.kind === 'item' ? 'i' : result.kind === 'equip' ? 'e' : 'n'}:${result.id}`;
             const k = Math.min(1, (t - resultT) / 0.5);
             ctx.fillStyle = `rgba(255, 240, 200, ${0.5 * (1 - k)})`; ctx.fillRect(0, 0, 400, 240);
             drawPart(ctx, code, 200, 160, 5);
@@ -126,8 +136,9 @@ export function createFusion(app) {
     function drawBottom(ctx) {
         ctx.fillStyle = '#16203a';
         ctx.fillRect(0, 0, 320, 240);
-        const list = fusionParts(g);
-        text(ctx, a ? (b ? 'この 2 つで 合体する？' : '2 つ目を えらぶ') : '1 つ目を えらぶ', 8, 20, { size: 12, bold: true, color: '#e0c8ff' });
+        const list = parts();
+        text(ctx, a ? (b ? 'この 2 つで 合体する？' : `2 つ目を えらぶ (${nameOf(a)}と 合体できる もの)`) : '1 つ目を えらぶ (合体できる ものだけ)', 8, 20, { size: 12, bold: true, color: '#e0c8ff', maxWidth: 260 });
+        if (!list.length) text(ctx, a ? 'いま もっている 中には ない' : '合体できる ものを もっていない', 160, 110, { size: 12, align: 'center', color: COLORS.dim });
         text(ctx, `${list.length ? index + 1 : 0}/${list.length}`, 312, 20, { size: 10.5, align: 'right', color: COLORS.dim });
         const top = scroll(list.length);
         for (let k = 0; k < ROWS && top + k < list.length; k++) {
@@ -138,6 +149,10 @@ export function createFusion(app) {
                 const m = medalByUid(g, p.uid), inWatch = g.watch.indexOf(m.uid);
                 text(ctx, `${chosen ? '◆ ' : ''}${unitOf(m.id).name}`, 16, y + 14, { size: 12, color: chosen ? COLORS.accent : COLORS.ink });
                 text(ctx, `Lv${m.lv}${inWatch >= 0 ? `  [${inWatch + 1}]` : ''}`, 304, y + 14, { size: 11, align: 'right', color: COLORS.sub });
+            } else if (p.type === 'equip') {
+                text(ctx, `${chosen ? '◆ ' : ''}${EQUIPS[p.id].name}`, 16, y + 14, { size: 12, color: chosen ? COLORS.accent : COLORS.ink });
+                text(ctx, '装備', 200, y + 14, { size: 10, color: '#a8ffd0' });
+                text(ctx, `×${equipFree(g, p.id)}`, 304, y + 14, { size: 11, align: 'right', color: COLORS.sub });
             } else {
                 text(ctx, `${chosen ? '◆ ' : ''}${ITEMS[p.id].name}`, 16, y + 14, { size: 12, color: chosen ? COLORS.accent : COLORS.ink });
                 if (ITEMS[p.id].material) text(ctx, '合成', 200, y + 14, { size: 10, color: '#c8a8ff' });

@@ -100,7 +100,10 @@ try {
     await shot('title');
     check(await evaluate('Boolean(window.__app && window.__app.scene)'), 'タイトルが 出る');
     await key('KeyJ');
-    await sleep(300);
+    await sleep(700);
+    check(await evaluate('window.__app.scene.debug?.launching?.() === true'), 'はじめからで なかまが 飛びだす 演出 (2026-11-03)');
+    await shot('title-launch');
+    await sleep(1700);
     check(await evaluate('window.__app.g && window.__app.g.story === "intro"'), 'J キーで 決定して はじめから 始まる');
     await shot('intro-talk');
     await skipTalk();
@@ -312,7 +315,7 @@ try {
     await sleep(1200);
     await evaluate('window.__app.autoHelp = false; window.__app.noChase = true; window.__app.noSwirl = true; true');
     await key('Enter');
-    await sleep(300);
+    await sleep(2300);
     check(await evaluate('window.__app.g && window.__app.g.story === "friends" && window.__app.g.medals.length >= 1'), 'つづきから で 前の 続き');
 
     // ----- 商店街 (段階 2。2026-10-27): 1 章 クリアの あと 南へ 行ける -----
@@ -1145,7 +1148,7 @@ try {
     await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: a.x, y: a.y }] });
     await sleep(80);
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    await sleep(400);
+    await sleep(2400);
     check(await evaluate('Boolean(window.__app.g)'), 'スマホの A ボタンで 決定できる');
     await skipTalk();
     await shot('phone-field');

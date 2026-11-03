@@ -4,7 +4,7 @@
 // 場面 (title → field ⇄ battle → result → field、field ⇄ menu) を 切りかえ、毎コマ 入力 → update → 描く。
 // セーブは 町に 戻るたび・メニューで・ページを 閉じるとき・30 秒ごと (設計書 7 章「いつでも 中断できる」)
 // =====================================================================
-import { CHESTS, OKU_GATES, KAIROU_IN, KAIROU_BOSS_AT } from './data/map.js';
+import { CHESTS, OKU_GATES, KAIROU_IN, KAIROU_BOSS_AT, okuAt } from './data/map.js';
 import { blockedTile } from './logic/world.js';
 import { setupScreens } from './core/screen.js';
 import { createInput } from './core/input.js';
@@ -114,6 +114,7 @@ function wantedBgm() {
         scene: sc.name,
         area: app.g ? areaAt(Math.floor(app.g.pos.x / TILE), Math.floor(app.g.pos.y / TILE)) : null,
         story: app.g ? app.g.story : null,
+        oku: app.g ? okuAt(Math.floor((app.g.pos.y - 3) / TILE)) : null,
         battle: b ? (() => { const boss = b.enemies.find(e => BOSSES[e.id] || KAIROU_UNITS[e.id]); return { kind: b.kind, outcome: b.outcome, bossId: boss ? (KAIROU_UNITS[boss.id]?.bgm || KAIROU_UNITS[boss.id]?.baseBoss || boss.id) : null, phase: boss?.phase ?? 1, enraged: Boolean(boss?.enraged) }; })() : null
     });
 }

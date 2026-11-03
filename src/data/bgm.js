@@ -25,6 +25,18 @@ export const MODES = {
 };
 
 export const SONGS = {
+    // ----- ダンジョンの 奥の エリア・無限回廊の 地図 (2026-11-03 ユーザー指定: 専用の 曲) -----
+    oku: {
+        name: 'ダンジョンの 奥へ', bpm: 96, root: 62, mode: 'minor', lead: 'triangle',
+        melody: "1 . 3 . 5 - 6 5 | 4 - 3 - 1 - . . | 1 . 3 . 5 - 7 1' | 7 - 6 - 5 - . . | 6 . 5 . 4 - 3 4 | 5 - 3 - 1 - 7, . | 1 . 2 . 3 - 5 4 | 3 - 2 - 1 - - .",
+        chords: '1 4 1 5 6 1 7 1', bass: 'r . . . f . . .', arp: '0 1 2 1 0 1 2 1', drums: 'k . . h s . . h'
+    },
+    kairouMap: {
+        name: '赤黒い 無限回廊', bpm: 138, root: 64, mode: 'harmonic', lead: 'sawtooth',
+        melody: "1 1 5 1 6 - 5 . | 4 4 3 4 5 - . . | 1 1 5 1 6 - 7 . | 1' - 7 - 6 - 5 . | 4 . 6 . 1' - 7 6 | 5 - 3 - 7, - . . | 1 . 3 . 5 . 7 . | 1' - - . 5 - 1 .",
+        chords: '1 4 1 5 6 4 5 1', bass: 'r o r o f o r o', drums: 'x h s h x h s s'
+    },
+
     // ----- タイトル -----
     title: {
         name: 'こおりくんの 大冒険', bpm: 116, root: 72, mode: 'major', lead: 'square',
@@ -326,8 +338,10 @@ export function compileSong(song) {
 
 // いま 鳴らす 曲。scene: 場面の 名前 / area: 町の 地区 / battle: バトル (kind・ボスの id・おわったか)
 //   バトルが おわったら 止める (勝ち・負けの 効果音を 聞かせる)。結果画面も 止める
-export function bgmFor({ scene, area, battle, story = null }) {
+// oku: いる 奥の エリア (data/oku.js。なければ null)。奥の エリアと 無限回廊は 専用の 曲 (2026-11-03)
+export function bgmFor({ scene, area, battle, story = null, oku = null }) {
     if (scene === 'title') return 'title';
+    if (oku && (scene === 'field' || scene === 'menu')) return oku.kairou ? 'kairouMap' : 'oku';
     // 10 章: 黒い 霧の 町 (石の川タウン・商店街)
     if (story === 'shuugeki' && (area === 'ishinokawa' || area === 'shoutengai') && scene !== 'battle') return 'shuugeki';
     if (scene === 'field' || scene === 'menu' || scene === 'fusion') return SONGS[area] ? area : 'ishinokawa';
