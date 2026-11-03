@@ -166,7 +166,7 @@ export function createBattleView(app, battle, place, opts = {}) {
         const m = motions[u.uid];
         if (m) {
             const k = (t - m.start) / m.dur;
-            if (k >= 1 && m.kind !== 'ko') delete motions[u.uid];
+            if (k >= 1) delete motions[u.uid];
             else if (m.kind === 'skill' && m.skill) {
                 const p = skillPose(m.skill.kind, k, m.dx, m.dy);
                 ox += p.ox;
@@ -197,13 +197,15 @@ export function createBattleView(app, battle, place, opts = {}) {
                     if (m.big) oy -= Math.sin(Math.min(1, q / 0.55) * Math.PI) * 12;   // とびあがる
                 }
             } else if (m.kind === 'ko') {
-                // たおれる: 大きく のけぞって 吹っとび、ひっくりかえって つぶれる
-                const f = Math.min(1, k / 0.35);
-                ox += m.dx * f;
-                oy += m.dy * f - Math.sin(Math.min(1, k / 0.45) * Math.PI) * 14;
-                rot = m.lean * 2.6 * f;
-                sy = 1 - 0.45 * Math.max(0, (k - 0.35) / 0.65);
-                sx = 1 + 0.2 * Math.max(0, (k - 0.35) / 0.65);
+                // たおれる (2026-11-04 ユーザー指定で 直した: 前は かたむいた まま ずれて のこり、変な 動きに 見えた):
+                //   押されて のけぞり → もとの 場所へ もどりながら ぺたんと しずんで、さいごは もとの 形 (うすく なる) に もどる
+                const push = k < 0.25 ? Math.sin(k / 0.25 * Math.PI / 2) : Math.max(0, 1 - (k - 0.25) / 0.35);
+                ox += m.dx * 0.7 * push;
+                oy += m.dy * 0.4 * push;
+                rot = m.lean * push;
+                const squash = k < 0.25 ? 0 : Math.sin(Math.min(1, (k - 0.25) / 0.75) * Math.PI);
+                sy = 1 - 0.3 * squash;
+                sx = 1 + 0.12 * squash;
             }
         }
         if ((shakes[u.uid] || 0) > t) ox += Math.sin(t * 70) * 2.5;
