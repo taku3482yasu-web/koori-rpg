@@ -17,7 +17,10 @@ export const OKU = [
     { id: 'shiroOku', parent: 'shiro', name: 'SE城 地下 宝物蔵', place: 'shiro', wall: 'k', floor: 'r', accent: 'K', gate: { x: 44, y: 24 }, lvAdd: 3 },
     { id: 'kinnikuOku', parent: 'kinniku', name: '修行の 洞穴', place: 'kinniku', wall: 'J', floor: 'C', accent: 'N', gate: { x: 44, y: 20 }, lvAdd: 3 },
     { id: 'tsuboOku', parent: 'tsubo', name: '溶岩の 迷路', place: 'tsubo', wall: 'J', wall2: 'm', floor: 'C', accent: 'C', gate: { x: 44, y: 28 }, lvAdd: 3 },
-    { id: 'kuraiOku', parent: 'kurai', name: '喰らいの 城 地下牢', place: 'kurai', wall: 'V', floor: 'v', accent: 'K', gate: { x: 44, y: 32 }, lvAdd: 3 }
+    { id: 'kuraiOku', parent: 'kurai', name: '喰らいの 城 地下牢', place: 'kurai', wall: 'V', floor: 'v', accent: 'K', gate: { x: 44, y: 32 }, lvAdd: 3 },
+    // 無限回廊 (15 章。2026-11-03 ユーザー指定: 回廊の 敵も 追いかけてくる)。回廊の 番人に 話すと 入る。
+    //   いちばん 奥の 部屋に その 階の ボス。敵の Lv は 階で きまる (kairou)。宝箱・入り口の 道は なし
+    { id: 'kairouMap', parent: 'kurai', name: '無限回廊', place: 'kurai', wall: 'V', floor: 'r', accent: 'v', gate: null, kairou: true }
 ];
 
 // id から きまる 乱数

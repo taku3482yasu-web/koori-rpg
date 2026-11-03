@@ -55,6 +55,7 @@ export function peopleHere(g) {
         (p.only === 'boss14' && g.story === 'yoru' && PARK_CLUES.every(c => g.flags.clue14 && g.flags.clue14[c.id])) ||
         // 15 章: 無限回廊の 番人・まだ 勝って いない ライバル探検隊
         (p.only === 'clear14' && reached(g, 'clear14')) ||
+        (p.only === 'kairouBoss' && reached(g, 'clear14')) ||
         (p.only === 'team' && reached(g, 'clear14') && !g.flags[`team_${p.team}`])));
 }
 // 人の 名前と 絵 (ライバル探検隊の リーダーは バージョンで ちがう)

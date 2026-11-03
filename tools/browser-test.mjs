@@ -1061,10 +1061,18 @@ try {
     await key('KeyJ');
     await skipTalk();
     await sleep(300);
-    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.kind === "kairou"'), '無限回廊の 番人に 話すと 1 階の 強化ボスと バトル');
+    check(await evaluate('Math.floor((window.__app.g.pos.y - 3) / 16) === window.__KAIROU.in.y'), '無限回廊の 番人に 話すと 回廊の 地図へ (2026-11-03)');
+    await shot('kairou-in');
+    const kb2 = await evaluate('window.__KAIROU.boss');
+    await at(kb2.x, kb2.y + 1, 'up');
+    await key('KeyJ');
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.kind === "kairou"'), '回廊の いちばん 奥の ボスに 話すと 1 階の 強化ボスと バトル');
     await winNow();
     await skipTalk(30);
     check(await evaluate('window.__app.g.kairou.floor === 2'), '無限回廊: 勝つと 次の 階へ');
+    check(await evaluate('Math.floor((window.__app.g.pos.y - 3) / 16) === 41'), '勝つと 番人の 前に もどる');
     await at(20, 30, 'up');
     await key('KeyJ');
     await skipTalk();
@@ -1246,6 +1254,19 @@ try {
     check(await evaluate('window.__app.scene.debug.swirl() !== null'), 'バトルの はじめに 煙の 演出');
     await sleep(500);
     await shot('swirl-clear');
+    // 無限回廊 (2026-11-03): 回廊の 地図の いちばん 奥の ボスに 話すと その 階の ボスと バトル
+    await evaluate('(() => { const a = window.__app, b = a.scene.battle; b.outcome = "flee"; a.endBattle(b); return true; })()');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(150);
+    await skipTalk();
+    await evaluate(`(() => { const a = window.__app, k = window.__KAIROU; a.noChase = true; a.g.story = 'clear14'; a.g.pos = { x: k.boss.x * 16 + 8, y: (k.boss.y + 1) * 16 + 12, dir: 'up' }; return true; })()`);
+    await sleep(300);
+    await shot('kairou-map');
+    await key('KeyJ');
+    await sleep(300);
+    await skipTalk();
+    let kb = false;
+    for (let i = 0; i < 20 && !kb; i++) { await sleep(150); kb = await evaluate('window.__app.scene.name === "battle" && window.__app.scene.battle.kind === "kairou"'); }
+    check(kb, '無限回廊の 地図の 奥の ボスと バトル');
 } catch (e) {
     errors.push(String(e && e.stack || e));
 } finally {

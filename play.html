@@ -191,7 +191,10 @@ body.nopad #pad { display: none; }
     { id: "shiroOku", parent: "shiro", name: "SE城 地下 宝物蔵", place: "shiro", wall: "k", floor: "r", accent: "K", gate: { x: 44, y: 24 }, lvAdd: 3 },
     { id: "kinnikuOku", parent: "kinniku", name: "修行の 洞穴", place: "kinniku", wall: "J", floor: "C", accent: "N", gate: { x: 44, y: 20 }, lvAdd: 3 },
     { id: "tsuboOku", parent: "tsubo", name: "溶岩の 迷路", place: "tsubo", wall: "J", wall2: "m", floor: "C", accent: "C", gate: { x: 44, y: 28 }, lvAdd: 3 },
-    { id: "kuraiOku", parent: "kurai", name: "喰らいの 城 地下牢", place: "kurai", wall: "V", floor: "v", accent: "K", gate: { x: 44, y: 32 }, lvAdd: 3 }
+    { id: "kuraiOku", parent: "kurai", name: "喰らいの 城 地下牢", place: "kurai", wall: "V", floor: "v", accent: "K", gate: { x: 44, y: 32 }, lvAdd: 3 },
+    // 無限回廊 (15 章。2026-11-03 ユーザー指定: 回廊の 敵も 追いかけてくる)。回廊の 番人に 話すと 入る。
+    //   いちばん 奥の 部屋に その 階の ボス。敵の Lv は 階で きまる (kairou)。宝箱・入り口の 道は なし
+    { id: "kairouMap", parent: "kurai", name: "無限回廊", place: "kurai", wall: "V", floor: "r", accent: "v", gate: null, kairou: true }
   ];
   function rngOf(id) {
     let s = 2166136261;
@@ -1349,7 +1352,7 @@ body.nopad #pad { display: none; }
     taken.add(keyOf(c.x, c.y));
     reserve(c.x, c.y, 1);
   });
-  const OKU_GATES = OKU.map((o) => {
+  const OKU_GATES = OKU.filter((o) => o.gate).map((o) => {
     const p = placeSpot(Y0[o.parent], Y1[o.parent], from(o.parent), { x: o.gate.x, y: Y0[o.parent] + o.gate.y });
     const front = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy })).find((q) => walkable(q.x, q.y));
     return { id: o.id, x: p.x, y: p.y, front };
@@ -1387,6 +1390,7 @@ body.nopad #pad { display: none; }
     ...CHESTS13.map((c) => ({ ...c, kind: "rare" })),
     ...SPOT_CHESTS.map(([area, x, y, what], i) => ({ id: `t${i}_${area}`, ...placeSpot(Y0[area], Y1[area], from(area), { x, y: Y0[area] + y }), ...what })),
     ...OKU.flatMap((o, k) => {
+      if (o.kairou) return [];
       const info = OKU_INFO[k], y0 = OKU_Y0 + k * OKU_H, y1 = y0 + OKU_H;
       const at = (r2) => placeSpot(y0, y1, info.start, roomCorner(r2, 1));
       const list = [{ id: `${o.id}_far`, ...at(info.far), kind: "rare", equip: OKU_RARE[o.id] }];
@@ -1400,6 +1404,13 @@ body.nopad #pad { display: none; }
   PROPS.push(...OKU.map((o, k) => ({ id: `okuExit-${o.id}`, kind: "okuExit", x: OKU_INFO[k].exit.x, y: OKU_INFO[k].exit.y })));
   const LV_OF = { yama: YAMA_LV, umi: CAVE_LV, tera: TERA_LV, yashiki: YASHIKI_LV, moon: MOON_LV, shiro: SHIRO_LV, kinniku: KINNIKU_LV, tsubo: TSUBO_LV, kurai: KURAI_LV };
   OKU.forEach((o, k) => {
+    if (o.kairou) {
+      const kinds2 = ROAMS.filter((r2) => r2.y0 >= KURAI_Y0 && r2.y0 < OKU_Y0).flatMap((r2) => r2.kinds).filter((kd, i, a) => a.findIndex((x) => x.id === kd.id) === i);
+      OKU_INFO[k].rooms.filter((r2) => r2 !== OKU_INFO[k].startRoom && r2 !== OKU_INFO[k].far).forEach((r2, i) => {
+        ROAMS.push({ id: `${o.id}_r${i}`, label: o.name, x0: r2.x, y0: r2.y, x1: r2.x + r2.w - 1, y1: r2.y + r2.h - 1, max: 1, kairou: true, kinds: kinds2 });
+      });
+      return;
+    }
     const y0 = Y0[o.parent], y1 = Y1[o.parent];
     const kinds = [];
     for (const r2 of ROAMS) if (r2.y0 >= y0 && r2.y0 < y1) {
@@ -1417,6 +1428,11 @@ body.nopad #pad { display: none; }
     return { x: OKU_INFO[k].start.x, y: OKU_INFO[k].start.y, dir: "up" };
   };
   const okuGateOf = (id) => OKU_GATES.find((q) => q.id === id);
+  const KK = OKU.findIndex((o) => o.kairou);
+  const KAIROU_IN = okuStart("kairouMap");
+  const KAIROU_BOSS_AT = { x: OKU_INFO[KK].far.x + Math.floor(OKU_INFO[KK].far.w / 2), y: OKU_INFO[KK].far.y + 1 };
+  const KAIROU_BACK = { x: 10, y: 41, dir: "up" };
+  PEOPLE.push({ id: "kairouBoss", name: "回廊の ボス", art: "haridaijin", x: KAIROU_BOSS_AT.x, y: KAIROU_BOSS_AT.y, only: "kairouBoss", scale: 1 });
   const DUNGEON_AREAS = /* @__PURE__ */ new Set(["yama", "tera", "yashiki", "moon", "shiro", "kinniku", "tsubo", "kurai"]);
   const isDungeon = (tx, ty) => Boolean(okuAt(ty)) || DUNGEON_AREAS.has(areaAt(tx, ty)) || inCaveTile(tx, ty);
   const STORY = ["intro", "friends", "bridge", "clear", "school", "clear2", "yama", "clear3", "umi", "umibe", "clear4", "tera", "netdera", "clear5", "shinobi", "yashiki", "clear6", "meikyu", "clear7", "oshiro", "clear8", "onijoin", "kinniku", "clear9", "shuugeki", "clear10", "tsuboe", "tsubo", "clear11", "shuuketsu", "clear12", "kuraie", "kurai", "clear13", "invite", "park", "yoru", "clear14"];
@@ -1465,7 +1481,7 @@ body.nopad #pad { display: none; }
     p.only === "tashikeda10" && g.story === "shuugeki" && (g.flags.dark10 || 0) >= 5 || // 9 章: 氷河の ハル麒麟 → 山頂の ノゾエマ
     p.only === "harukirin9" && g.story === "kinniku" && !g.flags.kirin9 || p.only === "nozoema9" && g.story === "kinniku" && g.flags.kirin9 || // 14 章: おにおには 遊園地に いっしょに 来ている。夜に 手がかりが そろうと 広場に 残党の ボス
     p.only === "park14" && (g.story === "park" || g.story === "yoru") || p.only === "boss14" && g.story === "yoru" && PARK_CLUES.every((c) => g.flags.clue14 && g.flags.clue14[c.id]) || // 15 章: 無限回廊の 番人・まだ 勝って いない ライバル探検隊
-    p.only === "clear14" && reached(g, "clear14") || p.only === "team" && reached(g, "clear14") && !g.flags[`team_${p.team}`]));
+    p.only === "clear14" && reached(g, "clear14") || p.only === "kairouBoss" && reached(g, "clear14") || p.only === "team" && reached(g, "clear14") && !g.flags[`team_${p.team}`]));
   }
   const personArt = (g, p) => p.artBy ? p.artBy[g.version] || Object.values(p.artBy)[0] : p.art;
   const gatesHere = (g) => GATES.filter((q) => q.only === "beforeClear2" ? !reached(g, "clear2") : !reached(g, "clear"));
@@ -7081,7 +7097,7 @@ body.nopad #pad { display: none; }
   function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
     const dark = darkTown(g, source);
-    const [lo, hi] = dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === "kurai" ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, "clear") ? [8, 13] : [2, 5]);
+    const [lo, hi] = source.kairou ? kairouLv(g) : dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === "kurai" ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, "clear") ? [8, 13] : [2, 5]);
     const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
@@ -7511,6 +7527,10 @@ body.nopad #pad { display: none; }
     if (!g.kairou) g.kairou = { floor: 1, best: 0 };
     return g.kairou;
   }
+  const kairouLv = (g) => {
+    const f = kairouOf(g).floor;
+    return [Math.min(97, 70 + f * 2), Math.min(99, 73 + f * 2)];
+  };
   function kairouEnemies(g) {
     const floor = kairouOf(g).floor;
     const id = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];
@@ -20172,7 +20192,7 @@ body.nopad #pad { display: none; }
     const wait = {};
     let calmUntil = 0;
     let seq = 0;
-    const lvRange = (source) => source && source.lv || (reached(g, "clear") ? [4, 9] : [2, 5]);
+    const lvRange = (source) => (source && source.kairou ? kairouLv(g) : source && source.lv) || (reached(g, "clear") ? [4, 9] : [2, 5]);
     const rollLv = (source) => {
       const [lo, hi] = lvRange(source);
       return lo + rng.int(hi - lo + 1);
@@ -21473,10 +21493,18 @@ body.nopad #pad { display: none; }
         const harima = next.id === "harima";
         say([{ who: "回廊の 番人", art: "haridaijin", text: harima ? `${k.floor} 階……さいごの 階じゃ。この 奥には 地獄の 観音、覇理魔様が おられる。Lv${next.lv}。……生きて もどれよ。` : `ここは 無限回廊。赤黒く そまった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${nu.name} Lv${next.lv}じゃ。` }], {
           choices: [`${k.floor} 階に いどむ`, "やめる"],
+          // 2026-11-03: 回廊の 中を 歩いて いちばん 奥の ボスまで (とちゅうの 敵は 追いかけてくる)
           done: (i) => {
-            if (i === 0) app2.startBattle({ enemies: kairouEnemies(g), kind: "kairou", place: harima ? "kurai" : nu.place });
+            if (i === 0) say([{ who: "回廊の 番人", art: "haridaijin", text: `${k.floor} 階の ボスは いちばん 奥じゃ。とちゅうの 赤黒い 軍勢に 気を つけよ。` }], { done: () => warp(KAIROU_IN) });
           }
         });
+      } else if (p.id === "kairouBoss") {
+        const k = kairouOf(g), next = kairouEnemies(g)[0], nu = KAIROU_UNITS[next.id];
+        const harima = next.id === "harima";
+        say(
+          [{ who: "", text: harima ? `${k.floor} 階の 奥……地獄の 観音、覇理魔様が いる！` : `${k.floor} 階の ボス、${nu.name} Lv${next.lv}が 待ちかまえていた！` }],
+          { done: () => app2.startBattle({ enemies: kairouEnemies(g), kind: "kairou", place: harima ? "kurai" : nu.place }) }
+        );
       } else if (p.team) {
         const T = TEAMS[p.team];
         say(
@@ -22211,7 +22239,10 @@ body.nopad #pad { display: none; }
         const lines = [nar(`無限回廊 ${result2.kairou} 階を 突破！`)];
         if (result2.prize) lines.push(nar(`ごほうびに ${ITEMS[result2.prize].name}を もらった！`));
         lines.push({ who: "回廊の 番人", art: "haridaijin", text: `つぎは ${kairouOf(g).floor} 階じゃ。もっと 強い ボスが 待っておるぞ。` });
-        say(lines, { done: () => app2.save() });
+        say(lines, { done: () => {
+          warp(KAIROU_BACK);
+          app2.save();
+        } });
       } else if (result2.team && result2.outcome === "win") {
         const T = TEAMS[result2.team];
         story([
@@ -22539,6 +22570,11 @@ body.nopad #pad { display: none; }
           say([nar(`奥へ つづく 道が ある……。「${target.oku.name}」に 入った！`)], { done: () => warp(okuStart(target.oku.id)) });
           return;
         }
+        if ((target == null ? void 0 : target.type) === "okuExit" && target.oku.kairou) {
+          sfx("ok");
+          say([nar("無限回廊から 外へ 出た。")], { done: () => warp(KAIROU_BACK) });
+          return;
+        }
         if ((target == null ? void 0 : target.type) === "okuExit") {
           sfx("ok");
           const q = okuGateOf(target.oku.id);
@@ -22665,7 +22701,8 @@ body.nopad #pad { display: none; }
     function drawPeople(ctx) {
       const list = [];
       for (const p of peopleHere(g)) {
-        list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[personArt(g, p)], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
+        const art2 = p.id === "kairouBoss" ? KAIROU_UNITS[kairouEnemies(g)[0].id].art : personArt(g, p);
+        list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[art2], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.id === "kairouBoss" ? 1.5 : p.scale || 1 }) });
       }
       const talkable = !lens && !app2.talk.isActive() ? wild.facing(g.pos) : null;
       for (const c of wild.list) {
@@ -22964,7 +23001,10 @@ body.nopad #pad { display: none; }
       ctx.rect(8, 28, 144, 108);
       ctx.clip();
       const placed = [];
-      const labels = okuHere() ? [{ id: "exit", name: "もどり道", cx: OKU_INFO.find((o, k) => okuAt(o.exit.y) === okuHere()).exit.x, cy: OKU_INFO.find((o) => okuAt(o.exit.y) === okuHere()).exit.y }] : inKurai() ? KURAI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTsubo() ? TSUBO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inKinniku() ? KINNIKU_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inPark() ? PARK_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
+      const labels = okuHere() ? [
+        { id: "exit", name: "もどり道", cx: OKU_INFO.find((o) => okuAt(o.exit.y) === okuHere()).exit.x, cy: OKU_INFO.find((o) => okuAt(o.exit.y) === okuHere()).exit.y },
+        ...okuHere().kairou ? [{ id: "boss", name: `${kairouOf(g).floor} 階の ボス`, cx: KAIROU_BOSS_AT.x, cy: KAIROU_BOSS_AT.y }] : []
+      ] : inKurai() ? KURAI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTsubo() ? TSUBO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inKinniku() ? KINNIKU_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inPark() ? PARK_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inShiro() ? SHIRO_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inMoon() ? MOON_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYashiki() ? YASHIKI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inTera() ? TERA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inUmi() ? UMI_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inYama() ? YAMA_PLACES.map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x, cy: r2.y })) : inSchool() ? SCHOOL_ROOMS.filter((r2) => r2.id !== "getabako").map((r2) => ({ id: r2.id, name: r2.label, cx: r2.x + 0.5, cy: r2.y + 3 })) : BUILDINGS.map((b) => ({ id: b.id, name: MINI_NAMES[b.id] || b.label, cx: b.x + b.w / 2, cy: b.y + b.h / 2 }));
       for (const b of labels) {
         const name = b.name;
         const bx = 8 + b.cx * 3;
@@ -27325,6 +27365,7 @@ body.nopad #pad { display: none; }
   window.__bgm = currentBgm;
   window.__CHESTS = CHESTS;
   window.__OKU_GATES = OKU_GATES;
+  window.__KAIROU = { in: KAIROU_IN, boss: KAIROU_BOSS_AT };
   window.__blocked = (x, y) => blockedTile(app.g, x, y);
   function wantedBgm() {
     const sc = app.scene;

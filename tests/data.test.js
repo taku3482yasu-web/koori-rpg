@@ -469,9 +469,10 @@ test('地図: 喰らいの 城 (13 章)。ヒョウガリュウの おりる 野
 
 test('奥の エリア (2026-11-03): 9 つの ダンジョンに 入り口・中は 着く マスから ぜんぶの 宝箱と もどり道まで 歩ける', async () => {
     const { OKU, OKU_H, OKU_Y0, OKU_INFO, OKU_GATES, CHESTS, areaAt, regionOf, tileAt, BLOCK } = await import('../src/data/map.js');
-    assert.equal(OKU.length, 9);
+    assert.equal(OKU.filter(o => !o.kairou).length, 9);
     const props = new Set(CHESTS.map(c => `${c.x},${c.y}`));
     OKU.forEach((o, k) => {
+        if (o.kairou) return;
         const y0 = OKU_Y0 + k * OKU_H, info = OKU_INFO[k];
         assert.deepEqual(regionOf(info.start.y), [y0, y0 + OKU_H]);
         assert.equal(areaAt(info.start.x, info.start.y), o.parent);
@@ -512,4 +513,31 @@ test('宝箱 (2026-11-03): 町と ダンジョンに ある・中身は ある �
         else assert.ok(ITEMS[c.item], c.id);
     }
     for (const p of Object.values(DAILY_POOL)) for (const id of p.items) assert.ok(ITEMS[id], id);
+});
+
+test('無限回廊の 地図 (2026-11-03): 着く マスから いちばん 奥の ボスの 前まで 歩ける・とちゅうに 階で 強く なる 敵', async () => {
+    const { OKU, OKU_H, OKU_INFO, KAIROU_Y0, KAIROU_IN, KAIROU_BOSS_AT, ROAMS, PEOPLE, tileAt, BLOCK, isDungeon } = await import('../src/data/map.js');
+    const { newGame, kairouOf, kairouLv } = await import('../src/logic/game.js');
+    const k = OKU.findIndex(o => o.kairou);
+    assert.equal(KAIROU_Y0, OKU_INFO[k].start.y - (OKU_INFO[k].start.y - KAIROU_Y0));
+    const seen = new Set([`${KAIROU_IN.x},${KAIROU_IN.y}`]);
+    const q = [KAIROU_IN];
+    while (q.length) {
+        const p = q.pop();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const x = p.x + dx, y = p.y + dy, key = `${x},${y}`;
+            if (seen.has(key) || y < KAIROU_Y0 || y >= KAIROU_Y0 + OKU_H || BLOCK.has(tileAt(x, y)) || (x === KAIROU_BOSS_AT.x && y === KAIROU_BOSS_AT.y)) continue;
+            seen.add(key);
+            q.push({ x, y });
+        }
+    }
+    assert.ok([[0, 1], [1, 0], [-1, 0], [0, -1]].some(([dx, dy]) => seen.has(`${KAIROU_BOSS_AT.x + dx},${KAIROU_BOSS_AT.y + dy}`)), 'ボスの 前まで');
+    assert.ok(PEOPLE.some(p => p.id === 'kairouBoss'));
+    assert.ok(isDungeon(KAIROU_IN.x, KAIROU_IN.y), '回廊の 敵も 追いかけてくる');
+    const roams = ROAMS.filter(r => r.kairou);
+    assert.ok(roams.length >= 8);
+    const g = newGame('naitei');
+    const lv1 = kairouLv(g);
+    kairouOf(g).floor = 10;
+    assert.ok(kairouLv(g)[0] > lv1[0], '階が 上がると 強い');
 });

@@ -904,7 +904,7 @@ const from = area => ({ x: Math.floor(ARRIVE[area].x), y: Math.floor(ARRIVE[area
 CHESTS13.forEach(c => { taken.add(keyOf(c.x, c.y)); reserve(c.x, c.y, 1); });
 
 // 奥への 入り口 (もとの ダンジョンの 中)
-export const OKU_GATES = OKU.map(o => {
+export const OKU_GATES = OKU.filter(o => o.gate).map(o => {
     const p = placeSpot(Y0[o.parent], Y1[o.parent], from(o.parent), { x: o.gate.x, y: Y0[o.parent] + o.gate.y });
     const front = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy })).find(q => walkable(q.x, q.y));
     return { id: o.id, x: p.x, y: p.y, front };
@@ -934,6 +934,7 @@ export const CHESTS = [
     ...CHESTS13.map(c => ({ ...c, kind: 'rare' })),
     ...SPOT_CHESTS.map(([area, x, y, what], i) => ({ id: `t${i}_${area}`, ...placeSpot(Y0[area], Y1[area], from(area), { x, y: Y0[area] + y }), ...what })),
     ...OKU.flatMap((o, k) => {
+        if (o.kairou) return [];
         const info = OKU_INFO[k], y0 = OKU_Y0 + k * OKU_H, y1 = y0 + OKU_H;
         const at = r => placeSpot(y0, y1, info.start, roomCorner(r, 1));
         const list = [{ id: `${o.id}_far`, ...at(info.far), kind: 'rare', equip: OKU_RARE[o.id] }];
@@ -949,6 +950,14 @@ PROPS.push(...OKU.map((o, k) => ({ id: `okuExit-${o.id}`, kind: 'okuExit', x: OK
 // 奥の エリアで 歩きまわる キャラ: もとの ダンジョンに 出る キャラ ぜんぶ・Lv は 少し 高い
 const LV_OF = { yama: YAMA_LV, umi: CAVE_LV, tera: TERA_LV, yashiki: YASHIKI_LV, moon: MOON_LV, shiro: SHIRO_LV, kinniku: KINNIKU_LV, tsubo: TSUBO_LV, kurai: KURAI_LV };
 OKU.forEach((o, k) => {
+    if (o.kairou) {
+        // 無限回廊: 喰らいの 城の 軍勢と 同じ キャラ (ぜんぶ 紋つき)。Lv は 階で きまる (game.js の kairouLv)
+        const kinds = ROAMS.filter(r => r.y0 >= KURAI_Y0 && r.y0 < OKU_Y0).flatMap(r => r.kinds).filter((kd, i, a) => a.findIndex(x => x.id === kd.id) === i);
+        OKU_INFO[k].rooms.filter(r => r !== OKU_INFO[k].startRoom && r !== OKU_INFO[k].far).forEach((r, i) => {
+            ROAMS.push({ id: `${o.id}_r${i}`, label: o.name, x0: r.x, y0: r.y, x1: r.x + r.w - 1, y1: r.y + r.h - 1, max: 1, kairou: true, kinds });
+        });
+        return;
+    }
     const y0 = Y0[o.parent], y1 = Y1[o.parent];
     const kinds = [];
     for (const r of ROAMS) if (r.y0 >= y0 && r.y0 < y1) for (const kd of r.kinds) if (!kinds.some(x => x.id === kd.id && x.time === kd.time)) kinds.push({ ...kd });
@@ -962,6 +971,13 @@ OKU.forEach((o, k) => {
 export const okuAt = ty => (ty >= OKU_Y0 && ty < MAP_H ? OKU[Math.floor((ty - OKU_Y0) / OKU_H)] : null);
 export const okuStart = id => { const k = OKU.findIndex(o => o.id === id); return { x: OKU_INFO[k].start.x, y: OKU_INFO[k].start.y, dir: 'up' }; };
 export const okuGateOf = id => OKU_GATES.find(q => q.id === id);
+// 無限回廊の 地図: その 階の ボスが 立つ マス (いちばん 奥の 部屋の まんなか)・回廊の 番人の 前 (もどる ところ)
+const KK = OKU.findIndex(o => o.kairou);
+export const KAIROU_Y0 = OKU_Y0 + KK * OKU_H;
+export const KAIROU_IN = okuStart('kairouMap');
+export const KAIROU_BOSS_AT = { x: OKU_INFO[KK].far.x + Math.floor(OKU_INFO[KK].far.w / 2), y: OKU_INFO[KK].far.y + 1 };
+export const KAIROU_BACK = { x: 10, y: 41, dir: 'up' };
+PEOPLE.push({ id: 'kairouBoss', name: '回廊の ボス', art: 'haridaijin', x: KAIROU_BOSS_AT.x, y: KAIROU_BOSS_AT.y, only: 'kairouBoss', scale: 1 });
 // ダンジョンの 中か (2026-11-03: ダンジョンの 敵は こおりくんを 見つけると 追いかけてくる)。町・商店街・学校・遊園地・海辺の 町は ちがう
 const DUNGEON_AREAS = new Set(['yama', 'tera', 'yashiki', 'moon', 'shiro', 'kinniku', 'tsubo', 'kurai']);
 export const isDungeon = (tx, ty) => Boolean(okuAt(ty)) || DUNGEON_AREAS.has(areaAt(tx, ty)) || inCaveTile(tx, ty);

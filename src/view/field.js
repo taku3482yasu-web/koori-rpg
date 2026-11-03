@@ -22,7 +22,7 @@ import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCH
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES, PARK_Y0, PARK_IN, PARK_PLACES, PARK_NAME, PARK_CLUES,
     KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE,
-    OKU_Y0, OKU_INFO, CHESTS, okuAt, okuStart, okuGateOf } from '../data/map.js';
+    OKU_Y0, OKU_INFO, CHESTS, okuAt, okuStart, okuGateOf, KAIROU_IN, KAIROU_BACK, KAIROU_BOSS_AT } from '../data/map.js';
 import { EQUIPS } from '../data/equips.js';
 import { ITEMS, SHOPS } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
@@ -547,8 +547,14 @@ export function createField(app) {
                 ? `${k.floor} 階……さいごの 階じゃ。この 奥には 地獄の 観音、覇理魔様が おられる。Lv${next.lv}。……生きて もどれよ。`
                 : `ここは 無限回廊。赤黒く そまった ボスたちが 1 階ずつ 待っておる。いまは ${k.floor} 階 (さいこう ${k.best} 階)。${k.floor} 階の あいては ${nu.name} Lv${next.lv}じゃ。` }], {
                 choices: [`${k.floor} 階に いどむ`, 'やめる'],
-                done: i => { if (i === 0) app.startBattle({ enemies: kairouEnemies(g), kind: 'kairou', place: harima ? 'kurai' : nu.place }); }
+                // 2026-11-03: 回廊の 中を 歩いて いちばん 奥の ボスまで (とちゅうの 敵は 追いかけてくる)
+                done: i => { if (i === 0) say([{ who: '回廊の 番人', art: 'haridaijin', text: `${k.floor} 階の ボスは いちばん 奥じゃ。とちゅうの 赤黒い 軍勢に 気を つけよ。` }], { done: () => warp(KAIROU_IN) }); }
             });
+        } else if (p.id === 'kairouBoss') {
+            const k = kairouOf(g), next = kairouEnemies(g)[0], nu = KAIROU_UNITS[next.id];
+            const harima = next.id === 'harima';
+            say([{ who: '', text: harima ? `${k.floor} 階の 奥……地獄の 観音、覇理魔様が いる！` : `${k.floor} 階の ボス、${nu.name} Lv${next.lv}が 待ちかまえていた！` }],
+                { done: () => app.startBattle({ enemies: kairouEnemies(g), kind: 'kairou', place: harima ? 'kurai' : nu.place }) });
         } else if (p.team) {
             // 15 章: ライバル探検隊の 仲間クエスト (勝つと 3 人 なかまに なる)
             const T = TEAMS[p.team];
@@ -1247,7 +1253,7 @@ export function createField(app) {
             const lines = [nar(`無限回廊 ${result.kairou} 階を 突破！`)];
             if (result.prize) lines.push(nar(`ごほうびに ${ITEMS[result.prize].name}を もらった！`));
             lines.push({ who: '回廊の 番人', art: 'haridaijin', text: `つぎは ${kairouOf(g).floor} 階じゃ。もっと 強い ボスが 待っておるぞ。` });
-            say(lines, { done: () => app.save() });
+            say(lines, { done: () => { warp(KAIROU_BACK); app.save(); } });
         } else if (result.team && result.outcome === 'win') {
             const T = TEAMS[result.team];
             story([
@@ -1526,6 +1532,7 @@ export function createField(app) {
             }
             // ダンジョンの 奥への 道・奥からの もどり道 (2026-11-03)
             if (target?.type === 'okuGate') { sfx('ok'); say([nar(`奥へ つづく 道が ある……。「${target.oku.name}」に 入った！`)], { done: () => warp(okuStart(target.oku.id)) }); return; }
+            if (target?.type === 'okuExit' && target.oku.kairou) { sfx('ok'); say([nar('無限回廊から 外へ 出た。')], { done: () => warp(KAIROU_BACK) }); return; }
             if (target?.type === 'okuExit') { sfx('ok'); const q = okuGateOf(target.oku.id); say([nar('もどり道を 通って 外へ 出た。')], { done: () => warp({ x: q.front.x, y: q.front.y, dir: 'down' }) }); return; }
             if (target?.type === 'gate' && target.gate.id === 'gateYama') {
                 sfx('ok');
@@ -1632,7 +1639,9 @@ export function createField(app) {
     function drawPeople(ctx) {
         const list = [];
         for (const p of peopleHere(g)) {
-            list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[personArt(g, p)], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.scale || 1 }) });
+            // 無限回廊の ボスは その 階の ボスの 絵 (2026-11-03)
+            const art = p.id === 'kairouBoss' ? KAIROU_UNITS[kairouEnemies(g)[0].id].art : personArt(g, p);
+            list.push({ y: (p.y + (p.h || 1)) * TILE, draw: () => drawArt(ctx, ART[art], Math.floor(t * 2), p.x * TILE + 8 - cam.x, (p.y + (p.h || 1)) * TILE - cam.y, { scale: p.id === 'kairouBoss' ? 1.5 : p.scale || 1 }) });
         }
         const talkable = !lens && !app.talk.isActive() ? wild.facing(g.pos) : null;
         for (const c of wild.list) {
@@ -1918,7 +1927,8 @@ export function createField(app) {
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
         const labels = okuHere()
-            ? [{ id: 'exit', name: 'もどり道', cx: OKU_INFO.find((o, k) => okuAt(o.exit.y) === okuHere()).exit.x, cy: OKU_INFO.find(o => okuAt(o.exit.y) === okuHere()).exit.y }]
+            ? [{ id: 'exit', name: 'もどり道', cx: OKU_INFO.find(o => okuAt(o.exit.y) === okuHere()).exit.x, cy: OKU_INFO.find(o => okuAt(o.exit.y) === okuHere()).exit.y },
+                ...(okuHere().kairou ? [{ id: 'boss', name: `${kairouOf(g).floor} 階の ボス`, cx: KAIROU_BOSS_AT.x, cy: KAIROU_BOSS_AT.y }] : [])]
             : inKurai()
             ? KURAI_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
             : inTsubo()

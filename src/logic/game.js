@@ -187,7 +187,7 @@ export const darkTown = (g, source) => {
 export function encounter(g, source, rng, first = null) {
     const kinds = spotKinds(g, source);
     const dark = darkTown(g, source);
-    const [lo, hi] = dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === 'kurai' ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [8, 13] : [2, 5]);
+    const [lo, hi] = source.kairou ? kairouLv(g) : dark && source.lv && areaAt(source.x0 ?? source.x, source.y0 ?? source.y) === 'kurai' ? source.lv : dark ? DARK10_LV : source.lv || (reached(g, 'clear') ? [8, 13] : [2, 5]);
     const lead = first ? { ...first, lv: dark ? lo + rng.int(hi - lo + 1) : first.lv } : { id: rng.weighted(kinds).id, lv: lo + rng.int(hi - lo + 1) };
     const enemies = [{ id: lead.id, lv: lead.lv }];
     const more = () => ({ id: rng.weighted(kinds).id, lv: Math.max(1, lead.lv - 1) });
@@ -618,6 +618,8 @@ export function kairouOf(g) {
     if (!g.kairou) g.kairou = { floor: 1, best: 0 };
     return g.kairou;
 }
+// 無限回廊の 地図を 歩いている 敵の Lv (階が 上がるほど 強い。2026-11-03)
+export const kairouLv = g => { const f = kairouOf(g).floor; return [Math.min(97, 70 + f * 2), Math.min(99, 73 + f * 2)]; };
 export function kairouEnemies(g) {
     const floor = kairouOf(g).floor;
     const id = KAIROU_BOSSES[(floor - 1) % KAIROU_BOSSES.length];

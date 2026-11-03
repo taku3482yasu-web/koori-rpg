@@ -4,7 +4,7 @@
 // 場面 (title → field ⇄ battle → result → field、field ⇄ menu) を 切りかえ、毎コマ 入力 → update → 描く。
 // セーブは 町に 戻るたび・メニューで・ページを 閉じるとき・30 秒ごと (設計書 7 章「いつでも 中断できる」)
 // =====================================================================
-import { CHESTS, OKU_GATES } from './data/map.js';
+import { CHESTS, OKU_GATES, KAIROU_IN, KAIROU_BOSS_AT } from './data/map.js';
 import { blockedTile } from './logic/world.js';
 import { setupScreens } from './core/screen.js';
 import { createInput } from './core/input.js';
@@ -103,6 +103,7 @@ window.__app = app;   // 自動テスト・デバッグ用
 window.__bgm = currentBgm;
 window.__CHESTS = CHESTS;           // 宝箱 (2026-11-03)
 window.__OKU_GATES = OKU_GATES;     // 奥への 入り口
+window.__KAIROU = { in: KAIROU_IN, boss: KAIROU_BOSS_AT };   // 無限回廊の 地図
 window.__blocked = (x, y) => blockedTile(app.g, x, y);
 
 // ----- BGM: 町は 地区ごと・バトルは ボスごと (data/bgm.js) -----

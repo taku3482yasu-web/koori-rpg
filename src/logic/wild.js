@@ -8,7 +8,7 @@
 // ダンジョンの 中の キャラは こおりくんを 見つけると 追いかけてくる。ぶつかると その場で バトル (2026-11-03 ユーザー指定・セリフなし)
 // =====================================================================
 import { TILE, ROAMS, SPOTS, FRIENDS, isDungeon } from '../data/map.js';
-import { spotKinds, hasWatch } from './game.js';
+import { spotKinds, hasWatch, kairouLv } from './game.js';
 import { blockedTile } from './world.js';
 import { reached } from './story.js';
 
@@ -29,7 +29,7 @@ export function createWild(g, rng) {
     let seq = 0;
 
     // source.lv: その 場所の Lv の はば (商店街)。なければ ストーリーで 決まる
-    const lvRange = source => (source && source.lv) || (reached(g, 'clear') ? [4, 9] : [2, 5]);
+    const lvRange = source => (source && source.kairou ? kairouLv(g) : source && source.lv) || (reached(g, 'clear') ? [4, 9] : [2, 5]);
     const rollLv = source => { const [lo, hi] = lvRange(source); return lo + rng.int(hi - lo + 1); };
 
     function freeTileIn(r, hero) {
