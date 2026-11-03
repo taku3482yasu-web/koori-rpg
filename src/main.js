@@ -4,6 +4,8 @@
 // 場面 (title → field ⇄ battle → result → field、field ⇄ menu) を 切りかえ、毎コマ 入力 → update → 描く。
 // セーブは 町に 戻るたび・メニューで・ページを 閉じるとき・30 秒ごと (設計書 7 章「いつでも 中断できる」)
 // =====================================================================
+import { CHESTS, OKU_GATES } from './data/map.js';
+import { blockedTile } from './logic/world.js';
 import { setupScreens } from './core/screen.js';
 import { createInput } from './core/input.js';
 import { createRng } from './core/rng.js';
@@ -71,11 +73,14 @@ const app = {
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
     startBattle({ enemies, kind, place, mystery = null, team = null, helpers = null }) {
-        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, nature: m.nature || null, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null));
+        const allies = watchMedals(this.g).map(m => (m ? { uid: m.uid, id: m.id, lv: m.lv, nature: m.nature || null, equip: m.equip || null, bond: bondLevel(this.g, m.id), upgrade: specialUpgraded(this.g, m.id) } : null));
         const battle = createBattle({ allies, enemies, rng: this.rng, kind, intro: true, helpers });
         battle.mystery = mystery;
         battle.team = team;
-        this.scene = createBattleView(this, battle, place);
+        // はじまりの 煙の 演出の 下に 見せる いまの 画面 (2026-11-03)
+        let shot = null;
+        try { shot = document.createElement('canvas'); shot.width = 400; shot.height = 240; shot.getContext('2d').drawImage(screens.top.canvas, 0, 0, 400, 240); } catch { shot = null; }
+        this.scene = createBattleView(this, battle, place, { shot });
     },
     endBattle(battle) {
         const result = applyBattleResult(this.g, battle, this.rng);
@@ -96,6 +101,9 @@ app.setVersion(app.version);
 app.scene = createTitle(app);
 window.__app = app;   // 自動テスト・デバッグ用
 window.__bgm = currentBgm;
+window.__CHESTS = CHESTS;           // 宝箱 (2026-11-03)
+window.__OKU_GATES = OKU_GATES;     // 奥への 入り口
+window.__blocked = (x, y) => blockedTile(app.g, x, y);
 
 // ----- BGM: 町は 地区ごと・バトルは ボスごと (data/bgm.js) -----
 function wantedBgm() {

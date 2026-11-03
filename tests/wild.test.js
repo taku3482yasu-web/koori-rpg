@@ -89,3 +89,26 @@ test('戦った キャラの 場所は しばらく 出ない', () => {
     run(g, wild, 25);
     assert.ok(wild.list.some(x => x.roam === 'kadan'));
 });
+
+test('ダンジョンの キャラは こおりくんを 見つけると 追いかけてきて、ぶつかると バトル。町では 追いかけない (2026-11-03)', async () => {
+    const { OKU_INFO } = await import('../src/data/map.js');
+    const { g, wild } = setup();
+    // 奥の エリア (山の 氷穴) の 部屋に こおりくんを 立たせ、その 部屋の キャラを 待つ
+    const room = OKU_INFO[0].rooms.find(r => r !== OKU_INFO[0].startRoom && ROAMS.some(z => z.x0 === r.x && z.y0 === r.y));
+    g.pos = { x: (room.x + 1) * TILE + 8, y: (room.y + 1) * TILE + 12, dir: 'down' };
+    let touched = null;
+    for (let t = 0; t < 40 && !touched; t += 0.05) { g.playTime += 0.05; touched = wild.update(0.05, g.pos); }
+    assert.ok(touched, 'ぶつかって バトルに なる');
+    assert.ok(touched.chasing);
+    // しばらくは 追いかけない
+    wild.calm(3);
+    assert.equal(wild.update(0.05, g.pos), null);
+    // 町の キャラは 追いかけない
+    const town = setup();
+    run(town.g, town.wild, 20);
+    const c = town.wild.list.find(x => !x.friendly);
+    town.g.pos = { x: c.x + 30, y: c.y, dir: 'left' };
+    let hit = null;
+    for (let t = 0; t < 5; t += 0.05) { town.g.playTime += 0.05; hit = town.wild.update(0.05, town.g.pos) || hit; }
+    assert.equal(hit, null);
+});

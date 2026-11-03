@@ -108,7 +108,7 @@ try {
     await sleep(300);
     check(await evaluate('window.__app.g.flags.helpShown.move === true && window.__app.g.flags.helpSeen.move === true'), 'はじめると きほんの そうさの ヘルプが 流れる');
     await skipTalk();
-    await evaluate('window.__app.autoHelp = false; true');
+    await evaluate('window.__app.autoHelp = false; window.__app.noChase = true; window.__app.noSwirl = true; true');
 
     // ----- 歩く -----
     const before = await evaluate('window.__app.g.pos.x');
@@ -310,7 +310,7 @@ try {
     await evaluate('window.__app.save(), true');
     await send('Page.reload');
     await sleep(1200);
-    await evaluate('window.__app.autoHelp = false; true');
+    await evaluate('window.__app.autoHelp = false; window.__app.noChase = true; window.__app.noSwirl = true; true');
     await key('Enter');
     await sleep(300);
     check(await evaluate('window.__app.g && window.__app.g.story === "friends" && window.__app.g.medals.length >= 1'), 'つづきから で 前の 続き');
@@ -963,14 +963,14 @@ try {
         if (floor === 3) {
             // 4〜6 階は 探索の 階: 宝箱
             // (うろついている 紋つきに ぶつかって バトルに なる ことが あるので、なったら 勝って もう いちど)
-            for (let i = 0; i < 3 && !(await evaluate('Boolean(window.__app.g.flags.chest13 && window.__app.g.flags.chest13.c4)')); i++) {
+            for (let i = 0; i < 3 && !(await evaluate('Boolean(window.__app.g.flags.chests && window.__app.g.flags.chests.c4)')); i++) {
                 if (await sceneIs('battle')) { await winNow(); await skipTalk(10); }
                 await at(24, K13 + 16, 'up');
                 await key('KeyJ');
                 await skipTalk();
             }
             await shot('kurai-chest');
-            check(await evaluate('Boolean(window.__app.g.flags.chest13 && window.__app.g.flags.chest13.c4)'), '4 階の 宝箱を あける');
+            check(await evaluate('Boolean(window.__app.g.flags.chests && window.__app.g.flags.chests.c4)'), '4 階の 宝箱を あける');
         }
     }
     await at(24, K13 + 3, 'up');
@@ -1126,7 +1126,7 @@ try {
     await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
     await send('Page.reload');
     await sleep(1200);
-    await evaluate('window.__app.autoHelp = false; true');
+    await evaluate('window.__app.autoHelp = false; window.__app.noChase = true; window.__app.noSwirl = true; true');
     await evaluate('document.body.classList.remove("nopad"); window.dispatchEvent(new Event("resize")); true');
     await sleep(200);
     const pad = await evaluate('(() => { const r = document.getElementById("pad").getBoundingClientRect(); const s = document.getElementById("bottom").getBoundingClientRect(); return { padTop: r.top, padH: r.height, bottom: s.bottom, w: s.width }; })()');
@@ -1186,6 +1186,66 @@ try {
     await evaluate('(() => { const b = window.__app.scene.battle; b.bossTimer = 9.6; return true; })()');
     await sleep(500);
     await shot('phone-telegraph');
+
+    // ----- 2026-11-03: 敵の 必殺技の カットイン・宝箱と 装備・奥の エリア・追いかけてくる 敵・はじまりの 煙 -----
+    await evaluate('(() => { const b = window.__app.scene.battle; const e = b.enemies[0]; b.events.push({ type: "special", actor: e.uid, name: "テストの 大技", side: "enemy", big: true }); return true; })()');
+    await sleep(250);
+    check(await evaluate('Boolean(window.__app.scene.debug.ecut()) && window.__app.scene.battle.paused'), 'ボスの 必殺技で カットイン (バトルは 止まる)');
+    await shot('enemy-cutin');
+    await sleep(2400);
+    check(await evaluate('!window.__app.scene.debug.ecut()'), 'カットインの あと バトルに もどる');
+    await evaluate('(() => { const a = window.__app, b = a.scene.battle; b.outcome = "flee"; a.endBattle(b); return true; })()');
+    for (let i = 0; i < 20 && await sceneIs('battle'); i++) await sleep(150);
+    await skipTalk();
+    // 宝箱: 町の レアな 宝箱の 前に 立って 調べる → 装備を 手に 入れる
+    await evaluate(`(() => { const a = window.__app, c = window.__CHESTS.find(x => x.id === 't2_ishinokawa'); const free = [[0, 1, 'up'], [0, -1, 'down'], [1, 0, 'left'], [-1, 0, 'right']].find(([dx, dy]) => !window.__blocked(c.x + dx, c.y + dy)); a.g.pos = { x: (c.x + free[0]) * 16 + 8, y: (c.y + free[1]) * 16 + 12, dir: free[2] }; return true; })()`);
+    await sleep(200);
+    await key('KeyJ');
+    await sleep(300);
+    check(await evaluate('(window.__app.g.equips.hachimaki || 0) === 1'), '宝箱を あけると 装備が 手に 入る');
+    await shot('chest');
+    await skipTalk();
+    await key('KeyJ');
+    await sleep(200);
+    await skipTalk();
+    check(await evaluate('(window.__app.g.equips.hachimaki || 0) === 1'), 'レアな 宝箱は 1 回だけ');
+    // 装備: メニューの なかまで 付ける
+    await evaluate('(() => { const a = window.__app; a.go("menu"); return true; })()');
+    await sleep(200);
+    await key('KeyE');
+    await sleep(150);
+    await key('KeyJ');
+    await sleep(150);
+    await key('KeyS');
+    await key('KeyJ');
+    await sleep(200);
+    await shot('equip');
+    check(await evaluate('window.__app.g.medals[0].equip === "hachimaki"'), 'なかまに 装備を 付けられる');
+    await evaluate('(() => { window.__app.go("field"); return true; })()');
+    await sleep(200);
+    // 奥の エリア: 山の 入り口を 調べて 入る
+    await evaluate(`(() => { const a = window.__app, q = window.__OKU_GATES[0]; a.g.pos = { x: q.front.x * 16 + 8, y: q.front.y * 16 + 12, dir: q.front.y > q.y ? 'up' : q.front.y < q.y ? 'down' : q.front.x > q.x ? 'left' : 'right' }; return true; })()`);
+    await sleep(200);
+    await key('KeyJ');
+    await sleep(300);
+    await skipTalk();
+    await sleep(300);
+    check(await evaluate('Math.floor((window.__app.g.pos.y - 3) / 16) >= 444'), '奥への 道を 調べると 奥の エリアへ');
+    await shot('oku');
+    // 追いかけてくる 敵: 奥の エリアで 待つと ぶつかって バトル (セリフなし)・はじまりの 煙
+    let foe = false;
+    for (let i = 0; i < 40 && !foe; i++) { await sleep(150); foe = await evaluate('window.__app.field.debug.wild.list.some(c => !c.friendly && c.y >= 444 * 16)'); }
+    check(foe, '奥の エリアに 敵が 出る');
+    // 敵の 近く (同じ 部屋) に 立つ
+    await evaluate(`(() => { const a = window.__app, c = a.field.debug.wild.list.find(x => !x.friendly && x.y >= 444 * 16); const free = [[40, 0], [-40, 0], [0, 32], [0, -32], [24, 0], [-24, 0]].find(([dx, dy]) => !window.__blocked(Math.floor((c.x + dx) / 16), Math.floor((c.y + dy - 3) / 16))) || [0, 0]; a.g.pos = { x: c.x + free[0], y: c.y + free[1], dir: 'down' }; return true; })()`);
+    await evaluate('window.__app.noChase = false; window.__app.noSwirl = false; true');
+    let caught = false;
+    for (let i = 0; i < 120 && !caught; i++) { await sleep(150); caught = await sceneIs('battle'); }
+    check(caught, '奥の エリアの 敵は 追いかけてきて、ぶつかると バトル');
+    await shot('swirl');
+    check(await evaluate('window.__app.scene.debug.swirl() !== null'), 'バトルの はじめに 煙の 演出');
+    await sleep(500);
+    await shot('swirl-clear');
 } catch (e) {
     errors.push(String(e && e.stack || e));
 } finally {

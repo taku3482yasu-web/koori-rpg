@@ -242,12 +242,23 @@ function drawBuilding(c, b) {
 }
 
 function drawProp(c, p) {
-    if (p.kind === 'chest') {
-        // 宝箱 (13 章 喰らいの 城)
+    // 宝箱は あいた かどうかで かわるので field.js が 毎コマ 描く (2026-11-03)
+    if (p.kind === 'chest') return;
+    if (p.kind === 'okuGate') {
+        // ダンジョンの 奥への 道: 下へ おりる 暗い 穴と 石の 段
         const px = p.x * TILE, py = p.y * TILE;
-        c.fillStyle = '#5a3a1a'; c.fillRect(px + 1, py + 4, 14, 11);
-        c.fillStyle = '#8a5a2a'; c.fillRect(px + 2, py + 5, 12, 4);
-        c.fillStyle = '#e0b040'; c.fillRect(px + 1, py + 8, 14, 1); c.fillRect(px + 7, py + 7, 2, 4);
+        c.fillStyle = '#2a2420'; c.fillRect(px, py, 16, 16);
+        c.fillStyle = '#080608'; c.fillRect(px + 2, py + 2, 12, 12);
+        c.fillStyle = '#5a5048'; for (let i = 0; i < 4; i++) c.fillRect(px + 2 + i, py + 3 + i * 3, 12 - i * 2, 2);
+        c.fillStyle = '#c8a040'; c.fillRect(px + 6, py - 4, 4, 3);
+        return;
+    }
+    if (p.kind === 'okuExit') {
+        // 奥からの もどり道: 上へ のぼる 明るい 段
+        const px = p.x * TILE, py = p.y * TILE;
+        c.fillStyle = '#d8d0b8'; c.fillRect(px, py, 16, 16);
+        c.fillStyle = '#a89878'; for (let i = 0; i < 4; i++) c.fillRect(px + 1 + i, py + 12 - i * 3, 14 - i * 2, 2);
+        c.fillStyle = 'rgba(255,255,220,0.8)'; c.fillRect(px + 6, py + 1, 4, 2);
         return;
     }
     if (p.kind === 'mirror') {

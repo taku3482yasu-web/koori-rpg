@@ -21,7 +21,9 @@ import { ART } from '../art/index.js';
 import { TILE, MAP_W, SPOTS, BUILDINGS, areaAt, tileAt, regionOf, SCHOOL_Y0, SCHOOL_IN, SCHOOL_OUT, SCHOOL_OPEN, SCHOOL_ROOMS, MYSTERIES,
     YAMA_Y0, YAMA_IN, YAMA_OUT, YAMA_AFTER_BOSS, YAMA_PLACES, SEALS, UMI_Y0, UMI_IN, STATION_OUT, UMI_AFTER_BOSS, UMI_PLACES, inCaveTile,
     TERA_Y0, TERA_IN, TERA_AFTER_BOSS, TERA_PLACES, MONS, YASHIKI_Y0, YASHIKI_IN, YASHIKI_PLACES, MOON_Y0, MOON_IN, MOON_PLACES, SHIRO_Y0, SHIRO_IN, SHIRO_PLACES, PARK_Y0, PARK_IN, PARK_PLACES, PARK_NAME, PARK_CLUES,
-    KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE } from '../data/map.js';
+    KINNIKU_Y0, KINNIKU_IN, KINNIKU_PLACES, TSUBO_Y0, TSUBO_IN, TSUBO_PLACES, KURAI_Y0, KURAI_IN, KURAI_PLACES, HYOUGA13_AT, PEOPLE,
+    OKU_Y0, OKU_INFO, CHESTS, okuAt, okuStart, okuGateOf } from '../data/map.js';
+import { EQUIPS } from '../data/equips.js';
 import { ITEMS, SHOPS } from '../data/items.js';
 import { FUSION_HINTS } from '../data/fusion.js';
 import { NAKAMA, AREAS, RIVALS, rivalTeam, TEAMS, BOSSES, BOSS14, FLOOR13, KAIROU_UNITS } from '../data/nakama.js';
@@ -33,7 +35,7 @@ import { reached, chapterOf } from '../logic/story.js';
 import { questOf, questState, questReady, questProgress, acceptQuest, completeQuest } from '../logic/quests.js';
 import { TIMES, objective, hasWatch, spotActive, spotKinds, encounter, receiveWatch, advanceTime, bossEnemies, friendCount, takeGift, maxBuy, buyItem, MAX_ITEM, readLegend, sealsSolved, allSealsSolved,
     startChapter4, arriveUmi, canRideTrain, rivalEnemies, startChapter5, arriveTera, trainLines, monsSaved, allMonsSaved, startChapter6, arriveYashiki, arriveMoon, arriveShiro,
-    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen, seeHelp } from '../logic/game.js';
+    startChapter9, arriveKinniku, startChapter10, DARK10_GOAL, darkTown, startChapter11, arriveTsubo, meetAso, startChapter12, startChapter13, arriveKurai, floor13Next, floor13Helpers, floor13Team, openChest13, openChest, chestOpened, nightBefore, canFightAso, startChapter14, arrivePark, parkNight, findClue, cluesFound, boss14Enemies, kairouOf, kairouEnemies, teamEnemies, helpTopics, helpUnseen, seeHelp } from '../logic/game.js';
 import { createWild } from '../logic/wild.js';
 import { drawCue } from './cues.js';
 import { buildFieldCanvas, buildMiniMap } from './field-art.js';
@@ -79,7 +81,9 @@ export function createField(app) {
 
     // 学校の 中・山・海に いるか (町と 学校と 山と 海は つながって いないので、カメラも 地図も べつに する)
     const between = (y0, y1) => g.pos.y >= y0 * TILE && g.pos.y < y1 * TILE;
-    const inKurai = () => g.pos.y >= KURAI_Y0 * TILE;
+    const inKurai = () => between(KURAI_Y0, OKU_Y0);
+    // ダンジョンの 奥の エリア (2026-11-03。data/oku.js)。いなければ null
+    const okuHere = () => okuAt(Math.floor((g.pos.y - 3) / TILE));
     // 13 章: 階の 幹部の いる ところ (地図の「!」)
     const PEOPLE_AT = Object.fromEntries(PEOPLE.filter(p => p.only === 'floor13').map(p => [p.boss, { x: p.x, y: p.y }]));
     const inTsubo = () => between(TSUBO_Y0, KURAI_Y0);
@@ -115,6 +119,7 @@ export function createField(app) {
     // 場所を 飛ぶ (学校に 入る・出る)。p は マス
     function warp(p) {
         g.pos = { x: p.x * TILE + 8, y: p.y * TILE + 12, dir: p.dir };
+        wild.calm(1.5);
         trail.length = 0;
         buddy.x = g.pos.x - 14;
         buddy.y = g.pos.y;
@@ -1078,6 +1083,7 @@ export function createField(app) {
             wild.remove(fighting);
             fighting = null;
         }
+        wild.calm(2.5);   // バトルの あとは すぐには 追いかけてこない
         if (result.boss && result.outcome === 'win' && result.bossId === 'kage') {
             story([
                 { who: 'ルナシャドウ', art: 'lunashadow', text: '…………（ぺこり）。' },
@@ -1452,9 +1458,11 @@ export function createField(app) {
         t += dt;
         g.playTime += dt;
         camera();
-        wild.update(dt, g.pos);
+        // ダンジョンでは 見つかると 追いかけられ、ぶつかると その場で バトル (セリフなし。2026-11-03 ユーザー指定)
+        const touched = wild.update(dt, g.pos, !app.talk.isActive() && !lens && !app.noChase);
         if (app.talk.isActive()) return;
         if (lens) { updateLens(dt, input); return; }
+        if (touched) { sfx('big'); startWildBattle(touched); return; }
         if (showNewHelp()) return;
         // 10 章の はじまり: 9 章 クリアの あと 石の川タウン・商店街に もどると 黒い 霧 (ストーリー工房 10 章 場面 1)
         if (g.story === 'clear9' && g.pos.y < SCHOOL_Y0 * TILE && startChapter10(g)) {
@@ -1510,10 +1518,15 @@ export function createField(app) {
             if (target?.type === 'seal') { sfx('ok'); examineSeal(target.seal); return; }
             if (target?.type === 'mon') { sfx('ok'); examineMon(target.mon); return; }
             if (target?.type === 'chest') {
-                const got = openChest13(g, target.chest);
-                if (got) { sfx('heal'); app.save(); say([nar(`宝箱を あけた！ ${ITEMS[got.item].name}を ${got.n} こ 手に 入れた！`)]); } else say([nar('宝箱は からっぽだ。')]);
+                const got = openChest(g, target.chest, app.rng);
+                if (got?.equip) { sfx('watch'); app.save(); say([nar(`宝箱を あけた！ 装備「${EQUIPS[got.equip].name}」を 手に 入れた！`), nar(`${EQUIPS[got.equip].desc}`), nar('メニューの「なかま」で なかまに 付けられるよ。')]); }
+                else if (got) { sfx('heal'); app.save(); say([nar(`宝箱を あけた！ ${ITEMS[got.item].name}を ${got.n} こ 手に 入れた！`)]); }
+                else say([nar(target.chest.kind === 'daily' ? '宝箱は からっぽだ。あしたに なれば また なにか 入っているかも。' : '宝箱は からっぽだ。')]);
                 return;
             }
+            // ダンジョンの 奥への 道・奥からの もどり道 (2026-11-03)
+            if (target?.type === 'okuGate') { sfx('ok'); say([nar(`奥へ つづく 道が ある……。「${target.oku.name}」に 入った！`)], { done: () => warp(okuStart(target.oku.id)) }); return; }
+            if (target?.type === 'okuExit') { sfx('ok'); const q = okuGateOf(target.oku.id); say([nar('もどり道を 通って 外へ 出た。')], { done: () => warp({ x: q.front.x, y: q.front.y, dir: 'down' }) }); return; }
             if (target?.type === 'gate' && target.gate.id === 'gateYama') {
                 sfx('ok');
                 say([{ who: '', text: '「この先 山道。落石の ため 通行止め」と 書いてある。' }, ...(hasWatch(g) ? [furu('学校の さわぎが おちついたら 通れるように なるかも。')] : [])]);
@@ -1599,13 +1612,14 @@ export function createField(app) {
         const n = NAKAMA[c.id];
         c.flip = c.x > g.pos.x;
         if (c.target) { c.target = null; c.pause = 3; }
-        say([{ who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `${n.name}が おそいかかってきた！` }], {
-            done: () => {
-                fighting = c;
-                const source = wild.sourceOf(c);
-                app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place: inKurai() ? 'kurai' : darkTown(g, source) ? 'town' : inTsubo() ? 'tsubo' : inKinniku() ? (inHyouga() ? 'hyouga' : 'kinniku') : inPark() ? 'yuen' : inShiro() ? 'shiro' : inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id });
-            }
-        });
+        say([{ who: n.name, art: n.art, text: `「${n.line}」` }, { who: '', text: `${n.name}が おそいかかってきた！` }], { done: () => startWildBattle(c) });
+    }
+    // 見えている キャラとの バトル (話しかけた・ダンジョンで ぶつかった)
+    function startWildBattle(c) {
+        fighting = c;
+        const source = wild.sourceOf(c);
+        const place = okuHere() ? okuHere().place : inKurai() ? 'kurai' : darkTown(g, source) ? 'town' : inTsubo() ? 'tsubo' : inKinniku() ? (inHyouga() ? 'hyouga' : 'kinniku') : inPark() ? 'yuen' : inShiro() ? 'shiro' : inMoon() ? 'moon' : inYashiki() ? 'yashiki' : inTera() ? 'tera' : inUmi() ? (inCave() ? 'cave' : 'umi') : inYama() ? 'yama' : source.id;
+        app.startBattle({ enemies: encounter(g, source, app.rng, c), kind: 'wild', place });
     }
 
     function startLens() {
@@ -1638,7 +1652,7 @@ export function createField(app) {
                     ctx.beginPath(); ctx.ellipse(x, y - 7, 10, 11, 0, 0, Math.PI * 2); ctx.fill();
                 }
                 // 戦える キャラには 赤い「！」(2026-10-28 ユーザー指定)。話せる キャラには なにも つけない
-                if (!c.friendly) text(ctx, '!', x, y - 20 + Math.sin(t * 6) * 1.5, { size: 12, align: 'center', bold: true, color: '#ff3a3a' });
+                if (!c.friendly) text(ctx, c.chasing ? '！' : '!', x, y - (c.chasing ? 24 : 20) + Math.sin(t * (c.chasing ? 12 : 6)) * 1.5, { size: c.chasing ? 16 : 12, align: 'center', bold: true, color: '#ff3a3a' });
                 // 依頼が ある (たのみたい・できた) 話せる キャラには 小さな ふきだし
                 else if (c !== talkable) {
                     const q = questOf(g, c.friend);
@@ -1703,6 +1717,7 @@ export function createField(app) {
         for (const s of SPOTS) if (hiding(s)) drawCue(ctx, s, s.x * TILE + 8 - cam.x, s.y * TILE + 8 - cam.y, t);
         drawGates(ctx);
         drawSeals(ctx);
+        drawChests(ctx);
         drawColdLeak(ctx);
         drawMons(ctx);
         drawPeople(ctx);
@@ -1719,7 +1734,7 @@ export function createField(app) {
                 ctx.beginPath(); ctx.ellipse((i * 83 + t * 10) % 520 - 60, 20 + (i * 47) % 220, 70, 22, 0, 0, Math.PI * 2); ctx.fill();
             }
         }
-        if (g.weather === 'rain' && !inSchool() && !inCave() && !inMoon()) {
+        if (g.weather === 'rain' && !inSchool() && !inCave() && !inMoon() && !okuHere()) {
             ctx.fillStyle = 'rgba(40, 60, 100, 0.15)';
             ctx.fillRect(0, 0, 400, 240);
             ctx.strokeStyle = 'rgba(200, 220, 255, 0.55)';
@@ -1734,6 +1749,27 @@ export function createField(app) {
         }
         if (lens) drawLens(ctx);
         app.talk.drawTop(ctx, t);
+    }
+
+    // 宝箱 (2026-11-03): あけると ふたが あく。レアは 赤と 金・毎日の 宝箱は 茶色 (日が かわると しまって また 入る)
+    function drawChests(ctx) {
+        for (const c of CHESTS) {
+            const x = c.x * TILE - cam.x, y = c.y * TILE - cam.y;
+            if (x < -20 || x > 420 || y < -20 || y > 260) continue;
+            const open = chestOpened(g, c), rare = c.kind === 'rare';
+            const body = rare ? '#8a1a1a' : '#6a4220', lid = rare ? '#c03030' : '#9a6a32', trim = rare ? '#ffd84a' : '#e0b040';
+            ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x + 1, y + 14, 14, 2);
+            ctx.fillStyle = body; ctx.fillRect(x + 1, y + 7, 14, 8);
+            if (open) {
+                ctx.fillStyle = '#1a1010'; ctx.fillRect(x + 2, y + 6, 12, 3);
+                ctx.fillStyle = lid; ctx.fillRect(x + 1, y + 1, 14, 5);
+                ctx.fillStyle = trim; ctx.fillRect(x + 1, y + 5, 14, 1);
+            } else {
+                ctx.fillStyle = lid; ctx.fillRect(x + 1, y + 3, 14, 5);
+                ctx.fillStyle = trim; ctx.fillRect(x + 1, y + 7, 14, 1); ctx.fillRect(x + 7, y + 6, 2, 4);
+                if (rare || Math.sin(t * 3 + c.x) > 0.6) { ctx.fillStyle = 'rgba(255,255,220,0.9)'; ctx.fillRect(x + 12 + Math.sin(t * 5 + c.y), y + 1, 1, 3); ctx.fillRect(x + 11 + Math.sin(t * 5 + c.y), y + 2, 3, 1); }
+            }
+        }
     }
 
     // 封印の 柱 (3 章): 作りなおす 前は とけかけて しずくが 落ちる。作りなおすと 青く 光る。言いつたえを 読んだ あとは「？」
@@ -1863,7 +1899,7 @@ export function createField(app) {
             return;
         }
         const ht = heroTile(g);
-        text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}　${areaAt(ht.x, ht.y) === 'park' ? parkName() : AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
+        text(ctx, `${g.day}日目 ${TIMES[g.time]} ${g.weather === 'rain' ? '雨' : 'はれ'}　${okuHere() ? okuHere().name : areaAt(ht.x, ht.y) === 'park' ? parkName() : AREAS[areaAt(ht.x, ht.y)]}`, 10, 18, { size: 12, bold: true, maxWidth: 230 });
         text(ctx, `${g.money}円`, 310, 18, { size: 12, align: 'right', color: COLORS.accent });
         // 地図 (商店街が ふえて 縦に 長いので、こおりくんの まわりを 切りだす)
         panel(ctx, 6, 26, 148, 112, { fill: '#000', r: 3 });
@@ -1881,7 +1917,9 @@ export function createField(app) {
         ctx.rect(8, 28, 144, 108);
         ctx.clip();
         const placed = [];   // 名前どうしが 重なったら 下へ ずらす
-        const labels = inKurai()
+        const labels = okuHere()
+            ? [{ id: 'exit', name: 'もどり道', cx: OKU_INFO.find((o, k) => okuAt(o.exit.y) === okuHere()).exit.x, cy: OKU_INFO.find(o => okuAt(o.exit.y) === okuHere()).exit.y }]
+            : inKurai()
             ? KURAI_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))
             : inTsubo()
             ? TSUBO_PLACES.map(r => ({ id: r.id, name: r.label, cx: r.x, cy: r.y }))

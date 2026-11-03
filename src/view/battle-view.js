@@ -11,7 +11,8 @@
 import { ART } from '../art/index.js';
 import { backArt } from '../art/back.js';
 import { BACK_ART } from '../art/back-art.js';
-import { specialOf, createCommand, drawPerformance, drawCutin, MOTION_TIME, COMMANDS, COMMAND_NAMES } from './special-fx.js';
+import { specialOf, createCommand, drawPerformance, drawCutin, drawEnemyCutin, MOTION_TIME, COMMANDS, COMMAND_NAMES } from './special-fx.js';
+import { drawSwirl, SWIRL_IN, SWIRL_OUT } from './transition.js';
 import { skillMotion, skillPose, drawSkillFx, SKILL_KIND } from './skill-fx.js';
 import { ITEMS } from '../data/items.js';
 import { drawBackdrop, HORIZON } from './backdrop.js';
@@ -44,7 +45,13 @@ const BUFF_NAMES = { atk: 'こうげき↑', def: 'まもり↑', spd: 'すば�
 const ALLY_POS = [{ x: 78, y: 234 }, { x: 200, y: 242 }, { x: 322, y: 234 }];
 const ALLY_SCALE = 4;
 
-export function createBattleView(app, battle, place) {
+// opts.shot: バトル前の 画面 (はじまりの 煙の 演出で 使う。2026-11-03)
+export function createBattleView(app, battle, place, opts = {}) {
+    // はじまりの 演出: むらさきの 煙 (ボスは 赤い 霧) が まんなかで 渦を まき、まんなかから 晴れる。app.noSwirl で なし (テスト)
+    let swirlT = app.noSwirl ? null : 0;
+    const swirlBoss = battle.kind === 'boss' || battle.kind === 'kairou';
+    // 敵の 必殺技の カットイン (2026-11-03): その あとの できごとは カットインが おわるまで 待たせる
+    let ecut = null;   // { unit, name, boss, start, dur, held }
     const g = app.g;
     let t = 0, endT = 0;
     let shownRot = battle.rot;     // 輪の 回る アニメーション
@@ -198,7 +205,18 @@ export function createBattleView(app, battle, place) {
     function readEvents() {
         let actor = null, kind = 'attack';      // いま 動いている キャラ (つづく ダメージは その キャラの 攻撃)
         let skillHit = HIT_DELAY.skill;         // わざ・術の 当たる 時間 (わざごとの 動きで 変わる)
-        const list = battle.events.splice(0);
+        let list = battle.events.splice(0);
+        if (ecut) { ecut.held.push(...list); return; }
+        const ci = list.findIndex(e => e.type === 'special' && e.side === 'enemy' && !e.cut);
+        if (ci >= 0 && unitOf(list[ci].actor)) {
+            const e = list[ci], u = unitOf(e.actor);
+            e.cut = true;
+            const boss = Boolean(e.big || u.boss);
+            ecut = { unit: u, name: e.name, boss, start: t, dur: (boss ? 1.9 : 1.15) * (g.fastBattle ? 0.6 : 1), held: list.slice(ci), wasPaused: battle.paused };
+            battle.paused = true;
+            sfx(boss ? 'big' : 'special');
+            list = list.slice(0, ci);
+        }
         list.forEach((e, idx) => {
             if (e.type === 'begin') {
                 enterT = t;
@@ -831,9 +849,24 @@ export function createBattleView(app, battle, place) {
     }
 
     function update(dt, input) {
+        // はじまりの 煙: 画面が おおわれて いる あいだは 止まる
+        if (swirlT !== null) {
+            swirlT += dt;
+            if (swirlT >= SWIRL_IN + SWIRL_OUT) swirlT = null;
+            else if (swirlT < SWIRL_IN + 0.2) return;
+        }
         t += dt;
         g.playTime += dt;
         runLater();
+        // 敵の 必殺技の カットイン: おわったら 待たせた できごとを 流す
+        if (ecut) {
+            if (t - ecut.start < ecut.dur) return;
+            const held = ecut.held;
+            battle.paused = ecut.wasPaused;
+            ecut = null;
+            battle.events.unshift(...held);
+            readEvents();
+        }
         if (mg) { updateMinigame(dt, input); readEvents(); return; }
         // はじまり: たたかう・どうぐ・おやつ・にげる を えらぶ あいだは バトルは 止まっている
         if (battle.waiting && !battle.outcome) {
@@ -1348,6 +1381,8 @@ export function createBattleView(app, battle, place) {
             text(ctx, battle.outcome === 'win' ? 'かった！' : 'まけた……', 200, 128, { size: 34, align: 'center', bold: true, color: battle.outcome === 'win' ? COLORS.accent : '#a0b0d0' });
         }
         if (mg) drawMinigameTop(ctx);
+        if (ecut) drawEnemyCutin(ctx, ecut.unit, ecut.name, Math.min(1, (t - ecut.start) / ecut.dur), ecut.boss, t);
+        if (swirlT !== null) drawSwirl(ctx, swirlT, opts.shot, swirlBoss);
     }
 
     function drawMinigameTop(ctx) {
@@ -1560,5 +1595,5 @@ export function createBattleView(app, battle, place) {
         if (menu) drawMenu(ctx);
     }
 
-    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { motions, effects, mg: () => mg, menu: () => menu, intro: () => (battle.waiting ? introIndex : null), allyShown: () => enterT !== null, appearText: () => appearText } };
+    return { name: 'battle', update, drawTop, drawBottom, battle, debug: { ecut: () => ecut, swirl: () => swirlT, motions, effects, mg: () => mg, menu: () => menu, intro: () => (battle.waiting ? introIndex : null), allyShown: () => enterT !== null, appearText: () => appearText } };
 }

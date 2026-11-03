@@ -6,6 +6,7 @@
 //   (2026-10-28 ユーザー指定: 編成と なかまの 確認を 分ける。いらいは 町の 依頼 (2026-10-28))
 // タブの 切りかえ: L・R (Q・E)・Tab キー・タブの タップ。十字キー 左右でも (へんせいは 場所の えらびに 使うので のぞく)
 // へんせい: 6 つの 場所から 1 つ えらび (A)、メダル帳から 入れる メダルを えらぶ (A)。Y で はずす
+// なかま: なかまを えらんで A → 装備を えらぶ (2026-11-03。なかま 1 体に 1 つ。data/equips.js)
 // 一覧は 十字キー・マウスホイール で スクロール
 // =====================================================================
 import { ART } from '../art/index.js';
@@ -16,7 +17,8 @@ import { COLORS, drawArt, panel, text, wrap, fitSize, button, hit, bar, roundRec
 import { sfx } from '../core/sound.js';
 import { bgmOn, setBgmOn } from '../core/bgm.js';
 import { btn, isKeyboard, fillKeys } from '../core/keys.js';
-import { medalByUid, friendCount, bondLevel, specialUpgraded, helpTopics, seeHelp, readNatureBook } from '../logic/game.js';
+import { medalByUid, friendCount, bondLevel, specialUpgraded, helpTopics, seeHelp, readNatureBook, setEquip, equipFree } from '../logic/game.js';
+import { EQUIPS, EQUIP_IDS, equipShort } from '../data/equips.js';
 import { NATURES, STYLES, styleOf } from '../data/nature.js';
 import { statsAt, expFor } from '../logic/units.js';
 import { questList, questState, questProgress, questReady } from '../logic/quests.js';
@@ -56,7 +58,7 @@ export function createMenu(app) {
         t += dt;
         g.playTime += dt;
         const tc = input.touch;
-        const switchTab = d => { tab = (tab + d + NT) % NT; picking = false; bookPick = null; sfx('cursor'); };
+        const switchTab = d => { tab = (tab + d + NT) % NT; picking = false; bookPick = null; equipPick = null; sfx('cursor'); };
         // Tab キー (X と いっしょに 押される) は タブの 切りかえ。メニューは 閉じない
         if (input.pressed.tab) { switchTab(1); return; }
         if (input.pressed.l) { switchTab(-1); return; }
@@ -68,9 +70,9 @@ export function createMenu(app) {
             if (i >= 0) { tab = i; picking = false; sfx('cursor'); return; }
             if (tc.y > 214 && tc.x > 230) { sfx('cancel'); app.go('field'); return; }
         }
-        if ((input.pressed.b && !picking && !bookPick) || input.pressed.x || input.pressed.start) { sfx('cancel'); app.go('field'); return; }
+        if ((input.pressed.b && !picking && !bookPick && !equipPick) || input.pressed.x || input.pressed.start) { sfx('cancel'); app.go('field'); return; }
         if (tab === 0) updateWatch(input);
-        else if (tab === 1) nIndex = moveList(input, nIndex, box().length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
+        else if (tab === 1) updateNakama(input);
         else if (tab === 2) zIndex = moveList(input, zIndex, NAKAMA_IDS.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(zIndex, ZUKAN_ROWS, NAKAMA_IDS.length), ZUKAN_ROWS);
         else if (tab === 3) updateItems(input);
         else if (tab === T_QUEST) qIndex = moveList(input, qIndex, questList(g).length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(qIndex, ZUKAN_ROWS, questList(g).length), ZUKAN_ROWS);
@@ -83,6 +85,29 @@ export function createMenu(app) {
             const pick = tc.justDown ? (hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : -1) : input.pressed.a ? sIndex : -1;
             if (pick === 0) { sIndex = 0; app.save(); saved = t; sfx('ok'); }
             if (pick === 1) { sIndex = 1; setBgmOn(!bgmOn()); sfx('ok'); }
+        }
+    }
+    // なかま: A で 装備を えらぶ (2026-11-03)
+    let equipPick = null;   // { index }
+    let equipNote = null;
+    const equipList = () => [null, ...EQUIP_IDS.filter(id => (g.equips?.[id] || 0) > 0)];
+    function updateNakama(input) {
+        if (!equipPick) {
+            nIndex = moveList(input, nIndex, box().length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(nIndex, ZUKAN_ROWS, box().length), ZUKAN_ROWS);
+            if (input.pressed.a && box()[nIndex]) { equipPick = { index: 0 }; sfx('ok'); }
+            return;
+        }
+        if (input.pressed.b) { equipPick = null; sfx('cancel'); return; }
+        const list = equipList();
+        equipPick.index = moveList(input, equipPick.index, list.length, k => ({ x: 8, y: 52 + k * ROW_H, w: 304, h: ROW_H }), scroll(equipPick.index, ROWS + 2, list.length), ROWS + 2);
+        const pickTap = input.touch.justDown && hit({ x: 8, y: 52, w: 304, h: ROW_H * (ROWS + 2) }, input.touch.x, input.touch.y);
+        if (input.pressed.a || pickTap) {
+            const m = box()[nIndex], id = list[equipPick.index];
+            if (setEquip(g, m.uid, id)) {
+                equipNote = { text: id ? `${unitOf(m.id).name}に「${EQUIPS[id].name}」を 付けた！` : `${unitOf(m.id).name}の 装備を はずした`, t };
+                sfx(id ? 'heal' : 'ok');
+                equipPick = null;
+            } else sfx('cancel');
         }
     }
     // もちもの: 性格の 本 (2026-11-02) を えらんで A → なかまを えらんで 読ませる
@@ -198,6 +223,8 @@ export function createMenu(app) {
             text(ctx, `すばやさ${s.spd} ようじゅつ${s.mag}`, 170, 211, { size: 11 });
             const need = expFor(medal.lv + 1) - expFor(medal.lv);
             bar(ctx, 170, 218, 210, 4, (medal.exp - expFor(medal.lv)) / need, COLORS.ice);
+            // 装備 (2026-11-03)
+            text(ctx, medal.equip ? `装備: ${EQUIPS[medal.equip].name}（${equipShort(medal.equip)}）` : '装備: なし', 170, 234, { size: 10, color: medal.equip ? COLORS.accent : COLORS.dim, maxWidth: 225 });
         } else {
             const where = [...SPOTS, ...ROAMS].filter(s => s.kinds.some(k => k.id === id)).map(s => s.label);
             const known = g.zukan.friends[id] || g.zukan.seen[id];
@@ -262,6 +289,7 @@ export function createMenu(app) {
 
     // なかま: もっている メダル すべて (ウォッチに 入っている なかまは 場所の 番号)
     function drawAll(ctx) {
+        if (equipPick) { drawEquipPick(ctx); return; }
         const list = box();
         const top = scroll(nIndex, ZUKAN_ROWS, list.length);
         for (let k = 0; k < ZUKAN_ROWS && top + k < list.length; k++) {
@@ -272,7 +300,25 @@ export function createMenu(app) {
             text(ctx, ROLES[unitOf(m.id).role] || '', 170, y + 14, { size: 10.5, color: COLORS.sub });
             text(ctx, `Lv${m.lv}${inWatch >= 0 ? `  [${inWatch + 1}]` : ''}`, 304, y + 14, { size: 11, align: 'right', color: inWatch >= 0 ? COLORS.accent : COLORS.sub });
         }
-        text(ctx, `なかま ${list.length} 体　[ ] は ウォッチの 場所${list.length > ZUKAN_ROWS ? `　${nIndex + 1}/${list.length}` : ''}`, 8, 220, { size: 10, color: COLORS.sub });
+        text(ctx, equipNote && t - equipNote.t < 2.5 ? equipNote.text : `なかま ${list.length} 体　[ ] は ウォッチの 場所　${btn('a')} 装備${list.length > ZUKAN_ROWS ? `　${nIndex + 1}/${list.length}` : ''}`, 8, 220, { size: 10, color: equipNote && t - equipNote.t < 2.5 ? COLORS.accent : COLORS.sub, maxWidth: 304 });
+    }
+    // 装備を えらぶ (いちばん 上は「はずす」。のこりの 数は ほかの なかまに 付けていない ぶん)
+    function drawEquipPick(ctx) {
+        const m = box()[nIndex], list = equipList(), top = scroll(equipPick.index, ROWS + 2, list.length);
+        text(ctx, `${unitOf(m.id).name}に 付ける 装備`, 160, 46, { size: 11.5, align: 'center', bold: true, color: COLORS.accent });
+        list.slice(top, top + ROWS + 2).forEach((id, k) => {
+            const y = 52 + k * ROW_H;
+            if (top + k === equipPick.index) { roundRect(ctx, 8, y, 304, ROW_H - 2, 4); ctx.fillStyle = '#2d5aa8'; ctx.fill(); }
+            if (!id) { text(ctx, '（はずす）', 16, y + 14, { size: 12, color: COLORS.sub }); return; }
+            const mine = m.equip === id;
+            text(ctx, `${mine ? '★' : ''}${EQUIPS[id].name}`, 16, y + 14, { size: 12, maxWidth: 130, color: mine ? COLORS.accent : '#ffffff' });
+            text(ctx, equipShort(id), 150, y + 14, { size: 9.5, color: COLORS.sub, maxWidth: 130 });
+            text(ctx, `×${equipFree(g, id)}`, 304, y + 14, { size: 11, align: 'right', color: equipFree(g, id) > 0 || mine ? '#ffffff' : COLORS.dim });
+        });
+        if (!list[1]) text(ctx, 'まだ 装備を もっていない。宝箱を さがそう！', 160, 120, { size: 11, align: 'center', color: COLORS.sub });
+        const sel = list[equipPick.index];
+        if (sel) text(ctx, EQUIPS[sel].desc, 8, 200, { size: 10, color: COLORS.sub, maxWidth: 304 });
+        text(ctx, `${btn('a')} 付ける・${btn('b')} やめる`, 160, 218, { size: 10.5, align: 'center', color: COLORS.dim });
     }
 
     function drawWatch(ctx) {

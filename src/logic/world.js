@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------
 // こおりくんの 位置 (g.pos) は ドットの 座標で、足元の まんなか。ぶつかる 箱は 足元の 10 × 6 ドット
 // =====================================================================
-import { CHESTS13, TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, PARK_CLUES, tileAt } from '../data/map.js';
+import { CHESTS, OKU_GATES, OKU, OKU_INFO, TILE, BLOCK, WET, BUILDINGS, PROPS, PEOPLE, GATES, MYSTERIES, SEALS, MONS, PARK_CLUES, tileAt } from '../data/map.js';
 import { reached } from './story.js';
 
 const HALF_W = 5, BOX_H = 6;
@@ -151,8 +151,12 @@ export function lookAt(g) {
     if (seal) return { type: 'seal', seal };
     const mon = monsHere(g).find(m => m.x === f.x && m.y === f.y);
     if (mon) return { type: 'mon', mon };
-    const chest = CHESTS13.find(m => m.x === f.x && m.y === f.y);
+    const chest = CHESTS.find(m => m.x === f.x && m.y === f.y);
     if (chest) return { type: 'chest', chest };
+    const og = OKU_GATES.find(m => m.x === f.x && m.y === f.y);
+    if (og) return { type: 'okuGate', oku: OKU.find(o => o.id === og.id) };
+    const k = OKU_INFO.findIndex(o => o.exit.x === f.x && o.exit.y === f.y);
+    if (k >= 0) return { type: 'okuExit', oku: OKU[k] };
     return null;
 }
 

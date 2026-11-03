@@ -18,7 +18,8 @@
 // その 下 (y 300〜335) は 14 章の 遊園地 (2026-10-30)。内定版は ナイテイパーク・免許版は メンキョシティ (地図は 同じで 名前が ちがう)
 // その 下 (y 336〜371) は 筋肉の山 (9 章。2026-10-30)。8 章 クリアの あと、石の川駅から 電車で 行ける。とちゅうに 雪どけの 氷河
 // その 下 (y 372〜407) は ASOの壺の底 (11 章。2026-10-30)。10 章 クリアの あと、石の川駅から 電車で 行ける。火山の 底に バクエンリュウ
-// いちばん 下 (y 408〜443) は 喰らいの 城 (13 章。2026-10-30)。12 章 クリアの あと、石の川駅から 黒い 光の 道で 行ける
+// その 下 (y 408〜443) は 喰らいの 城 (13 章。2026-10-30)。12 章 クリアの あと、石の川駅から 黒い 光の 道で 行ける
+// いちばん 下 (y 444〜) は ダンジョンの 奥の エリア 9 つ (2026-11-03)。ダンジョンの「奥への 道」を しらべると 行ける
 //
 //   tiles[y][x]: G 草 / F 花 / T 木 / R 道 / W 川 / B 橋 / P 川原の 石ころ / S 公園の 砂 / K 石だたみ / A 駐車場
 //                学校: L 木の ゆか / X かべ / Y プールサイド / M げた箱の マット (W は プールの 水)
@@ -32,8 +33,12 @@
 //   BUILDINGS: 家などの 建物 (通れない)。door は 調べる マス (建物の 下の まんなか)
 //   SPOTS: レンズで さがす 場所 (設計書 5.2)。kinds の time は 出る 時間帯、weather: 'rain' は 雨の日だけ
 // =====================================================================
+import { OKU, OKU_H, carveOku, roomCorner } from './oku.js';
+export { OKU, OKU_H } from './oku.js';
+
 export const TILE = 16;
-export const MAP_W = 48, MAP_H = 444;
+export const OKU_Y0 = 444;      // ここから 下が ダンジョンの 奥の エリア (2026-11-03。data/oku.js。1 つ 40 行)
+export const MAP_W = 48, MAP_H = OKU_Y0 + OKU.length * OKU_H;
 export const TOWN_H = 36;       // ここから 下が 商店街
 export const SCHOOL_Y0 = 60;    // ここから 下が 小学校の 中
 export const YAMA_Y0 = 84;      // ここから 下が 山と ダム
@@ -51,6 +56,8 @@ export const FLOORS13 = [[21, 10], [18, 37], [15, 10], [12, 37], [9, 10], [6, 24
 export const BLOCK = new Set(['T', 'W', 'X', 'Q', 'I', 'J', 'Z', 'V', 'k', 'm']);
 export const WET = new Set(['D', 'E', 'I']);   // 3 章 クリアで 水に もどる マス
 
+// 奥の エリアの 形 (部屋・着く マス・もどり道・いちばん 奥の 部屋・行き止まり)。build で 作る
+export const OKU_INFO = [];
 function build() {
     const t = Array.from({ length: MAP_H }, () => Array(MAP_W).fill('G'));
     const fill = (x0, y0, x1, y1, c) => {
@@ -299,6 +306,8 @@ function build() {
     fill(23, R + 28, 24, R + 29, 'v');                                   // 城門
     fill(23, R + 30, 24, R + 32, 'K');
     [[3, R + 31], [12, R + 32], [32, R + 31], [40, R + 33], [44, R + 30], [8, R + 33]].forEach(([x, y]) => { t[y][x] = 'T'; });
+    // ----- ダンジョンの 奥の エリア (2026-11-03) -----
+    OKU.forEach((o, k) => OKU_INFO.push(carveOku(t, o, OKU_Y0 + k * OKU_H, MAP_W)));
     return t.map(row => row.join(''));
 }
 export const TILES = build();
@@ -822,9 +831,137 @@ export const UMI_PLACES = [
 
 export const tileAt = (x, y) => (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H ? 'T' : TILES[y][x]);
 // その マスの 地区 (設計書 5.1)
-export const areaAt = (x, y) => (y >= KURAI_Y0 ? 'kurai' : y >= TSUBO_Y0 ? 'tsubo' : y >= KINNIKU_Y0 ? 'kinniku' : y >= PARK_Y0 ? 'park' : y >= SHIRO_Y0 ? 'shiro' : y >= MOON_Y0 ? 'moon' : y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
+export const areaAt = (x, y) => (y >= OKU_Y0 ? (y < MAP_H ? OKU[Math.floor((y - OKU_Y0) / OKU_H)].parent : 'kurai') : y >= KURAI_Y0 ? 'kurai' : y >= TSUBO_Y0 ? 'tsubo' : y >= KINNIKU_Y0 ? 'kinniku' : y >= PARK_Y0 ? 'park' : y >= SHIRO_Y0 ? 'shiro' : y >= MOON_Y0 ? 'moon' : y >= YASHIKI_Y0 ? 'yashiki' : y >= TERA_Y0 ? 'tera' : y >= UMI_Y0 ? 'umi' : y >= YAMA_Y0 ? 'yama' : y >= SCHOOL_Y0 ? 'school' : y >= TOWN_H ? 'shoutengai' : 'ishinokawa');
 export const inSchoolTile = y => y >= SCHOOL_Y0 && y < YAMA_Y0;
 // 町・学校・山・海 は つながって いないので、カメラと 地図は べつに する。[上, 下) の マス
-export const regionOf = ty => (ty >= KURAI_Y0 ? [KURAI_Y0, MAP_H] : ty >= TSUBO_Y0 ? [TSUBO_Y0, KURAI_Y0] : ty >= KINNIKU_Y0 ? [KINNIKU_Y0, TSUBO_Y0] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
+export const regionOf = ty => (ty >= OKU_Y0 ? [OKU_Y0 + Math.floor((ty - OKU_Y0) / OKU_H) * OKU_H, OKU_Y0 + (Math.floor((ty - OKU_Y0) / OKU_H) + 1) * OKU_H] : ty >= KURAI_Y0 ? [KURAI_Y0, OKU_Y0] : ty >= TSUBO_Y0 ? [TSUBO_Y0, KURAI_Y0] : ty >= KINNIKU_Y0 ? [KINNIKU_Y0, TSUBO_Y0] : ty >= PARK_Y0 ? [PARK_Y0, KINNIKU_Y0] : ty >= SHIRO_Y0 ? [SHIRO_Y0, PARK_Y0] : ty >= MOON_Y0 ? [MOON_Y0, SHIRO_Y0] : ty >= YASHIKI_Y0 ? [YASHIKI_Y0, MOON_Y0] : ty >= TERA_Y0 ? [TERA_Y0, YASHIKI_Y0] : ty >= UMI_Y0 ? [UMI_Y0, TERA_Y0] : ty >= YAMA_Y0 ? [YAMA_Y0, UMI_Y0] : ty >= SCHOOL_Y0 ? [SCHOOL_Y0, YAMA_Y0] : [0, SCHOOL_Y0]);
 // どうくつの 中か (4 章。バトルの 背景が かわる)
 export const inCaveTile = (x, y) => y >= UMI_Y0 && y < TERA_Y0 && x >= 30;
+
+// =====================================================================
+// 奥の エリア と 宝箱 (2026-11-03 ユーザー指定)
+// ---------------------------------------------------------------------
+// 宝箱 CHESTS: kind 'rare' = 1 回だけ (中身は きまっている。item か equip)・'daily' = 日が かわると また 入る (pool から えらぶ)
+// 奥への 入り口 OKU_GATES: もとの ダンジョンに 立つ「奥への 道」。しらべると 奥へ。奥の「もどり道」で もどる
+// 宝箱・入り口の マスは placeSpot で きめる: めやすの 近くで、だれも 立たない マスの うち、おいても 通り道を ふさがない ところ
+// =====================================================================
+const ARRIVE = {
+    ishinokawa: START, shoutengai: { x: 5, y: 41 }, school: SCHOOL_IN, yama: YAMA_IN, umi: UMI_IN, tera: TERA_IN, yashiki: YASHIKI_IN,
+    moon: MOON_IN, shiro: SHIRO_IN, park: PARK_IN, kinniku: KINNIKU_IN, tsubo: TSUBO_IN, kurai: KURAI_IN
+};
+const taken = new Set();   // 宝箱・入り口を おいた マス
+const keyOf = (x, y) => `${x},${y}`;
+// だれかが 立つ・とおる・しらべる マス (ここには おかない)
+const reserved = new Set();
+const reserve = (x, y, r = 0) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) reserved.add(keyOf(x + dx, y + dy)); };
+PEOPLE.forEach(p => { for (let k = 0; k < (p.h || 1); k++) reserve(p.x, p.y + k, 1); });
+BUILDINGS.forEach(b => { reserve(b.door.x, b.door.y, 1); reserve(b.door.x, b.door.y + 1, 1); });
+[...MYSTERIES, ...SEALS, ...MONS, ...SPOTS, ...PROPS].forEach(m => reserve(m.x, m.y, 1));
+GATES.forEach(q => { for (let k = 0; k < q.w; k++) reserve(q.x + k, q.y, 1); });
+Object.values(ARRIVE).forEach(p => reserve(Math.floor(p.x), Math.floor(p.y), 2));
+[YAMA_OUT, SCHOOL_OUT, STATION_OUT, YAMA_AFTER_BOSS, UMI_AFTER_BOSS, TERA_AFTER_BOSS, HYOUGA13_AT].forEach(p => reserve(Math.floor(p.x), Math.floor(p.y), 1));
+
+const inBuilding = (x, y) => BUILDINGS.some(b => x >= b.x && x < b.x + b.w && y >= b.y && y < b.y + b.h);
+const walkable = (x, y) => {
+    const c = tileAt(x, y);
+    return !BLOCK.has(c) && !WET.has(c) && c !== 'U' && c !== 'M' && !inBuilding(x, y) && !taken.has(keyOf(x, y))
+        && !PROPS.some(p => p.x === x && p.y === y) && !MYSTERIES.some(m => m.x === x && m.y === y) && !SEALS.some(m => m.x === x && m.y === y);
+};
+// [y0, y1) の 中で from から 歩いて 行ける マスの 数 (block は ためしに ふさぐ マス)
+function reach(y0, y1, from, block = null) {
+    const seen = new Set([keyOf(from.x, from.y)]);
+    const q = [from];
+    while (q.length) {
+        const p = q.pop();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const x = p.x + dx, y = p.y + dy, k = keyOf(x, y);
+            if (y < y0 || y >= y1 || seen.has(k) || (block && block.x === x && block.y === y) || !walkable(x, y)) continue;
+            seen.add(k);
+            q.push({ x, y });
+        }
+    }
+    return seen;
+}
+// めやす hint の 近くで おける マス (となりに かべが ある 所を えらぶ)
+function placeSpot(y0, y1, from, hint) {
+    const base = reach(y0, y1, from);
+    const cands = [...base].map(k => k.split(',').map(Number)).filter(([x, y]) => !reserved.has(keyOf(x, y)))
+        .sort((a, b) => Math.abs(a[0] - hint.x) + Math.abs(a[1] - hint.y) - Math.abs(b[0] - hint.x) - Math.abs(b[1] - hint.y));
+    for (const [x, y] of cands.slice(0, 120)) {
+        const nextToWall = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => !walkable(x + dx, y + dy));
+        if (!nextToWall) continue;
+        if (reach(y0, y1, from, { x, y }).size !== base.size - 1) continue;   // ふさぐと 行けなく なる 所が できる
+        taken.add(keyOf(x, y));
+        reserve(x, y, 1);
+        return { x, y };
+    }
+    throw new Error(`宝箱を おける 場所が ない: ${y0} ${hint.x},${hint.y}`);
+}
+
+const Y0 = { ishinokawa: 0, shoutengai: TOWN_H, school: SCHOOL_Y0, yama: YAMA_Y0, umi: UMI_Y0, tera: TERA_Y0, yashiki: YASHIKI_Y0, moon: MOON_Y0, shiro: SHIRO_Y0, park: PARK_Y0, kinniku: KINNIKU_Y0, tsubo: TSUBO_Y0, kurai: KURAI_Y0 };
+const Y1 = { ishinokawa: SCHOOL_Y0, shoutengai: SCHOOL_Y0, school: YAMA_Y0, yama: UMI_Y0, umi: TERA_Y0, tera: YASHIKI_Y0, yashiki: MOON_Y0, moon: SHIRO_Y0, shiro: PARK_Y0, park: KINNIKU_Y0, kinniku: TSUBO_Y0, tsubo: KURAI_Y0, kurai: OKU_Y0 };
+const from = area => ({ x: Math.floor(ARRIVE[area].x), y: Math.floor(ARRIVE[area].y) });
+CHESTS13.forEach(c => { taken.add(keyOf(c.x, c.y)); reserve(c.x, c.y, 1); });
+
+// 奥への 入り口 (もとの ダンジョンの 中)
+export const OKU_GATES = OKU.map(o => {
+    const p = placeSpot(Y0[o.parent], Y1[o.parent], from(o.parent), { x: o.gate.x, y: Y0[o.parent] + o.gate.y });
+    const front = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy })).find(q => walkable(q.x, q.y));
+    return { id: o.id, x: p.x, y: p.y, front };
+});
+
+// 町・ダンジョンの 宝箱: [地区, めやす x, めやす y (地区の 上から), 中身]
+const SPOT_CHESTS = [
+    ['ishinokawa', 3, 13, { kind: 'daily', pool: 'town' }], ['ishinokawa', 45, 33, { kind: 'daily', pool: 'town' }], ['ishinokawa', 46, 12, { kind: 'rare', equip: 'hachimaki' }],
+    ['shoutengai', 2, 20, { kind: 'daily', pool: 'town' }], ['shoutengai', 46, 2, { kind: 'rare', equip: 'wristband' }],
+    ['school', 3, 2, { kind: 'rare', equip: 'beads' }],
+    ['yama', 2, 20, { kind: 'daily', pool: 'dungeon' }], ['yama', 45, 30, { kind: 'rare', equip: 'zouri' }],
+    ['umi', 14, 24, { kind: 'daily', pool: 'dungeon' }], ['umi', 46, 14, { kind: 'rare', equip: 'koura' }],
+    ['tera', 45, 30, { kind: 'daily', pool: 'dungeon' }], ['tera', 2, 10, { kind: 'rare', equip: 'netJuzu' }],
+    ['yashiki', 3, 12, { kind: 'daily', pool: 'dungeon' }], ['yashiki', 44, 20, { kind: 'rare', equip: 'tenguGeta' }],
+    ['moon', 3, 5, { kind: 'daily', pool: 'dungeon' }], ['moon', 44, 8, { kind: 'rare', equip: 'moonPendant' }],
+    ['shiro', 3, 20, { kind: 'daily', pool: 'dungeon' }], ['shiro', 44, 15, { kind: 'rare', equip: 'kanaboKey' }],
+    ['park', 3, 5, { kind: 'daily', pool: 'dungeon' }], ['park', 44, 5, { kind: 'rare', equip: 'hissatsuBand' }],
+    ['kinniku', 3, 25, { kind: 'daily', pool: 'dungeon' }], ['kinniku', 44, 8, { kind: 'rare', equip: 'muscleBelt' }],
+    ['tsubo', 3, 10, { kind: 'daily', pool: 'dungeon' }], ['tsubo', 44, 12, { kind: 'rare', item: 'ougonmame', n: 2 }],
+    ['kurai', 3, 33, { kind: 'daily', pool: 'deep' }]
+];
+// 奥の エリアの いちばん 奥の レア装備・行き止まりの 合成アイテム
+const OKU_RARE = { yamaOku: 'kooriMuffler', umiOku: 'dragonScale', teraOku: 'pagodaCharm', yashikiOku: 'shinobiZukin', moonOku: 'shitennouBand', shiroOku: 'goldArmor', kinnikuOku: 'kinnikuGlove', tsuboOku: 'magmaStone', kuraiOku: 'hoshiCrown' };
+const OKU_MATERIAL = ['kesshou', 'hoshikakera', 'tsukishizuku', 'onitsuno', 'tsukishizuku', 'ougonmame', 'luckycoin', 'onitsuno', 'makimono'];
+
+export const CHESTS = [
+    ...CHESTS13.map(c => ({ ...c, kind: 'rare' })),
+    ...SPOT_CHESTS.map(([area, x, y, what], i) => ({ id: `t${i}_${area}`, ...placeSpot(Y0[area], Y1[area], from(area), { x, y: Y0[area] + y }), ...what })),
+    ...OKU.flatMap((o, k) => {
+        const info = OKU_INFO[k], y0 = OKU_Y0 + k * OKU_H, y1 = y0 + OKU_H;
+        const at = r => placeSpot(y0, y1, info.start, roomCorner(r, 1));
+        const list = [{ id: `${o.id}_far`, ...at(info.far), kind: 'rare', equip: OKU_RARE[o.id] }];
+        info.deadEnds.slice(0, 3).forEach((r, i) => list.push({ id: `${o.id}_d${i}`, ...at(r), ...(i === 0 ? { kind: 'rare', item: OKU_MATERIAL[k], n: 2 } : { kind: 'daily', pool: 'deep' }) }));
+        if (o.id === 'kuraiOku') list[1] = { ...list[1], item: undefined, n: undefined, equip: 'kuraiFang' };
+        return list;
+    })
+];
+PROPS.push(...CHESTS.filter(c => !CHESTS13.some(d => d.id === c.id)).map(c => ({ id: `chest-${c.id}`, kind: 'chest', x: c.x, y: c.y })));
+PROPS.push(...OKU_GATES.map(q => ({ id: `okuGate-${q.id}`, kind: 'okuGate', x: q.x, y: q.y })));
+PROPS.push(...OKU.map((o, k) => ({ id: `okuExit-${o.id}`, kind: 'okuExit', x: OKU_INFO[k].exit.x, y: OKU_INFO[k].exit.y })));
+
+// 奥の エリアで 歩きまわる キャラ: もとの ダンジョンに 出る キャラ ぜんぶ・Lv は 少し 高い
+const LV_OF = { yama: YAMA_LV, umi: CAVE_LV, tera: TERA_LV, yashiki: YASHIKI_LV, moon: MOON_LV, shiro: SHIRO_LV, kinniku: KINNIKU_LV, tsubo: TSUBO_LV, kurai: KURAI_LV };
+OKU.forEach((o, k) => {
+    const y0 = Y0[o.parent], y1 = Y1[o.parent];
+    const kinds = [];
+    for (const r of ROAMS) if (r.y0 >= y0 && r.y0 < y1) for (const kd of r.kinds) if (!kinds.some(x => x.id === kd.id && x.time === kd.time)) kinds.push({ ...kd });
+    const lv = LV_OF[o.parent].map(v => v + o.lvAdd);
+    OKU_INFO[k].rooms.filter(r => r !== OKU_INFO[k].startRoom).forEach((r, i) => {
+        if (i % 2) return;
+        ROAMS.push({ id: `${o.id}_r${i}`, label: o.name, x0: r.x, y0: r.y, x1: r.x + r.w - 1, y1: r.y + r.h - 1, max: 1, lv, kinds });
+    });
+});
+// 奥の エリアの 中 (なければ null)
+export const okuAt = ty => (ty >= OKU_Y0 && ty < MAP_H ? OKU[Math.floor((ty - OKU_Y0) / OKU_H)] : null);
+export const okuStart = id => { const k = OKU.findIndex(o => o.id === id); return { x: OKU_INFO[k].start.x, y: OKU_INFO[k].start.y, dir: 'up' }; };
+export const okuGateOf = id => OKU_GATES.find(q => q.id === id);
+// ダンジョンの 中か (2026-11-03: ダンジョンの 敵は こおりくんを 見つけると 追いかけてくる)。町・商店街・学校・遊園地・海辺の 町は ちがう
+const DUNGEON_AREAS = new Set(['yama', 'tera', 'yashiki', 'moon', 'shiro', 'kinniku', 'tsubo', 'kurai']);
+export const isDungeon = (tx, ty) => Boolean(okuAt(ty)) || DUNGEON_AREAS.has(areaAt(tx, ty)) || inCaveTile(tx, ty);

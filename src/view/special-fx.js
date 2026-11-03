@@ -568,3 +568,52 @@ export function drawCutin(ctx, unit, sp, k) {
     text(ctx, unit.name, 290, 156, { size: 12, align: 'center', bold: true });
     ctx.restore();
 }
+
+// 敵の 必殺技の カットイン (2026-11-03 ユーザー指定: 敵・ボスにも)。右から 赤い 帯。ボスは 黒と 赤の 豪華な 版
+//   k: 0〜1 (カットインの すすみ)・time: 画面の 秒 (いなずまの ゆらめき)
+export function drawEnemyCutin(ctx, unit, name, k, boss, time = 0) {
+    const slide = k < 0.2 ? 1 - k / 0.2 : k > 0.88 ? -(k - 0.88) / 0.12 : 0;
+    const shake = boss && k > 0.2 && k < 0.5 ? Math.sin(time * 90) * 3 : 0;
+    ctx.fillStyle = boss ? 'rgba(10,0,0,0.78)' : 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, 400, 240);
+    if (boss) {
+        // 赤い 光の すじと いなずま
+        ctx.save();
+        ctx.translate(200, 120);
+        ctx.rotate(time * 0.8);
+        for (let i = 0; i < 16; i++) {
+            ctx.rotate(Math.PI / 8);
+            ctx.fillStyle = i % 2 ? 'rgba(200,20,40,0.35)' : 'rgba(80,0,10,0.35)';
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(320, -24); ctx.lineTo(320, 24); ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+        if (Math.sin(time * 23) > 0.6) {
+            ctx.strokeStyle = 'rgba(255,220,220,0.9)'; ctx.lineWidth = 2;
+            ctx.beginPath(); let x = 60 + ((time * 97) % 280), y = 0; ctx.moveTo(x, y);
+            for (let i = 0; i < 6; i++) { x += (i % 2 ? -14 : 12); y += 40; ctx.lineTo(x, y); }
+            ctx.stroke();
+        }
+        if (k < 0.08) { ctx.fillStyle = `rgba(255,255,255,${1 - k / 0.08})`; ctx.fillRect(0, 0, 400, 240); }
+    }
+    ctx.save();
+    ctx.translate(-slide * 400 + shake, shake * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(0, 40); ctx.lineTo(400, 70); ctx.lineTo(400, 210); ctx.lineTo(0, 180);
+    ctx.closePath();
+    ctx.fillStyle = boss ? '#2a0408' : '#8a1424';
+    ctx.globalAlpha = 0.92;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = boss ? '#ffd84a' : '#ffb0b0';
+    ctx.lineWidth = boss ? 4 : 3;
+    ctx.stroke();
+    for (let i = 0; i < 12; i++) {
+        ctx.fillStyle = boss ? 'rgba(255,80,80,0.45)' : 'rgba(255,255,255,0.3)';
+        ctx.fillRect(420 - ((i * 53 + k * 700) % 460), 70 + (i * 29) % 120, 30, 2);
+    }
+    drawArt(ctx, ART[unit.art], Math.floor(k * 12), 300, 196, { scale: boss ? 7 : 6.5, flip: true });
+    text(ctx, boss ? 'ボスの 必殺技！！' : '敵の 必殺技', 120, 84, { size: boss ? 15 : 13, align: 'center', bold: true, color: boss ? '#ff6a6a' : '#ffd0d0' });
+    text(ctx, `「${name}」`, 130, 122 + (boss ? Math.sin(time * 20) : 0), { size: boss ? 23 : 20, align: 'center', bold: true, color: boss ? '#ffd84a' : '#ffffff', maxWidth: 230 });
+    text(ctx, unit.name, 120, 152, { size: 12, align: 'center', bold: true, color: boss ? '#ffb0b0' : '#ffe0e0' });
+    ctx.restore();
+}

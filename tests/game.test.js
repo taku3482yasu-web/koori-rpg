@@ -809,3 +809,31 @@ test('ヘルプ (2026-11-02): ストーリーが すすむと 話題が ふえ�
     seeHelp(g, helpTopics(g)[0].id);
     assert.equal(helpUnseen(g).length, n - 1);
 });
+
+test('宝箱と 装備 (2026-11-03): レアは 1 回・毎日の 宝箱は 日が かわると また あく・装備は 1 体 1 つで 力が 上がる', async () => {
+    const { newGame, openChest, chestOpened, setEquip, equipFree, addEquip, addHero } = await import('../src/logic/game.js');
+    const { createRng } = await import('../src/core/rng.js').catch(() => ({ createRng: null }));
+    const rng = { next: () => 0.5, int: n => Math.floor(n / 2), chance: p => p > 0.9 };
+    const g = newGame('naitei');
+    const rare = { id: 'r1', kind: 'rare', equip: 'hachimaki' };
+    assert.deepEqual(openChest(g, rare, rng), { equip: 'hachimaki' });
+    assert.equal(openChest(g, rare, rng), null);
+    assert.equal(g.equips.hachimaki, 1);
+    const daily = { id: 'd1', kind: 'daily', pool: 'town' };
+    const got = openChest(g, daily, rng);
+    assert.ok(got.item && got.n >= 1);
+    assert.ok(chestOpened(g, daily));
+    assert.equal(openChest(g, daily, rng), null);
+    g.day++;
+    assert.ok(!chestOpened(g, daily));
+    assert.ok(openChest(g, daily, rng));
+    addHero(g, 10);
+    const m = g.medals[0];
+    assert.equal(setEquip(g, m.uid, 'hachimaki'), true);
+    assert.equal(equipFree(g, 'hachimaki'), 0);
+    assert.equal(setEquip(g, m.uid, 'zouri'), false, 'もって いない 装備は 付けられない');
+    addEquip(g, 'zouri');
+    assert.equal(setEquip(g, m.uid, 'zouri'), true);
+    assert.equal(equipFree(g, 'hachimaki'), 1);
+    void createRng;
+});

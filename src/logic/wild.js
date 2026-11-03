@@ -5,8 +5,9 @@
 // 話せる キャラ (friendly): FRIENDS の 場所に いつも いる。話しかけると 会話や 道具 (印なし。2026-10-28)
 // かくれている キャラ: レンズで 見つけると その場に 出てくる (reveal)。話しかけると バトル
 // バトルの あとは いなくなり、しばらくすると また 出てくる
+// ダンジョンの 中の キャラは こおりくんを 見つけると 追いかけてくる。ぶつかると その場で バトル (2026-11-03 ユーザー指定・セリフなし)
 // =====================================================================
-import { TILE, ROAMS, SPOTS, FRIENDS } from '../data/map.js';
+import { TILE, ROAMS, SPOTS, FRIENDS, isDungeon } from '../data/map.js';
 import { spotKinds, hasWatch } from './game.js';
 import { blockedTile } from './world.js';
 import { reached } from './story.js';
@@ -16,10 +17,15 @@ const WALK = 22;             // 歩く 速さ (ドット / 秒)
 const REVEALED_LIFE = 90;    // 見つけた キャラが その場に いる 時間 (秒)
 const NOTICE = 34;           // こおりくんが これより 近いと 立ち止まる (ドット)
 const TALK = 26;             // 話しかけられる きょり (ドット)
+const SIGHT = 80;            // ダンジョンで こおりくんに 気づく きょり (ドット)
+const GIVE_UP = 140;         // これより はなれると 追うのを やめる
+const CHASE = 46;            // 追いかける 速さ (ドット / 秒。こおりくんが 走れば にげられる)
+const TOUCH_X = 13, TOUCH_Y = 10;   // ぶつかった ことに なる きょり
 
 export function createWild(g, rng) {
     const list = [];
     const wait = {};         // ROAMS の id → また 出せる 時刻 (g.playTime)
+    let calmUntil = 0;       // この 時刻までは 追いかけない (バトルの あと・場所を うつった あと)
     let seq = 0;
 
     // source.lv: その 場所の Lv の はば (商店街)。なければ ストーリーで 決まる
@@ -78,13 +84,40 @@ export function createWild(g, rng) {
         if (c.roam && !c.friendly) wait[c.roam] = g.playTime + RESPAWN;
     }
 
-    function update(dt, hero) {
+    const tileOf = c => ({ x: Math.floor(c.x / TILE), y: Math.floor((c.y - 3) / TILE) });
+    const free = (x, y) => !blockedTile(g, Math.floor(x / TILE), Math.floor((y - 3) / TILE));
+    // 追いかける: 横と 縦を べつべつに 動かす (かべに そって すべる)
+    function chase(c, hero, dt) {
+        const dx = hero.x - c.x, dy = hero.y - c.y, d = Math.hypot(dx, dy) || 1;
+        const step = CHASE * dt;
+        const nx = c.x + dx / d * step, ny = c.y + dy / d * step;
+        if (free(nx, c.y)) c.x = nx;
+        if (free(c.x, ny)) c.y = ny;
+        c.walkT += dt;
+        c.flip = dx < 0;
+    }
+    // update は ぶつかった キャラを 返す (なければ null)。canChase: いま 追いかけて いいか (会話中などは false)
+    function update(dt, hero, canChase = true) {
         spawnRoamers(hero);
+        let touched = null;
         for (const c of [...list]) {
             if (c.revealed) {
                 if (g.playTime - c.born > REVEALED_LIFE) remove(c);
                 continue;
             }
+            // ダンジョンの キャラ: 見つけたら 追いかける
+            if (!c.friendly && hero && canChase && g.playTime >= calmUntil) {
+                const t2 = tileOf(c), d = Math.hypot(c.x - hero.x, c.y - hero.y);
+                if (isDungeon(t2.x, t2.y) && (d < SIGHT || (c.chasing && d < GIVE_UP))) {
+                    if (!c.chasing) c.spotted = g.playTime;
+                    c.chasing = true;
+                    c.target = null;
+                    if (g.playTime - c.spotted > 0.35) chase(c, hero, dt);   // 気づいて「！」が 出てから 走りだす
+                    if (!touched && Math.abs(c.x - hero.x) < TOUCH_X && Math.abs(c.y - hero.y) < TOUCH_Y) touched = c;
+                    continue;
+                }
+                if (c.chasing) { c.chasing = false; c.pause = 1.5; }
+            } else c.chasing = false;
             const r = ROAMS.find(z => z.id === c.roam) || FRIENDS.find(z => z.id === c.roam);
             // こおりくんが 近くに 来たら 立ち止まって こっちを 向く (話しかけやすいように)
             if (hero && Math.hypot(c.x - hero.x, c.y - hero.y) < NOTICE) {
@@ -110,7 +143,10 @@ export function createWild(g, rng) {
             c.walkT += dt;
             if (Math.abs(dx) > 0.3) c.flip = dx < 0;
         }
+        return touched;
     }
+    // しばらく 追いかけない (バトルの あと・ワープの あと)
+    const calm = (sec = 2.5) => { calmUntil = g.playTime + sec; for (const c of list) c.chasing = false; };
 
     // 話しかけられる キャラ: 近くて (TALK 以内)、向いている 方の 側に いる。すぐ そば (14 以内) なら 向きは 問わない。いちばん 近い 1 体
     function facing(pos) {
@@ -127,5 +163,5 @@ export function createWild(g, rng) {
 
     const sourceOf = c => (c.friendly ? FRIENDS.find(f => f.id === c.friend) : c.roam ? ROAMS.find(r => r.id === c.roam) : SPOTS.find(s => s.id === c.spot));
 
-    return { list, update, reveal, remove, facing, sourceOf };
+    return { list, update, reveal, remove, facing, sourceOf, calm };
 }

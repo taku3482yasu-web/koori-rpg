@@ -63,6 +63,7 @@
 //     おにおに: 必殺技を ためる あいだ (b.burst) に 決まった ダメージを あたえると 紋が 暴発 (自爆): 味方に ダメージ + チャンスタイム。
 //       2 回目からの ためでは ガードして、うける ダメージが へる (guardCut)
 // =====================================================================
+import { EQUIPS } from '../data/equips.js';
 import { CHART } from '../data/nakama.js';
 import { ITEMS } from '../data/items.js';
 import { speciesOf, statsAt } from './units.js';
@@ -86,9 +87,12 @@ let uidSeq = 0;
 // upgrade: こおりくんの 必殺技が 進化している (9 章 クリアから)。dark: 紋つき (「・闇」)
 export const DARK_K = 1.15;
 // nature: メダルの 性格・style: キャラの 戦い方 (2026-11-02。data/nature.js)
-function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false, nature = null }, side) {
+// equip: 装備 (2026-11-03。data/equips.js)。能力が 上がり、gaugeK で 必殺技ゲージが たまりやすい
+function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false, nature = null, equip = null }, side) {
     const sp = speciesOf(id);
     const st = statsAt(id, lv, nature);
+    const eq = equip ? EQUIPS[equip] : null;
+    if (eq) for (const [k, v] of Object.entries(eq.bonus || {})) st[k] = Math.round(st[k] * (1 + v));
     const isDark = dark || Boolean(sp.dark);
     if (dark) for (const k of ['hp', 'atk', 'def']) st[k] = Math.round(st[k] * DARK_K);
     return {
@@ -96,7 +100,7 @@ function makeUnit({ uid, id, lv, bond = 0, upgrade = false, dark = false, nature
         id, lv, side, bond, nature, style: styleOf(sp), shade: Boolean(sp.shade),
         name: dark && !sp.dark ? `${sp.name}・闇` : sp.name, dark: isDark, element: sp.element, role: sp.role, art: sp.art, scale: sp.scale || 1,
         waza: sp.waza, jutsu: sp.jutsu, special: (upgrade && sp.special2) || sp.special || null, bigMove: sp.bigMove || null, boss: Boolean(sp.bigMove), hero: Boolean(sp.hero),
-        max: st.hp, hp: st.hp, s: st,
+        max: st.hp, hp: st.hp, s: st, equip: eq ? equip : null, gaugeK: 1 + (eq?.gauge || 0),
         timer: 0, gauge: 0, status: {}, buffs: {}, ko: false, guarding: false,
         bossMoves: sp.moves || null, chanceTurns: sp.chanceTurns || 3,
         // しかけの 部位 (4 章・5 章): 出ている ときだけ ロックオンできる 部位
@@ -658,7 +662,7 @@ function damage(b, from, to, power, { magic = false, mult = 1, element = null, u
     to.hp = Math.max(0, to.hp - dmg);
     if (to.enrageDef && !to.enraged && to.hp > 0 && to.hp <= to.max * to.enrageDef.at) enrage(b, to);
     if (to.status.sleep > 0) to.status.sleep = 0;   // たたかれると 目が さめる
-    if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4);
+    if (to.side === 'ally') to.gauge = Math.min(GAUGE_MAX, to.gauge + 4 * (to.gaugeK || 1));
     emit(b, 'damage', { target: to.uid, amount: dmg, crit, eff, guard: to.guarding || headGuard || shell < 1 || burstGuard < 1, weak: weak && !headGuard, headGuard, part: gim });
     if (gim && to.hp > 0 && !to.gims[gim].arm) hitGim(b, to, gim, dmg);
     // 右腕 (6 章): 右腕に 当てると しぼみ、体に 当てると ふくらむ
@@ -882,7 +886,7 @@ function act(b, u) {
         emit(b, 'attack', { actor: u.uid, target: to.uid });
         damage(b, u, to, 1.0);
     }
-    u.gauge = Math.min(GAUGE_MAX, u.gauge + (u.side === 'ally' ? 15 : 8));
+    u.gauge = Math.min(GAUGE_MAX, u.gauge + (u.side === 'ally' ? 15 * (u.gaugeK || 1) : 8));
 }
 
 function tickUnit(b, u, dt, acting) {

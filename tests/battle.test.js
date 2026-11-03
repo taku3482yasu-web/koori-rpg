@@ -1210,3 +1210,14 @@ test('大成功 (2026-11-03): 必殺技は 威力が さらに 上がり、お�
     resolveRescue(b, startRescue(b, u.uid), true, false);
     assert.equal(u.hp, hp, 'ふつうの 成功は 回復しない');
 });
+
+test('装備 (2026-11-03): 付けた なかまは 能力が 上がり、ゲージの たまりやすさが かわる', () => {
+    const rng = createRng(3);
+    const plain = createBattle({ allies: [{ id: 'haribaby', lv: 20 }], enemies: [{ id: 'saikoron', lv: 5 }], rng });
+    const geared = createBattle({ allies: [{ id: 'haribaby', lv: 20, equip: 'hoshiCrown' }], enemies: [{ id: 'saikoron', lv: 5 }], rng: createRng(3) });
+    const a = plain.wheel[0], b = geared.wheel[0];
+    for (const k of ['atk', 'def', 'spd', 'mag']) assert.ok(b.s[k] > a.s[k], k);
+    assert.ok(b.max > a.max);
+    assert.equal(a.gaugeK, 1);
+    assert.equal(b.gaugeK, 1.2);
+});

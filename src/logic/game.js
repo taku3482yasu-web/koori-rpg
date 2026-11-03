@@ -47,6 +47,7 @@
 import { NAKAMA, NAKAMA_IDS, BOSSES, HERO_ID, idsInArea, rivalTeam, RIVAL_LV, evolveOf, inVersion, TEAMS, TEAM_LV, teamsIn, BOSS14, KAIROU_BOSSES, KAIROU_UNITS, FLOOR13, HELPER_LV } from '../data/nakama.js';
 import { SPOTS, START, areaAt } from '../data/map.js';
 import { ITEMS } from '../data/items.js';
+import { EQUIPS, EQUIP_IDS } from '../data/equips.js';
 import { expFor, expReward, gainExp, moneyReward } from './units.js';
 import { reached, MAIN_END } from './story.js';
 import { MYSTERIES, SEALS, MONS, PARK_CLUES } from '../data/map.js';
@@ -74,6 +75,7 @@ export function newGame(version, seed = 1) {
         pos: { x: START.x * 16 + 8, y: START.y * 16 + 12, dir: 'down' },
         money: 300,
         items: { onigiri: 3, melonpan: 1 },
+        equips: {},         // 装備 (2026-11-03): もっている 数。メダルの equip に 付ける
         medals: [],
         watch: [null, null, null, null, null, null],
         zukan: { seen: {}, friends: {} },
@@ -92,7 +94,7 @@ export function newGame(version, seed = 1) {
 // 古い セーブを 今の 形に 直す (足りない 項目を 足す)
 export function migrate(save) {
     const base = newGame(save.version);
-    const g = { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {} };
+    const g = { ...base, ...save, zukan: { ...base.zukan, ...save.zukan }, spotCooldown: {}, equips: { ...(save.equips || {}) } };
     // こおりくんの メダルが ない セーブ (2026-10-27 より 前) は、なかまの いちばん 高い Lv で 足す
     if (g.story !== 'intro' && !heroMedal(g)) addHero(g, Math.max(5, ...g.medals.map(m => m.lv)));
     // 性格の ない メダル (2026-11-02 より 前) に 性格を つける
@@ -204,13 +206,50 @@ export const floor13Next = g => (g.story === 'kurai' ? FLOOR13[g.flags.fl13 || 0
 // その 階で 加勢する ライバル探検隊
 export const floor13Team = (f, version) => f.team[version] || f.team.naitei;
 export const floor13Helpers = (f, version) => { const t = floor13Team(f, version); return { team: t, name: TEAMS[t].name, members: TEAMS[t].members, lv: HELPER_LV }; };
-// 13 章 4〜6 階の 宝箱 (1 回だけ)
-export function openChest13(g, chest) {
-    g.flags.chest13 = g.flags.chest13 || {};
-    if (g.flags.chest13[chest.id]) return null;
-    g.flags.chest13[chest.id] = true;
-    g.items[chest.item] = Math.min(MAX_ITEM, (g.items[chest.item] || 0) + chest.n);
-    return chest;
+// ----- 宝箱 (2026-11-03 ユーザー指定: 町と ダンジョン。13 章の 宝箱も ここ) -----
+//   rare: 1 回だけ (中身は きまっている)・daily: 日が かわると また 入る (DAILY_POOL から えらぶ。まれに 装備)
+export const DAILY_POOL = {
+    town: { items: ['onigiri', 'melonpan', 'choco', 'cider', 'tomato', 'daikon', 'ringo'], equip: [[1, 0.08]] },
+    dungeon: { items: ['yakisoba', 'ramune', 'ringo', 'ninniku', 'banana', 'kiyomizu', 'hoshikakera', 'kesshou', 'onitsuno'], equip: [[1, 0.06], [2, 0.03]] },
+    deep: { items: ['ikayaki', 'kakigoori', 'suika', 'okamemen', 'kiyomizu', 'tsukishizuku', 'ougonmame', 'luckycoin', 'hoshikakera'], equip: [[2, 0.08], [1, 0.08]] }
+};
+export const chestOpened = (g, chest) => (chest.kind === 'daily'
+    ? (g.flags.chestDay || {})[chest.id] === g.day
+    : Boolean((g.flags.chests || {})[chest.id] || (g.flags.chest13 || {})[chest.id]));
+export const addEquip = (g, id, n = 1) => { g.equips[id] = (g.equips[id] || 0) + n; };
+// あける → { item, n } か { equip }。もう あいていたら null
+export function openChest(g, chest, rng) {
+    if (chestOpened(g, chest)) return null;
+    let got;
+    if (chest.kind === 'daily') {
+        const pool = DAILY_POOL[chest.pool] || DAILY_POOL.town;
+        const tier = pool.equip.find(([, p]) => rng.chance(p));
+        if (tier) {
+            const list = EQUIP_IDS.filter(id => EQUIPS[id].tier === tier[0]);
+            got = { equip: list[rng.int(list.length)] };
+        } else got = { item: pool.items[rng.int(pool.items.length)], n: 1 + rng.int(2) };
+        g.flags.chestDay = { ...(g.flags.chestDay || {}), [chest.id]: g.day };
+    } else {
+        got = chest.equip ? { equip: chest.equip } : { item: chest.item, n: chest.n || 1 };
+        g.flags.chests = { ...(g.flags.chests || {}), [chest.id]: true };
+    }
+    if (got.equip) addEquip(g, got.equip);
+    else g.items[got.item] = Math.min(MAX_ITEM, (g.items[got.item] || 0) + got.n);
+    return got;
+}
+// 13 章の 宝箱 (いままでの 名前。CHESTS13 は rare)
+export const openChest13 = (g, chest, rng) => openChest(g, { ...chest, kind: 'rare' }, rng);
+
+// ----- 装備 (2026-11-03 ユーザー指定: なかま 1 体に 1 つ) -----
+export const equipUsed = (g, id) => g.medals.filter(m => m.equip === id).length;
+export const equipFree = (g, id) => (g.equips[id] || 0) - equipUsed(g, id);
+// uid の なかまに 装備を 付ける (id = null で はずす)。付けられたら true
+export function setEquip(g, uid, id) {
+    const m = medalByUid(g, uid);
+    if (!m) return false;
+    if (id && m.equip !== id && equipFree(g, id) <= 0) return false;
+    m.equip = id || null;
+    return true;
 }
 // ライバル探検隊 (4 章): バージョンの チーム 3 人 (まんなかが リーダー)
 export const rivalEnemies = g => {

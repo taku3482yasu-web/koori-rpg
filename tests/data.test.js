@@ -434,8 +434,8 @@ test('地図: ASOの壺の底 (11 章)。駅から 火山の 底の バクエン
 });
 
 test('地図: 喰らいの 城 (13 章)。ヒョウガリュウの おりる 野原から 城門 → 1・2 階 → 3〜7 階 (階段の 前に 幹部) → 最上階の ルキハの 前', async () => {
-    const { KURAI_Y0, KURAI_IN, HYOUGA13_AT } = await import('../src/data/map.js');
-    assert.deepEqual(regionOf(KURAI_IN.y), [KURAI_Y0, MAP_H]);
+    const { KURAI_Y0, KURAI_IN, HYOUGA13_AT, OKU_Y0 } = await import('../src/data/map.js');
+    assert.deepEqual(regionOf(KURAI_IN.y), [KURAI_Y0, OKU_Y0]);
     assert.ok(!BLOCK.has(TILES[HYOUGA13_AT.y][HYOUGA13_AT.x]), '山の ヒョウガリュウの 前に 立てる');
     const ruk = PEOPLE.find(p => p.id === 'rukiha13');
     const bosses = PEOPLE.filter(p => p.only === 'floor13').sort((a, b) => a.floor - b.floor);
@@ -465,4 +465,51 @@ test('地図: 喰らいの 城 (13 章)。ヒョウガリュウの おりる 野
     const { CHESTS13 } = await import('../src/data/map.js');
     const after = reach(1);
     for (const c of CHESTS13) assert.ok([[0, 1], [0, -1], [1, 0], [-1, 0]].some(([dx, dy]) => after.has(`${c.x + dx},${c.y + dy}`)), `宝箱 ${c.id}`);
+});
+
+test('奥の エリア (2026-11-03): 9 つの ダンジョンに 入り口・中は 着く マスから ぜんぶの 宝箱と もどり道まで 歩ける', async () => {
+    const { OKU, OKU_H, OKU_Y0, OKU_INFO, OKU_GATES, CHESTS, areaAt, regionOf, tileAt, BLOCK } = await import('../src/data/map.js');
+    assert.equal(OKU.length, 9);
+    const props = new Set(CHESTS.map(c => `${c.x},${c.y}`));
+    OKU.forEach((o, k) => {
+        const y0 = OKU_Y0 + k * OKU_H, info = OKU_INFO[k];
+        assert.deepEqual(regionOf(info.start.y), [y0, y0 + OKU_H]);
+        assert.equal(areaAt(info.start.x, info.start.y), o.parent);
+        assert.ok(!BLOCK.has(tileAt(info.start.x, info.start.y)), `${o.name} の 着く マス`);
+        const seen = new Set([`${info.start.x},${info.start.y}`]);
+        const q = [info.start];
+        while (q.length) {
+            const p = q.pop();
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                const x = p.x + dx, y = p.y + dy, key = `${x},${y}`;
+                if (seen.has(key) || y < y0 || y >= y0 + OKU_H || BLOCK.has(tileAt(x, y)) || props.has(key) || (x === info.exit.x && y === info.exit.y)) continue;
+                seen.add(key);
+                q.push({ x, y });
+            }
+        }
+        const near = c => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => seen.has(`${c.x + dx},${c.y + dy}`));
+        for (const c of CHESTS.filter(c => c.y >= y0 && c.y < y0 + OKU_H)) assert.ok(near(c), `${o.name} の 宝箱 ${c.id}`);
+        assert.ok(near(info.exit), `${o.name} の もどり道`);
+        assert.ok(seen.size > 300, `${o.name} は 広い (${seen.size} マス)`);
+        assert.ok(CHESTS.some(c => c.id === `${o.id}_far` && c.equip), 'いちばん 奥に レア装備');
+        const gate = OKU_GATES.find(q2 => q2.id === o.id);
+        assert.equal(areaAt(gate.x, gate.y), o.parent, '入り口は もとの ダンジョンに');
+        assert.ok(gate.front, '入り口の 前に 立てる');
+    });
+});
+
+test('宝箱 (2026-11-03): 町と ダンジョンに ある・中身は ある 道具か 装備・場所が かぶらない', async () => {
+    const { CHESTS, areaAt } = await import('../src/data/map.js');
+    const { EQUIPS } = await import('../src/data/equips.js');
+    const { ITEMS } = await import('../src/data/items.js');
+    const { DAILY_POOL } = await import('../src/logic/game.js');
+    assert.equal(new Set(CHESTS.map(c => `${c.x},${c.y}`)).size, CHESTS.length);
+    assert.equal(new Set(CHESTS.map(c => c.id)).size, CHESTS.length);
+    for (const area of ['ishinokawa', 'shoutengai', 'yama', 'umi', 'tera', 'yashiki', 'moon', 'shiro', 'kinniku', 'tsubo', 'kurai']) assert.ok(CHESTS.some(c => areaAt(c.x, c.y) === area), area);
+    for (const c of CHESTS) {
+        if (c.kind === 'daily') assert.ok(DAILY_POOL[c.pool], c.id);
+        else if (c.equip) assert.ok(EQUIPS[c.equip], c.id);
+        else assert.ok(ITEMS[c.item], c.id);
+    }
+    for (const p of Object.values(DAILY_POOL)) for (const id of p.items) assert.ok(ITEMS[id], id);
 });
