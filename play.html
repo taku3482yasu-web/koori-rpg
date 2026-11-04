@@ -7974,7 +7974,6 @@ body.nopad #pad { display: none; }
       rotateCooldown: 0,
       itemCooldown: 0,
       rescueCooldown: 0,
-      frontDownTime: 0,
       bossTimer: 0,
       warned: false,
       food: null,
@@ -8000,7 +7999,26 @@ body.nopad #pad { display: none; }
     b.front = () => [0, 1, 2].map((i) => b.wheel[(b.rot + i) % 6]);
     b.frontAlive = () => b.front().filter((u) => u && !u.ko);
     b.enemiesAlive = () => b.enemies.filter((u) => !u.ko);
+    settleFront(b, false);
     return b;
+  }
+  const aliveCount = (b, rot) => [0, 1, 2].filter((i) => {
+    const u = b.wheel[(rot + i) % 6];
+    return u && !u.ko;
+  }).length;
+  function settleFront(b, notify = true) {
+    if (aliveCount(b, b.rot)) return;
+    let best = b.rot, most = 0;
+    for (const k of [3, 2, 4, 1, 5]) {
+      const rot = (b.rot + k) % 6, n = aliveCount(b, rot);
+      if (n > most) {
+        best = rot;
+        most = n;
+      }
+    }
+    if (!most) return;
+    b.rot = best;
+    if (notify) emit(b, "rotate", { auto: true });
   }
   const IDOL_SLOTS = ["left", "right"];
   const idolsOf = (b, boss) => b.enemies.filter((e) => e.idol && !e.ko && e.owner === boss.uid);
@@ -8589,7 +8607,7 @@ body.nopad #pad { display: none; }
     }
   }
   function step(b, dt) {
-    var _a;
+    var _a, _b;
     if (b.outcome || b.paused || b.waiting) return;
     b.t += dt;
     b.rotateCooldown = Math.max(0, b.rotateCooldown - dt);
@@ -8737,14 +8755,8 @@ body.nopad #pad { display: none; }
         emit(b, "smokeEnd");
       }
     }
-    if (!b.frontAlive().length && b.wheel.some((u) => u && !u.ko)) {
-      b.frontDownTime += dt;
-      if (b.frontDownTime > 2) {
-        b.rot = (b.rot + 3) % 6;
-        b.frontDownTime = 0;
-        emit(b, "rotate", { auto: true });
-      }
-    } else b.frontDownTime = 0;
+    if (b.bind && ((_b = unitByUid(b, b.bind.target)) == null ? void 0 : _b.ko)) releaseBind(b, "ko");
+    settleFront(b);
     checkOutcome(b);
   }
   function bossTick(b, e, dt) {
@@ -8850,7 +8862,11 @@ body.nopad #pad { display: none; }
       emit(b, "boundWheel");
       return false;
     }
-    b.rot = (b.rot + (dir > 0 ? 1 : 5)) % 6;
+    const step1 = dir > 0 ? 1 : 5;
+    let rot = (b.rot + step1) % 6;
+    while (rot !== b.rot && !aliveCount(b, rot)) rot = (rot + step1) % 6;
+    if (rot === b.rot) return false;
+    b.rot = rot;
     b.rotateCooldown = ROTATE_COOLDOWN;
     emit(b, "rotate", { dir });
     return true;
