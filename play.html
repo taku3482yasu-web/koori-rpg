@@ -1945,6 +1945,13 @@ body.nopad #pad { display: none; }
     if (!ac || muted || ac.state !== "running") return;
     (_a = SOUNDS[name]) == null ? void 0 : _a.call(SOUNDS);
   }
+  if (typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", () => {
+      if (!ac) return;
+      if (document.hidden) ac.suspend();
+      else ac.resume();
+    });
+  }
   const audioContext = () => ac && !muted && ac.state === "running" ? ac : null;
   const MODES = {
     major: [0, 2, 4, 5, 7, 9, 11],
@@ -26774,6 +26781,7 @@ body.nopad #pad { display: none; }
     let iIndex = 0;
     let qIndex = 0;
     let hIndex = 0;
+    let titleAsk = false;
     let saved = 0;
     const box = () => g.medals;
     const scroll = (index, rows, len) => Math.max(0, Math.min(len - rows, index - Math.floor(rows / 2)));
@@ -26787,6 +26795,19 @@ body.nopad #pad { display: none; }
       t += dt;
       g.playTime += dt;
       const tc = input2.touch;
+      if (titleAsk) {
+        if (input2.pressed.a || tc.justDown && hit(TITLE_YES, tc.x, tc.y)) {
+          titleAsk = false;
+          sfx("ok");
+          app2.go("title");
+          return;
+        }
+        if (input2.pressed.b || tc.justDown && hit(TITLE_NO, tc.x, tc.y)) {
+          titleAsk = false;
+          sfx("cancel");
+        }
+        return;
+      }
       const switchTab = (d) => {
         tab = (tab + d + NT) % NT;
         picking = false;
@@ -26843,11 +26864,15 @@ body.nopad #pad { display: none; }
         hIndex = moveList(input2, hIndex, list.length, (k) => ({ x: 8, y: 36 + k * ROW_H$1, w: 304, h: ROW_H$1 }), scroll(hIndex, ZUKAN_ROWS, list.length), ZUKAN_ROWS);
         if (list[hIndex]) seeHelp(g, list[hIndex].id);
       } else if (tab === T_SAVE) {
-        if (input2.pressed.up || input2.pressed.down) {
-          sIndex = 1 - sIndex;
+        if (input2.pressed.up) {
+          sIndex = (sIndex + 2) % 3;
           sfx("cursor");
         }
-        const pick = tc.justDown ? hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : -1 : input2.pressed.a ? sIndex : -1;
+        if (input2.pressed.down) {
+          sIndex = (sIndex + 1) % 3;
+          sfx("cursor");
+        }
+        const pick = tc.justDown ? hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : hit(TITLE_BTN, tc.x, tc.y) ? 2 : -1 : input2.pressed.a ? sIndex : -1;
         if (pick === 0) {
           sIndex = 0;
           app2.save();
@@ -26857,6 +26882,11 @@ body.nopad #pad { display: none; }
         if (pick === 1) {
           sIndex = 1;
           setBgmOn(!bgmOn());
+          sfx("ok");
+        }
+        if (pick === 2) {
+          sIndex = 2;
+          titleAsk = true;
           sfx("ok");
         }
       }
@@ -26926,8 +26956,11 @@ body.nopad #pad { display: none; }
       }
     }
     let bookNote = null;
-    const SAVE_BTN = { x: 80, y: 74, w: 160, h: 40, label: "セーブする" };
-    const BGM_BTN = { x: 80, y: 128, w: 160, h: 40 };
+    const SAVE_BTN = { x: 80, y: 68, w: 160, h: 38, label: "セーブする" };
+    const BGM_BTN = { x: 80, y: 112, w: 160, h: 38 };
+    const TITLE_BTN = { x: 80, y: 156, w: 160, h: 38, label: "タイトルへ もどる" };
+    const TITLE_YES = { x: 40, y: 130, w: 110, h: 40, label: "はい" };
+    const TITLE_NO = { x: 170, y: 130, w: 110, h: 40, label: "いいえ" };
     let sIndex = 0;
     function moveList(input2, index, len, rowRect, top, rows) {
       if (!len) return 0;
@@ -27118,11 +27151,18 @@ body.nopad #pad { display: none; }
       else {
         button(ctx, SAVE_BTN, { active: sIndex === 0 });
         button(ctx, { ...BGM_BTN, label: `BGM: ${bgmOn() ? "オン" : "オフ"}` }, { active: sIndex === 1 });
-        text(ctx, "ページを 閉じたときも 自動で セーブします", 160, 196, { size: 11, align: "center", color: COLORS.sub });
+        button(ctx, TITLE_BTN, { active: sIndex === 2 });
+        text(ctx, "ページを 閉じたときも 自動で セーブします", 160, 210, { size: 11, align: "center", color: COLORS.sub });
         if (saved && t - saved < 1.5) text(ctx, "セーブした！", 160, 62, { size: 14, align: "center", bold: true, color: COLORS.accent });
       }
       text(ctx, `${btn("l")}${btn("r")}${isKeyboard() ? "・[Tab]" : ""} タブ`, 8, 232, { size: 10.5, color: COLORS.dim });
       text(ctx, `${btn("b")} もどる`, 312, 232, { size: 10.5, align: "right", color: COLORS.dim });
+      if (titleAsk) {
+        panel(ctx, 20, 60, 280, 124, { fill: "rgba(10, 14, 30, 0.97)", edge: COLORS.accent, r: 8 });
+        text(ctx, "セーブして タイトルへ もどる？", 160, 100, { size: 14, align: "center", bold: true });
+        button(ctx, TITLE_YES);
+        button(ctx, TITLE_NO);
+      }
     }
     function drawAll(ctx) {
       if (equipPick) {
@@ -27619,7 +27659,12 @@ body.nopad #pad { display: none; }
       if (name === "field") this.scene = this.field;
       else if (name === "menu") this.scene = createMenu(this);
       else if (name === "fusion") this.scene = createFusion(this);
-      else if (name === "title") this.scene = createTitle(this);
+      else if (name === "title") {
+        this.save();
+        this.g = null;
+        this.field = null;
+        this.scene = createTitle(this);
+      }
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)

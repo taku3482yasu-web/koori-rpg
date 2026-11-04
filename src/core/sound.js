@@ -55,5 +55,13 @@ export function sfx(name) {
 }
 
 export function setMuted(v) { muted = v; }
+
+// タブを 切りかえて 画面が かくれたら 音を 止め、もどったら 再開する (2026-11-04 ユーザー指定)
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (!ac) return;
+        if (document.hidden) ac.suspend(); else ac.resume();
+    });
+}
 // BGM (core/bgm.js) も 同じ 音の 出口を 使う。まだ 鳴らせない ときは null
 export const audioContext = () => (ac && !muted && ac.state === 'running' ? ac : null);

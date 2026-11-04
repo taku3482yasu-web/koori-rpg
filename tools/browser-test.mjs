@@ -695,6 +695,21 @@ try {
     await clickBottom(160, 148);
     await sleep(200);
     check(await evaluate('window.__bgm() === "moon" && localStorage.getItem("koori-rpg:bgm") === "on"'), 'もう いちど おすと BGM が オンに もどる');
+    // ----- ゲーム中に タイトルへ もどる (メニューの セーブ タブ。2026-11-04) -----
+    await clickBottom(160, 175);
+    await sleep(200);
+    await shot('menu-title-ask');
+    await clickBottom(225, 150);
+    await sleep(200);
+    check(await sceneIs('menu'), 'タイトルへ もどる: いいえ なら メニューの まま');
+    await clickBottom(160, 175);
+    await sleep(200);
+    await clickBottom(95, 150);
+    await sleep(300);
+    check(await evaluate('window.__app.scene.name === "title" && window.__app.g === null'), 'タイトルへ もどる: はい で タイトルへ (ゲームは セーブして 手ばなす)');
+    await evaluate('window.__app.start(window.__app.version, false); true');
+    await sleep(300);
+    check(await evaluate('window.__app.scene === window.__app.field && window.__app.g.story === "clear7"'), 'タイトルから つづきで もどれる');
     await key('KeyK');
     await sleep(300);
 

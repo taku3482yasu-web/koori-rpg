@@ -42,6 +42,7 @@ export function createMenu(app) {
     let iIndex = 0;                                 // もちもの
     let qIndex = 0;                                 // いらい
     let hIndex = 0;                                 // ヘルプ
+    let titleAsk = false;                           // タイトルへ もどる か 聞いている
     let saved = 0;
 
     const box = () => g.medals;
@@ -58,6 +59,12 @@ export function createMenu(app) {
         t += dt;
         g.playTime += dt;
         const tc = input.touch;
+        // タイトルへ もどる か 聞いている あいだ (2026-11-04 ユーザー指定)
+        if (titleAsk) {
+            if (input.pressed.a || (tc.justDown && hit(TITLE_YES, tc.x, tc.y))) { titleAsk = false; sfx('ok'); app.go('title'); return; }
+            if (input.pressed.b || (tc.justDown && hit(TITLE_NO, tc.x, tc.y))) { titleAsk = false; sfx('cancel'); }
+            return;
+        }
         const switchTab = d => { tab = (tab + d + NT) % NT; picking = false; bookPick = null; equipPick = null; sfx('cursor'); };
         // Tab キー (X と いっしょに 押される) は タブの 切りかえ。メニューは 閉じない
         if (input.pressed.tab) { switchTab(1); return; }
@@ -81,10 +88,12 @@ export function createMenu(app) {
             hIndex = moveList(input, hIndex, list.length, k => ({ x: 8, y: 36 + k * ROW_H, w: 304, h: ROW_H }), scroll(hIndex, ZUKAN_ROWS, list.length), ZUKAN_ROWS);
             if (list[hIndex]) seeHelp(g, list[hIndex].id);
         } else if (tab === T_SAVE) {
-            if (input.pressed.up || input.pressed.down) { sIndex = 1 - sIndex; sfx('cursor'); }
-            const pick = tc.justDown ? (hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : -1) : input.pressed.a ? sIndex : -1;
+            if (input.pressed.up) { sIndex = (sIndex + 2) % 3; sfx('cursor'); }
+            if (input.pressed.down) { sIndex = (sIndex + 1) % 3; sfx('cursor'); }
+            const pick = tc.justDown ? (hit(SAVE_BTN, tc.x, tc.y) ? 0 : hit(BGM_BTN, tc.x, tc.y) ? 1 : hit(TITLE_BTN, tc.x, tc.y) ? 2 : -1) : input.pressed.a ? sIndex : -1;
             if (pick === 0) { sIndex = 0; app.save(); saved = t; sfx('ok'); }
             if (pick === 1) { sIndex = 1; setBgmOn(!bgmOn()); sfx('ok'); }
+            if (pick === 2) { sIndex = 2; titleAsk = true; sfx('ok'); }
         }
     }
     // なかま: A で 装備を えらぶ (2026-11-03)
@@ -134,9 +143,12 @@ export function createMenu(app) {
         }
     }
     let bookNote = null;
-    const SAVE_BTN = { x: 80, y: 74, w: 160, h: 40, label: 'セーブする' };
-    const BGM_BTN = { x: 80, y: 128, w: 160, h: 40 };
-    let sIndex = 0;   // セーブ タブで えらんでいる ボタン (0 セーブ・1 BGM)
+    const SAVE_BTN = { x: 80, y: 68, w: 160, h: 38, label: 'セーブする' };
+    const BGM_BTN = { x: 80, y: 112, w: 160, h: 38 };
+    const TITLE_BTN = { x: 80, y: 156, w: 160, h: 38, label: 'タイトルへ もどる' };
+    const TITLE_YES = { x: 40, y: 130, w: 110, h: 40, label: 'はい' };
+    const TITLE_NO = { x: 170, y: 130, w: 110, h: 40, label: 'いいえ' };
+    let sIndex = 0;   // セーブ タブで えらんでいる ボタン (0 セーブ・1 BGM・2 タイトルへ)
 
     function moveList(input, index, len, rowRect, top, rows) {
         if (!len) return 0;
@@ -280,11 +292,18 @@ export function createMenu(app) {
         else {
             button(ctx, SAVE_BTN, { active: sIndex === 0 });
             button(ctx, { ...BGM_BTN, label: `BGM: ${bgmOn() ? 'オン' : 'オフ'}` }, { active: sIndex === 1 });
-            text(ctx, 'ページを 閉じたときも 自動で セーブします', 160, 196, { size: 11, align: 'center', color: COLORS.sub });
+            button(ctx, TITLE_BTN, { active: sIndex === 2 });
+            text(ctx, 'ページを 閉じたときも 自動で セーブします', 160, 210, { size: 11, align: 'center', color: COLORS.sub });
             if (saved && t - saved < 1.5) text(ctx, 'セーブした！', 160, 62, { size: 14, align: 'center', bold: true, color: COLORS.accent });
         }
         text(ctx, `${btn('l')}${btn('r')}${isKeyboard() ? '・[Tab]' : ''} タブ`, 8, 232, { size: 10.5, color: COLORS.dim });
         text(ctx, `${btn('b')} もどる`, 312, 232, { size: 10.5, align: 'right', color: COLORS.dim });
+        if (titleAsk) {
+            panel(ctx, 20, 60, 280, 124, { fill: 'rgba(10, 14, 30, 0.97)', edge: COLORS.accent, r: 8 });
+            text(ctx, 'セーブして タイトルへ もどる？', 160, 100, { size: 14, align: 'center', bold: true });
+            button(ctx, TITLE_YES);
+            button(ctx, TITLE_NO);
+        }
     }
 
     // なかま: もっている メダル すべて (ウォッチに 入っている なかまは 場所の 番号)

@@ -128,5 +128,5 @@ export function playBgm(id) {
 }
 export const currentBgm = () => cur?.id ?? null;
 
-// 画面が かくれて いる あいだも 少し 先まで 予約を つづける (requestAnimationFrame は 止まるので)
+// 毎コマの 呼び出しが 止まっても 予約を つづける。タブが かくれた ときは core/sound.js が 音を 止める (requestAnimationFrame は 止まるので)
 if (typeof window !== 'undefined') setInterval(schedule, 100);

@@ -68,7 +68,14 @@ const app = {
         if (name === 'field') this.scene = this.field;
         else if (name === 'menu') this.scene = createMenu(this);
         else if (name === 'fusion') this.scene = createFusion(this);
-        else if (name === 'title') this.scene = createTitle(this);
+        else if (name === 'title') {
+            // ゲーム中から タイトルへ (2026-11-04 ユーザー指定)。タイトルで バージョンを かえると 保存先も かわるので、
+            // セーブしてから いまの ゲームを 手ばなす (のこすと べつの バージョンの セーブに 上書きしてしまう)
+            this.save();
+            this.g = null;
+            this.field = null;
+            this.scene = createTitle(this);
+        }
     },
     // mystery: 七不思議の id (2 章。勝つと たしかめた ことに なる)
     // team: 15 章の ライバル探検隊の 仲間クエスト (勝つと チームの 3 人が なかまに なる)
