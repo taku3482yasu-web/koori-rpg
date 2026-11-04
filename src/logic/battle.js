@@ -7,7 +7,8 @@
 //
 //   wheel: おなかまウォッチに セットした 6 枚 (null は あき)。前の 3 体 = wheel[rot], wheel[rot+1], wheel[rot+2]
 //   なかまは spd で 決まる 間かくで 動く。ゲージ (100) が たまると 必殺技が 打てる (ミニゲームの 結果で 威力が 変わる)
-//   後ろの なかまは 少しずつ HP が 戻る。前の 3 体が 全員 たおれたら 2 秒後に 自動で 半分 回す
+//   後ろの なかまは 少しずつ HP が 戻る。前には かならず 1 体は 生きている なかまが いる (2026-11-04 ユーザー指定):
+//     全員 たおれたら すぐに なかまの いる ところまで 自動で 回す。プレイヤーが 回すときも だれも いない ところは とばす
 //   ボスは 大技の 前に 予告 (telegraph) を 出す。そのあいだに 輪を 回して 守りの 強い なかまを 前に 出せる
 //   とりつき (2 章。設計書 3.4): ねむり・のろい・こんらん・どく・いたずら・めくらまし は ぜんぶ「とりつき」(2026-10-30 ユーザー指定)。
 //     いたずらの とりつきは なまけたり 味方を 攻めたり する。めくらましの とりつきは 攻撃が 当たりにくい。
@@ -313,7 +314,7 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
         wheel: Array.from({ length: 6 }, (_, i) => (allies[i] ? makeUnit(allies[i], 'ally') : null)),
         enemies: enemies.map(e => makeUnit(e, 'enemy')),
         events: [], outcome: null, paused: false,
-        rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0, frontDownTime: 0,
+        rotateCooldown: 0, itemCooldown: 0, rescueCooldown: 0,
         bossTimer: 0, warned: false, food: null, lock: null, lockPart: null, weakT: 0, chance: null, charge: null, smoke: null, chant: null, clones: null, armCharge: null, burst: null, regen: null, hack: null, bind: null, barrier: null
     };
     // 敵は 少しずつ ずらして 動き出す
@@ -322,7 +323,23 @@ export function createBattle({ allies, enemies, rng, kind = 'wild', intro = fals
     b.front = () => [0, 1, 2].map(i => b.wheel[(b.rot + i) % 6]);
     b.frontAlive = () => b.front().filter(u => u && !u.ko);
     b.enemiesAlive = () => b.enemies.filter(u => !u.ko);
+    settleFront(b, false);
     return b;
+}
+
+// rot の 位置の 前に 生きている なかまが いるか
+const aliveCount = (b, rot) => [0, 1, 2].filter(i => { const u = b.wheel[(rot + i) % 6]; return u && !u.ko; }).length;
+// 前に だれも いなければ、いちばん 多く なかまが ならぶ ところまで 回す (おなじなら 半分 回す ほうを 先に)
+function settleFront(b, notify = true) {
+    if (aliveCount(b, b.rot)) return;
+    let best = b.rot, most = 0;
+    for (const k of [3, 2, 4, 1, 5]) {
+        const rot = (b.rot + k) % 6, n = aliveCount(b, rot);
+        if (n > most) { best = rot; most = n; }
+    }
+    if (!most) return;   // 全員 たおれた
+    b.rot = best;
+    if (notify) emit(b, 'rotate', { auto: true });
 }
 
 // ----- 氷の 偶像 (3 章の ダムの主) -----
@@ -1044,15 +1061,9 @@ export function step(b, dt) {
         b.smoke.left -= dt;
         if (b.smoke.left <= 0) { b.smoke = null; emit(b, 'smokeEnd'); }
     }
-    // 前の 3 体が 全員 たおれたら、少し 待って 半分 回す
-    if (!b.frontAlive().length && b.wheel.some(u => u && !u.ko)) {
-        b.frontDownTime += dt;
-        if (b.frontDownTime > 2) {
-            b.rot = (b.rot + 3) % 6;
-            b.frontDownTime = 0;
-            emit(b, 'rotate', { auto: true });
-        }
-    } else b.frontDownTime = 0;
+    // 拘束された なかまが たおれたら リングは とける (輪が 回せなく ならない ように)
+    if (b.bind && unitByUid(b, b.bind.target)?.ko) releaseBind(b, 'ko');
+    settleFront(b);
     checkOutcome(b);
 }
 
@@ -1158,7 +1169,12 @@ function bossTick(b, e, dt) {
 export function rotate(b, dir) {
     if (b.outcome || b.paused || b.rotateCooldown > 0) return false;
     if (b.bind) { emit(b, 'boundWheel'); return false; }   // 拘束のリングが ある あいだは 輪を 回せない
-    b.rot = (b.rot + (dir > 0 ? 1 : 5)) % 6;
+    // だれも いない ところは とばす (前に かならず 1 体 いる)
+    const step1 = dir > 0 ? 1 : 5;
+    let rot = (b.rot + step1) % 6;
+    while (rot !== b.rot && !aliveCount(b, rot)) rot = (rot + step1) % 6;
+    if (rot === b.rot) return false;
+    b.rot = rot;
     b.rotateCooldown = ROTATE_COOLDOWN;
     emit(b, 'rotate', { dir });
     return true;

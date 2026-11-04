@@ -125,8 +125,30 @@ test('前の 3 体が 全員 たおれたら、後ろと 自動で 入れかわ�
     const allies = ['haribaby', 'kogame', 'kozarappa', 'ishikoron', 'mizukirin', 'pekorisu'].map(id => ({ id, lv: 3 }));
     const b = createBattle({ allies, enemies: [{ id: 'donguriko', lv: 3 }], rng: createRng(1) });
     b.front().forEach(u => { u.hp = 0; u.ko = true; });
-    run(b, 2.5);
-    assert.deepEqual(b.front().map(u => u.id), ['ishikoron', 'mizukirin', 'pekorisu']);
+    run(b, 0.1);
+    assert.deepEqual(b.front().map(u => u.id), ['ishikoron', 'mizukirin', 'pekorisu'], 'すぐに 入れかわる');
+});
+
+test('前には かならず 生きている なかまが 1 体 いる (2026-11-04 ユーザー指定)', () => {
+    const enemies = [{ id: 'donguriko', lv: 3 }];
+    // はじめから 前に だれも いない
+    const start = createBattle({ allies: [null, null, null, null, { id: 'kogame', lv: 3 }, null], enemies, rng: createRng(1) });
+    assert.equal(start.frontAlive().length, 1, 'はじめから 前に いる');
+    // 回しても だれも いない ところには 止まらない
+    const one = createBattle({ allies: [{ id: 'kogame', lv: 3 }], enemies, rng: createRng(1) });
+    for (let i = 0; i < 12; i++) {
+        one.rotateCooldown = 0;
+        assert.ok(rotate(one, i % 5 === 0 ? -1 : 1), '回せる');
+        assert.equal(one.frontAlive().length, 1, `${i} 回目`);
+    }
+    // ばらばらの 2 体: 片方が たおれたら もう 片方の ところへ
+    const two = createBattle({ allies: [{ id: 'kogame', lv: 3 }, null, null, null, { id: 'haribaby', lv: 3 }, null], enemies, rng: createRng(1) });
+    two.rot = 1; two.rotateCooldown = 0;
+    assert.ok(rotate(two, 1));
+    assert.equal(two.front().filter(Boolean)[0].id, 'haribaby', 'いない ところを とばした');
+    two.frontAlive().forEach(u => { u.hp = 0; u.ko = true; });
+    run(two, 0.1);
+    assert.deepEqual(two.frontAlive().map(u => u.id), ['kogame'], '仲間の いる ところまで 回る');
 });
 
 test('ボスは 大技の 前に 予告を 出す', () => {
